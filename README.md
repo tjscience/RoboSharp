@@ -9,7 +9,7 @@ In the project, you will find the RoboSharp library as well as a sample backup a
 
 Here is an example of how you would use RoboSharp:
 
-```csharp
+```c#
 public void Backup()
 {
     RoboCommand backup = new RoboCommand();
