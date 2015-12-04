@@ -102,26 +102,11 @@ namespace RoboSharp
                     }
                     else if (splitData.Length == 3)
                     {
-                        // handle size when robocopy shortens it.
-                        string sizeStr = splitData[1].Trim();
-                        double multiplier = 1;
-
-                        if (sizeStr.EndsWith("m"))
-                        {
-                            sizeStr = sizeStr.Replace("m", "").Trim();
-                            multiplier = 1000000;
-                        }
-                        else if (sizeStr.EndsWith("g"))
-                        {
-                            sizeStr = sizeStr.Replace("g", "").Trim();
-                            multiplier = 1000000000;
-                        }
-
                         var file = new ProcessedFileInfo();
                         file.FileClass = splitData[0].Trim();
-                        double size;
-                        double.TryParse(sizeStr, out size);
-                        file.Size = Convert.ToInt64(size * multiplier);
+                        long size = 0;
+                        long.TryParse(splitData[1].Trim(), out size);
+                        file.Size = size;
                         file.Name = splitData[2];
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
                     }
@@ -282,7 +267,7 @@ namespace RoboSharp
             var parsedLoggingOptions = LoggingOptions.Parse();
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
-            return string.Format("{0}{1}{2}{3}", parsedCopyOptions, parsedSelectionOptions, 
+            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions, 
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
