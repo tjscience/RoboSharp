@@ -1,3 +1,4 @@
+![logo](robosharp.png?raw=true)
 # RoboSharp
 RoboSharp is a .NET wrapper for the awesome Robocopy windows application.
 
