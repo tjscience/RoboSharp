@@ -58,7 +58,13 @@
     <Compile Include="RoboCommandCompletedEventArgs.cs" />
     <Compile Include="SelectionOptions.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="RoboSharp.nuspec" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>call "D:\Users\terry\Documents\Visual Studio 2015\Projects\VisualStudioNuspecUpdater\VisualStudioNuspecUpdater\bin\Release\VisualStudioNuspecUpdater.exe" $(ProjectDir)RoboSharp.nuspec</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

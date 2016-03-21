@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace RoboSharp
 {
     public class SelectionOptions
     {
+        #region Option Constants
+
         private const string ONLY_COPY_ARCHIVE_FILES = "/A ";
         private const string ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG = "/M ";
         private const string INCLUDE_ATTRIBUTES = "/IA:{0} ";
@@ -32,6 +30,10 @@ namespace RoboSharp
         private const string COMPENSATE_FOR_DST_DIFFERENCE = "/DST ";
         private const string EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES = "/XJD ";
         private const string EXCLUDE_JUNCTION_POINTS_FOR_FILES = "/XJF ";
+
+        #endregion Option Constants
+
+        #region Public Properties
 
         /// <summary>
         /// Copies only files for which the Archive attribute is set.
@@ -162,9 +164,13 @@ namespace RoboSharp
         /// </summary>
         public bool ExcludeJunctionPointsForFiles { get; set; }
 
+        #endregion Public Properties
+
         internal string Parse()
         {
             var options = new StringBuilder();
+
+            #region Set Options
 
             if (OnlyCopyArchiveFiles)
                 options.Append(ONLY_COPY_ARCHIVE_FILES);
@@ -175,13 +181,9 @@ namespace RoboSharp
             if (!string.IsNullOrWhiteSpace(ExcludeAttributes))
                 options.Append(string.Format(EXCLUDE_ATTRIBUTES, ExcludeAttributes.CleanOptionInput()));
             if (!string.IsNullOrWhiteSpace(ExcludeFiles))
-            {
                 options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
-            }
             if (!string.IsNullOrWhiteSpace(ExcludeDirectories))
-            {
                 options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
-            }
             if (ExcludeChanged)
                 options.Append(EXCLUDE_CHANGED);
             if (ExcludeNewer)
@@ -218,6 +220,8 @@ namespace RoboSharp
                 options.Append(USE_FAT_FILE_TIMES);
             if (CompensateForDstDifference)
                 options.Append(COMPENSATE_FOR_DST_DIFFERENCE);
+
+            #endregion Set Options
 
             return options.ToString();
         }

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace RoboSharp
 {
     public class CopyOptions
     {
+        #region Option Constants
+
         internal const string COPY_SUBDIRECTORIES = "/S ";
         internal const string COPY_SUBDIRECTORIES_INCLUDING_EMPTY = "/E ";
         internal const string DEPTH = "/LEV:{0} ";
@@ -42,10 +40,17 @@ namespace RoboSharp
         internal const string DO_NOT_COPY_DIRECTORY_INFO = "/NODCOPY ";
         internal const string DO_NOT_USE_WINDOWS_COPY_OFFLOAD = "/NOOFFLOAD ";
 
+        #endregion Option Constants
+
+        #region Option Defaults
 
         private string fileFilter = "*.*";
         private string copyFlags = "DAT";
         private string directoryCopyFlags = "DA";
+
+        #endregion Option Defaults
+
+        #region Public Properties
 
         /// <summary>
         /// The source file path where the RoboCommand is copying files from.
@@ -267,6 +272,8 @@ namespace RoboSharp
         /// </summary>
         public bool DoNotUseWindowsCopyOffload { get; set; }
 
+        #endregion Public Properties
+
         internal string Parse()
         {
             var options = new StringBuilder();
@@ -276,10 +283,14 @@ namespace RoboSharp
             options.Append(Destination + " ");
             options.Append(FileFilter + " ");
 
-            // Set options
-            options.Append(string.Format(COPY_FLAGS, CopyFlags.CleanOptionInput()));
-            options.Append(string.Format(DIRECTORY_COPY_FLAGS, DirectoryCopyFlags.CleanOptionInput()));
+            #region Set Options
+            var cleanedCopyFlags = CopyFlags.CleanOptionInput();
+            var cleanedDirectoryCopyFlags = DirectoryCopyFlags.CleanOptionInput();
 
+            if (!string.IsNullOrWhiteSpace(cleanedCopyFlags))
+                options.Append(string.Format(COPY_FLAGS, cleanedCopyFlags));
+            if (!string.IsNullOrWhiteSpace(cleanedDirectoryCopyFlags))
+                options.Append(string.Format(DIRECTORY_COPY_FLAGS, cleanedDirectoryCopyFlags));
             if (CopySubdirectories)
                 options.Append(COPY_SUBDIRECTORIES);
             if (CopySubdirectoriesIncludingEmpty)
@@ -342,6 +353,7 @@ namespace RoboSharp
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
             if (DoNotUseWindowsCopyOffload)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
+            #endregion Set Options
 
             return options.ToString();
         }
