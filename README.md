@@ -1,5 +1,7 @@
+
 ![logo](robosharp.png?raw=true)
 # RoboSharp
+### Now available on nuget! https://www.nuget.org/packages/RoboSharp/
 RoboSharp is a .NET wrapper for the awesome Robocopy windows application.
 
 Robocopy is a very extensive file copy application written by microsoft and included in modern versions of Windows. To learn more about Robocopy, visit the documentation page at http://technet.microsoft.com/en-us/library/cc733145.aspx.
