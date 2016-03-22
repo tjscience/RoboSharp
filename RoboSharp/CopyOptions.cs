@@ -46,7 +46,7 @@ namespace RoboSharp
 
         private string fileFilter = "*.*";
         private string copyFlags = "DAT";
-        private string directoryCopyFlags = "DA";
+        private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
         #endregion Option Defaults
 
@@ -276,6 +276,7 @@ namespace RoboSharp
 
         internal string Parse()
         {
+            var version = VersionManager.Version;
             var options = new StringBuilder();
 
             // Set Source, Destination and FileFilter
@@ -303,7 +304,7 @@ namespace RoboSharp
                 options.Append(ENABLE_BACKUP_MODE);
             if (EnableRestartModeWithBackupFallback)
                 options.Append(ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK);
-            if (UseUnbufferedIo)
+            if (UseUnbufferedIo && version >= 6.2)
                 options.Append(USE_UNBUFFERED_IO);
             if (EnableEfsRawMode)
                 options.Append(ENABLE_EFSRAW_MODE);
@@ -349,9 +350,9 @@ namespace RoboSharp
                 options.Append(COPY_SYMBOLIC_LINK);
             if (MultiThreadedCopiesCount > 0)
                 options.Append(string.Format(MULTITHREADED_COPIES_COUNT, MultiThreadedCopiesCount));
-            if (DoNotCopyDirectoryInfo)
+            if (DoNotCopyDirectoryInfo && version >= 6.2)
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
-            if (DoNotUseWindowsCopyOffload)
+            if (DoNotUseWindowsCopyOffload && version >= 6.2)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
             #endregion Set Options
 
