@@ -1,0 +1,15 @@
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\bin\Debug\RoboSharp.BackupApp.exe.config
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\bin\Debug\RoboSharp.BackupApp.exe
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\bin\Debug\RoboSharp.BackupApp.pdb
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\bin\Debug\RoboSharp.dll
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\bin\Debug\RoboSharp.pdb
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.csprojResolveAssemblyReference.cache
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\MainWindow.baml
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\MainWindow.g.cs
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\App.g.cs
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp_MarkupCompile.cache
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.g.resources
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.Properties.Resources.resources
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.csproj.GenerateResource.Cache
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.exe
+D:\source\robosharp\RoboSharp\RoboSharp.BackupApp\obj\Debug\RoboSharp.BackupApp.pdb

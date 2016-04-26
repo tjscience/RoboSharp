@@ -1,0 +1,4 @@
+D:\source\robosharp\RoboSharp\RoboSharp\bin\Debug\RoboSharp.dll
+D:\source\robosharp\RoboSharp\RoboSharp\bin\Debug\RoboSharp.pdb
+D:\source\robosharp\RoboSharp\RoboSharp\obj\Debug\RoboSharp.dll
+D:\source\robosharp\RoboSharp\RoboSharp\obj\Debug\RoboSharp.pdb
