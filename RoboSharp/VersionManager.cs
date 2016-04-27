@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Management;
 using System.Text;
@@ -53,7 +54,7 @@ namespace RoboSharp
             var segments = version.Split(new char[] { '.' });
             var major = Convert.ToDouble(segments[0]);
             var otherSegments = segments.Skip(1);
-            var dec = Convert.ToDouble("." + string.Join("", otherSegments));
+            var dec = Convert.ToDouble("." + string.Join("", otherSegments), CultureInfo.InvariantCulture);
             return major + dec;
         }
     }
