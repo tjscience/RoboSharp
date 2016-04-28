@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -280,9 +281,9 @@ namespace RoboSharp
             var options = new StringBuilder();
 
             // Set Source, Destination and FileFilter
-            options.Append(Source + " ");
-            options.Append(Destination + " ");
-            options.Append(FileFilter + " ");
+            options.Append($"\"{Source}\" ");
+            options.Append($"\"{Destination}\" ");
+            options.Append($"\"{FileFilter}\" ");
 
             #region Set Options
             var cleanedCopyFlags = CopyFlags.CleanOptionInput();
