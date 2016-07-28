@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -80,7 +81,7 @@ namespace RoboSharp
             {
                 // copy progress data
                 if (OnCopyProgressChanged != null)
-                    OnCopyProgressChanged(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""))));
+                    OnCopyProgressChanged(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
             }
             else
             {
