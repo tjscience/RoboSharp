@@ -149,6 +149,7 @@ namespace RoboSharp
         {
             if (process != null && isPaused == false)
             {
+                Debugger.Instance.DebugMessage("RoboCommand execution paused.");
                 process.Suspend();
                 isPaused = true;
             }
@@ -158,24 +159,25 @@ namespace RoboSharp
         {
             if (process != null && isPaused == true)
             {
+                Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
                 process.Resume();
                 isPaused = false;
             }
         }
 
-        public void Start(string domain = "", string username = "", string password = "")
+        public Task Start(string domain = "", string username = "", string password = "")
         {
+            Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
 
             // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
             {
+                Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-
-                if (OnCommandError != null)
-                    OnCommandError(this, new ErrorEventArgs("The Source directory does not exist."));
-
-                return;
+                OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                return null;
             }
 
             #region Create Destination Directory
@@ -185,22 +187,20 @@ namespace RoboSharp
                 var dInfo = Directory.CreateDirectory(CopyOptions.Destination.Replace("\"", ""));
                 if (!dInfo.Exists)
                 {
+                    Debugger.Instance.DebugMessage("The destination directory does not exist.");
                     hasError = true;
-
-                    if (OnCommandError != null)
-                        OnCommandError(this, new ErrorEventArgs("The Destination directory is invalid."));
-
-                    return;
+                    OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    return null;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debugger.Instance.DebugMessage(ex.Message);
                 hasError = true;
-
-                if (OnCommandError != null)
-                    OnCommandError(this, new ErrorEventArgs("The Destination directory is invalid."));
-
-                return;
+                OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                return null;
             }
 
             #endregion
@@ -208,23 +208,33 @@ namespace RoboSharp
             backupTask = Task.Run(() =>
             {
                 process = new Process();
-                
+
                 if (!string.IsNullOrEmpty(domain))
+                {
+                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
                     process.StartInfo.Domain = domain;
+                }
 
                 if (!string.IsNullOrEmpty(username))
+                {
+                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
                     process.StartInfo.UserName = username;
+                }
 
                 if (!string.IsNullOrEmpty(password))
                 {
+                    Debugger.Instance.DebugMessage("RoboCommand password entered.");
                     var ssPwd = new System.Security.SecureString();
+
                     for (int x = 0; x < password.Length; x++)
                     {
                         ssPwd.AppendChar(password[x]);
                     }
+
                     process.StartInfo.Password = ssPwd;
                 }
-                
+
+                Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
@@ -234,10 +244,12 @@ namespace RoboSharp
                 process.StartInfo.Arguments = GenerateParameters();
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
+                Debugger.Instance.DebugMessage("RoboCopy process started.");
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
+                Debugger.Instance.DebugMessage("RoboCopy process exited.");
             });
 
             backupTask.ContinueWith((continuation) =>
@@ -253,6 +265,8 @@ namespace RoboSharp
 
                 Stop();
             });
+
+            return backupTask;
         }
 
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
@@ -276,10 +290,15 @@ namespace RoboSharp
 
         private string GenerateParameters()
         {
+            Debugger.Instance.DebugMessage("Generating parameters...");
+            Debugger.Instance.DebugMessage(CopyOptions);
             var parsedCopyOptions = CopyOptions.Parse();
             var parsedSelectionOptions = SelectionOptions.Parse();
+            Debugger.Instance.DebugMessage("SelectionOptions parsed.");
             var parsedRetryOptions = RetryOptions.Parse();
+            Debugger.Instance.DebugMessage("RetryOptions parsed.");
             var parsedLoggingOptions = LoggingOptions.Parse();
+            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
             return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions, 

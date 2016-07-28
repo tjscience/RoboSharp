@@ -47,6 +47,7 @@
     <Compile Include="ApplicationConstants.cs" />
     <Compile Include="CopyOptions.cs" />
     <Compile Include="CopyProgressEventArgs.cs" />
+    <Compile Include="Debugger.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FileProcessedEventArgs.cs" />
     <Compile Include="ErrorEventArgs.cs" />
@@ -61,7 +62,9 @@
     <Compile Include="VersionManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="RoboSharp.nuspec" />
+    <None Include="RoboSharp.nuspec">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

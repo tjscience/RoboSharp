@@ -277,6 +277,7 @@ namespace RoboSharp
 
         internal string Parse()
         {
+            Debugger.Instance.DebugMessage("Parsing CopyOptions...");
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
@@ -284,17 +285,27 @@ namespace RoboSharp
             options.Append($"\"{Source}\" ");
             options.Append($"\"{Destination}\" ");
             options.Append($"\"{FileFilter}\" ");
+            Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options
             var cleanedCopyFlags = CopyFlags.CleanOptionInput();
             var cleanedDirectoryCopyFlags = DirectoryCopyFlags.CleanOptionInput();
 
             if (!string.IsNullOrWhiteSpace(cleanedCopyFlags))
+            {
                 options.Append(string.Format(COPY_FLAGS, cleanedCopyFlags));
+                Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
+            }
             if (!string.IsNullOrWhiteSpace(cleanedDirectoryCopyFlags))
+            {
                 options.Append(string.Format(DIRECTORY_COPY_FLAGS, cleanedDirectoryCopyFlags));
+                Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
+            }
             if (CopySubdirectories)
+            {
                 options.Append(COPY_SUBDIRECTORIES);
+                Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
+            }
             if (CopySubdirectoriesIncludingEmpty)
                 options.Append(COPY_SUBDIRECTORIES_INCLUDING_EMPTY);
             if (Depth > 0)
@@ -357,7 +368,9 @@ namespace RoboSharp
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
             #endregion Set Options
 
-            return options.ToString();
+            var parsedOptions = options.ToString();
+            Debugger.Instance.DebugMessage(string.Format("CopyOptions parsed ({0}).", parsedOptions));
+            return parsedOptions;
         }
     }
 }
