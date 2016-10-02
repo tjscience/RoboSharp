@@ -206,7 +206,7 @@ namespace RoboSharp
 
             #endregion
 
-            backupTask = Task.Run(() =>
+            backupTask = Task.Factory.StartNew(() =>
             {
                 process = new Process();
 
