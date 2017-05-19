@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>RoboSharp</id>
-    <version>1.0.25</version>
+    <version>1.0.26</version>
     <title>RoboSharp</title>
     <authors>Terry Phillips</authors>
     <owners>Terry Phillips</owners>
@@ -11,7 +11,10 @@
     <iconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</description>
-    <copyright>Copyright 2016</copyright>
+    <copyright>Copyright 2017</copyright>
     <tags></tags>
+    <dependencies>
+      <dependency id="TaskParallelLibrary" version="1.0.2856.0" />
+    </dependencies>
   </metadata>
 </package>

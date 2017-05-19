@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace RoboSharp
 {
@@ -291,12 +290,12 @@ namespace RoboSharp
             var cleanedCopyFlags = CopyFlags.CleanOptionInput();
             var cleanedDirectoryCopyFlags = DirectoryCopyFlags.CleanOptionInput();
 
-            if (!string.IsNullOrWhiteSpace(cleanedCopyFlags))
+            if (!cleanedCopyFlags.IsNullOrWhiteSpace())
             {
                 options.Append(string.Format(COPY_FLAGS, cleanedCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
             }
-            if (!string.IsNullOrWhiteSpace(cleanedDirectoryCopyFlags))
+            if (!cleanedDirectoryCopyFlags.IsNullOrWhiteSpace())
             {
                 options.Append(string.Format(DIRECTORY_COPY_FLAGS, cleanedDirectoryCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
@@ -338,9 +337,9 @@ namespace RoboSharp
                 options.Append(MOVE_FILES);
             if (MoveFilesAndDirectories)
                 options.Append(MOVE_FILES_AND_DIRECTORIES);
-            if (!string.IsNullOrWhiteSpace(AddAttributes))
+            if (!AddAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(ADD_ATTRIBUTES, AddAttributes.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(RemoveAttributes))
+            if (!RemoveAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(REMOVE_ATTRIBUTES, RemoveAttributes.CleanOptionInput()));
             if (CreateDirectoryAndFileTree)
                 options.Append(CREATE_DIRECTORY_AND_FILE_TREE);
@@ -352,7 +351,7 @@ namespace RoboSharp
                 options.Append(string.Format(MONITOR_SOURCE_CHANGES_LIMIT, MonitorSourceChangesLimit));
             if (MonitorSourceTimeLimit > 0)
                 options.Append(string.Format(MONITOR_SOURCE_TIME_LIMIT, MonitorSourceTimeLimit));
-            if (!string.IsNullOrWhiteSpace(RunHours))
+            if (!RunHours.IsNullOrWhiteSpace())
                 options.Append(string.Format(RUN_HOURS, RunHours.CleanOptionInput()));
             if (CheckPerFile)
                 options.Append(CHECK_PER_FILE);

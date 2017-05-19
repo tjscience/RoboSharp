@@ -154,13 +154,13 @@ namespace RoboSharp
                 options.Append(NO_PROGRESS);
             if (ShowEstimatedTimeOfArrival)
                 options.Append(SHOW_ESTIMATED_TIME_OF_ARRIVAL);
-            if (!string.IsNullOrWhiteSpace(LogPath))
+            if (!LogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(LOG_PATH, LogPath));
-            if (!string.IsNullOrWhiteSpace(AppendLogPath))
+            if (!AppendLogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(APPEND_LOG_PATH, AppendLogPath));
-            if (!string.IsNullOrWhiteSpace(UnicodeLogPath))
+            if (!UnicodeLogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(UNICODE_LOG_PATH, UnicodeLogPath));
-            if (!string.IsNullOrWhiteSpace(AppendUnicodeLogPath))
+            if (!AppendUnicodeLogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(APPEND_UNICODE_LOG_PATH, AppendUnicodeLogPath));
             if (OutputToRoboSharpAndLog)
                 options.Append(OUTPUT_TO_ROBOSHARP_AND_LOG);

@@ -48,12 +48,12 @@ namespace RoboSharp
 
         private static double GetOsVersionNumber(string version)
         {
-            if (string.IsNullOrWhiteSpace(version))
+            if (version.IsNullOrWhiteSpace())
                 return 0;
 
             var segments = version.Split(new char[] { '.' });
             var major = Convert.ToDouble(segments[0]);
-            var otherSegments = segments.Skip(1);
+            var otherSegments = segments.Skip(1).ToArray();
             var dec = Convert.ToDouble("." + string.Join("", otherSegments), CultureInfo.InvariantCulture);
             return major + dec;
         }

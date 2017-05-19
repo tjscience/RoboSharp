@@ -176,13 +176,13 @@ namespace RoboSharp
                 options.Append(ONLY_COPY_ARCHIVE_FILES);
             if (OnlyCopyArchiveFilesAndResetArchiveFlag)
                 options.Append(ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG);
-            if (!string.IsNullOrWhiteSpace(IncludeAttributes))
+            if (!IncludeAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(INCLUDE_ATTRIBUTES, IncludeAttributes.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(ExcludeAttributes))
+            if (!ExcludeAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_ATTRIBUTES, ExcludeAttributes.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(ExcludeFiles))
+            if (!ExcludeFiles.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
-            if (!string.IsNullOrWhiteSpace(ExcludeDirectories))
+            if (!ExcludeDirectories.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
             if (ExcludeChanged)
                 options.Append(EXCLUDE_CHANGED);
@@ -202,13 +202,13 @@ namespace RoboSharp
                 options.Append(string.Format(MAX_FILE_SIZE, MaxFileSize));
             if (MinFileSize > 0)
                 options.Append(string.Format(MIN_FILE_SIZE, MinFileSize));
-            if (!string.IsNullOrWhiteSpace(MaxFileAge))
+            if (!MaxFileAge.IsNullOrWhiteSpace())
                 options.Append(string.Format(MAX_FILE_AGE, MaxFileAge.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(MinFileAge))
+            if (!MinFileAge.IsNullOrWhiteSpace())
                 options.Append(string.Format(MIN_FILE_AGE, MinFileAge.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(MaxLastAccessDate))
+            if (!MaxLastAccessDate.IsNullOrWhiteSpace())
                 options.Append(string.Format(MAX_LAST_ACCESS_DATE, MaxLastAccessDate.CleanOptionInput()));
-            if (!string.IsNullOrWhiteSpace(MinLastAccessDate))
+            if (!MinLastAccessDate.IsNullOrWhiteSpace())
                 options.Append(string.Format(MIN_LAST_ACCESS_DATE, MinLastAccessDate.CleanOptionInput()));
             if (ExcludeJunctionPoints)
                 options.Append(EXCLUDE_JUNCTION_POINTS);

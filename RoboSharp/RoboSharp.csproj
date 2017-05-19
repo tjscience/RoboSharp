@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RoboSharp</RootNamespace>
     <AssemblyName>RoboSharp</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -38,9 +38,12 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Threading, Version=1.0.2856.102, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\TaskParallelLibrary.1.0.2856.0\lib\Net35\System.Threading.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -52,6 +55,7 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FileProcessedEventArgs.cs" />
     <Compile Include="ErrorEventArgs.cs" />
+    <Compile Include="Lazy.cs" />
     <Compile Include="LoggingOptions.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ProcessedFileInfo.cs" />
@@ -60,9 +64,11 @@
     <Compile Include="RoboCommand.cs" />
     <Compile Include="RoboCommandCompletedEventArgs.cs" />
     <Compile Include="SelectionOptions.cs" />
+    <Compile Include="StringExtensions.cs" />
     <Compile Include="VersionManager.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="RoboSharp.nuspec">
       <SubType>Designer</SubType>
     </None>
