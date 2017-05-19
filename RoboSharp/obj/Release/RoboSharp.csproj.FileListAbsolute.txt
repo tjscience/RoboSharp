@@ -1,5 +1,0 @@
-D:\Users\terry\Source\Repos\RoboSharp\RoboSharp\bin\Release\RoboSharp.dll
-D:\Users\terry\Source\Repos\RoboSharp\RoboSharp\bin\Release\RoboSharp.pdb
-D:\Users\terry\Source\Repos\RoboSharp\RoboSharp\obj\Release\RoboSharp.csprojResolveAssemblyReference.cache
-D:\Users\terry\Source\Repos\RoboSharp\RoboSharp\obj\Release\RoboSharp.dll
-D:\Users\terry\Source\Repos\RoboSharp\RoboSharp\obj\Release\RoboSharp.pdb

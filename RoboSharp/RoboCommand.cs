@@ -74,7 +74,7 @@ namespace RoboSharp
             if (e.Data == null)
                 return;
             var data = e.Data.Trim().Replace("\0", "");
-            if (string.IsNullOrWhiteSpace(data))
+            if (data.IsNullOrWhiteSpace())
                 return;
 
             if (data.EndsWith("%", StringComparison.Ordinal))
@@ -272,7 +272,7 @@ namespace RoboSharp
 
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (OnCommandError != null && !string.IsNullOrWhiteSpace(e.Data))
+            if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
                 OnCommandError(this, new ErrorEventArgs(e.Data));
@@ -281,7 +281,7 @@ namespace RoboSharp
 
         public void Stop()
         {
-            if (process != null && string.IsNullOrWhiteSpace(CopyOptions.RunHours) && !process.HasExited)
+            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !process.HasExited)
             {
                 process.Kill();
                 process.Dispose();

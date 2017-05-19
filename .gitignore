@@ -1,0 +1,6 @@
+/.vs
+bin
+obj
+*.user
+/packages
+/*.sln.GhostDoc.xml
