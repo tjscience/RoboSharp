@@ -295,7 +295,7 @@ namespace RoboSharp
                 options.Append(string.Format(COPY_FLAGS, cleanedCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
             }
-            if (!cleanedDirectoryCopyFlags.IsNullOrWhiteSpace())
+            if (!cleanedDirectoryCopyFlags.IsNullOrWhiteSpace() && version >= 5.1260026)
             {
                 options.Append(string.Format(DIRECTORY_COPY_FLAGS, cleanedDirectoryCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
