@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
-    <id>RoboSharp</id>
-    <version>1.0.27</version>
-    <title>RoboSharp</title>
+    <id>RoboSharpNET35</id>
+    <version>1.0.28</version>
+    <title>RoboSharp .NET 3.5</title>
     <authors>Terry Phillips</authors>
     <owners>Terry Phillips</owners>
     <licenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</licenseUrl>
