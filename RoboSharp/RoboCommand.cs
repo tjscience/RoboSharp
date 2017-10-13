@@ -80,8 +80,7 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
-                if (OnCopyProgressChanged != null)
-                    OnCopyProgressChanged(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
+                OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
             }
             else
             {
@@ -206,7 +205,7 @@ namespace RoboSharp
 
             #endregion
 
-            backupTask = Task.Factory.StartNew(() =>
+            backupTask = Task.Run(() =>
             {
                 process = new Process();
 

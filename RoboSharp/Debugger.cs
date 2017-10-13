@@ -13,7 +13,7 @@ namespace RoboSharp
 
         public static Debugger Instance
         {
-            get { return instance.Value(); }
+            get { return instance.Value; }
         }
 
         public EventHandler<DebugMessageArgs> DebugMessageEvent;
