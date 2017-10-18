@@ -15,6 +15,7 @@ namespace RoboSharp
         private Process process;
         private Task backupTask;
         private bool hasError;
+        private bool hasExited;
         private bool isPaused;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
@@ -244,6 +245,7 @@ namespace RoboSharp
                 process.StartInfo.Arguments = GenerateParameters();
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
+                process.Exited += Process_Exited;
                 Debugger.Instance.DebugMessage("RoboCopy process started.");
                 process.Start();
                 process.BeginOutputReadLine();
@@ -277,12 +279,18 @@ namespace RoboSharp
                 OnCommandError(this, new ErrorEventArgs(e.Data));
             }
         }
-
+        
+	    void Process_Exited(object sender, System.EventArgs e)
+	    {
+		    hasExited = true;
+    	}
+        
         public void Stop()
         {
-            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !process.HasExited)
+            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
             {
                 process.Kill();
+                hasExited = true;
                 process.Dispose();
                 process = null;
             }
