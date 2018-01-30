@@ -21,6 +21,7 @@ namespace RoboSharp
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
         private LoggingOptions loggingOptions = new LoggingOptions();
+        private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
 
         #endregion Private Vars
 
@@ -46,6 +47,11 @@ namespace RoboSharp
         {
             get { return loggingOptions; }
             set { loggingOptions = value; }
+        }
+
+        public RoboSharpConfiguration Configuration
+        {
+            get { return configuration; }
         }
 
         #endregion Public Vars
@@ -111,7 +117,7 @@ namespace RoboSharp
                     }
                     else
                     {
-                        if (OnError != null && Regex.IsMatch(data, @" ERROR \d{1,3} \(0x\d{8}\) "))
+                        if (OnError != null && Regex.IsMatch(data, $" {Configuration.ErrorToken} " + @"\d{1,3} \(0x\d{8}\) "))
                         {
                             var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
 
@@ -241,7 +247,7 @@ namespace RoboSharp
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.FileName = "ROBOCOPY.exe";
+                process.StartInfo.FileName = Configuration.RoboCopyExe;
                 process.StartInfo.Arguments = GenerateParameters();
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
