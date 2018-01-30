@@ -57,9 +57,14 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ProcessedFileInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Results\ResultsBuilder.cs" />
+    <Compile Include="Results\RoboCopyExitCodes.cs" />
+    <Compile Include="Results\RoboCopyResultsStatus.cs" />
+    <Compile Include="Results\Statistic.cs" />
     <Compile Include="RetryOptions.cs" />
     <Compile Include="RoboCommand.cs" />
     <Compile Include="RoboCommandCompletedEventArgs.cs" />
+    <Compile Include="Results\RoboCopyResults.cs" />
     <Compile Include="RoboSharpConfiguration.cs" />
     <Compile Include="SelectionOptions.cs" />
     <Compile Include="StringExtensions.cs" />
@@ -70,6 +75,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

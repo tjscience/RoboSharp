@@ -23,6 +23,9 @@ namespace RoboSharp
         private LoggingOptions loggingOptions = new LoggingOptions();
         private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
 
+        private Results.ResultsBuilder resultsBuilder;
+        private Results.RoboCopyResults results;
+
         #endregion Private Vars
 
         #region Public Vars
@@ -78,6 +81,8 @@ namespace RoboSharp
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            resultsBuilder?.AddOutput(e.Data);
+
             if (e.Data == null)
                 return;
             var data = e.Data.Trim().Replace("\0", "");
@@ -172,10 +177,19 @@ namespace RoboSharp
             }
         }
 
+        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        {
+            await Start(domain, username, password);
+            return GetResults();
+        }
+
         public Task Start(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
+
+            resultsBuilder = new Results.ResultsBuilder();
+            results = null;
 
             // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
@@ -257,6 +271,7 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
+                results = resultsBuilder.BuildResults(process.ExitCode);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             });
 
@@ -267,7 +282,7 @@ namespace RoboSharp
                     // backup is complete
                     if (OnCommandCompleted != null)
                     {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
+                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
                     }
                 }
 
@@ -300,6 +315,11 @@ namespace RoboSharp
                 process.Dispose();
                 process = null;
             }
+        }
+
+        public Results.RoboCopyResults GetResults()
+        {
+            return results;
         }
 
         private string GenerateParameters()
