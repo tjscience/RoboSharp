@@ -170,6 +170,9 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
+	    
+	    var tokenSource = new CancellationTokenSource();
+	    CancellationToken cancellationToken = tokenSource.Token;
 
             // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
@@ -178,7 +181,7 @@ namespace RoboSharp
                 hasError = true;
                 OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                return null;
+		tokenSource.Cancel(true);
             }
 
             #region Create Destination Directory
@@ -192,7 +195,7 @@ namespace RoboSharp
                     hasError = true;
                     OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                    return null;
+                    tokenSource.Cancel(true);
                 }
             }
             catch (Exception ex)
@@ -201,13 +204,15 @@ namespace RoboSharp
                 hasError = true;
                 OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                return null;
+                tokenSource.Cancel(true);
             }
 
             #endregion
 
             backupTask = Task.Run(() =>
             {
+	    	cancellationToken.ThrowIfCancellationRequested();
+		
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
@@ -252,7 +257,7 @@ namespace RoboSharp
                 process.BeginErrorReadLine();
                 process.WaitForExit();
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            });
+            },cancellationToken);
 
             backupTask.ContinueWith((continuation) =>
             {
