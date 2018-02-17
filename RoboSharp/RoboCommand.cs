@@ -94,6 +94,7 @@ namespace RoboSharp
                     {
                         var file = new ProcessedFileInfo();
                         file.FileClass = "New Dir";
+                        file.FileClassType = FileClassType.NewDir;
                         long size;
                         long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out size);
                         file.Size = size;
@@ -104,6 +105,7 @@ namespace RoboSharp
                     {
                         var file = new ProcessedFileInfo();
                         file.FileClass = splitData[0].Trim();
+                        file.FileClassType = FileClassType.File;
                         long size = 0;
                         long.TryParse(splitData[1].Trim(), out size);
                         file.Size = size;
@@ -136,6 +138,7 @@ namespace RoboSharp
                                 {
                                     var file = new ProcessedFileInfo();
                                     file.FileClass = "System Message";
+                                    file.FileClassType = FileClassType.SystemMessage;
                                     file.Size = 0;
                                     file.Name = data;
                                     OnFileProcessed(this, new FileProcessedEventArgs(file));
