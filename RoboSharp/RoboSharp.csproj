@@ -53,6 +53,7 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FileProcessedEventArgs.cs" />
     <Compile Include="ErrorEventArgs.cs" />
+    <Compile Include="ImpersonateUser.cs" />
     <Compile Include="LoggingOptions.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="ProcessedFileInfo.cs" />
