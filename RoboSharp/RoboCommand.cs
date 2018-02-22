@@ -9,349 +9,358 @@ using System.Threading.Tasks;
 
 namespace RoboSharp
 {
-    public class RoboCommand : IDisposable
-    {
-        #region Private Vars
+	public class RoboCommand : IDisposable
+	{
+		#region Private Vars
 
-        private Process process;
-        private Task backupTask;
-        private bool hasError;
-        private bool hasExited;
-        private bool isPaused;
-        private CopyOptions copyOptions = new CopyOptions();
-        private SelectionOptions selectionOptions = new SelectionOptions();
-        private RetryOptions retryOptions = new RetryOptions();
-        private LoggingOptions loggingOptions = new LoggingOptions();
-        private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
+		private Process process;
+		private Task backupTask;
+		private bool hasError;
+		private bool hasExited;
+		private bool isPaused;
+		private CopyOptions copyOptions = new CopyOptions();
+		private SelectionOptions selectionOptions = new SelectionOptions();
+		private RetryOptions retryOptions = new RetryOptions();
+		private LoggingOptions loggingOptions = new LoggingOptions();
+		private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
 
-        #endregion Private Vars
+		#endregion Private Vars
 
-        #region Public Vars
-        public bool IsPaused { get { return isPaused; } }
-        public string CommandOptions { get { return GenerateParameters(); } }    
-        public CopyOptions CopyOptions
-        {
-            get { return copyOptions; }
-            set { copyOptions = value; }
-        }
-        public SelectionOptions SelectionOptions
-        {
-            get { return selectionOptions; }
-            set { selectionOptions = value; }
-        }
-        public RetryOptions RetryOptions
-        {
-            get { return retryOptions; }
-            set { retryOptions = value; }
-        }
-        public LoggingOptions LoggingOptions
-        {
-            get { return loggingOptions; }
-            set { loggingOptions = value; }
-        }
+		#region Public Vars
+		public bool IsPaused { get { return isPaused; } }
+		public string CommandOptions { get { return GenerateParameters(); } }
+		public CopyOptions CopyOptions
+		{
+			get { return copyOptions; }
+			set { copyOptions = value; }
+		}
+		public SelectionOptions SelectionOptions
+		{
+			get { return selectionOptions; }
+			set { selectionOptions = value; }
+		}
+		public RetryOptions RetryOptions
+		{
+			get { return retryOptions; }
+			set { retryOptions = value; }
+		}
+		public LoggingOptions LoggingOptions
+		{
+			get { return loggingOptions; }
+			set { loggingOptions = value; }
+		}
 
-        public RoboSharpConfiguration Configuration
-        {
-            get { return configuration; }
-        }
+		public RoboSharpConfiguration Configuration
+		{
+			get { return configuration; }
+		}
 
-        #endregion Public Vars
+		#endregion Public Vars
 
-        #region Events
+		#region Events
 
-        public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
-        public event FileProcessedHandler OnFileProcessed;
-        public delegate void CommandErrorHandler(object sender, ErrorEventArgs e);
-        public event CommandErrorHandler OnCommandError;
-        public delegate void ErrorHandler(object sender, ErrorEventArgs e);
-        public event ErrorHandler OnError;
-        public delegate void CommandCompletedHandler(object sender, RoboCommandCompletedEventArgs e);
-        public event CommandCompletedHandler OnCommandCompleted;
-        public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
-        public event CopyProgressHandler OnCopyProgressChanged;
+		public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
+		public event FileProcessedHandler OnFileProcessed;
+		public delegate void CommandErrorHandler(object sender, ErrorEventArgs e);
+		public event CommandErrorHandler OnCommandError;
+		public delegate void ErrorHandler(object sender, ErrorEventArgs e);
+		public event ErrorHandler OnError;
+		public delegate void CommandCompletedHandler(object sender, RoboCommandCompletedEventArgs e);
+		public event CommandCompletedHandler OnCommandCompleted;
+		public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
+		public event CopyProgressHandler OnCopyProgressChanged;
 
-        #endregion
+		#endregion
 
-        public RoboCommand()
-        {
-            
-        }
+		public RoboCommand()
+		{
 
-        void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (e.Data == null)
-                return;
-            var data = e.Data.Trim().Replace("\0", "");
-            if (data.IsNullOrWhiteSpace())
-                return;
+		}
 
-            if (data.EndsWith("%", StringComparison.Ordinal))
-            {
-                // copy progress data
-                OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
-            }
-            else
-            {
-                if (OnFileProcessed != null)
-                {
-                    var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+		void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+		{
+			if (e.Data == null)
+				return;
+			var data = e.Data.Trim().Replace("\0", "");
+			if (data.IsNullOrWhiteSpace())
+				return;
 
-                    if (splitData.Length == 2)
-                    {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = "New Dir";
-                        file.FileClassType = FileClassType.NewDir;
-                        long size;
-                        long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out size);
-                        file.Size = size;
-                        file.Name = splitData[1];
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
-                    }
-                    else if (splitData.Length == 3)
-                    {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = splitData[0].Trim();
-                        file.FileClassType = FileClassType.File;
-                        long size = 0;
-                        long.TryParse(splitData[1].Trim(), out size);
-                        file.Size = size;
-                        file.Name = splitData[2];
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
-                    }
-                    else
-                    {
-                        if (OnError != null && Regex.IsMatch(data, $" {Configuration.ErrorToken} " + @"\d{1,3} \(0x\d{8}\) "))
-                        {
-                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+			if (data.EndsWith("%", StringComparison.Ordinal))
+			{
+				// copy progress data
+				OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
+			}
+			else
+			{
+				if (OnFileProcessed != null)
+				{
+					var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-                            if(errorCode.Key != null)
-                            {
-                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value)));
-                            }
-                            else
-                            {
-                                OnError(this, new ErrorEventArgs(data));
-                            }
-                        }
-                        else
-                        {
-                            if (!data.StartsWith("----------"))
-                            {
-                                // Do not log errors that have already been logged
-                                var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
+					if (splitData.Length == 2)
+					{
+						var file = new ProcessedFileInfo();
+						file.FileClass = "New Dir";
+						file.FileClassType = FileClassType.NewDir;
+						long size;
+						long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out size);
+						file.Size = size;
+						file.Name = splitData[1];
+						OnFileProcessed(this, new FileProcessedEventArgs(file));
+					}
+					else if (splitData.Length == 3)
+					{
+						var file = new ProcessedFileInfo();
+						file.FileClass = splitData[0].Trim();
+						file.FileClassType = FileClassType.File;
+						long size = 0;
+						long.TryParse(splitData[1].Trim(), out size);
+						file.Size = size;
+						file.Name = splitData[2];
+						OnFileProcessed(this, new FileProcessedEventArgs(file));
+					}
+					else
+					{
+						if (OnError != null && Regex.IsMatch(data, $" {Configuration.ErrorToken} " + @"\d{1,3} \(0x\d{8}\) "))
+						{
+							var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
 
-                                if (errorCode.Key == null)
-                                {
-                                    var file = new ProcessedFileInfo();
-                                    file.FileClass = "System Message";
-                                    file.FileClassType = FileClassType.SystemMessage;
-                                    file.Size = 0;
-                                    file.Name = data;
-                                    OnFileProcessed(this, new FileProcessedEventArgs(file));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+							if (errorCode.Key != null)
+							{
+								OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value)));
+							}
+							else
+							{
+								OnError(this, new ErrorEventArgs(data));
+							}
+						}
+						else
+						{
+							if (!data.StartsWith("----------"))
+							{
+								// Do not log errors that have already been logged
+								var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
 
-        public void Pause()
-        {
-            if (process != null && isPaused == false)
-            {
-                Debugger.Instance.DebugMessage("RoboCommand execution paused.");
-                process.Suspend();
-                isPaused = true;
-            }
-        }
+								if (errorCode.Key == null)
+								{
+									var file = new ProcessedFileInfo();
+									file.FileClass = "System Message";
+									file.FileClassType = FileClassType.SystemMessage;
+									file.Size = 0;
+									file.Name = data;
+									OnFileProcessed(this, new FileProcessedEventArgs(file));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 
-        public void Resume()
-        {
-            if (process != null && isPaused == true)
-            {
-                Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
-                process.Resume();
-                isPaused = false;
-            }
-        }
+		public void Pause()
+		{
+			if (process != null && isPaused == false)
+			{
+				Debugger.Instance.DebugMessage("RoboCommand execution paused.");
+				process.Suspend();
+				isPaused = true;
+			}
+		}
 
-        public Task Start(string domain = "", string username = "", string password = "")
-        {
-            Debugger.Instance.DebugMessage("RoboCommand started execution.");
-            hasError = false;
-	    
-	    var tokenSource = new CancellationTokenSource();
-	    CancellationToken cancellationToken = tokenSource.Token;
+		public void Resume()
+		{
+			if (process != null && isPaused == true)
+			{
+				Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
+				process.Resume();
+				isPaused = false;
+			}
+		}
 
-            // make sure source path is valid
-            if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
-            {
-                Debugger.Instance.DebugMessage("The Source directory does not exist.");
-                hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
-                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-		tokenSource.Cancel(true);
-            }
+		public Task Start(string domain = "", string username = "", string password = "")
+		{
+			Debugger.Instance.DebugMessage("RoboCommand started execution.");
+			hasError = false;
 
-            #region Create Destination Directory
+			var tokenSource = new CancellationTokenSource();
+			CancellationToken cancellationToken = tokenSource.Token;
 
-            try
-            {
-                var dInfo = Directory.CreateDirectory(CopyOptions.Destination.Replace("\"", ""));
-                if (!dInfo.Exists)
-                {
-                    Debugger.Instance.DebugMessage("The destination directory does not exist.");
-                    hasError = true;
-                    OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
-                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                    tokenSource.Cancel(true);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debugger.Instance.DebugMessage(ex.Message);
-                hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
-                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                tokenSource.Cancel(true);
-            }
+			// Authentificate on Target Server
+			ImpersonatedUser impersonation = null;
+			if (!String.IsNullOrEmpty(username))
+				impersonation = new ImpersonatedUser(username, domain, password);
 
-            #endregion
+			// make sure source path is valid
+			if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
+			{
+				Debugger.Instance.DebugMessage("The Source directory does not exist.");
+				hasError = true;
+				OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
+				Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+				tokenSource.Cancel(true);
+			}
 
-            backupTask = Task.Run(() =>
-            {
-	    	cancellationToken.ThrowIfCancellationRequested();
-		
-                process = new Process();
+			#region Create Destination Directory
 
-                if (!string.IsNullOrEmpty(domain))
-                {
-                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
-                    process.StartInfo.Domain = domain;
-                }
+			try
+			{
+				var dInfo = Directory.CreateDirectory(CopyOptions.Destination.Replace("\"", ""));
+				if (!dInfo.Exists)
+				{
+					Debugger.Instance.DebugMessage("The destination directory does not exist.");
+					hasError = true;
+					OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+					Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+					tokenSource.Cancel(true);
+				}
+			}
+			catch (Exception ex)
+			{
+				Debugger.Instance.DebugMessage(ex.Message);
+				hasError = true;
+				OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+				Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+				tokenSource.Cancel(true);
+			}
 
-                if (!string.IsNullOrEmpty(username))
-                {
-                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
-                    process.StartInfo.UserName = username;
-                }
+			#endregion
 
-                if (!string.IsNullOrEmpty(password))
-                {
-                    Debugger.Instance.DebugMessage("RoboCommand password entered.");
-                    var ssPwd = new System.Security.SecureString();
+			// Close Authentification
+			if (impersonation != null)
+				impersonation.Dispose();
 
-                    for (int x = 0; x < password.Length; x++)
-                    {
-                        ssPwd.AppendChar(password[x]);
-                    }
+			backupTask = Task.Run(() =>
+			{
+				cancellationToken.ThrowIfCancellationRequested();
 
-                    process.StartInfo.Password = ssPwd;
-                }
+				process = new Process();
 
-                Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.FileName = Configuration.RoboCopyExe;
-                process.StartInfo.Arguments = GenerateParameters();
-                process.OutputDataReceived += process_OutputDataReceived;
-                process.ErrorDataReceived += process_ErrorDataReceived;
-                process.Exited += Process_Exited;
-                Debugger.Instance.DebugMessage("RoboCopy process started.");
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-                process.WaitForExit();
-                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            },cancellationToken);
+				if (!string.IsNullOrEmpty(domain))
+				{
+					Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
+					process.StartInfo.Domain = domain;
+				}
 
-            backupTask.ContinueWith((continuation) =>
-            {
-                if (!hasError)
-                {
-                    // backup is complete
-                    if (OnCommandCompleted != null)
-                    {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
-                    }
-                }
+				if (!string.IsNullOrEmpty(username))
+				{
+					Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
+					process.StartInfo.UserName = username;
+				}
 
-                Stop();
-            });
+				if (!string.IsNullOrEmpty(password))
+				{
+					Debugger.Instance.DebugMessage("RoboCommand password entered.");
+					var ssPwd = new System.Security.SecureString();
 
-            return backupTask;
-        }
+					for (int x = 0; x < password.Length; x++)
+					{
+						ssPwd.AppendChar(password[x]);
+					}
 
-        void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
-            {
-                hasError = true;
-                OnCommandError(this, new ErrorEventArgs(e.Data));
-            }
-        }
-        
-	    void Process_Exited(object sender, System.EventArgs e)
-	    {
-		    hasExited = true;
-    	}
-        
-        public void Stop()
-        {
-            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
-            {
-                process.Kill();
-                hasExited = true;
-                process.Dispose();
-                process = null;
-            }
-        }
+					process.StartInfo.Password = ssPwd;
+				}
 
-        private string GenerateParameters()
-        {
-            Debugger.Instance.DebugMessage("Generating parameters...");
-            Debugger.Instance.DebugMessage(CopyOptions);
-            var parsedCopyOptions = CopyOptions.Parse();
-            var parsedSelectionOptions = SelectionOptions.Parse();
-            Debugger.Instance.DebugMessage("SelectionOptions parsed.");
-            var parsedRetryOptions = RetryOptions.Parse();
-            Debugger.Instance.DebugMessage("RetryOptions parsed.");
-            var parsedLoggingOptions = LoggingOptions.Parse();
-            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
-            //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
+				Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
+				process.StartInfo.UseShellExecute = false;
+				process.StartInfo.RedirectStandardOutput = true;
+				process.StartInfo.RedirectStandardError = true;
+				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				process.StartInfo.CreateNoWindow = true;
+				process.StartInfo.FileName = Configuration.RoboCopyExe;
+				process.StartInfo.Arguments = GenerateParameters();
+				process.OutputDataReceived += process_OutputDataReceived;
+				process.ErrorDataReceived += process_ErrorDataReceived;
+				process.Exited += Process_Exited;
+				Debugger.Instance.DebugMessage("RoboCopy process started.");
+				process.Start();
+				process.BeginOutputReadLine();
+				process.BeginErrorReadLine();
+				process.WaitForExit();
+				Debugger.Instance.DebugMessage("RoboCopy process exited.");
+			}, cancellationToken);
 
-            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions, 
-                parsedRetryOptions, parsedLoggingOptions);
-        }
+			backupTask.ContinueWith((continuation) =>
+			{
+				if (!hasError)
+				{
+					// backup is complete
+					if (OnCommandCompleted != null)
+					{
+						OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
+					}
+				}
 
-        #region IDisposable Implementation
+				Stop();
+			});
 
-        bool disposed = false;
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+			return backupTask;
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
+		void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+		{
+			if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
+			{
+				hasError = true;
+				OnCommandError(this, new ErrorEventArgs(e.Data));
+			}
+		}
 
-            if (disposing)
-            {
-                
-            }
+		void Process_Exited(object sender, System.EventArgs e)
+		{
+			hasExited = true;
+		}
 
-            if (process != null)
-                process.Dispose();
-            disposed = true;
-        }
+		public void Stop()
+		{
+			if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
+			{
+				process.Kill();
+				hasExited = true;
+				process.Dispose();
+				process = null;
+			}
+		}
 
-        #endregion IDisposable Implementation
-    }
+		private string GenerateParameters()
+		{
+			Debugger.Instance.DebugMessage("Generating parameters...");
+			Debugger.Instance.DebugMessage(CopyOptions);
+			var parsedCopyOptions = CopyOptions.Parse();
+			var parsedSelectionOptions = SelectionOptions.Parse();
+			Debugger.Instance.DebugMessage("SelectionOptions parsed.");
+			var parsedRetryOptions = RetryOptions.Parse();
+			Debugger.Instance.DebugMessage("RetryOptions parsed.");
+			var parsedLoggingOptions = LoggingOptions.Parse();
+			Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+			//var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
+
+			return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
+				parsedRetryOptions, parsedLoggingOptions);
+		}
+
+		#region IDisposable Implementation
+
+		bool disposed = false;
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
+
+			if (disposing)
+			{
+
+			}
+
+			if (process != null)
+				process.Dispose();
+			disposed = true;
+		}
+
+		#endregion IDisposable Implementation
+	}
 }
