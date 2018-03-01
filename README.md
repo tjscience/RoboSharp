@@ -50,3 +50,7 @@ void backup_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
     }));
 }
 ```
+
+# Contributing to RoboSharp
+
+First off, thanks! Please go through the [guidelines](CONTRIBUTING.md).
