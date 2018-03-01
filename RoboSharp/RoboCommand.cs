@@ -260,6 +260,7 @@ namespace RoboSharp
                 process.StartInfo.Arguments = GenerateParameters();
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
+                process.EnableRaisingEvents = true;
                 process.Exited += Process_Exited;
                 Debugger.Instance.DebugMessage("RoboCopy process started.");
                 process.Start();
