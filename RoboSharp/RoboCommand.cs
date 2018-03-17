@@ -218,12 +218,10 @@ namespace RoboSharp
             }
 
             #endregion
-
+            process = new Process();
             backupTask = Task.Run(() =>
             {
 	    	cancellationToken.ThrowIfCancellationRequested();
-		
-                process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
                 {
@@ -275,10 +273,10 @@ namespace RoboSharp
                 if (!hasError)
                 {
                     // backup is complete
-                    if (OnCommandCompleted != null)
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs
                     {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
-                    }
+                        ExitCode = process.ExitCode
+                    });
                 }
 
                 Stop();
