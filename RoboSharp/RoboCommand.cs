@@ -67,6 +67,8 @@ namespace RoboSharp
         public event ErrorHandler OnError;
         public delegate void CommandCompletedHandler(object sender, RoboCommandCompletedEventArgs e);
         public event CommandCompletedHandler OnCommandCompleted;
+        public delegate void ProcessExitHandler(object sender, ExitEventArgs e);
+        public event ProcessExitHandler OnProcessExited;
         public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
         public event CopyProgressHandler OnCopyProgressChanged;
 
@@ -272,13 +274,15 @@ namespace RoboSharp
 
             backupTask.ContinueWith((continuation) =>
             {
+                if (hasExited)
+                {
+                    OnProcessExited?.Invoke(this, new ExitEventArgs { ExitCode = process.ExitCode });
+                }
+
                 if (!hasError)
                 {
                     // backup is complete
-                    if (OnCommandCompleted != null)
-                    {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
-                    }
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs());
                 }
 
                 Stop();
