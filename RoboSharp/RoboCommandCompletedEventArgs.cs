@@ -4,9 +4,6 @@ namespace RoboSharp
 {
     public class RoboCommandCompletedEventArgs : EventArgs
     {
-        public RoboCommandCompletedEventArgs()
-        {
-
-        }
+        public int ExitCode;
     }
 }
