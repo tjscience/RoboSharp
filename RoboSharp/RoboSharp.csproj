@@ -50,6 +50,7 @@
     <Compile Include="CopyOptions.cs" />
     <Compile Include="CopyProgressEventArgs.cs" />
     <Compile Include="Debugger.cs" />
+    <Compile Include="ExitEventArgs.cs" />
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="FileProcessedEventArgs.cs" />
     <Compile Include="ErrorEventArgs.cs" />
