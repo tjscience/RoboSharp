@@ -13,6 +13,7 @@ namespace RoboSharp
 
             return option;
         }
+    }
 
         public static string CleanDirectoryPath(this string path)
         {
@@ -28,7 +29,7 @@ namespace RoboSharp
             {
                 path = path.Substring(0, path.Length - 1);
             }
-            
+
             return path;
         }
     }
