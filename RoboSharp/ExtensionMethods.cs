@@ -13,7 +13,6 @@ namespace RoboSharp
 
             return option;
         }
-    }
 
         public static string CleanDirectoryPath(this string path)
         {
