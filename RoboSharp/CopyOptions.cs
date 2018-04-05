@@ -55,11 +55,13 @@ namespace RoboSharp
         /// <summary>
         /// The source file path where the RoboCommand is copying files from.
         /// </summary>
-        public string Source { get; set; }
+        private string _source;
+        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }    
         /// <summary>
         /// The destination file path where the RoboCommand is copying files to.
         /// </summary>
-        public string Destination { get; set; }
+        private string _destination;
+        public string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         /// <summary>
         /// Allows you to supply a specific file to copy or use wildcard characters (* or ?).
         /// </summary>
