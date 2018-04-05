@@ -28,9 +28,8 @@ namespace RoboSharp
             {
                 path = path.Substring(0, path.Length - 1);
             }
-
+            
             return path;
         }
-
     }
 }
