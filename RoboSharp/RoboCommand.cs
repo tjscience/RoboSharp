@@ -185,7 +185,7 @@ namespace RoboSharp
 	    CancellationToken cancellationToken = tokenSource.Token;
 
             // make sure source path is valid
-            if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
+            if(!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
@@ -198,7 +198,7 @@ namespace RoboSharp
 
             try
             {
-                var dInfo = Directory.CreateDirectory(CopyOptions.Destination.Replace("\"", ""));
+                var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
                 if (!dInfo.Exists)
                 {
                     Debugger.Instance.DebugMessage("The destination directory does not exist.");
