@@ -219,7 +219,11 @@ namespace RoboSharp
 
             #endregion
 
-            backupTask = Task.Factory.StartNew(() =>
+#if NET40
+                backupTask = Task.Factory.StartNew(() =>
+#else
+                backupTask = Task.Run(() =>
+#endif
             {
 	    	cancellationToken.ThrowIfCancellationRequested();
 		
@@ -329,7 +333,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-        #region IDisposable Implementation
+#region IDisposable Implementation
 
         bool disposed = false;
         public void Dispose()
@@ -353,6 +357,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-        #endregion IDisposable Implementation
+#endregion IDisposable Implementation
     }
 }
