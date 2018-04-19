@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp
 {
-    public class RoboCommand : IDisposable
+    public class RoboCommand : IDisposable, IRoboCommand
     {
         #region Private Vars
 
