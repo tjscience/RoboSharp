@@ -43,10 +43,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Threading, Version=1.0.2856.102, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\TaskParallelLibrary.1.0.2856.0\lib\Net35\System.Threading.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -109,7 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RoboSharp\RoboSharp.csproj">
-      <Project>{c1ccb107-347f-439f-9e90-05c91874bf4d}</Project>
+      <Project>{8185f775-00ef-4f28-98bc-6b3f8944c23a}</Project>
       <Name>RoboSharp</Name>
     </ProjectReference>
   </ItemGroup>

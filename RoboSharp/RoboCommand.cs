@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp
 {
-    public class RoboCommand : IDisposable
+    public class RoboCommand : IDisposable, IRoboCommand
     {
         #region Private Vars
 
@@ -219,7 +220,11 @@ namespace RoboSharp
 
             #endregion
 
-            backupTask = Task.Run(() =>
+#if NET40
+                backupTask = Task.Factory.StartNew(() =>
+#else
+                backupTask = Task.Run(() =>
+#endif
             {
 	    	cancellationToken.ThrowIfCancellationRequested();
 		
@@ -329,7 +334,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-        #region IDisposable Implementation
+#region IDisposable Implementation
 
         bool disposed = false;
         public void Dispose()
@@ -353,6 +358,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-        #endregion IDisposable Implementation
+#endregion IDisposable Implementation
     }
 }
