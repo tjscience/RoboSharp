@@ -7,6 +7,7 @@ namespace RoboSharp
     {
         public RoboCommandCompletedEventArgs(Results.RoboCopyResults results)
         {
+            this.Results = results;
         }
 
         public Results.RoboCopyResults Results { get; }
