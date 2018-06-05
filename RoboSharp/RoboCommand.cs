@@ -271,7 +271,7 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
-                results = resultsBuilder.BuildResults(process.ExitCode);
+                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             });
 
