@@ -220,15 +220,12 @@ namespace RoboSharp
 
             #endregion
 
-#if NET40
-                backupTask = Task.Factory.StartNew(() =>
-#else
-                backupTask = Task.Run(() =>
-#endif
+            backupTask = Task.Factory.StartNew(() =>
             {
-	    	cancellationToken.ThrowIfCancellationRequested();
-		
-                process = new Process();
+
+
+	    		cancellationToken.ThrowIfCancellationRequested();
+				process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
                 {
@@ -273,7 +270,7 @@ namespace RoboSharp
                 process.BeginErrorReadLine();
                 process.WaitForExit();
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            },cancellationToken);
+            },cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             backupTask.ContinueWith((continuation) =>
             {
@@ -287,7 +284,7 @@ namespace RoboSharp
                 }
 
                 Stop();
-            });
+            }, cancellationToken);
 
             return backupTask;
         }
