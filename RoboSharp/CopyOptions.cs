@@ -136,10 +136,7 @@ namespace RoboSharp
             {
                 return copyFlags;
             }
-            set
-            {
-                copyFlags = value;
-            }
+            set => copyFlags = value;
         }
         /// <summary>
         /// Copies files with security (equivalent to /copy:DAT).
@@ -235,24 +232,26 @@ namespace RoboSharp
         /// [/PF]
         /// </summary>
         public bool CheckPerFile { get; set; }
-        /// <summary>
-        /// The default value of zero indicates that this feature is turned off.
-        /// Specifies the inter-packet gap to free bandwidth on slow lines.
-        /// [/IPG:N]
-        /// </summary>
-        public int InterPacketGap { get; set; }
+
+	    /// <summary>
+	    /// The default value of zero indicates that this feature is turned off.
+	    /// Specifies the inter-packet gap to free bandwidth on slow lines.
+	    /// [/IPG:N]
+	    /// </summary>
+	    public int InterPacketGap { get; set; } = 5;
         /// <summary>
         /// Copies the symbolic link instead of the target.
         /// [/SL]
         /// </summary>
         public bool CopySymbolicLink { get; set; }
-        /// <summary>
-        /// The default value of zero indicates that this feature is turned off.
-        /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
-        /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
-        /// [/MT:N]
-        /// </summary>
-        public int MultiThreadedCopiesCount { get; set; }
+
+	    /// <summary>
+	    /// The default value of zero indicates that this feature is turned off.
+	    /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
+	    /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
+	    /// [/MT:N]
+	    /// </summary>
+	    public int MultiThreadedCopiesCount { get; set; } = 0;
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).
