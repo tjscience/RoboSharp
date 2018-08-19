@@ -6,11 +6,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using RoboSharp.Interfaces;
 
 namespace RoboSharp
 {
-    public class RoboCommand : IDisposable, IRoboCommand
+    public class RoboCommand : IDisposable
     {
         #region Private Vars
 
@@ -220,12 +219,11 @@ namespace RoboSharp
 
             #endregion
 
-            backupTask = Task.Factory.StartNew(() =>
+            backupTask = Task.Run(() =>
             {
-
-
-	    		cancellationToken.ThrowIfCancellationRequested();
-				process = new Process();
+	    	cancellationToken.ThrowIfCancellationRequested();
+		
+                process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
                 {
@@ -270,7 +268,7 @@ namespace RoboSharp
                 process.BeginErrorReadLine();
                 process.WaitForExit();
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            },cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+            },cancellationToken);
 
             backupTask.ContinueWith((continuation) =>
             {
@@ -284,7 +282,7 @@ namespace RoboSharp
                 }
 
                 Stop();
-            }, cancellationToken);
+            });
 
             return backupTask;
         }
@@ -331,7 +329,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-#region IDisposable Implementation
+        #region IDisposable Implementation
 
         bool disposed = false;
         public void Dispose()
@@ -355,6 +353,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-#endregion IDisposable Implementation
+        #endregion IDisposable Implementation
     }
 }
