@@ -9,7 +9,7 @@
 
     <AssemblyTitle>RoboSharp</AssemblyTitle>
     <Copyright>Copyright 2018</Copyright>
-    <Version>1.1.2</Version>
+    <Version>1.2.0</Version>
     <Authors>Terry Phillips</Authors>
     <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
 
@@ -28,10 +28,6 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
     <PackageReference Include="System.Management" Version="4.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
