@@ -1,3 +1,5 @@
+20/09/18 - this fork combines the release 1.20 release from tjscience with the results code from alex-becker-startp (https://github.com/alex-becker-startp/RoboSharp/tree/new/copyResults)
+
 
 ![logo](robosharp.png?raw=true)
 # RoboSharp
