@@ -18,6 +18,7 @@ namespace RoboSharp
         private bool hasError;
         private bool hasExited;
         private bool isPaused;
+	private bool isCancelled;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -31,6 +32,7 @@ namespace RoboSharp
 
         #region Public Vars
         public bool IsPaused { get { return isPaused; } }
+	public bool IsCancelled { get { return isCancelled; } }
         public string CommandOptions { get { return GenerateParameters(); } }    
         public CopyOptions CopyOptions
         {
@@ -324,6 +326,7 @@ namespace RoboSharp
                 hasExited = true;
                 process.Dispose();
                 process = null;
+		isCancelled = true;
             }
         }
 
