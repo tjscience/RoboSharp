@@ -1,5 +1,7 @@
 20/09/18 - this fork combines the release 1.20 release from tjscience with the results code from alex-becker-startp (https://github.com/alex-becker-startp/RoboSharp/tree/new/copyResults)
 
+21/09/18 - made changes to RetryOptions.cs for default retryCount and retryWaitTime - made changes in CopyOptions.cs to remove default copyFlags and directoryCopyFlags - finally added new isCancelled boolean to RoboCommand.cs
+
 
 ![logo](robosharp.png?raw=true)
 # RoboSharp
