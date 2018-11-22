@@ -191,7 +191,7 @@ namespace RoboSharp
         public string AddAttributes { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
-        /// Adds the specified attributes to copied files.
+        /// Removes the specified attributes from copied files.
         /// [/A-:attributes]
         /// </summary>
         public string RemoveAttributes { get; set; }
