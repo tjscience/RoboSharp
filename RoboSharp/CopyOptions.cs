@@ -127,7 +127,7 @@ namespace RoboSharp
         ///S NTFS access control list (ACL)
         ///O Owner information
         ///U Auditing information
-        ///The default value for copyflags is DA (data, attributes, and time stamps).
+        ///The default value for copyflags is DAT (data, attributes, and time stamps).
         ///[/COPY:copyflags]
         /// </summary>
         public string CopyFlags
