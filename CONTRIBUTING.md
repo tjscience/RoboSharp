@@ -1,6 +1,6 @@
 # RoboSharp Contributing Guidelines
 
-Hey there! I'm really glad that you are interested in contributing to RoboSharp! Here are some hopefully straght-forward guidelines to do so.
+Hey there! I'm really glad that you are interested in contributing to RoboSharp! Here are some hopefully straight-forward guidelines to do so.
 
 # Pull Requests
 
