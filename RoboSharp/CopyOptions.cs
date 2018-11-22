@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -39,12 +39,14 @@ namespace RoboSharp
         internal const string DIRECTORY_COPY_FLAGS = "/DCOPY:{0} ";
         internal const string DO_NOT_COPY_DIRECTORY_INFO = "/NODCOPY ";
         internal const string DO_NOT_USE_WINDOWS_COPY_OFFLOAD = "/NOOFFLOAD ";
+        internal const string EXCLUDE_FILE_FILTER = "/XF:{0} ";
 
         #endregion Option Constants
 
         #region Option Defaults
 
         private string fileFilter = "*.*";
+        private string excludeFileFilter = string.Empty;
         private string copyFlags = "DAT";
         private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
@@ -56,7 +58,7 @@ namespace RoboSharp
         /// The source file path where the RoboCommand is copying files from.
         /// </summary>
         private string _source;
-        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }    
+        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         /// <summary>
         /// The destination file path where the RoboCommand is copying files to.
         /// </summary>
@@ -75,6 +77,16 @@ namespace RoboSharp
             {
                 fileFilter = value;
             }
+        }
+
+        /// <summary>
+        /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
+        /// Default is no exclusion (string.Empty).
+        /// </summary>
+        public string ExcludeFileFilter
+        {
+            get => excludeFileFilter;
+            set => excludeFileFilter = value;
         }
 
         /// <summary>
@@ -233,25 +245,25 @@ namespace RoboSharp
         /// </summary>
         public bool CheckPerFile { get; set; }
 
-	    /// <summary>
-	    /// The default value of zero indicates that this feature is turned off.
-	    /// Specifies the inter-packet gap to free bandwidth on slow lines.
-	    /// [/IPG:N]
-	    /// </summary>
-	    public int InterPacketGap { get; set; } = 5;
+        /// <summary>
+        /// The default value of zero indicates that this feature is turned off.
+        /// Specifies the inter-packet gap to free bandwidth on slow lines.
+        /// [/IPG:N]
+        /// </summary>
+        public int InterPacketGap { get; set; } = 5;
         /// <summary>
         /// Copies the symbolic link instead of the target.
         /// [/SL]
         /// </summary>
         public bool CopySymbolicLink { get; set; }
 
-	    /// <summary>
-	    /// The default value of zero indicates that this feature is turned off.
-	    /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
-	    /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
-	    /// [/MT:N]
-	    /// </summary>
-	    public int MultiThreadedCopiesCount { get; set; } = 0;
+        /// <summary>
+        /// The default value of zero indicates that this feature is turned off.
+        /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
+        /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
+        /// [/MT:N]
+        /// </summary>
+        public int MultiThreadedCopiesCount { get; set; } = 0;
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).
@@ -366,6 +378,8 @@ namespace RoboSharp
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
             if (DoNotUseWindowsCopyOffload && version >= 6.2)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
+            if (!excludeFileFilter.IsNullOrWhiteSpace())
+                options.Append(string.Format(EXCLUDE_FILE_FILTER, excludeFileFilter.CleanOptionInput()));
             #endregion Set Options
 
             var parsedOptions = options.ToString();
