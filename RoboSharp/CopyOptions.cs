@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -44,7 +47,7 @@ namespace RoboSharp
 
         #region Option Defaults
 
-        private string fileFilter = "*.*";
+        private IEnumerable<string> fileFilter = new[] { "*.*" };
         private string copyFlags = "DAT";
         private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
@@ -63,9 +66,9 @@ namespace RoboSharp
         private string _destination;
         public string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         /// <summary>
-        /// Allows you to supply a specific file to copy or use wildcard characters (* or ?).
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?).
         /// </summary>
-        public string FileFilter
+        public IEnumerable<string> FileFilter
         {
             get
             {
@@ -281,10 +284,16 @@ namespace RoboSharp
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            // Set Source, Destination and FileFilter
+            // Set Source and Destination
             options.Append($"\"{Source}\" ");
             options.Append($"\"{Destination}\" ");
-            options.Append($"\"{FileFilter}\" ");
+
+            // Set FileFiltergit stq
+            // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
+            var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
+            string fileFilter = String.Join(" ", fileFilterQuotedItems);
+            options.Append($"{fileFilter} ");
+
             Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options
