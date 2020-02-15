@@ -1,9 +1,10 @@
-20/09/18 - this fork combines the release 1.20 release from tjscience with the results code from alex-becker-startp (https://github.com/alex-becker-startp/RoboSharp/tree/new/copyResults)
+20/09/18 - this fork combines the 1.20 release from tjscience with the results code from alex-becker-startp (https://github.com/alex-becker-startp/RoboSharp/tree/new/copyResults)
 
 21/09/18 - made changes to RetryOptions.cs for default retryCount and retryWaitTime - made changes in CopyOptions.cs to remove default copyFlags and directoryCopyFlags - finally added new isCancelled boolean to RoboCommand.cs
 
 21/09/18 - removed .NET 4 support from RoboSharp.csproj as code for creating results requires 4.5
 
+15/02/20 - this also includes changes in pull requests 68 and 80 - https://github.com/tjscience/RoboSharp/pull/68 / https://github.com/tjscience/RoboSharp/pull/80
 
 ![logo](robosharp.png?raw=true)
 # RoboSharp
