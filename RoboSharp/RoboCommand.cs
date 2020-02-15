@@ -287,7 +287,7 @@ namespace RoboSharp
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             },cancellationToken);
 
-            backupTask.ContinueWith((continuation) =>
+            Task continueWithTask = backupTask.ContinueWith((continuation) =>
             {
                 if (!hasError)
                 {
@@ -301,7 +301,7 @@ namespace RoboSharp
                 Stop();
             });
 
-            return backupTask;
+             return continueWithTask;
         }
 
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
