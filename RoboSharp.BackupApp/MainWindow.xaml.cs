@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace RoboSharp.BackupApp
 {
@@ -53,7 +55,13 @@ namespace RoboSharp.BackupApp
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
-            copy.CopyOptions.FileFilter = FileFilter.Text;
+            
+            // split user input by whitespace, mantaining those enclosed by quotes
+            var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
+                .Cast<Match>()
+                .Select(m => m.Value);
+                
+            copy.CopyOptions.FileFilter = fileFilterItems;
             copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
             copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
             if (!string.IsNullOrWhiteSpace(Depth.Text))
