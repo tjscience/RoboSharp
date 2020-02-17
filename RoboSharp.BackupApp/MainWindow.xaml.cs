@@ -111,7 +111,7 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
-            
+
             copy.Start();
         }
 
@@ -120,7 +120,7 @@ namespace RoboSharp.BackupApp
             Console.WriteLine(e.Message);
         }
 
-        void copy_OnCommandError(object sender, ErrorEventArgs e)
+        void copy_OnCommandError(object sender, CommandErrorEventArgs e)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {

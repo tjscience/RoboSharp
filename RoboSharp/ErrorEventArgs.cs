@@ -4,11 +4,13 @@ namespace RoboSharp
 {
     public class ErrorEventArgs : EventArgs
     {
-        public string Error { get; set; }
+        public string Error { get; }
+        public int ErrorCode { get; }
 
-        public ErrorEventArgs(string error)
+        public ErrorEventArgs(string error, int errorCode)
         {
             Error = error;
+            ErrorCode = errorCode;
         }
     }
 }
