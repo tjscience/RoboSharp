@@ -59,7 +59,7 @@ namespace RoboSharp
         /// The source file path where the RoboCommand is copying files from.
         /// </summary>
         private string _source;
-        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }    
+        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         /// <summary>
         /// The destination file path where the RoboCommand is copying files to.
         /// </summary>
@@ -79,35 +79,34 @@ namespace RoboSharp
                 fileFilter = value;
             }
         }
-
         /// <summary>
-        /// Copies subdirectories. Note that this option excludes empty directories. 
+        /// Copies subdirectories. Note that this option excludes empty directories.
         /// [/S]
         /// </summary>
         public bool CopySubdirectories { get; set; }
         /// <summary>
-        /// Copies subdirectories. Note that this option includes empty directories. 
+        /// Copies subdirectories. Note that this option includes empty directories.
         /// [/E]
         /// </summary>
         public bool CopySubdirectoriesIncludingEmpty { get; set; }
         /// <summary>
-        /// Copies only the top N levels of the source directory tree. The default is 
-        /// zero which does not limit the depth. 
+        /// Copies only the top N levels of the source directory tree. The default is
+        /// zero which does not limit the depth.
         /// [/LEV:N]
         /// </summary>
         public int Depth { get; set; }
         /// <summary>
-        /// Copies files in Restart mode. 
+        /// Copies files in Restart mode.
         /// [/Z]
         /// </summary>
         public bool EnableRestartMode { get; set; }
         /// <summary>
-        /// Copies files in Backup mode. 
+        /// Copies files in Backup mode.
         /// [/B]
         /// </summary>
         public bool EnableBackupMode { get; set; }
         /// <summary>
-        /// Uses Restart mode. If access is denied, this option uses Backup mode. 
+        /// Uses Restart mode. If access is denied, this option uses Backup mode.
         /// [/ZB]
         /// </summary>
         public bool EnableRestartModeWithBackupFallback { get; set; }
@@ -117,7 +116,7 @@ namespace RoboSharp
         /// </summary>
         public bool UseUnbufferedIo { get; set; }
         /// <summary>
-        /// Copies all encrypted files in EFS RAW mode. 
+        /// Copies all encrypted files in EFS RAW mode.
         /// [/EFSRAW]
         /// </summary>
         public bool EnableEfsRawMode { get; set; }
@@ -288,7 +287,7 @@ namespace RoboSharp
             options.Append($"\"{Source}\" ");
             options.Append($"\"{Destination}\" ");
 
-            // Set FileFiltergit stq
+            // Set FileFilter
             // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
             var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
             string fileFilter = String.Join(" ", fileFilterQuotedItems);
