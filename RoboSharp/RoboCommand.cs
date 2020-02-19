@@ -190,11 +190,13 @@ namespace RoboSharp
             }
         }
 
-        //public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
-        //{
-        //    await Start(domain, username, password);
-        //    return GetResults();
-        //}
+#if NET45
+        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        {
+            await Start(domain, username, password);
+            return GetResults();
+        }
+#endif
 
         public Task Start(string domain = "", string username = "", string password = "")
         {
@@ -217,7 +219,7 @@ namespace RoboSharp
                 tokenSource.Cancel(true);
             }
 
-            #region Create Destination Directory
+#region Create Destination Directory
 
             try
             {
@@ -240,7 +242,7 @@ namespace RoboSharp
                 tokenSource.Cancel(true);
             }
 
-            #endregion
+#endregion
 
             backupTask = Task.Factory.StartNew(() =>
             {
