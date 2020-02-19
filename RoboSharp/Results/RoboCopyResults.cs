@@ -19,7 +19,14 @@ namespace RoboSharp.Results
         /// </returns>
         public override string ToString()
         {
-            return $"ExitCode: {Status.ExitCode}, Directories: {DirectoriesStatistic.Total}, Files: {FilesStatistic.Total}, Bytes: {BytesStatistic.Total}";
+            string str = $"ExitCode: {Status.ExitCode}, Directories: {DirectoriesStatistic.Total}, Files: {FilesStatistic.Total}, Bytes: {BytesStatistic.Total}";
+
+            if (SpeedStatistic != null)
+            {
+                str = str + $", Speed: {SpeedStatistic.BytesPerSec} Bytes/sec";
+            }
+
+            return str;
         }
     }
 }
