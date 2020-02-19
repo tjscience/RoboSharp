@@ -19,7 +19,7 @@ namespace RoboSharp
         private bool hasError;
         private bool hasExited;
         private bool isPaused;
-	private bool isCancelled;
+        private bool isCancelled;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -33,7 +33,7 @@ namespace RoboSharp
 
         #region Public Vars
         public bool IsPaused { get { return isPaused; } }
-	public bool IsCancelled { get { return isCancelled; } }
+        public bool IsCancelled { get { return isCancelled; } }
         public string CommandOptions { get { return GenerateParameters(); } }
         public CopyOptions CopyOptions
         {
@@ -219,7 +219,7 @@ namespace RoboSharp
                 tokenSource.Cancel(true);
             }
 
-#region Create Destination Directory
+            #region Create Destination Directory
 
             try
             {
@@ -242,7 +242,7 @@ namespace RoboSharp
                 tokenSource.Cancel(true);
             }
 
-#endregion
+            #endregion
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -321,10 +321,10 @@ namespace RoboSharp
             }
         }
 
-	    void Process_Exited(object sender, System.EventArgs e)
-	    {
-		    hasExited = true;
-    	}
+        void Process_Exited(object sender, System.EventArgs e)
+        {
+            hasExited = true;
+        }
 
         public void Stop()
         {
@@ -360,7 +360,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-#region IDisposable Implementation
+        #region IDisposable Implementation
 
         bool disposed = false;
         public void Dispose()
@@ -384,6 +384,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-#endregion IDisposable Implementation
+        #endregion IDisposable Implementation
     }
 }
