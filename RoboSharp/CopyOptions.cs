@@ -129,7 +129,7 @@ namespace RoboSharp
         ///S NTFS access control list (ACL)
         ///O Owner information
         ///U Auditing information
-        ///The default value for copyflags is DA (data, attributes, and time stamps).
+        ///The default value for copyflags is DAT (data, attributes, and time stamps).
         ///[/COPY:copyflags]
         /// </summary>
         public string CopyFlags
@@ -193,7 +193,7 @@ namespace RoboSharp
         public string AddAttributes { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
-        /// Adds the specified attributes to copied files.
+        /// Removes the specified attributes from copied files.
         /// [/A-:attributes]
         /// </summary>
         public string RemoveAttributes { get; set; }
