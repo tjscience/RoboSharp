@@ -79,7 +79,6 @@ namespace RoboSharp
                 fileFilter = value;
             }
         }
-
         /// <summary>
         /// Copies subdirectories. Note that this option excludes empty directories.
         /// [/S]

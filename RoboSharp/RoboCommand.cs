@@ -67,7 +67,7 @@ namespace RoboSharp
 
         public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
         public event FileProcessedHandler OnFileProcessed;
-        public delegate void CommandErrorHandler(object sender, ErrorEventArgs e);
+        public delegate void CommandErrorHandler(object sender, CommandErrorEventArgs e);
         public event CommandErrorHandler OnCommandError;
         public delegate void ErrorHandler(object sender, ErrorEventArgs e);
         public event ErrorHandler OnError;
@@ -128,17 +128,23 @@ namespace RoboSharp
                     }
                     else
                     {
-                        if (OnError != null && Regex.IsMatch(data, $" {Configuration.ErrorToken} " + @"\d{1,3} \(0x\d{8}\) "))
-                        {
-                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                        var regex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
 
-                            if(errorCode.Key != null)
+                        if (OnError != null && regex.IsMatch(data))
+                        {
+                            // parse error code
+                            var match = regex.Match(data);
+                            string value = match.Groups[1].Value;
+                            int parsedValue = Int32.Parse(value);
+
+                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                            if (errorCode.Key != null)
                             {
-                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value)));
+                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
                             }
                             else
                             {
-                                OnError(this, new ErrorEventArgs(data));
+                                OnError(this, new ErrorEventArgs(data, parsedValue));
                             }
                         }
                         else
@@ -206,7 +212,7 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Source directory does not exist."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
@@ -220,7 +226,7 @@ namespace RoboSharp
                 {
                     Debugger.Instance.DebugMessage("The destination directory does not exist.");
                     hasError = true;
-                    OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                     tokenSource.Cancel(true);
                 }
@@ -229,7 +235,7 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage(ex.Message);
                 hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
@@ -238,8 +244,6 @@ namespace RoboSharp
 
             backupTask = Task.Factory.StartNew(() =>
             {
-
-
                 cancellationToken.ThrowIfCancellationRequested();
                 process = new Process();
 
@@ -311,7 +315,7 @@ namespace RoboSharp
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
-                OnCommandError(this, new ErrorEventArgs(e.Data));
+                OnCommandError(this, new CommandErrorEventArgs(e.Data));
             }
         }
 
