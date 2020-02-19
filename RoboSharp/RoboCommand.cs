@@ -332,7 +332,7 @@ namespace RoboSharp
                 hasExited = true;
                 process.Dispose();
                 process = null;
-		isCancelled = true;
+                isCancelled = true;
             }
         }
 

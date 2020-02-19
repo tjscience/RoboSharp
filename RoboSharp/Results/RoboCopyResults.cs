@@ -8,6 +8,7 @@ namespace RoboSharp.Results
         public Statistic DirectoriesStatistic { get; internal set; }
         public Statistic FilesStatistic { get; internal set; }
         public Statistic BytesStatistic { get; internal set; }
+        public SpeedStatistic SpeedStatistic { get; internal set; }
         public string[] LogLines { get; internal set; }
 
         /// <summary>
