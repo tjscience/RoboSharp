@@ -55,12 +55,12 @@ namespace RoboSharp.BackupApp
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
-            
+
             // split user input by whitespace, mantaining those enclosed by quotes
             var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
                 .Cast<Match>()
                 .Select(m => m.Value);
-                
+
             copy.CopyOptions.FileFilter = fileFilterItems;
             copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
             copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
@@ -90,7 +90,7 @@ namespace RoboSharp.BackupApp
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
                 copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
-            
+
             // select options
             copy.SelectionOptions.OnlyCopyArchiveFiles = OnlyCopyArchiveFiles.IsChecked ?? false;
             copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag = OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked ?? false;

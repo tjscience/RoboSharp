@@ -8,6 +8,8 @@
 
 ![logo](robosharp.png?raw=true)
 # RoboSharp
+| <h2>[RoboSharp Going Forward...](https://github.com/tjscience/RoboSharp/issues/63)</h2> | [![image](https://user-images.githubusercontent.com/3706870/44311401-a9064000-a3b4-11e8-96a3-d308f52aeec1.png)](https://github.com/tjscience/RoboSharp/issues/63) |
+| ------ | ----------- |
 ### Now available on nuget! https://www.nuget.org/packages/RoboSharp/
 RoboSharp is a .NET wrapper for the awesome Robocopy windows application.
 

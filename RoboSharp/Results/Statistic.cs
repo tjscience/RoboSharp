@@ -51,7 +51,7 @@ namespace RoboSharp.Results
 
                 var tokenString = match.Groups[tokenName].Value;
                 var tokenValue = ParseTokenString(tokenString);
-                prop.SetValue(res, tokenValue);
+                prop.SetValue(res, tokenValue, null);
             }
 
             return res;

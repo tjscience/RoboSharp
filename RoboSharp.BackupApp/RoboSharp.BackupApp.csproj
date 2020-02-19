@@ -105,7 +105,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RoboSharp\RoboSharp.csproj">
-      <Project>{c1ccb107-347f-439f-9e90-05c91874bf4d}</Project>
+      <Project>{8185f775-00ef-4f28-98bc-6b3f8944c23a}</Project>
       <Name>RoboSharp</Name>
     </ProjectReference>
   </ItemGroup>
