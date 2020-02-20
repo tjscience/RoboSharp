@@ -24,19 +24,19 @@ namespace RoboSharp.Results
         {
             var res = new SpeedStatistic();
 
-            var pattern = new Regex(@"\d+\.?\d*");
+            var pattern = new Regex(@"\d+([\.,]\d+)?");
             Match match;
 
             match = pattern.Match(line1);
             if (match.Success)
             {
-                res.BytesPerSec = Convert.ToDecimal(match.Value, CultureInfo.InvariantCulture);
+                res.BytesPerSec = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
             }
 
             match = pattern.Match(line2);
             if (match.Success)
             {
-                res.MegaBytesPerMin = Convert.ToDecimal(match.Value, CultureInfo.InvariantCulture);
+                res.MegaBytesPerMin = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
             }
 
             return res;

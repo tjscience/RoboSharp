@@ -36,7 +36,7 @@ namespace RoboSharp.Results
             if (statisticLines.Count >= 3)
                 res.BytesStatistic = Statistic.Parse(statisticLines[2]);
 
-            if (statisticLines.Count == 7)
+            if (statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
             res.LogLines = outputLines.ToArray();
