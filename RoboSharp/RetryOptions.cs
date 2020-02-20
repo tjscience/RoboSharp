@@ -9,8 +9,8 @@ namespace RoboSharp
         internal const string SAVE_TO_REGISTRY = "/REG ";
         internal const string WAIT_FOR_SHARENAMES = "/TBD ";
 
-        private int retryCount = 2;
-        private int retryWaitTime = 2;
+        private int retryCount = 0;
+        private int retryWaitTime = 30;
 
         /// <summary>
         /// Specifies the number of retries N on failed copies (default is 0).
