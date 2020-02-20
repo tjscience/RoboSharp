@@ -18,7 +18,7 @@ namespace RoboSharp
         internal const string SHOW_ESTIMATED_TIME_OF_ARRIVAL = "/ETA ";
         internal const string LOG_PATH = "/LOG:{0} ";
         internal const string APPEND_LOG_PATH = "/LOG+:{0} ";
-        internal const string UNICODE_LOG_PATH = "UNILOG:{0} ";
+        internal const string UNICODE_LOG_PATH = "/UNILOG:{0} ";
         internal const string APPEND_UNICODE_LOG_PATH = "/UNILOG+:{0} ";
         internal const string OUTPUT_TO_ROBOSHARP_AND_LOG = "/TEE ";
         internal const string NO_JOB_HEADER = "/NJH ";
