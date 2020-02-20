@@ -169,7 +169,7 @@ namespace RoboSharp.BackupApp
 
         private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
         {
-            if(!copy.IsPaused)
+            if (!copy.IsPaused)
             {
                 copy.Pause();
                 PauseResumeButton.Content = "Resume";
@@ -219,7 +219,10 @@ namespace RoboSharp.BackupApp
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             if (copy != null)
+            {
                 copy.Stop();
+                copy.Dispose();
+            }
         }
     }
 

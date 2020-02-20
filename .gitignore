@@ -4,3 +4,4 @@ obj
 *.user
 /packages
 /*.sln.GhostDoc.xml
+RoboSharp/RoboSharp.csproj

@@ -19,16 +19,21 @@ namespace RoboSharp
         private bool hasError;
         private bool hasExited;
         private bool isPaused;
+        private bool isCancelled;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
         private LoggingOptions loggingOptions = new LoggingOptions();
         private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
 
+        private Results.ResultsBuilder resultsBuilder;
+        private Results.RoboCopyResults results;
+
         #endregion Private Vars
 
         #region Public Vars
         public bool IsPaused { get { return isPaused; } }
+        public bool IsCancelled { get { return isCancelled; } }
         public string CommandOptions { get { return GenerateParameters(); } }
         public CopyOptions CopyOptions
         {
@@ -80,6 +85,8 @@ namespace RoboSharp
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            resultsBuilder?.AddOutput(e.Data);
+
             if (e.Data == null)
                 return;
             var data = e.Data.Trim().Replace("\0", "");
@@ -183,6 +190,14 @@ namespace RoboSharp
             }
         }
 
+#if NET45
+        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        {
+            await Start(domain, username, password);
+            return GetResults();
+        }
+#endif
+
         public Task Start(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
@@ -190,6 +205,9 @@ namespace RoboSharp
 
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
+
+            resultsBuilder = new Results.ResultsBuilder();
+            results = null;
 
             // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
@@ -273,6 +291,7 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
+                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
@@ -283,7 +302,7 @@ namespace RoboSharp
                     // backup is complete
                     if (OnCommandCompleted != null)
                     {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(process.ExitCode));
+                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
                     }
                 }
 
@@ -302,10 +321,10 @@ namespace RoboSharp
             }
         }
 
-	    void Process_Exited(object sender, System.EventArgs e)
-	    {
-		    hasExited = true;
-    	}
+        void Process_Exited(object sender, System.EventArgs e)
+        {
+            hasExited = true;
+        }
 
         public void Stop()
         {
@@ -315,7 +334,13 @@ namespace RoboSharp
                 hasExited = true;
                 process.Dispose();
                 process = null;
+                isCancelled = true;
             }
+        }
+
+        public Results.RoboCopyResults GetResults()
+        {
+            return results;
         }
 
         private string GenerateParameters()
@@ -335,7 +360,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-#region IDisposable Implementation
+        #region IDisposable Implementation
 
         bool disposed = false;
         public void Dispose()
@@ -359,6 +384,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-#endregion IDisposable Implementation
+        #endregion IDisposable Implementation
     }
 }

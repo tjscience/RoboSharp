@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RoboSharp
 {
     public class RoboCommandCompletedEventArgs : EventArgs
     {
-        public int RoboCopyExitCode { get; set; }
-        public RoboCommandCompletedEventArgs(int roboCopyExitCode)
+        public RoboCommandCompletedEventArgs(Results.RoboCopyResults results)
         {
-            RoboCopyExitCode = roboCopyExitCode;
+            this.Results = results;
         }
+
+        public Results.RoboCopyResults Results { get; }
     }
 }

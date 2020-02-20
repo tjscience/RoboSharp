@@ -48,8 +48,8 @@ namespace RoboSharp
         #region Option Defaults
 
         private IEnumerable<string> fileFilter = new[] { "*.*" };
-        private string copyFlags = "DAT";
-        private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
+        private string copyFlags = "";  // was private string copyFlags = "DAT";
+        private string directoryCopyFlags = ""; // was  private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
         #endregion Option Defaults
 
