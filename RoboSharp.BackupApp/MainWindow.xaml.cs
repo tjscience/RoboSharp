@@ -23,6 +23,8 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
             this.Closing += MainWindow_Closing;
             ErrorGrid.ItemsSource = Errors;
+            VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
+            var v = VersionManager.Version;
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
