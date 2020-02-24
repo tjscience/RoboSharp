@@ -52,6 +52,56 @@ void backup_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
 }
 ```
 
+Extended Results:
+
+See below examples on how to access the extended results where you can get total, copied, skipped, mismatch, failed and extra statistics for directories and files and bytes, as well as additional speed info e.g. bytes per sec and megabytes per minute
+
+```c#
+void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                OptionsGrid.IsEnabled = true;
+                ProgressGrid.IsEnabled = false;
+
+                var results = e.Results;
+                Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
+                Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
+                Console.WriteLine("MegaBytesPerMin: " + results.SpeedStatistic.MegaBytesPerMin);
+            }));
+        }
+```
+
+or
+
+```c#
+var cmd = new RoboCommand();
+var results = await cmd.StartAsync();
+// do something with results...
+```
+
+or
+
+```c#
+var cmd = new RoboCommand();
+var copyTask = cmd.Start();
+copyTask.Wait(); // be careful to avoid deadlocks here!
+var results = cmd.GetResults();
+// do something with results...
+```
+
+or
+
+```c#
+var cmd = new RoboCommand();
+cmd.OnCommandCompleted += (args) => 
+{
+    var results = args.Results;
+    // do something with results...
+}
+cmd.Start();
+```
+
 # Contributing to RoboSharp
 
 First off, thanks! Please go through the [guidelines](CONTRIBUTING.md).
