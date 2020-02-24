@@ -166,6 +166,10 @@ namespace RoboSharp.BackupApp
             {
                 OptionsGrid.IsEnabled = true;
                 ProgressGrid.IsEnabled = false;
+                
+                var results = e.Results;
+                Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
+                Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
             }));
         }
 
