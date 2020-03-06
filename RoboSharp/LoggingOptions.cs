@@ -68,6 +68,7 @@ namespace RoboSharp
         /// <summary>
         /// Do not log file names.
         /// [/NFL]
+        /// WARNING: If this is set to TRUE then GUI then cannot handle showing progress correctly as it can't get information it requires from the log
         /// </summary>
         public bool NoFileList { get; set; }
         /// <summary>
