@@ -119,6 +119,7 @@ namespace RoboSharp
         /// <summary>
         /// Do not output a Job Summary.
         /// [/NJS]
+        /// WARNING: If this is set to TRUE then statistics will not work correctly as this information is gathered from the job summary part of the log 
         /// </summary>
         public bool NoJobSummary { get; set; }
         /// <summary>
