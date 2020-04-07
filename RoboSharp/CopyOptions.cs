@@ -240,7 +240,7 @@ namespace RoboSharp
 	    /// Specifies the inter-packet gap to free bandwidth on slow lines.
 	    /// [/IPG:N]
 	    /// </summary>
-	    public int InterPacketGap { get; set; } = 5;
+	    public int InterPacketGap { get; set; }
         /// <summary>
         /// Copies the symbolic link instead of the target.
         /// [/SL]
@@ -253,7 +253,7 @@ namespace RoboSharp
 	    /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
 	    /// [/MT:N]
 	    /// </summary>
-	    public int MultiThreadedCopiesCount { get; set; } = 0;
+	    public int MultiThreadedCopiesCount { get; set; }
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).
