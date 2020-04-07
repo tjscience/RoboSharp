@@ -19,6 +19,7 @@ namespace RoboSharp
         private bool hasError;
         private bool hasExited;
         private bool isPaused;
+        private bool isRunning;
         private bool isCancelled;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
@@ -33,6 +34,7 @@ namespace RoboSharp
 
         #region Public Vars
         public bool IsPaused { get { return isPaused; } }
+        public bool IsRunning { get { return isRunning; } }
         public bool IsCancelled { get { return isCancelled; } }
         public string CommandOptions { get { return GenerateParameters(); } }
         public CopyOptions CopyOptions
@@ -202,6 +204,8 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
+            
+            isRunning = true;
 
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
@@ -303,6 +307,7 @@ namespace RoboSharp
                     if (OnCommandCompleted != null)
                     {
                         OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
+                        isRunning = false;
                     }
                 }
 
