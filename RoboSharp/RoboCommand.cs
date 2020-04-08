@@ -340,6 +340,7 @@ namespace RoboSharp
                 process.Dispose();
                 process = null;
                 isCancelled = true;
+                isRunning = false;
             }
         }
 
