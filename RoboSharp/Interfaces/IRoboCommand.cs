@@ -16,6 +16,7 @@ namespace RoboSharp.Interfaces
         event RoboCommand.ErrorHandler OnError;
         event RoboCommand.CommandCompletedHandler OnCommandCompleted;
         event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
+        event RoboCommand.GeneralOutputHandler OnGeneralOutputChanged;
         void Pause();
         void Resume();
         Task Start(string domain = "", string username = "", string password = "");

@@ -77,6 +77,8 @@ namespace RoboSharp
         public event CommandCompletedHandler OnCommandCompleted;
         public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
         public event CopyProgressHandler OnCopyProgressChanged;
+        public delegate void GeneralOutputHandler(object sender, GeneralOutputEventArgs e);
+        public event GeneralOutputHandler OnGeneralOutputChanged;
 
         #endregion
 
@@ -168,6 +170,7 @@ namespace RoboSharp
                             }
                         }
                     }
+                    this.OnGeneralOutputChanged(this, new GeneralOutputEventArgs(e.Data.ToString()));
                 }
             }
         }
@@ -204,7 +207,7 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
-            
+
             isRunning = true;
 
             var tokenSource = new CancellationTokenSource();

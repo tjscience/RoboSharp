@@ -54,6 +54,7 @@ namespace RoboSharp.BackupApp
             copy.OnError += copy_OnError;
             copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
             copy.OnCommandCompleted += copy_OnCommandCompleted;
+            copy.OnGeneralOutputChanged += Copy_OnGeneralOutputChanged;
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
@@ -115,6 +116,14 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
 
             copy.Start();
+        }
+
+        private void Copy_OnGeneralOutputChanged(object sender, GeneralOutputEventArgs e)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                DetailsTextBlock.Text += $"{e.GeneralOutput}\n";
+            }));
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)

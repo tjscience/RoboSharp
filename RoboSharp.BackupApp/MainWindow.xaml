@@ -225,6 +225,9 @@
             <TabItem Header="Errors" Name="ErrorsTab">
                 <DataGrid Name="ErrorGrid"></DataGrid>
             </TabItem>
+            <TabItem Header="Details" Name="DetailsTab">
+                <TextBlock Name="DetailsTextBlock"/>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
