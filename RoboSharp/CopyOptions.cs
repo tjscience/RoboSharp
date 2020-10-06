@@ -42,6 +42,8 @@ namespace RoboSharp
         internal const string DIRECTORY_COPY_FLAGS = "/DCOPY:{0} ";
         internal const string DO_NOT_COPY_DIRECTORY_INFO = "/NODCOPY ";
         internal const string DO_NOT_USE_WINDOWS_COPY_OFFLOAD = "/NOOFFLOAD ";
+        internal const string INCLUDE_SAME_FILES = "/IS ";
+        internal const string INCLUDE_MODIFIED_FILES = "/IT ";
 
         #endregion Option Constants
 
@@ -274,6 +276,16 @@ namespace RoboSharp
         /// [/NOOFFLOAD]
         /// </summary>
         public bool DoNotUseWindowsCopyOffload { get; set; }
+        /// <summary>
+        /// Includes the same files.
+        /// [/IS]
+        /// </summary>
+        public bool IncludeSameFiles { get; set; }
+        /// <summary>
+        /// Includes the modified files.
+        /// [/IT]
+        /// </summary>
+        public bool IncludeModifiedFiles { get; set; }
 
         #endregion Public Properties
 
@@ -374,6 +386,10 @@ namespace RoboSharp
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
             if (DoNotUseWindowsCopyOffload && version >= 6.2)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
+            if (IncludeSameFiles)
+                options.Append(INCLUDE_SAME_FILES);
+            if (IncludeModifiedFiles)
+                options.Append(INCLUDE_MODIFIED_FILES);
             #endregion Set Options
 
             var parsedOptions = options.ToString();
