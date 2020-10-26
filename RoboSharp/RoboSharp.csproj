@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net40;net45;</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>1.2.1</Version>
+		<Version>1.2.2</Version>
 		<Copyright>Copyright � 2020</Copyright>
 		<Authors>Terry</Authors>
 		<owners>Terry</owners>
