@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace RoboSharp.BackupApp
 {
@@ -21,6 +23,8 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
             this.Closing += MainWindow_Closing;
             ErrorGrid.ItemsSource = Errors;
+            VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
+            var v = VersionManager.Version;
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -53,7 +57,13 @@ namespace RoboSharp.BackupApp
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
-            copy.CopyOptions.FileFilter = FileFilter.Text;
+
+            // split user input by whitespace, mantaining those enclosed by quotes
+            var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
+                .Cast<Match>()
+                .Select(m => m.Value);
+
+            copy.CopyOptions.FileFilter = fileFilterItems;
             copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
             copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
             if (!string.IsNullOrWhiteSpace(Depth.Text))
@@ -82,7 +92,7 @@ namespace RoboSharp.BackupApp
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
                 copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
-            
+
             // select options
             copy.SelectionOptions.OnlyCopyArchiveFiles = OnlyCopyArchiveFiles.IsChecked ?? false;
             copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag = OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked ?? false;
@@ -103,7 +113,7 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
-            
+
             copy.Start();
         }
 
@@ -112,7 +122,7 @@ namespace RoboSharp.BackupApp
             Console.WriteLine(e.Message);
         }
 
-        void copy_OnCommandError(object sender, ErrorEventArgs e)
+        void copy_OnCommandError(object sender, CommandErrorEventArgs e)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
@@ -156,12 +166,16 @@ namespace RoboSharp.BackupApp
             {
                 OptionsGrid.IsEnabled = true;
                 ProgressGrid.IsEnabled = false;
+                
+                var results = e.Results;
+                Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
+                Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
             }));
         }
 
         private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
         {
-            if(!copy.IsPaused)
+            if (!copy.IsPaused)
             {
                 copy.Pause();
                 PauseResumeButton.Content = "Resume";
@@ -211,7 +225,10 @@ namespace RoboSharp.BackupApp
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             if (copy != null)
+            {
                 copy.Stop();
+                copy.Dispose();
+            }
         }
     }
 

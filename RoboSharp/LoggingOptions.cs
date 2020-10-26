@@ -18,7 +18,7 @@ namespace RoboSharp
         internal const string SHOW_ESTIMATED_TIME_OF_ARRIVAL = "/ETA ";
         internal const string LOG_PATH = "/LOG:{0} ";
         internal const string APPEND_LOG_PATH = "/LOG+:{0} ";
-        internal const string UNICODE_LOG_PATH = "UNILOG:{0} ";
+        internal const string UNICODE_LOG_PATH = "/UNILOG:{0} ";
         internal const string APPEND_UNICODE_LOG_PATH = "/UNILOG+:{0} ";
         internal const string OUTPUT_TO_ROBOSHARP_AND_LOG = "/TEE ";
         internal const string NO_JOB_HEADER = "/NJH ";
@@ -68,6 +68,7 @@ namespace RoboSharp
         /// <summary>
         /// Do not log file names.
         /// [/NFL]
+        /// WARNING: If this is set to TRUE then GUI cannot handle showing progress correctly as it can't get information it requires from the log
         /// </summary>
         public bool NoFileList { get; set; }
         /// <summary>
@@ -118,6 +119,7 @@ namespace RoboSharp
         /// <summary>
         /// Do not output a Job Summary.
         /// [/NJS]
+        /// WARNING: If this is set to TRUE then statistics will not work correctly as this information is gathered from the job summary part of the log 
         /// </summary>
         public bool NoJobSummary { get; set; }
         /// <summary>

@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp
 {
-    public class RoboCommand : IDisposable
+    public class RoboCommand : IDisposable, IRoboCommand
     {
         #region Private Vars
 
@@ -18,17 +19,24 @@ namespace RoboSharp
         private bool hasError;
         private bool hasExited;
         private bool isPaused;
+        private bool isRunning;
+        private bool isCancelled;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
         private LoggingOptions loggingOptions = new LoggingOptions();
         private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
 
+        private Results.ResultsBuilder resultsBuilder;
+        private Results.RoboCopyResults results;
+
         #endregion Private Vars
 
         #region Public Vars
         public bool IsPaused { get { return isPaused; } }
-        public string CommandOptions { get { return GenerateParameters(); } }    
+        public bool IsRunning { get { return isRunning; } }
+        public bool IsCancelled { get { return isCancelled; } }
+        public string CommandOptions { get { return GenerateParameters(); } }
         public CopyOptions CopyOptions
         {
             get { return copyOptions; }
@@ -61,7 +69,7 @@ namespace RoboSharp
 
         public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
         public event FileProcessedHandler OnFileProcessed;
-        public delegate void CommandErrorHandler(object sender, ErrorEventArgs e);
+        public delegate void CommandErrorHandler(object sender, CommandErrorEventArgs e);
         public event CommandErrorHandler OnCommandError;
         public delegate void ErrorHandler(object sender, ErrorEventArgs e);
         public event ErrorHandler OnError;
@@ -74,11 +82,13 @@ namespace RoboSharp
 
         public RoboCommand()
         {
-            
+
         }
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            resultsBuilder?.AddOutput(e.Data);
+
             if (e.Data == null)
                 return;
             var data = e.Data.Trim().Replace("\0", "");
@@ -120,17 +130,23 @@ namespace RoboSharp
                     }
                     else
                     {
-                        if (OnError != null && Regex.IsMatch(data, $" {Configuration.ErrorToken} " + @"\d{1,3} \(0x\d{8}\) "))
-                        {
-                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                        var regex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
 
-                            if(errorCode.Key != null)
+                        if (OnError != null && regex.IsMatch(data))
+                        {
+                            // parse error code
+                            var match = regex.Match(data);
+                            string value = match.Groups[1].Value;
+                            int parsedValue = Int32.Parse(value);
+
+                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                            if (errorCode.Key != null)
                             {
-                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value)));
+                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
                             }
                             else
                             {
-                                OnError(this, new ErrorEventArgs(data));
+                                OnError(this, new ErrorEventArgs(data, parsedValue));
                             }
                         }
                         else
@@ -176,34 +192,47 @@ namespace RoboSharp
             }
         }
 
+#if NET45
+        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        {
+            await Start(domain, username, password);
+            return GetResults();
+        }
+#endif
+
         public Task Start(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
-	    
-	    var tokenSource = new CancellationTokenSource();
-	    CancellationToken cancellationToken = tokenSource.Token;
+            
+            isRunning = true;
+
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = tokenSource.Token;
+
+            resultsBuilder = new Results.ResultsBuilder();
+            results = null;
 
             // make sure source path is valid
-            if (!Directory.Exists(CopyOptions.Source.Replace("\"", "")))
+            if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Source directory does not exist."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Source directory does not exist."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-		tokenSource.Cancel(true);
+                tokenSource.Cancel(true);
             }
 
             #region Create Destination Directory
 
             try
             {
-                var dInfo = Directory.CreateDirectory(CopyOptions.Destination.Replace("\"", ""));
+                var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
                 if (!dInfo.Exists)
                 {
                     Debugger.Instance.DebugMessage("The destination directory does not exist.");
                     hasError = true;
-                    OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                     tokenSource.Cancel(true);
                 }
@@ -212,7 +241,7 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage(ex.Message);
                 hasError = true;
-                OnCommandError?.Invoke(this, new ErrorEventArgs("The Destination directory is invalid."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
@@ -221,8 +250,7 @@ namespace RoboSharp
 
             backupTask = Task.Factory.StartNew(() =>
             {
-	    	cancellationToken.ThrowIfCancellationRequested();
-		
+                cancellationToken.ThrowIfCancellationRequested();
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
@@ -267,24 +295,26 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
+                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            },cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
-            backupTask.ContinueWith((continuation) =>
+            Task continueWithTask = backupTask.ContinueWith((continuation) =>
             {
                 if (!hasError)
                 {
                     // backup is complete
                     if (OnCommandCompleted != null)
                     {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs());
+                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
+                        isRunning = false;
                     }
                 }
 
                 Stop();
-            });
+            }, cancellationToken);
 
-            return backupTask;
+            return continueWithTask;
         }
 
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
@@ -292,15 +322,15 @@ namespace RoboSharp
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
-                OnCommandError(this, new ErrorEventArgs(e.Data));
+                OnCommandError(this, new CommandErrorEventArgs(e.Data));
             }
         }
-        
-	    void Process_Exited(object sender, System.EventArgs e)
-	    {
-		    hasExited = true;
-    	}
-        
+
+        void Process_Exited(object sender, System.EventArgs e)
+        {
+            hasExited = true;
+        }
+
         public void Stop()
         {
             if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
@@ -309,7 +339,14 @@ namespace RoboSharp
                 hasExited = true;
                 process.Dispose();
                 process = null;
+                isCancelled = true;
+                isRunning = false;
             }
+        }
+
+        public Results.RoboCopyResults GetResults()
+        {
+            return results;
         }
 
         private string GenerateParameters()
@@ -325,7 +362,7 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("LoggingOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
-            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions, 
+            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
@@ -345,7 +382,7 @@ namespace RoboSharp
 
             if (disposing)
             {
-                
+
             }
 
             if (process != null)

@@ -1,33 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netcoreapp2.0;net45;net40</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
+	<PropertyGroup>
+		<TargetFrameworks>net40;net45;</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>1.2.1</Version>
+		<Copyright>Copyright � 2020</Copyright>
+		<Authors>Terry</Authors>
+		<owners>Terry</owners>
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
+		<PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
+		<Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
+		<summary>Merged urgent pull request #46</summary>
+	</PropertyGroup>
 
-    <AssemblyOriginatorKeyFile>../tools/Key.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
+	<ItemGroup>
+		<Reference Include="System.Management" />
+	</ItemGroup>
 
-    <AssemblyTitle>RoboSharp</AssemblyTitle>
-    <Copyright>Copyright 2018</Copyright>
-    <Version>1.2.0</Version>
-    <Authors>Terry Phillips</Authors>
-    <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
-
-    <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
-    <PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/tjscience/RoboSharp.git</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
-    <PackageReference Include="System.Management" Version="4.5.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PackageReference Include="System.Management" Version="4.0.0" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<Folder Include="Properties\" />
+	</ItemGroup>
 </Project>

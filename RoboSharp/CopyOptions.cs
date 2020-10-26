@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -44,7 +47,7 @@ namespace RoboSharp
 
         #region Option Defaults
 
-        private string fileFilter = "*.*";
+        private IEnumerable<string> fileFilter = new[] { "*.*" };
         private string copyFlags = "DAT";
         private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
@@ -55,15 +58,17 @@ namespace RoboSharp
         /// <summary>
         /// The source file path where the RoboCommand is copying files from.
         /// </summary>
-        public string Source { get; set; }
+        private string _source;
+        public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         /// <summary>
         /// The destination file path where the RoboCommand is copying files to.
         /// </summary>
-        public string Destination { get; set; }
+        private string _destination;
+        public string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         /// <summary>
-        /// Allows you to supply a specific file to copy or use wildcard characters (* or ?).
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?).
         /// </summary>
-        public string FileFilter
+        public IEnumerable<string> FileFilter
         {
             get
             {
@@ -74,35 +79,34 @@ namespace RoboSharp
                 fileFilter = value;
             }
         }
-
         /// <summary>
-        /// Copies subdirectories. Note that this option excludes empty directories. 
+        /// Copies subdirectories. Note that this option excludes empty directories.
         /// [/S]
         /// </summary>
         public bool CopySubdirectories { get; set; }
         /// <summary>
-        /// Copies subdirectories. Note that this option includes empty directories. 
+        /// Copies subdirectories. Note that this option includes empty directories.
         /// [/E]
         /// </summary>
         public bool CopySubdirectoriesIncludingEmpty { get; set; }
         /// <summary>
-        /// Copies only the top N levels of the source directory tree. The default is 
-        /// zero which does not limit the depth. 
+        /// Copies only the top N levels of the source directory tree. The default is
+        /// zero which does not limit the depth.
         /// [/LEV:N]
         /// </summary>
         public int Depth { get; set; }
         /// <summary>
-        /// Copies files in Restart mode. 
+        /// Copies files in Restart mode.
         /// [/Z]
         /// </summary>
         public bool EnableRestartMode { get; set; }
         /// <summary>
-        /// Copies files in Backup mode. 
+        /// Copies files in Backup mode.
         /// [/B]
         /// </summary>
         public bool EnableBackupMode { get; set; }
         /// <summary>
-        /// Uses Restart mode. If access is denied, this option uses Backup mode. 
+        /// Uses Restart mode. If access is denied, this option uses Backup mode.
         /// [/ZB]
         /// </summary>
         public bool EnableRestartModeWithBackupFallback { get; set; }
@@ -112,7 +116,7 @@ namespace RoboSharp
         /// </summary>
         public bool UseUnbufferedIo { get; set; }
         /// <summary>
-        /// Copies all encrypted files in EFS RAW mode. 
+        /// Copies all encrypted files in EFS RAW mode.
         /// [/EFSRAW]
         /// </summary>
         public bool EnableEfsRawMode { get; set; }
@@ -125,7 +129,7 @@ namespace RoboSharp
         ///S NTFS access control list (ACL)
         ///O Owner information
         ///U Auditing information
-        ///The default value for copyflags is DA (data, attributes, and time stamps).
+        ///The default value for copyflags is DAT (data, attributes, and time stamps).
         ///[/COPY:copyflags]
         /// </summary>
         public string CopyFlags
@@ -134,10 +138,7 @@ namespace RoboSharp
             {
                 return copyFlags;
             }
-            set
-            {
-                copyFlags = value;
-            }
+            set => copyFlags = value;
         }
         /// <summary>
         /// Copies files with security (equivalent to /copy:DAT).
@@ -192,7 +193,7 @@ namespace RoboSharp
         public string AddAttributes { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
-        /// Adds the specified attributes to copied files.
+        /// Removes the specified attributes from copied files.
         /// [/A-:attributes]
         /// </summary>
         public string RemoveAttributes { get; set; }
@@ -233,24 +234,26 @@ namespace RoboSharp
         /// [/PF]
         /// </summary>
         public bool CheckPerFile { get; set; }
-        /// <summary>
-        /// The default value of zero indicates that this feature is turned off.
-        /// Specifies the inter-packet gap to free bandwidth on slow lines.
-        /// [/IPG:N]
-        /// </summary>
-        public int InterPacketGap { get; set; }
+
+	    /// <summary>
+	    /// The default value of zero indicates that this feature is turned off.
+	    /// Specifies the inter-packet gap to free bandwidth on slow lines.
+	    /// [/IPG:N]
+	    /// </summary>
+	    public int InterPacketGap { get; set; }
         /// <summary>
         /// Copies the symbolic link instead of the target.
         /// [/SL]
         /// </summary>
         public bool CopySymbolicLink { get; set; }
-        /// <summary>
-        /// The default value of zero indicates that this feature is turned off.
-        /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
-        /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
-        /// [/MT:N]
-        /// </summary>
-        public int MultiThreadedCopiesCount { get; set; }
+
+	    /// <summary>
+	    /// The default value of zero indicates that this feature is turned off.
+	    /// Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
+	    /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
+	    /// [/MT:N]
+	    /// </summary>
+	    public int MultiThreadedCopiesCount { get; set; }
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).
@@ -280,10 +283,16 @@ namespace RoboSharp
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            // Set Source, Destination and FileFilter
+            // Set Source and Destination
             options.Append($"\"{Source}\" ");
             options.Append($"\"{Destination}\" ");
-            options.Append($"\"{FileFilter}\" ");
+
+            // Set FileFilter
+            // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
+            var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
+            string fileFilter = String.Join(" ", fileFilterQuotedItems);
+            options.Append($"{fileFilter} ");
+
             Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options
