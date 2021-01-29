@@ -1,25 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>net40;net45;</TargetFrameworks>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>1.2.2</Version>
-		<Copyright>Copyright � 2020</Copyright>
-		<Authors>Terry</Authors>
-		<owners>Terry</owners>
-		<requireLicenseAcceptance>false</requireLicenseAcceptance>
-		<PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
-		<PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
-		<PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
-		<Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
-		<summary>Merged urgent pull request #46</summary>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>net40;net45;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.2.2</Version>
+    <Copyright>Copyright � 2020</Copyright>
+    <Authors>Terry</Authors>
+    <owners>Terry</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
+    <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
+    <summary>Merged urgent pull request #46</summary>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<Reference Include="System.Management" />
-	</ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40' Or '$(TargetFramework)' == 'net45'">
+    <Reference Include="System.Management" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="Properties\" />
-	</ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1' Or '$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="Microsoft.Management.Infrastructure">
+      <Version>2.0.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
 </Project>
