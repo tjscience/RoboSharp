@@ -50,7 +50,7 @@ namespace RoboSharp
 
         private static string GetOsVersion()
         {
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD || NETCOREAPP
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
             {
                 var win32OperatingSystemCimInstance = session.QueryInstances("root\\cimv2", "WQL", "SELECT Version FROM  Win32_OperatingSystem").FirstOrDefault();
