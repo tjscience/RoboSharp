@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net40;net45;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.2</Version>
-    <Copyright>Copyright � 2020</Copyright>
+    <Version>1.2.3</Version>
+    <Copyright>Copyright 2021</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -12,7 +12,11 @@
     <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
     <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
-    <summary>Merged urgent pull request #46</summary>
+    <summary>
+      Merged pull #93 - Use dot as NumberDecimalSeperator independent of current culture.
+      Merged pull #95 - Add new targetframeworks.
+      Merged pull #99 - Wrap log file paths in quotes if needed.
+    </summary>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net40' Or '$(TargetFramework)' == 'net45'">
