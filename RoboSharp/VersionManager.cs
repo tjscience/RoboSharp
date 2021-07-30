@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Management;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
@@ -57,11 +56,24 @@ namespace RoboSharp
         {
             System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;            
 
-            using (ManagementObjectSearcher objMOS = new ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
+#if NETSTANDARD2_1 || NETCOREAPP3_1
+            using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
+
             {
-                foreach (ManagementObject objManagement in objMOS.Get())
+                var win32OperatingSystemCimInstance = session.QueryInstances("root\\cimv2", "WQL", "SELECT Version FROM  Win32_OperatingSystem").FirstOrDefault();
+
+                if (win32OperatingSystemCimInstance?.CimInstanceProperties["Version"] != null)
+                {
+                    return win32OperatingSystemCimInstance.CimInstanceProperties["Version"].Value.ToString();
+                }
+            }
+#endif
+#if NET40 || NET45
+            using (System.Management.ManagementObjectSearcher objMOS = new System.Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
+            {
+                foreach (System.Management.ManagementObject objManagement in objMOS.Get())
                 {
                     var version = objManagement.GetPropertyValue("Version");
 
@@ -71,6 +83,7 @@ namespace RoboSharp
                     }
                 }
             }
+#endif
 
             return Environment.OSVersion.Version.ToString();
         }
