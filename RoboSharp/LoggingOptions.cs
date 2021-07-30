@@ -129,7 +129,7 @@ namespace RoboSharp
         public bool OutputAsUnicode { get; set; }
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
-        internal string WrapPath(string logPath) => logPath.StartsWith("\"") ? logPath : logPath.Contains(" ") ? $"\"{logPath}\"" : logPath;
+        internal string WrapPath(string logPath) => ( !logPath.StartsWith("\"") && logPath.Contains(" ") ) ? $"\"{logPath}\"" : logPath;
         
         internal string Parse()
         {
