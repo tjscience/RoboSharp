@@ -24,7 +24,7 @@ namespace RoboSharp
         internal const string NO_JOB_HEADER = "/NJH ";
         internal const string NO_JOB_SUMMARY = "/NJS ";
         internal const string OUTPUT_AS_UNICODE = "/UNICODE ";
-        
+
         /// <summary>
         /// Do not copy, timestamp or delete any files.
         /// [/L]
