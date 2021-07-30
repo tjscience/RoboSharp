@@ -19,11 +19,16 @@ namespace RoboSharp
 
         public static VersionCheckType VersionCheck { get; set; } = VersionManager.VersionCheckType.UseRtlGetVersion;
 
+
         private static double? version;
         public static double Version
         {
             get
             {
+                System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+                customCulture.NumberFormat.NumberDecimalSeparator = ".";
+                System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+
                 if (version == null)
                 {
                     if (VersionCheck == VersionCheckType.UseWMI)
@@ -37,7 +42,6 @@ namespace RoboSharp
                         var osVersionInfo = new OSVERSIONINFOEX { OSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX)) };
                         RtlGetVersion(ref osVersionInfo);
                         var versionString = $"{osVersionInfo.MajorVersion}.{osVersionInfo.MinorVersion}{osVersionInfo.BuildNumber}";
-                        version = Convert.ToDouble(versionString);
                         return version.Value;
                     }
                 }
@@ -50,8 +54,13 @@ namespace RoboSharp
 
         private static string GetOsVersion()
         {
+            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;            
+
 #if NETSTANDARD2_1 || NETCOREAPP3_1
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
+
             {
                 var win32OperatingSystemCimInstance = session.QueryInstances("root\\cimv2", "WQL", "SELECT Version FROM  Win32_OperatingSystem").FirstOrDefault();
 
@@ -81,6 +90,10 @@ namespace RoboSharp
 
         private static double GetOsVersionNumber(string version)
         {
+            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
+            customCulture.NumberFormat.NumberDecimalSeparator = ".";
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+
             if (version.IsNullOrWhiteSpace())
                 return 0;
 
