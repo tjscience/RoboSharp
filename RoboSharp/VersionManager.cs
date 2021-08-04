@@ -25,10 +25,6 @@ namespace RoboSharp
         {
             get
             {
-                System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
-                customCulture.NumberFormat.NumberDecimalSeparator = ".";
-                System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
-
                 if (version == null)
                 {
                     if (VersionCheck == VersionCheckType.UseWMI)
@@ -42,6 +38,7 @@ namespace RoboSharp
                         var osVersionInfo = new OSVERSIONINFOEX { OSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX)) };
                         RtlGetVersion(ref osVersionInfo);
                         var versionString = $"{osVersionInfo.MajorVersion}.{osVersionInfo.MinorVersion}{osVersionInfo.BuildNumber}";
+                        version = GetOsVersionNumber(versionString);
                         return version.Value;
                     }
                 }
@@ -52,12 +49,16 @@ namespace RoboSharp
             }
         }
 
-        private static string GetOsVersion()
+        static VersionManager()
         {
             System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
             customCulture.NumberFormat.NumberDecimalSeparator = ".";
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;            
+            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
+        }
 
+
+        private static string GetOsVersion()
+        {
 #if NETSTANDARD2_1 || NETCOREAPP3_1
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
@@ -90,10 +91,6 @@ namespace RoboSharp
 
         private static double GetOsVersionNumber(string version)
         {
-            System.Globalization.CultureInfo customCulture = (System.Globalization.CultureInfo)System.Threading.Thread.CurrentThread.CurrentCulture.Clone();
-            customCulture.NumberFormat.NumberDecimalSeparator = ".";
-            System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
-
             if (version.IsNullOrWhiteSpace())
                 return 0;
 
