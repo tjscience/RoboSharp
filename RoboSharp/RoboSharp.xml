@@ -738,7 +738,8 @@
         </member>
         <member name="P:RoboSharp.RoboCommand.StopIfDisposing">
             <summary>
-            Value indicating if the <see cref="M:RoboSharp.RoboCommand.Stop"/> method should be called when the <see cref="M:RoboSharp.RoboCommand.Dispose"/> method is called.
+            Value indicating if the process should be killed when the <see cref="M:RoboSharp.RoboCommand.Dispose"/> method is called. <br/>
+            For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE.
             </summary>
         </member>
         <member name="T:RoboSharp.RoboCommand.FileProcessedHandler">
@@ -798,7 +799,6 @@
         </member>
         <member name="M:RoboSharp.RoboCommand.Dispose">
             <inheritdoc cref="M:System.IDisposable.Dispose"/>>
-            <remarks><see cref="M:RoboSharp.RoboCommand.Stop"/> should be called prior to this if <see cref="P:RoboSharp.RoboCommand.IsRunning"/> is TRUE</remarks>
         </member>
         <member name="M:RoboSharp.RoboCommand.Dispose(System.Boolean)">
             <summary>IDisposable Implementation</summary>

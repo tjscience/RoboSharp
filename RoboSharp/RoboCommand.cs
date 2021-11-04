@@ -75,7 +75,8 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Value indicating if the <see cref="Stop"/> method should be called when the <see cref="Dispose()"/> method is called.
+        /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called. <br/>
+        /// For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE.
         /// </summary>
         public bool StopIfDisposing { get; set; }
 
@@ -422,10 +423,8 @@ namespace RoboSharp
         bool disposed = false;
 
         /// <inheritdoc cref="IDisposable.Dispose"/>>
-        /// <remarks><see cref="RoboCommand.Stop"/> should be called prior to this if <see cref="IsRunning"/> is TRUE</remarks>
         public void Dispose()
         {
-            if (StopIfDisposing) Stop();
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -436,6 +435,14 @@ namespace RoboSharp
             if (disposed)
                 return;
 
+            if (StopIfDisposing && process != null && !hasExited)
+            {
+                process.Kill();
+                hasExited = true;
+                isCancelled = true;
+                isRunning = false;
+            }
+
             if (disposing)
             {
 
@@ -443,6 +450,7 @@ namespace RoboSharp
 
             if (process != null)
                 process.Dispose();
+
             disposed = true;
         }
 
