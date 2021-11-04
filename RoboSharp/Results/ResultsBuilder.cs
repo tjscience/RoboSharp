@@ -5,11 +5,14 @@ using System.Text.RegularExpressions;
 
 namespace RoboSharp.Results
 {
-    public class ResultsBuilder
+    /// <summary>
+    /// Helper class to build a <see cref="RoboCopyResults"/> object.
+    /// </summary>
+    internal class ResultsBuilder
     {
         private readonly List<string> outputLines = new List<string>();
 
-        public void AddOutput(string output)
+        internal void AddOutput(string output)
         {
             if (output == null)
                 return;
@@ -20,7 +23,7 @@ namespace RoboSharp.Results
             outputLines.Add(output);
         }
 
-        public RoboCopyResults BuildResults(int exitCode)
+        internal RoboCopyResults BuildResults(int exitCode)
         {
             var res = new RoboCopyResults();
             res.Status = new RoboCopyExitStatus(exitCode);

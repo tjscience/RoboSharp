@@ -7,13 +7,22 @@ using System.Text.RegularExpressions;
 
 namespace RoboSharp.Results
 {
+    /// <summary>
+    /// Information about number of items Copied, Skipped, Failed, etc.
+    /// </summary>
     public class Statistic
     {
+        /// <summary> Total Scanned during the run</summary>
         public long Total { get; private set; }
+        /// <summary> Total Copied </summary>
         public long Copied { get; private set; }
+        /// <summary> Total Skipped </summary>
         public long Skipped { get; private set; }
+        /// <summary>  </summary>
         public long Mismatch { get; private set; }
+        /// <summary> Total that failed to copy or move </summary>
         public long Failed { get; private set; }
+        /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
         public long Extras { get; private set; }
 
         /// <summary>
@@ -24,6 +33,11 @@ namespace RoboSharp.Results
             return $"Total: {Total}, Copied: {Copied}, Skipped: {Skipped}, Mismatch: {Mismatch}, Failed: {Failed}, Extras: {Extras}";
         }
 
+        /// <summary>
+        /// Parse a string and for the tokens reported by RoboCopy
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns>New Statistic Object</returns>
         public static Statistic Parse(string line)
         {
             var res = new Statistic();
