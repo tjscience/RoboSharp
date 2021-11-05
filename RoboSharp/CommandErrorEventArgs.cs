@@ -16,31 +16,12 @@ namespace RoboSharp
         public string Error { get; }
 
         /// <summary>
-        /// If this CommandErrorEventArgs object was created in response to an exception, that exception is captured here. <br/>
-        /// If no exception was thrown, this property will be null.
+        /// New Instance of CommandErrorEventArgs object
         /// </summary>
-        public Exception Exception { get; }
-
-        /// <summary>
-        /// <inheritdoc cref="CommandErrorEventArgs"/>
-        /// </summary>
-        /// <param name="error"><inheritdoc cref="Error"/></param>
-        /// <param name="ex"><inheritdoc cref="Exception"/></param>
-        public CommandErrorEventArgs(string error, Exception ex)
+        /// <param name="error"></param>
+        public CommandErrorEventArgs(string error)
         {
             Error = error;
-            Exception = ex;
         }
-
-        /// <summary>
-        /// <inheritdoc cref="CommandErrorEventArgs"/>
-        /// </summary>
-        /// <param name="ex">Exception to data to pass to the event handler</param>
-        public CommandErrorEventArgs(Exception ex)
-        {
-            Error = ex.Message;
-            Exception = ex;
-        }
-
     }
 }
