@@ -277,13 +277,11 @@ namespace RoboSharp
 
             #region Create Destination Directory
 
-            //Do not create the destination directory. Robocopy does this automatically anyway. [fixes #101] 
-            //Check that the Destination Drive is accessible insteead [fixes #106]
             try
             {
                 using (var impersonation = new ImpersonatedUser(username, domain, password))
                 {
-                    //Check if the destination drive is accessible -> should not cause exception
+                    //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
                     DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
                     if (!dInfo.Exists)
                     {
@@ -293,7 +291,7 @@ namespace RoboSharp
                         Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                         tokenSource.Cancel(true);
                     }
-                    //If not list only, verify that drive has write access -> should cause exception if no write access
+                    //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
                     if (!LoggingOptions.ListOnly & !hasError)
                     {
                         dInfo = Directory.CreateDirectory(CopyOptions.Destination);

@@ -29,7 +29,7 @@ namespace RoboSharp
         public CommandErrorEventArgs(string error, Exception ex)
         {
             Error = error;
-            Exception = ex;
+            this.Exception = ex;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace RoboSharp
         public CommandErrorEventArgs(Exception ex)
         {
             Error = ex.Message;
-            Exception = ex;
+            this.Exception = ex;
         }
 
     }
