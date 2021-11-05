@@ -264,37 +264,51 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Source directory does not exist."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
 
-            //#region Create Destination Directory
+            #region Create Destination Directory
 
-            // Do not create the destination directory. Robocopy does this automatically anyway. [fixes #101] 
-            //try
-            //{
-            //    var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+            //Do not create the destination directory. Robocopy does this automatically anyway. [fixes #101] 
+            //Check that the Destination Drive is accessible insteead [fixes #106]
+            try
+            {
+                //Check if the destination drive is accessible -> should not cause exception
+                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
+                if (!dInfo.Exists)
+                {
+                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
+                    hasError = true;
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    tokenSource.Cancel(true);
+                }
+                //If not list only, verify that drive has write access -> should cause exception if no write access
+                if (!LoggingOptions.ListOnly & !hasError)
+                {
+                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+                    if (!dInfo.Exists)
+                    {
+                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                        hasError = true;
+                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                        tokenSource.Cancel(true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debugger.Instance.DebugMessage(ex.Message);
+                hasError = true;
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                tokenSource.Cancel(true);
+            }
 
-            //    if (!dInfo.Exists)
-            //    {
-            //        Debugger.Instance.DebugMessage("The destination directory does not exist.");
-            //        hasError = true;
-            //        OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
-            //        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //        tokenSource.Cancel(true);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Debugger.Instance.DebugMessage(ex.Message);
-            //    hasError = true;
-            //    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
-            //    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //    tokenSource.Cancel(true);
-            //}
-
-            //#endregion
+            #endregion
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -371,7 +385,7 @@ namespace RoboSharp
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
-                OnCommandError(this, new CommandErrorEventArgs(e.Data));
+                OnCommandError(this, new CommandErrorEventArgs(e.Data, null));
             }
         }
 

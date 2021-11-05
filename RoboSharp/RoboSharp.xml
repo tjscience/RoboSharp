@@ -14,11 +14,24 @@
             Error Description
             </summary>
         </member>
-        <member name="M:RoboSharp.CommandErrorEventArgs.#ctor(System.String)">
+        <member name="P:RoboSharp.CommandErrorEventArgs.Exception">
             <summary>
-            New Instance of CommandErrorEventArgs object
+            If this CommandErrorEventArgs object was created in response to an exception, that exception is captured here. <br/>
+            If no exception was thrown, this property will be null.
             </summary>
-            <param name="error"></param>
+        </member>
+        <member name="M:RoboSharp.CommandErrorEventArgs.#ctor(System.String,System.Exception)">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.CommandErrorEventArgs"/>
+            </summary>
+            <param name="error"><inheritdoc cref="P:RoboSharp.CommandErrorEventArgs.Error"/></param>
+            <param name="ex"><inheritdoc cref="P:RoboSharp.CommandErrorEventArgs.Exception"/></param>
+        </member>
+        <member name="M:RoboSharp.CommandErrorEventArgs.#ctor(System.Exception)">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.CommandErrorEventArgs"/>
+            </summary>
+            <param name="ex">Exception to data to pass to the event handler</param>
         </member>
         <member name="T:RoboSharp.CopyOptions">
             <summary>
@@ -277,7 +290,7 @@
         </member>
         <member name="T:RoboSharp.ErrorEventArgs">
             <summary>
-            Information about an Error reported by RoboCopy
+            Information about an Error reported by the RoboCopy process
             </summary>
         </member>
         <member name="P:RoboSharp.ErrorEventArgs.Error">
@@ -292,7 +305,7 @@
         </member>
         <member name="M:RoboSharp.ErrorEventArgs.#ctor(System.String,System.Int32)">
             <summary>
-            New Instance of ErrorEventArgs object
+            <inheritdoc cref="T:RoboSharp.ErrorEventArgs"/>
             </summary>
             <param name="error"><inheritdoc cref="P:RoboSharp.ErrorEventArgs.Error"/></param>
             <param name="errorCode"><inheritdoc cref="P:RoboSharp.ErrorEventArgs.ErrorCode"/></param>
@@ -567,7 +580,7 @@
         </member>
         <member name="T:RoboSharp.Results.RoboCopyResults">
             <summary>
-            
+            Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
             </summary>
         </member>
         <member name="P:RoboSharp.Results.RoboCopyResults.Status">
@@ -674,6 +687,35 @@
             </summary>
             <param name="line"></param>
             <returns>New Statistic Object</returns>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistic(RoboSharp.Results.Statistic)">
+            <summary>
+            Add the results of the supplied Statistics object to this Statistics object.
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Add the results of the supplied Statistics objects to this Statistics object.
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistics(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Combine the results of the supplied statistics objects
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+            <returns>New Statistics Object</returns>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AverageStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Combine the supplied <see cref="T:RoboSharp.Results.Statistic"/> objects, then get the average.
+            </summary>
+            <param name="stats">Array of Stats objects</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AverageStatistics(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <returns>New Statistics Object</returns>
+            <inheritdoc cref="M:RoboSharp.Results.Statistic.AverageStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})"/>
         </member>
         <member name="T:RoboSharp.RetryOptions">
             <summary>
