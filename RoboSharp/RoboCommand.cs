@@ -7,6 +7,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Interfaces;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Security.Principal;
 
 namespace RoboSharp
 {
@@ -260,13 +263,16 @@ namespace RoboSharp
             results = null;
 
             // make sure source path is valid
-            if (!Directory.Exists(CopyOptions.Source))
+            using (var impersonation = new ImpersonatedUser(username, domain, password))
             {
-                Debugger.Instance.DebugMessage("The Source directory does not exist.");
-                hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
-                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                tokenSource.Cancel(true);
+                if (!Directory.Exists(CopyOptions.Source))
+                {
+                    Debugger.Instance.DebugMessage("The Source directory does not exist.");
+                    hasError = true;
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    tokenSource.Cancel(true);
+                }
             }
 
             #region Create Destination Directory
@@ -275,27 +281,30 @@ namespace RoboSharp
             //Check that the Destination Drive is accessible insteead [fixes #106]
             try
             {
-                //Check if the destination drive is accessible -> should not cause exception
-                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
-                if (!dInfo.Exists)
+                using (var impersonation = new ImpersonatedUser(username, domain, password))
                 {
-                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
-                    hasError = true;
-                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
-                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                    tokenSource.Cancel(true);
-                }
-                //If not list only, verify that drive has write access -> should cause exception if no write access
-                if (!LoggingOptions.ListOnly & !hasError)
-                {
-                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+                    //Check if the destination drive is accessible -> should not cause exception
+                    DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
                     if (!dInfo.Exists)
                     {
-                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                        Debugger.Instance.DebugMessage("The destination drive does not exist.");
                         hasError = true;
-                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
                         Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                         tokenSource.Cancel(true);
+                    }
+                    //If not list only, verify that drive has write access -> should cause exception if no write access
+                    if (!LoggingOptions.ListOnly & !hasError)
+                    {
+                        dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+                        if (!dInfo.Exists)
+                        {
+                            Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                            hasError = true;
+                            OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                            Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                            tokenSource.Cancel(true);
+                        }
                     }
                 }
             }
@@ -470,4 +479,89 @@ namespace RoboSharp
 
         #endregion IDisposable Implementation
     }
+
+    #region ImpersonatedUser Class [ Fix #43 ]
+
+    /// <summary>
+    /// Create an authenticated user to test Source/Destination directory access
+    /// <remarks>See Issue #43</remarks>
+    /// </summary>
+    internal class ImpersonatedUser : IDisposable
+    {
+        IntPtr userHandle;
+
+        WindowsImpersonationContext impersonationContext;
+
+        /// <inheritdoc cref="ImpersonatedUser"/>
+        /// <inheritdoc cref="RoboCommand.Start(string, string, string)"></inheritdoc>
+        internal ImpersonatedUser(string user, string domain, string password)
+        {
+            userHandle = IntPtr.Zero;
+
+            bool loggedOn = LogonUser(
+                user,
+                domain,
+                password,
+                LogonType.Interactive,
+                LogonProvider.Default,
+                out userHandle);
+
+            if (!loggedOn)
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+
+            // Begin impersonating the user
+            impersonationContext = WindowsIdentity.Impersonate(userHandle);
+        }
+
+        /// <inheritdoc cref="IDisposable.Dispose"/>
+        public void Dispose()
+        {
+            if (userHandle != IntPtr.Zero)
+            {
+                CloseHandle(userHandle);
+
+                userHandle = IntPtr.Zero;
+
+                impersonationContext.Undo();
+            }
+        }
+
+        [DllImport("advapi32.dll", SetLastError = true)]
+        static extern bool LogonUser(
+
+            string lpszUsername,
+
+            string lpszDomain,
+
+            string lpszPassword,
+
+            LogonType dwLogonType,
+
+            LogonProvider dwLogonProvider,
+
+            out IntPtr phToken
+
+            );
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool CloseHandle(IntPtr hHandle);
+
+        enum LogonType : int
+        {
+            Interactive = 2,
+            Network = 3,
+            Batch = 4,
+            Service = 5,
+            NetworkCleartext = 8,
+            NewCredentials = 9,
+        }
+
+        enum LogonProvider : int
+        {
+            Default = 0,
+        }
+
+    }
+
+    #endregion ImpersonatedUser Class
 }
