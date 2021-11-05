@@ -271,17 +271,31 @@ namespace RoboSharp
 
             #region Create Destination Directory
 
+            //Check that the Destination Drive is accessible insteead [fixes #106]
             try
             {
-                var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
-
+                //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
+                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
                 if (!dInfo.Exists)
                 {
-                    Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
                     hasError = true;
-                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                     tokenSource.Cancel(true);
+                }
+                //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
+                if (!LoggingOptions.ListOnly & !hasError)
+                {
+                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+                    if (!dInfo.Exists)
+                    {
+                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                        hasError = true;
+                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                        tokenSource.Cancel(true);
+                    }
                 }
             }
             catch (Exception ex)
