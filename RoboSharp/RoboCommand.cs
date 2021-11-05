@@ -269,31 +269,31 @@ namespace RoboSharp
                 tokenSource.Cancel(true);
             }
 
-            //#region Create Destination Directory
+            #region Create Destination Directory
 
-            //try
-            //{
-            //    var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+            try
+            {
+                var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
 
-            //    if (!dInfo.Exists)
-            //    {
-            //        Debugger.Instance.DebugMessage("The destination directory does not exist.");
-            //        hasError = true;
-            //        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
-            //        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //        tokenSource.Cancel(true);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Debugger.Instance.DebugMessage(ex.Message);
-            //    hasError = true;
-            //    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
-            //    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //    tokenSource.Cancel(true);
-            //}
+                if (!dInfo.Exists)
+                {
+                    Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                    hasError = true;
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    tokenSource.Cancel(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debugger.Instance.DebugMessage(ex.Message);
+                hasError = true;
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                tokenSource.Cancel(true);
+            }
 
-            //#endregion
+            #endregion
 
             backupTask = Task.Factory.StartNew(() =>
             {
