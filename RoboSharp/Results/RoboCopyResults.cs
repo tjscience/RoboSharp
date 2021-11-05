@@ -3,7 +3,7 @@
 namespace RoboSharp.Results
 {
     /// <summary>
-    /// 
+    /// Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
     /// </summary>
     public class RoboCopyResults
     {
