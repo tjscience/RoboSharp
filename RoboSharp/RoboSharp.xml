@@ -321,6 +321,20 @@
         <member name="M:RoboSharp.FileProcessedEventArgs.#ctor(RoboSharp.ProcessedFileInfo)">
             <inheritdoc cref="M:System.EventArgs.#ctor"/>
         </member>
+        <member name="T:RoboSharp.ImpersonatedUser">
+            <summary>
+            Create an authenticated user to test Source/Destination directory access
+            <remarks>See Issue #43 and PR #45 </remarks>
+            <remarks>This class is not available in NetCoreApp3.1, NetStandard2.0, and NetStandard2.1</remarks>
+            </summary>
+        </member>
+        <member name="M:RoboSharp.ImpersonatedUser.#ctor(System.String,System.String,System.String)">
+            <inheritdoc cref="T:RoboSharp.ImpersonatedUser"/>
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Start(System.String,System.String,System.String)"></inheritdoc>
+        </member>
+        <member name="M:RoboSharp.ImpersonatedUser.Dispose">
+            <inheritdoc cref="M:System.IDisposable.Dispose"/>
+        </member>
         <member name="T:RoboSharp.Interfaces.IRoboCommand">
             <summary>
             
