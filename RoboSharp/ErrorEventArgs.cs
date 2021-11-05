@@ -3,7 +3,7 @@
 namespace RoboSharp
 {
     /// <summary>
-    /// Information about an Error reported by RoboCopy
+    /// Information about an Error reported by the RoboCopy process
     /// </summary>
     public class ErrorEventArgs : EventArgs
     {
@@ -18,7 +18,7 @@ namespace RoboSharp
         public int ErrorCode { get; }
 
         /// <summary>
-        /// New Instance of ErrorEventArgs object
+        /// <inheritdoc cref="ErrorEventArgs"/>
         /// </summary>
         /// <param name="error"><inheritdoc cref="Error"/></param>
         /// <param name="errorCode"><inheritdoc cref="ErrorCode"/></param>

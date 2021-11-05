@@ -264,14 +264,13 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Source directory does not exist."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
 
             //#region Create Destination Directory
 
-            // Do not create the destination directory. Robocopy does this automatically anyway. [fixes #101] 
             //try
             //{
             //    var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
@@ -280,7 +279,7 @@ namespace RoboSharp
             //    {
             //        Debugger.Instance.DebugMessage("The destination directory does not exist.");
             //        hasError = true;
-            //        OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
+            //        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
             //        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
             //        tokenSource.Cancel(true);
             //    }
@@ -289,7 +288,7 @@ namespace RoboSharp
             //{
             //    Debugger.Instance.DebugMessage(ex.Message);
             //    hasError = true;
-            //    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
+            //    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
             //    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
             //    tokenSource.Cancel(true);
             //}
@@ -371,7 +370,7 @@ namespace RoboSharp
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
-                OnCommandError(this, new CommandErrorEventArgs(e.Data));
+                OnCommandError(this, new CommandErrorEventArgs(e.Data, null));
             }
         }
 
