@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace RoboSharp
 {
+    /// <summary>
+    /// Setup the ErrorToken and the path to RoboCopy.exe.
+    /// </summary>
     public class RoboSharpConfiguration
     {
         private static readonly IDictionary<string, RoboSharpConfiguration> 
@@ -13,6 +16,9 @@ namespace RoboSharp
             {"de", new RoboSharpConfiguration { ErrorToken = "FEHLER"} },
         };
 
+        /// <summary>
+        /// 
+        /// </summary>
         public string ErrorToken
         {
             get { return errorToken ?? GetDefaultConfiguration().ErrorToken; }
@@ -20,6 +26,9 @@ namespace RoboSharp
         }
         private string errorToken = null;
 
+        /// <summary>
+        /// Specify the path to RoboCopy.exe here. If not set, use the default copy.
+        /// </summary>
         public string RoboCopyExe
         {
             get { return roboCopyExe ?? "Robocopy.exe"; }

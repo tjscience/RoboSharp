@@ -17,6 +17,10 @@
     </summary>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net40|AnyCPU'">
+    <DocumentationFile>C:\Users\rbrenckman\source\repos\RobotSoftwareTool_.Net Framework\RoboSharp\RoboSharp\RoboSharp.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net40' Or '$(TargetFramework)' == 'net45'">
     <Reference Include="System.Management" />
   </ItemGroup>

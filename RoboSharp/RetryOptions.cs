@@ -2,6 +2,9 @@
 
 namespace RoboSharp
 {
+    /// <summary>
+    /// RoboCopy switches for how to react if a copy/move operation errors
+    /// </summary>
     public class RetryOptions
     {
         internal const string RETRY_COUNT = "/R:{0} ";

@@ -5,6 +5,9 @@ using System.Text;
 
 namespace RoboSharp
 {
+    /// <summary>
+    /// Source, Destination, and options for how to move or copy files.
+    /// </summary>
     public class CopyOptions
     {
         #region Option Constants
@@ -59,11 +62,13 @@ namespace RoboSharp
         /// The source file path where the RoboCommand is copying files from.
         /// </summary>
         private string _source;
+        /// <inheritdoc cref="_source"/>
         public string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         /// <summary>
         /// The destination file path where the RoboCommand is copying files to.
         /// </summary>
         private string _destination;
+        /// <inheritdoc cref="_destination"/>
         public string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?).

@@ -10,6 +10,9 @@ using RoboSharp.Interfaces;
 
 namespace RoboSharp
 {
+    /// <summary>
+    /// Wrapper for the RoboCopy process
+    /// </summary>
     public class RoboCommand : IDisposable, IRoboCommand
     {
         #region Private Vars
@@ -33,53 +36,82 @@ namespace RoboSharp
         #endregion Private Vars
 
         #region Public Vars
+        /// <summary> Value indicating if process is currently paused </summary>
         public bool IsPaused { get { return isPaused; } }
+        /// <summary> Value indicating if process is currently running </summary>
         public bool IsRunning { get { return isRunning; } }
+        /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
+        /// <summary>  </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
+        /// <inheritdoc cref="RoboSharp.CopyOptions"/>
         public CopyOptions CopyOptions
         {
             get { return copyOptions; }
             set { copyOptions = value; }
         }
+        /// <inheritdoc cref="RoboSharp.SelectionOptions"/>
         public SelectionOptions SelectionOptions
         {
             get { return selectionOptions; }
             set { selectionOptions = value; }
         }
+        /// <inheritdoc cref="RoboSharp.RetryOptions"/>
         public RetryOptions RetryOptions
         {
             get { return retryOptions; }
             set { retryOptions = value; }
         }
+        /// <inheritdoc cref="RoboSharp.LoggingOptions"/>
         public LoggingOptions LoggingOptions
         {
             get { return loggingOptions; }
             set { loggingOptions = value; }
         }
-
+        /// <inheritdoc cref="RoboSharp.RoboSharpConfiguration"/>
         public RoboSharpConfiguration Configuration
         {
             get { return configuration; }
         }
 
+        /// <summary>
+        /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called. <br/>
+        /// For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE.
+        /// </summary>
+        public bool StopIfDisposing { get; set; }
+
         #endregion Public Vars
 
         #region Events
 
+        /// <summary>Handles <see cref="OnFileProcessed"/></summary>
         public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
+        /// <summary>Occurs each time a new item has started processing</summary>
         public event FileProcessedHandler OnFileProcessed;
+
+        /// <summary>Handles <see cref="OnCommandError"/></summary>
         public delegate void CommandErrorHandler(object sender, CommandErrorEventArgs e);
+        /// <summary>Occurs when an error occurs while generating the command</summary>
         public event CommandErrorHandler OnCommandError;
+
+        /// <summary>Handles <see cref="OnError"/></summary>
         public delegate void ErrorHandler(object sender, ErrorEventArgs e);
+        /// <summary>Occurs when the command exits due to an error</summary>
         public event ErrorHandler OnError;
+
+        /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
         public delegate void CommandCompletedHandler(object sender, RoboCommandCompletedEventArgs e);
+        /// <summary>Occurs when the command exits</summary>
         public event CommandCompletedHandler OnCommandCompleted;
+
+        /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
         public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
+        /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 
         #endregion
 
+        /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand()
         {
 
@@ -172,6 +204,7 @@ namespace RoboSharp
             }
         }
 
+        /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
         {
             if (process != null && isPaused == false)
@@ -182,6 +215,7 @@ namespace RoboSharp
             }
         }
 
+        /// <summary>Resume execution of the RoboCopy process when <see cref="IsPaused"/> == true</summary>
         public void Resume()
         {
             if (process != null && isPaused == true)
@@ -193,6 +227,11 @@ namespace RoboSharp
         }
 
 #if NET45
+        /// <summary>
+        /// Start the RoboCopy Process, then return the results.
+        /// </summary>
+        /// <returns>Returns the RoboCopy results once RoboCopy has finished executing.</returns>        
+        /// <inheritdoc cref="Start(string, string, string)"/>
         public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
         {
             await Start(domain, username, password);
@@ -200,6 +239,13 @@ namespace RoboSharp
         }
 #endif
 
+        /// <summary>
+        /// Start the RoboCopy Process.
+        /// </summary>
+        /// <param name="domain"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns>Returns a task that reports when the RoboCopy process has finished executing.</returns>
         public Task Start(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
@@ -218,37 +264,50 @@ namespace RoboSharp
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
                 hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Source directory does not exist."));
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
 
-            //#region Create Destination Directory
+            #region Create Destination Directory
 
-            // Do not create the destination directory. Robocopy does this automatically anyway. [fixes #101] 
-            //try
-            //{
-            //    var dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+            //Check that the Destination Drive is accessible insteead [fixes #106]
+            try
+            {
+                //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
+                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
+                if (!dInfo.Exists)
+                {
+                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
+                    hasError = true;
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    tokenSource.Cancel(true);
+                }
+                //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
+                if (!LoggingOptions.ListOnly & !hasError)
+                {
+                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
+                    if (!dInfo.Exists)
+                    {
+                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                        hasError = true;
+                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                        tokenSource.Cancel(true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debugger.Instance.DebugMessage(ex.Message);
+                hasError = true;
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                tokenSource.Cancel(true);
+            }
 
-            //    if (!dInfo.Exists)
-            //    {
-            //        Debugger.Instance.DebugMessage("The destination directory does not exist.");
-            //        hasError = true;
-            //        OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
-            //        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //        tokenSource.Cancel(true);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Debugger.Instance.DebugMessage(ex.Message);
-            //    hasError = true;
-            //    OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid."));
-            //    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            //    tokenSource.Cancel(true);
-            //}
-
-            //#endregion
+            #endregion
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -291,6 +350,7 @@ namespace RoboSharp
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
                 process.EnableRaisingEvents = true;
+                hasExited = false;
                 process.Exited += Process_Exited;
                 Debugger.Instance.DebugMessage("RoboCopy process started.");
                 process.Start();
@@ -324,7 +384,7 @@ namespace RoboSharp
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
                 hasError = true;
-                OnCommandError(this, new CommandErrorEventArgs(e.Data));
+                OnCommandError(this, new CommandErrorEventArgs(e.Data, null));
             }
         }
 
@@ -333,6 +393,7 @@ namespace RoboSharp
             hasExited = true;
         }
 
+        /// <summary>Kill the process</summary>
         public void Stop()
         {
             if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
@@ -342,10 +403,12 @@ namespace RoboSharp
                 process.Dispose();
                 process = null;
                 isCancelled = true;
-                isRunning = false;
             }
+            isRunning = !hasExited;
         }
 
+        /// <inheritdoc cref="Results.RoboCopyResults"/>
+        /// <returns>The RoboCopyResults object from the last run</returns>
         public Results.RoboCopyResults GetResults()
         {
             return results;
@@ -371,16 +434,27 @@ namespace RoboSharp
         #region IDisposable Implementation
 
         bool disposed = false;
+
+        /// <inheritdoc cref="IDisposable.Dispose"/>>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>IDisposable Implementation</summary>
         protected virtual void Dispose(bool disposing)
         {
             if (disposed)
                 return;
+
+            if (StopIfDisposing && process != null && !hasExited)
+            {
+                process.Kill();
+                hasExited = true;
+                isCancelled = true;
+                isRunning = false;
+            }
 
             if (disposing)
             {
@@ -389,6 +463,7 @@ namespace RoboSharp
 
             if (process != null)
                 process.Dispose();
+
             disposed = true;
         }
 

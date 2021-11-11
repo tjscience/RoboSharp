@@ -1,0 +1,1042 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RoboSharp</name>
+    </assembly>
+    <members>
+        <member name="T:RoboSharp.CommandErrorEventArgs">
+            <summary>
+            Describes an error that occured when generating the command
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CommandErrorEventArgs.Error">
+            <summary>
+            Error Description
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CommandErrorEventArgs.Exception">
+            <summary>
+            If this CommandErrorEventArgs object was created in response to an exception, that exception is captured here. <br/>
+            If no exception was thrown, this property will be null.
+            </summary>
+        </member>
+        <member name="M:RoboSharp.CommandErrorEventArgs.#ctor(System.String,System.Exception)">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.CommandErrorEventArgs"/>
+            </summary>
+            <param name="error"><inheritdoc cref="P:RoboSharp.CommandErrorEventArgs.Error"/></param>
+            <param name="ex"><inheritdoc cref="P:RoboSharp.CommandErrorEventArgs.Exception"/></param>
+        </member>
+        <member name="M:RoboSharp.CommandErrorEventArgs.#ctor(System.Exception)">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.CommandErrorEventArgs"/>
+            </summary>
+            <param name="ex">Exception to data to pass to the event handler</param>
+        </member>
+        <member name="T:RoboSharp.CopyOptions">
+            <summary>
+            Source, Destination, and options for how to move or copy files.
+            </summary>
+        </member>
+        <member name="F:RoboSharp.CopyOptions._source">
+            <summary>
+            The source file path where the RoboCommand is copying files from.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.Source">
+            <inheritdoc cref="F:RoboSharp.CopyOptions._source"/>
+        </member>
+        <member name="F:RoboSharp.CopyOptions._destination">
+            <summary>
+            The destination file path where the RoboCommand is copying files to.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.Destination">
+            <inheritdoc cref="F:RoboSharp.CopyOptions._destination"/>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.FileFilter">
+            <summary>
+            Allows you to supply a set of files to copy or use wildcard characters (* or ?).
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopySubdirectories">
+            <summary>
+            Copies subdirectories. Note that this option excludes empty directories.
+            [/S]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopySubdirectoriesIncludingEmpty">
+            <summary>
+            Copies subdirectories. Note that this option includes empty directories.
+            [/E]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.Depth">
+            <summary>
+            Copies only the top N levels of the source directory tree. The default is
+            zero which does not limit the depth.
+            [/LEV:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.EnableRestartMode">
+            <summary>
+            Copies files in Restart mode.
+            [/Z]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.EnableBackupMode">
+            <summary>
+            Copies files in Backup mode.
+            [/B]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.EnableRestartModeWithBackupFallback">
+            <summary>
+            Uses Restart mode. If access is denied, this option uses Backup mode.
+            [/ZB]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.UseUnbufferedIo">
+            <summary>
+            Copy using unbuffered I/O (recommended for large files).
+            [/J]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.EnableEfsRawMode">
+            <summary>
+            Copies all encrypted files in EFS RAW mode.
+            [/EFSRAW]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopyFlags">
+             <summary>
+             This property should be set to a string consisting of all the flags to include (eg. DAT; DATSOU)
+             Specifies the file properties to be copied. The following are the valid values for this option:
+            D Data
+            A Attributes
+            T Time stamps
+            S NTFS access control list (ACL)
+            O Owner information
+            U Auditing information
+            The default value for copyflags is DAT (data, attributes, and time stamps).
+            [/COPY:copyflags]
+             </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopyFilesWithSecurity">
+            <summary>
+            Copies files with security (equivalent to /copy:DAT).
+            [/SEC]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopyAll">
+            <summary>
+            Copies all file information (equivalent to /copy:DATSOU).
+            [/COPYALL]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.RemoveFileInformation">
+            <summary>
+            Copies no file information (useful with Purge option).
+            [/NOCOPY]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.FixFileSecurityOnAllFiles">
+            <summary>
+            Fixes file security on all files, even skipped ones.
+            [/SECFIX]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.FixFileTimesOnAllFiles">
+            <summary>
+            Fixes file times on all files, even skipped ones.
+            [/TIMFIX]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.Purge">
+            <summary>
+            Deletes destination files and directories that no longer exist in the source.
+            [/PURGE]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.Mirror">
+            <summary>
+            Mirrors a directory tree (equivalent to CopySubdirectoriesIncludingEmpty plus Purge).
+            [/MIR]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.MoveFiles">
+            <summary>
+            Moves files, and deletes them from the source after they are copied.
+            [/MOV]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.MoveFilesAndDirectories">
+            <summary>
+            Moves files and directories, and deletes them from the source after they are copied.
+            [/MOVE]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.AddAttributes">
+            <summary>
+            This property should be set to a string consisting of all the attributes to add (eg. AH; RASHCNET).
+            Adds the specified attributes to copied files.
+            [/A+:attributes]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.RemoveAttributes">
+            <summary>
+            This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
+            Removes the specified attributes from copied files.
+            [/A-:attributes]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CreateDirectoryAndFileTree">
+            <summary>
+            Creates a directory tree and zero-length files only.
+            [/CREATE]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.FatFiles">
+            <summary>
+            Creates destination files by using 8.3 character-length FAT file names only.
+            [/FAT]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.TurnLongPathSupportOff">
+            <summary>
+            Turns off support for very long paths (longer than 256 characters).
+            [/256]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.MonitorSourceChangesLimit">
+            <summary>
+            The default value of zero indicates that you do not wish to monitor for changes.
+            Monitors the source, and runs again when more than N changes are detected.
+            [/MON:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.MonitorSourceTimeLimit">
+            <summary>
+            The default value of zero indicates that you do not wish to monitor for changes.
+            Monitors source, and runs again in M minutes if changes are detected.
+            [/MOT:M]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.RunHours">
+            <summary>
+            Specifies run times when new copies may be started.
+            [/rh:hhmm-hhmm]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CheckPerFile">
+            <summary>
+            Checks run times on a per-file (not per-pass) basis.
+            [/PF]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.InterPacketGap">
+            <summary>
+            The default value of zero indicates that this feature is turned off.
+            Specifies the inter-packet gap to free bandwidth on slow lines.
+            [/IPG:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.CopySymbolicLink">
+            <summary>
+            Copies the symbolic link instead of the target.
+            [/SL]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.MultiThreadedCopiesCount">
+            <summary>
+            The default value of zero indicates that this feature is turned off.
+            Creates multi-threaded copies with N threads. Must be an integer between 1 and 128.
+            The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
+            [/MT:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.DirectoryCopyFlags">
+            <summary>
+            What to copy for directories (default is DA).
+            (copyflags: D=Data, A=Attributes, T=Timestamps).
+            [/DCOPY:copyflags]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.DoNotCopyDirectoryInfo">
+            <summary>
+            Do not copy any directory info.
+            [/NODCOPY]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyOptions.DoNotUseWindowsCopyOffload">
+            <summary>
+            Copy files without using the Windows Copy Offload mechanism.
+            [/NOOFFLOAD]
+            </summary>
+        </member>
+        <member name="T:RoboSharp.CopyProgressEventArgs">
+            <summary>
+            Current File Progress reported as <see cref="T:System.Double"/>
+            </summary>
+        </member>
+        <member name="P:RoboSharp.CopyProgressEventArgs.CurrentFileProgress">
+            <summary>
+            Current File Progress Percentage
+            </summary>
+        </member>
+        <member name="M:RoboSharp.CopyProgressEventArgs.#ctor(System.Double)">
+            <summary><inheritdoc cref="T:RoboSharp.CopyProgressEventArgs"/></summary>
+            <param name="progress"><inheritdoc cref="P:RoboSharp.CopyProgressEventArgs.CurrentFileProgress"/></param>
+        </member>
+        <member name="T:RoboSharp.ErrorEventArgs">
+            <summary>
+            Information about an Error reported by the RoboCopy process
+            </summary>
+        </member>
+        <member name="P:RoboSharp.ErrorEventArgs.Error">
+            <summary>
+            Error Description
+            </summary>
+        </member>
+        <member name="P:RoboSharp.ErrorEventArgs.ErrorCode">
+            <summary>
+            Error Code
+            </summary>
+        </member>
+        <member name="M:RoboSharp.ErrorEventArgs.#ctor(System.String,System.Int32)">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.ErrorEventArgs"/>
+            </summary>
+            <param name="error"><inheritdoc cref="P:RoboSharp.ErrorEventArgs.Error"/></param>
+            <param name="errorCode"><inheritdoc cref="P:RoboSharp.ErrorEventArgs.ErrorCode"/></param>
+        </member>
+        <member name="T:RoboSharp.FileProcessedEventArgs">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.ProcessedFileInfo"/>
+            </summary>
+        </member>
+        <member name="P:RoboSharp.FileProcessedEventArgs.ProcessedFile">
+            <inheritdoc cref="T:RoboSharp.ProcessedFileInfo"/>
+        </member>
+        <member name="M:RoboSharp.FileProcessedEventArgs.#ctor(RoboSharp.ProcessedFileInfo)">
+            <inheritdoc cref="M:System.EventArgs.#ctor"/>
+        </member>
+        <member name="T:RoboSharp.Interfaces.IRoboCommand">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.IsPaused">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.IsPaused"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.CommandOptions">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.IsPaused"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.CopyOptions">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.CopyOptions"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.SelectionOptions">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.SelectionOptions"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.RetryOptions">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.RetryOptions"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.LoggingOptions">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.LoggingOptions"/>
+        </member>
+        <member name="P:RoboSharp.Interfaces.IRoboCommand.Configuration">
+            <inheritdoc cref="P:RoboSharp.RoboCommand.Configuration"/>
+        </member>
+        <member name="E:RoboSharp.Interfaces.IRoboCommand.OnFileProcessed">
+            <inheritdoc cref="E:RoboSharp.RoboCommand.OnFileProcessed"/>
+        </member>
+        <member name="E:RoboSharp.Interfaces.IRoboCommand.OnCommandError">
+            <inheritdoc cref="E:RoboSharp.RoboCommand.OnCommandError"/>
+        </member>
+        <member name="E:RoboSharp.Interfaces.IRoboCommand.OnError">
+            <inheritdoc cref="E:RoboSharp.RoboCommand.OnError"/>
+        </member>
+        <member name="E:RoboSharp.Interfaces.IRoboCommand.OnCommandCompleted">
+            <inheritdoc cref="E:RoboSharp.RoboCommand.OnCommandCompleted"/>
+        </member>
+        <member name="E:RoboSharp.Interfaces.IRoboCommand.OnCopyProgressChanged">
+            <inheritdoc cref="E:RoboSharp.RoboCommand.OnCopyProgressChanged"/>
+        </member>
+        <member name="M:RoboSharp.Interfaces.IRoboCommand.Pause">
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Pause"/>
+        </member>
+        <member name="M:RoboSharp.Interfaces.IRoboCommand.Resume">
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Resume"/>
+        </member>
+        <member name="M:RoboSharp.Interfaces.IRoboCommand.Start(System.String,System.String,System.String)">
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Start(System.String,System.String,System.String)"/>
+        </member>
+        <member name="M:RoboSharp.Interfaces.IRoboCommand.Stop">
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Stop"/>
+        </member>
+        <member name="M:RoboSharp.Interfaces.IRoboCommand.Dispose">
+            <inheritdoc cref="M:RoboSharp.RoboCommand.Dispose"/>
+        </member>
+        <member name="T:RoboSharp.LoggingOptions">
+            <summary>
+            Options related to the output logs generated by RoboCopy
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.ListOnly">
+            <summary>
+            Do not copy, timestamp or delete any files.
+            [/L]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.ReportExtraFiles">
+            <summary>
+            Report all extra files, not just those selected.
+            [X]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.VerboseOutput">
+            <summary>
+            Produce verbose output, showing skipped files.
+            [V]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.IncludeSourceTimeStamps">
+            <summary>
+            Include source file time stamps in the output.
+            [/TS]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.IncludeFullPathNames">
+            <summary>
+            Include full path names of files in the output.
+            [/FP]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.PrintSizesAsBytes">
+            <summary>
+            Print sizes as bytes in the output.
+            [/BYTES]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoFileSizes">
+            <summary>
+            Do not log file sizes.
+            [/NS]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoFileClasses">
+            <summary>
+            Do not log file classes.
+            [/NC]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoFileList">
+            <summary>
+            Do not log file names.
+            [/NFL]
+            WARNING: If this is set to TRUE then GUI cannot handle showing progress correctly as it can't get information it requires from the log
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoDirectoryList">
+            <summary>
+            Do not log directory names.
+            [/NDL]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoProgress">
+            <summary>
+            Do not log percentage copied.
+            [/NP]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.ShowEstimatedTimeOfArrival">
+            <summary>
+            Show estimated time of arrival of copied files.
+            [/ETA]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.LogPath">
+            <summary>
+            Output status to LOG file (overwrite existing log).
+            [/LOG:file]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.AppendLogPath">
+            <summary>
+            Output status to LOG file (append to existing log).
+            [/LOG+:file]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.UnicodeLogPath">
+            <summary>
+            Output status to LOG file as UNICODE (overwrite existing log).
+            [/UNILOG:file]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.AppendUnicodeLogPath">
+            <summary>
+            Output status to LOG file as UNICODE (append to existing log).
+            [/UNILOG+:file]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.OutputToRoboSharpAndLog">
+            <summary>
+            Output to RoboSharp and Log.
+            [/TEE]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoJobHeader">
+            <summary>
+            Do not output a Job Header.
+            [/NJH]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.NoJobSummary">
+            <summary>
+            Do not output a Job Summary.
+            [/NJS]
+            WARNING: If this is set to TRUE then statistics will not work correctly as this information is gathered from the job summary part of the log 
+            </summary>
+        </member>
+        <member name="P:RoboSharp.LoggingOptions.OutputAsUnicode">
+            <summary>
+            Output as UNICODE.
+            [/UNICODE]
+            </summary>
+        </member>
+        <member name="M:RoboSharp.LoggingOptions.WrapPath(System.String)">
+            <summary> Encase the LogPath in quotes if needed </summary>
+        </member>
+        <member name="T:RoboSharp.FileClassType">
+            <summary>
+            Message Type reported by RoboCopy
+            </summary>
+        </member>
+        <member name="F:RoboSharp.FileClassType.NewDir">
+            <summary>Details about a FOLDER</summary>
+        </member>
+        <member name="F:RoboSharp.FileClassType.File">
+            <summary>Details about a FILE</summary>
+        </member>
+        <member name="F:RoboSharp.FileClassType.SystemMessage">
+            <summary>Status Message reported by RoboCopy</summary>
+        </member>
+        <member name="T:RoboSharp.ProcessedFileInfo">
+            <summary>Contains information about the current item being processed by RoboCopy</summary>
+        </member>
+        <member name="P:RoboSharp.ProcessedFileInfo.FileClass">
+            <summary>Description of the item as reported by RoboCopy</summary>
+        </member>
+        <member name="P:RoboSharp.ProcessedFileInfo.FileClassType">
+            <inheritdoc cref="T:RoboSharp.FileClassType"/>
+        </member>
+        <member name="P:RoboSharp.ProcessedFileInfo.Size">
+            <summary>File Size</summary>
+        </member>
+        <member name="P:RoboSharp.ProcessedFileInfo.Name">
+            <summary>Folder or File Name / Message Text</summary>
+        </member>
+        <member name="T:RoboSharp.Results.ResultsBuilder">
+            <summary>
+            Helper class to build a <see cref="T:RoboSharp.Results.RoboCopyResults"/> object.
+            </summary>
+        </member>
+        <member name="T:RoboSharp.Results.RoboCopyExitCodes">
+            <summary>
+            RoboCopy Exit Codes
+            </summary>
+            <remarks><see href="https://ss64.com/nt/robocopy-exit.html"/></remarks>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.NoErrorNoCopy">
+            <summary>No Files Copied, No Errors Occured</summary>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.FilesCopiedSuccessful">
+            <summary>One or more files were copied successfully</summary>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected">
+            <summary>
+            Some Extra files or directories were detected.<br/>
+            Examine the output log for details. 
+            </summary>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.MismatchedDirectoriesDetected">
+            <summary>
+            Some Mismatched files or directories were detected.<br/>
+            Examine the output log. Housekeeping might be required.
+            </summary>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied">
+            <summary>
+            Some files or directories could not be copied <br/>
+            (copy errors occurred and the retry limit was exceeded).
+            Check these errors further.
+            </summary>
+        </member>
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccoured">
+            <summary>
+            Serious error. Robocopy did not copy any files.<br/>
+            Either a usage error or an error due to insufficient access privileges on the source or destination directorie
+            </summary>
+        </member>
+        <member name="T:RoboSharp.Results.RoboCopyResults">
+            <summary>
+            Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.Status">
+            <inheritdoc cref="T:RoboSharp.Results.RoboCopyExitStatus"/>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.DirectoriesStatistic">
+            <summary> Information about number of Directories Copied, Skipped, Failed, etc.</summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.FilesStatistic">
+            <summary> Information about number of Files Copied, Skipped, Failed, etc.</summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.BytesStatistic">
+            <summary> Information about number of Bytes processed.</summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.SpeedStatistic">
+            <inheritdoc cref="T:RoboSharp.Results.SpeedStatistic"/>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyResults.LogLines">
+            <summary> Output Text reported by RoboCopy </summary>
+        </member>
+        <member name="M:RoboSharp.Results.RoboCopyResults.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+            <returns>
+            A string that represents the current object.
+            </returns>
+        </member>
+        <member name="T:RoboSharp.Results.RoboCopyExitStatus">
+            <summary>
+            Object that evaluates the ExitCode reported after RoboCopy finishes executing.
+            </summary>
+        </member>
+        <member name="M:RoboSharp.Results.RoboCopyExitStatus.#ctor(System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:System.Object"/> class.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyExitStatus.ExitCodeValue">
+            <summary>ExitCode as reported by RoboCopy</summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyExitStatus.ExitCode">
+            <summary>ExitCode reported by RoboCopy converted into the Enum</summary>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyExitStatus.Successful">
+            <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.FilesCopiedSuccessful"/>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyExitStatus.HasWarnings">
+            <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.MismatchedDirectoriesDetected"/>
+        </member>
+        <member name="P:RoboSharp.Results.RoboCopyExitStatus.HasErrors">
+            <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccoured"/>
+        </member>
+        <member name="M:RoboSharp.Results.RoboCopyExitStatus.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+        </member>
+        <member name="T:RoboSharp.Results.SpeedStatistic">
+            <summary> Contains information regarding average Transfer Speed </summary>
+        </member>
+        <member name="P:RoboSharp.Results.SpeedStatistic.BytesPerSec">
+            <summary> Average Transfer Rate in Bytes/Second </summary>
+        </member>
+        <member name="P:RoboSharp.Results.SpeedStatistic.MegaBytesPerMin">
+            <summary> Average Transfer Rate in MB/Minute</summary>
+        </member>
+        <member name="M:RoboSharp.Results.SpeedStatistic.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+        </member>
+        <member name="T:RoboSharp.Results.Statistic">
+            <summary>
+            Information about number of items Copied, Skipped, Failed, etc.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Total">
+            <summary> Total Scanned during the run</summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Copied">
+            <summary> Total Copied </summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Skipped">
+            <summary> Total Skipped </summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Mismatch">
+            <summary>  </summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Failed">
+            <summary> Total that failed to copy or move </summary>
+        </member>
+        <member name="P:RoboSharp.Results.Statistic.Extras">
+            <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.Parse(System.String)">
+            <summary>
+            Parse a string and for the tokens reported by RoboCopy
+            </summary>
+            <param name="line"></param>
+            <returns>New Statistic Object</returns>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistic(RoboSharp.Results.Statistic)">
+            <summary>
+            Add the results of the supplied Statistics object to this Statistics object.
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Add the results of the supplied Statistics objects to this Statistics object.
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AddStatistics(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Combine the results of the supplied statistics objects
+            </summary>
+            <param name="stats">Statistics Item to add</param>
+            <returns>New Statistics Object</returns>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AverageStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <summary>
+            Combine the supplied <see cref="T:RoboSharp.Results.Statistic"/> objects, then get the average.
+            </summary>
+            <param name="stats">Array of Stats objects</param>
+        </member>
+        <member name="M:RoboSharp.Results.Statistic.AverageStatistics(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})">
+            <returns>New Statistics Object</returns>
+            <inheritdoc cref="M:RoboSharp.Results.Statistic.AverageStatistic(System.Collections.Generic.IEnumerable{RoboSharp.Results.Statistic})"/>
+        </member>
+        <member name="T:RoboSharp.RetryOptions">
+            <summary>
+            RoboCopy switches for how to react if a copy/move operation errors
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RetryOptions.RetryCount">
+            <summary>
+            Specifies the number of retries N on failed copies (default is 0).
+            [/R:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RetryOptions.RetryWaitTime">
+            <summary>
+            Specifies the wait time N in seconds between retries (default is 30).
+            [/W:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RetryOptions.SaveToRegistry">
+            <summary>
+            Saves RetryCount and RetryWaitTime in the Registry as default settings.
+            [/REG]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RetryOptions.WaitForSharenames">
+            <summary>
+            Wait for sharenames to be defined.
+            [/TBD]
+            </summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand">
+            <summary>
+            Wrapper for the RoboCopy process
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.IsPaused">
+            <summary> Value indicating if process is currently paused </summary>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.IsRunning">
+            <summary> Value indicating if process is currently running </summary>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.IsCancelled">
+            <summary> Value indicating if process was Cancelled </summary>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.CommandOptions">
+            <summary>  </summary>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.CopyOptions">
+            <inheritdoc cref="T:RoboSharp.CopyOptions"/>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.SelectionOptions">
+            <inheritdoc cref="T:RoboSharp.SelectionOptions"/>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.RetryOptions">
+            <inheritdoc cref="T:RoboSharp.RetryOptions"/>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.LoggingOptions">
+            <inheritdoc cref="T:RoboSharp.LoggingOptions"/>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.Configuration">
+            <inheritdoc cref="T:RoboSharp.RoboSharpConfiguration"/>
+        </member>
+        <member name="P:RoboSharp.RoboCommand.StopIfDisposing">
+            <summary>
+            Value indicating if the process should be killed when the <see cref="M:RoboSharp.RoboCommand.Dispose"/> method is called. <br/>
+            For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE.
+            </summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand.FileProcessedHandler">
+            <summary>Handles <see cref="E:RoboSharp.RoboCommand.OnFileProcessed"/></summary>
+        </member>
+        <member name="E:RoboSharp.RoboCommand.OnFileProcessed">
+            <summary>Occurs each time a new item has started processing</summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand.CommandErrorHandler">
+            <summary>Handles <see cref="E:RoboSharp.RoboCommand.OnCommandError"/></summary>
+        </member>
+        <member name="E:RoboSharp.RoboCommand.OnCommandError">
+            <summary>Occurs when an error occurs while generating the command</summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand.ErrorHandler">
+            <summary>Handles <see cref="E:RoboSharp.RoboCommand.OnError"/></summary>
+        </member>
+        <member name="E:RoboSharp.RoboCommand.OnError">
+            <summary>Occurs when the command exits due to an error</summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand.CommandCompletedHandler">
+            <summary>Handles <see cref="E:RoboSharp.RoboCommand.OnCommandCompleted"/></summary>
+        </member>
+        <member name="E:RoboSharp.RoboCommand.OnCommandCompleted">
+            <summary>Occurs when the command exits</summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommand.CopyProgressHandler">
+            <summary>Handles <see cref="E:RoboSharp.RoboCommand.OnCopyProgressChanged"/></summary>
+        </member>
+        <member name="E:RoboSharp.RoboCommand.OnCopyProgressChanged">
+            <summary>Occurs each time the current item's progress is updated</summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.#ctor">
+            <summary>Create a new RoboCommand object</summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Pause">
+            <summary>Pause execution of the RoboCopy process when <see cref="P:RoboSharp.RoboCommand.IsPaused"/> == false</summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Resume">
+            <summary>Resume execution of the RoboCopy process when <see cref="P:RoboSharp.RoboCommand.IsPaused"/> == true</summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Start(System.String,System.String,System.String)">
+            <summary>
+            Start the RoboCopy Process.
+            </summary>
+            <param name="domain"></param>
+            <param name="username"></param>
+            <param name="password"></param>
+            <returns>Returns a task that reports when the RoboCopy process has finished executing.</returns>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Stop">
+            <summary>Kill the process</summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.GetResults">
+            <inheritdoc cref="T:RoboSharp.Results.RoboCopyResults"/>
+            <returns>The RoboCopyResults object from the last run</returns>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Dispose">
+            <inheritdoc cref="M:System.IDisposable.Dispose"/>>
+        </member>
+        <member name="M:RoboSharp.RoboCommand.Dispose(System.Boolean)">
+            <summary>IDisposable Implementation</summary>
+        </member>
+        <member name="T:RoboSharp.RoboCommandCompletedEventArgs">
+            <summary>
+            <inheritdoc cref="T:RoboSharp.Results.RoboCopyResults"/>
+            </summary>
+        </member>
+        <member name="M:RoboSharp.RoboCommandCompletedEventArgs.#ctor(RoboSharp.Results.RoboCopyResults)">
+            <summary>
+            Return the Results object
+            </summary>
+            <param name="results"></param>
+        </member>
+        <member name="P:RoboSharp.RoboCommandCompletedEventArgs.Results">
+            <inheritdoc cref="T:RoboSharp.Results.RoboCopyResults"/>
+        </member>
+        <member name="T:RoboSharp.RoboSharpConfiguration">
+            <summary>
+            Setup the ErrorToken and the path to RoboCopy.exe.
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RoboSharpConfiguration.ErrorToken">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="P:RoboSharp.RoboSharpConfiguration.RoboCopyExe">
+            <summary>
+            Specify the path to RoboCopy.exe here. If not set, use the default copy.
+            </summary>
+        </member>
+        <member name="T:RoboSharp.SelectionOptions">
+            <summary>
+            RoboCopy Switches that determine which folders and files are selected for copying/moving
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.OnlyCopyArchiveFiles">
+            <summary>
+            Copies only files for which the Archive attribute is set.
+            [/A]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag">
+            <summary>
+            Copies only files for which the Archive attribute is set, and resets the Archive attribute.
+            [/M]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.IncludeAttributes">
+            <summary>
+            This property should be set to a string consisting of all the attributes to include (eg. AH; RASHCNETO).
+            Includes only files for which any of the specified attributes are set.
+            [/IA:attributes]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeAttributes">
+            <summary>
+            This property should be set to a string consisting of all the attributes to exclude (eg. AH; RASHCNETO).
+            Excludes files for which any of the specified attributes are set.
+            [/XA:attributes]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeFiles">
+            <summary>
+            Files should be separated by spaces.
+            Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
+            [/XF File File ...]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeDirectories">
+            <summary>
+            Directories should be separated by spaces.
+            Excludes directories that match the specified names or paths.
+            [/XD Directory Directory ...]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeChanged">
+            <summary>
+            Excludes changed files.
+            [/XC]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeNewer">
+            <summary>
+            Excludes newer files.
+            [/XN]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeOlder">
+            <summary>
+            Excludes older files.
+            [/XO]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeExtra">
+            <summary>
+            Excludes extra files and directories.
+            [/XX]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeLonely">
+            <summary>
+            Excludes lonely files and directories.
+            [/XL]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.IncludeSame">
+            <summary>
+            Includes the same files.
+            [/IS]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.IncludeTweaked">
+            <summary>
+            Includes tweaked files.
+            [/IT]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MaxFileSize">
+            <summary>
+            Zero indicates that this feature is turned off.
+            Specifies the maximum file size (to exclude files bigger than N bytes).
+            [/MAX:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MinFileSize">
+            <summary>
+            Zero indicates that this feature is turned off.
+            Specifies the minimum file size (to exclude files smaller than N bytes).
+            [/MIN:N]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MaxFileAge">
+            <summary>
+            Specifies the maximum file age (to exclude files older than N days or date).
+            [/MAXAGE:N OR YYYYMMDD]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MinFileAge">
+            <summary>
+            Specifies the minimum file age (exclude files newer than N days or date).
+            [/MINAGE:N OR YYYYMMDD]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MaxLastAccessDate">
+            <summary>
+            Specifies the maximum last access date (excludes files unused since Date).
+            [/MAXLAD:YYYYMMDD]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.MinLastAccessDate">
+            <summary>
+            Specifies the minimum last access date (excludes files used since N) If N is less 
+            than 1900, N specifies the number of days. Otherwise, N specifies a date 
+            in the format YYYYMMDD.
+            [/MAXLAD:N or YYYYMMDD]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeJunctionPoints">
+            <summary>
+            Excludes junction points, which are normally included by default.
+            [/XJ]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.UseFatFileTimes">
+            <summary>
+            Assumes FAT file times (two-second precision).
+            [/FFT]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.CompensateForDstDifference">
+            <summary>
+            Compensates for one-hour DST time differences.
+            [/DST]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeJunctionPointsForDirectories">
+            <summary>
+            Excludes junction points for directories.
+            [/XJD]
+            </summary>
+        </member>
+        <member name="P:RoboSharp.SelectionOptions.ExcludeJunctionPointsForFiles">
+            <summary>
+            Excludes junction points for files.
+            [/XJF]
+            </summary>
+        </member>
+        <member name="M:RoboSharp.VersionManager.RtlGetVersion(RoboSharp.VersionManager.OSVERSIONINFOEX@)">
+            <summary>
+            taken from https://stackoverflow.com/a/49641055
+            </summary>
+            <param name="versionInfo"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

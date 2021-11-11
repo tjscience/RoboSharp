@@ -7,9 +7,12 @@ using System.Text.RegularExpressions;
 
 namespace RoboSharp.Results
 {
+    /// <summary> Contains information regarding average Transfer Speed </summary>
     public class SpeedStatistic
     {
+        /// <summary> Average Transfer Rate in Bytes/Second </summary>
         public decimal BytesPerSec { get; private set; }
+        /// <summary> Average Transfer Rate in MB/Minute</summary>
         public decimal MegaBytesPerMin { get; private set; }
 
         /// <summary>
@@ -20,7 +23,7 @@ namespace RoboSharp.Results
             return $"Speed: {BytesPerSec} Bytes/sec{Environment.NewLine}Speed: {MegaBytesPerMin} MegaBytes/min";
         }
 
-        public static SpeedStatistic Parse(string line1, string line2)
+        internal static SpeedStatistic Parse(string line1, string line2)
         {
             var res = new SpeedStatistic();
 
