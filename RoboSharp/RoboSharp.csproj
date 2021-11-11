@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net40;net45;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.4</Version>
+    <Version>1.2.5</Version>
     <Copyright>Copyright 2021</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
@@ -13,7 +13,7 @@
     <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
     <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
     <summary>
-      fixes #92 - Version strings are combined using a culture dependent NumberDecimalSeparator.
+      pull request #107
     </summary>
   </PropertyGroup>
 
