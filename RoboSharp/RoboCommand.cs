@@ -259,7 +259,14 @@ namespace RoboSharp
             resultsBuilder = new Results.ResultsBuilder();
             results = null;
 
-            // make sure source path is valid
+            #region Check Source and Destination
+
+            #if NET40_OR_GREATER
+            // Authentificate on Target Server -- Create user if username is provided, else null
+            ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
+            #endif
+			
+			// make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
@@ -306,6 +313,13 @@ namespace RoboSharp
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 tokenSource.Cancel(true);
             }
+
+            #endregion
+			
+			#if NET40_OR_GREATER
+            //Dispose Authentification
+            impersonation?.Dispose();
+            #endif
 
             #endregion
 
