@@ -266,7 +266,7 @@ namespace RoboSharp
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
             #endif
 			
-			// make sure source path is valid
+	    // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
@@ -316,7 +316,7 @@ namespace RoboSharp
 
             #endregion
 			
-			#if NET40_OR_GREATER
+	    #if NET40_OR_GREATER
             //Dispose Authentification
             impersonation?.Dispose();
             #endif
