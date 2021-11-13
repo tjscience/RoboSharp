@@ -94,7 +94,7 @@ namespace RoboSharp.Results
                 var unit = match.Groups["Unit"].Value.ToLower();
 
                 var number = double.Parse($"{mains}.{fraction}", NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
-               switch (unit)
+                switch (unit)
                 {
                     case "k":
                         // Byte = kBytes * 1024
