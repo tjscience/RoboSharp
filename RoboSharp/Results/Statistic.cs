@@ -91,22 +91,26 @@ namespace RoboSharp.Results
             {
                 var mains = match.Groups["Mains"].Value.Replace(".", "").Replace(",", "");
                 var fraction = match.Groups["Fraction"].Value;
-                var unit = match.Groups["Unit"].Value.ToUpper();
+                var unit = match.Groups["Unit"].Value.ToLower();
 
                 var number = double.Parse($"{mains}.{fraction}", NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
                 switch (unit)
                 {
                     case "k":
-                        number /= Math.Pow(1024, 1);
+                        // Byte = kBytes * 1024
+                        number *= Math.Pow(1024, 1);
                         break;
                     case "m":
-                        number /= Math.Pow(1024, 2);
+                        // Byte = MBytes * 1024 * 1024
+                        number *= Math.Pow(1024, 2);
                         break;
                     case "g":
-                        number /= Math.Pow(1024, 3);
+                        // Byte = GBytes * 1024 * 1024 * 1024
+                        number *= Math.Pow(1024, 3);
                         break;
                     case "t":
-                        number /= Math.Pow(1024, 4);
+                        // Byte = TBytes * 1024 * 1024 * 1024 * 1024
+                        number *= Math.Pow(1024, 4);
                         break;
                 }
 
