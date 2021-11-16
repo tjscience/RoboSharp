@@ -323,6 +323,8 @@ namespace RoboSharp
 
             #endregion
 
+	    isRunning = !cancellationToken.IsCancellationRequested;	
+
             backupTask = Task.Factory.StartNew(() =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
