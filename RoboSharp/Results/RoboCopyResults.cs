@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 
 namespace RoboSharp.Results
 {
@@ -37,5 +38,93 @@ namespace RoboSharp.Results
 
             return str;
         }
+
+        #pragma warning disable CS1734 
+        // paramref produces a cleaner remark statement, but since they aren't method params, it causes this warning.
+        
+        /// <summary>
+        /// Combines the RoboCopyResults object with this RoboCopyResults object.
+        /// <para/>
+        /// </summary>
+        /// <param name="resultsToCombine">RoboCopyResults object to combine with this one.</param>
+        /// <remarks>
+        /// The <paramref name="FilesStatistic"/>, <paramref name="BytesStatistic"/>, <paramref name="DirectoriesStatistic"/> properties will be added together. <br/>
+        /// The <paramref name="SpeedStatistic"/> properties will be averaged together. <br/>
+        /// The <paramref name="LogLines"/> will be appended into a single large array. <br/>
+        /// The <paramref name="Status"/> property will represent the combined results.
+        /// </remarks>
+        public void CombineResult(RoboCopyResults resultsToCombine)
+        {
+            this.BytesStatistic.AddStatistic(resultsToCombine.BytesStatistic);
+            this.FilesStatistic.AddStatistic(resultsToCombine.FilesStatistic);
+            this.DirectoriesStatistic.AddStatistic(resultsToCombine.DirectoriesStatistic);
+            this.SpeedStatistic.AverageStatistic(resultsToCombine.SpeedStatistic);
+
+            List<string> combinedlog = new List<string>();
+            combinedlog.AddRange(this.LogLines);
+            combinedlog.AddRange(resultsToCombine.LogLines);
+            this.LogLines = combinedlog.ToArray();
+        }
+
+        /// <summary>
+        /// Combines the array of RoboCopyResults object with this RoboCopyResult object.
+        /// </summary>
+        /// <param name="resultsToCombine">Array or List of RoboCopyResults</param>
+        /// <inheritdoc cref="CombineResult(RoboCopyResults)"/>
+        public void CombineResult(IEnumerable<RoboCopyResults> resultsToCombine) 
+        {
+            //Initialize List Objects
+            List<Statistic> bytes = new List<Statistic> { };
+            List<Statistic> files = new List<Statistic> { };
+            List<Statistic> dirs = new List<Statistic> { };
+            List<SpeedStatistic> speed = new List<SpeedStatistic> { };
+            List<RoboCopyExitStatus> status = new List<RoboCopyExitStatus> { };
+            List<string> combinedlog = new List<string>();
+            combinedlog.AddRange(this.LogLines);
+
+            //Add all results to their respective lists
+            foreach (RoboCopyResults R in resultsToCombine)
+            {
+                bytes.Add(R.BytesStatistic);
+                files.Add(R.FilesStatistic);
+                dirs.Add(R.DirectoriesStatistic);
+                speed.Add(R.SpeedStatistic);
+                status.Add(R.Status);
+                combinedlog.AddRange(R.LogLines);
+            }
+
+            //Combine all results -> Done like this to reduce jumping in and out of functions repeatedly during the loop
+            this.BytesStatistic.AddStatistic(bytes);
+            this.FilesStatistic.AddStatistic(files);
+            this.DirectoriesStatistic.AddStatistic(dirs);
+            this.SpeedStatistic.AverageStatistic(speed);
+            this.Status.CombineStatus(status);
+            this.LogLines = combinedlog.ToArray();
+        }
+
+
+        /// <returns>
+        /// New RoboCopy Results Object. <para/>
+        /// </returns>
+        /// <inheritdoc cref="CombineResult(RoboCopyResults)"/>
+        public static RoboCopyResults CombineResults(RoboCopyResults resultsToCombine)
+        {
+            RoboCopyResults ret = new RoboCopyResults();
+            ret.CombineResult(resultsToCombine);
+            return ret;
+        }
+
+        /// <returns>
+        /// New RoboCopy Results Object. <para/>
+        /// </returns>
+        /// <inheritdoc cref="CombineResult(IEnumerable{RoboCopyResults})"/>
+        public static RoboCopyResults CombineResults(IEnumerable<RoboCopyResults> resultsToCombine) 
+        {
+            RoboCopyResults ret = new RoboCopyResults();
+            ret.CombineResult(resultsToCombine);
+            return ret;
+        }
+
+        #pragma warning restore CS1734
     }
 }

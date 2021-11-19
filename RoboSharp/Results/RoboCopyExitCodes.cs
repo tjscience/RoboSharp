@@ -34,5 +34,7 @@ namespace RoboSharp.Results
         /// Either a usage error or an error due to insufficient access privileges on the source or destination directorie
         /// </summary>
         SeriousErrorOccoured = 0x10,
+        /// <summary>The Robocopy process exited prior to completion</summary>
+        Cancelled = -1,
     }
 }

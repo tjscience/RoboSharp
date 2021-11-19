@@ -79,6 +79,13 @@ namespace RoboSharp.Results
 
         #region AVERAGE
 
+
+        /// <summary>
+        /// Average the supplied  <see cref="SpeedStatistic"/> object with this <see cref="SpeedStatistic"/> object.
+        /// </summary>
+        /// <param name="stat">Object to average with</param>
+        public void AverageStatistic(SpeedStatistic stat) => this.AddStatistic(new SpeedStatistic[] { stat });
+
         /// <summary>
         /// Combine the supplied <see cref="SpeedStatistic"/> objects, then get the average.
         /// </summary>
