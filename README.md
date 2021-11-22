@@ -131,6 +131,21 @@ FileStats.AddStatistic(results2.FilesStatistic);
 DirStats.AddStatistic(results2.DirectoriesStatistic);
 ```
 
+You could also use .AddStatistic in the OnCommandCompleted event e.g.
+
+```c#
+void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
+        {
+            this.BeginInvoke((Action)(() =>
+            {
+                // ## get robocopy results 
+                RoboSharp.Results.RoboCopyResults AnalysisResults = e.Results;
+
+                FileStats.AddStatistic(AnalysisResults.FilesStatistic);
+            }));
+        }
+```
+
 .AverageStatistics
 
 Again if running multiple RoboCopy tasks you can use this to get average results for BytesPerSec and MegaBytesPerMin 
