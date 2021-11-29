@@ -52,7 +52,7 @@ void backup_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
 }
 ```
 
-### Extended Results:
+## Extended Results:
 
 See below examples on how to access the extended results where you can get total, copied, skipped, mismatch, failed and extra statistics for directories and files and bytes, as well as additional speed info e.g. bytes per sec and megabytes per minute
 
