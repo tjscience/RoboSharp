@@ -116,7 +116,7 @@ test = new RoboCommand();
 test.CopyOptions.Source = @"C:\SOURCE_1";
 test.CopyOptions.Destination = @"C:\DESTINATION";
 
-RoboSharp.Results.RoboCopyResults results1 = await cmd.StartAsync();
+RoboSharp.Results.RoboCopyResults results1 = await test.StartAsync();
 
 FileStats.AddStatistic(results1.FilesStatistic);
 DirStats.AddStatistic(results1.DirectoriesStatistic);
@@ -125,7 +125,7 @@ DirStats.AddStatistic(results1.DirectoriesStatistic);
 test.CopyOptions.Source = @"C:\SOURCE_2";
 test.CopyOptions.Destination = @"C:\DESTINATION";
 
-RoboSharp.Results.RoboCopyResults results2 = await cmd.StartAsync();
+RoboSharp.Results.RoboCopyResults results2 = await test.StartAsync();
 
 FileStats.AddStatistic(results2.FilesStatistic);
 DirStats.AddStatistic(results2.DirectoriesStatistic);
