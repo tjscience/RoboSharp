@@ -110,7 +110,7 @@ This is useful if you are running multiple RoboCopy tasks as it allows you to ad
 RoboSharp.Results.Statistic FileStats = new RoboSharp.Results.Statistic();
 RoboSharp.Results.Statistic DirStats = new RoboSharp.Results.Statistic();
 
-cmd = new RoboCommand();
+test = new RoboCommand();
 
 // Run first task and add results
 test.CopyOptions.Source = @"C:\SOURCE_1";
