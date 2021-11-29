@@ -138,7 +138,7 @@ void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
         {
             this.BeginInvoke((Action)(() =>
             {
-                // ## get robocopy results 
+                // Get robocopy results 
                 RoboSharp.Results.RoboCopyResults AnalysisResults = e.Results;
 
                 FileStats.AddStatistic(AnalysisResults.FilesStatistic);
@@ -153,14 +153,14 @@ Again if running multiple RoboCopy tasks you can use this to get average results
 Based on above example
 
 ```c#
-//Call Static Method to return new object with the average
+// Call Static Method to return new object with the average
 RoboSharp.Results.SpeedStatistic avg = RoboSharp.Results.SpeedStatistic.AverageStatistics(new RoboSharp.Results.SpeedStatistic[] { results1.SpeedStatistic, results2.SpeedStatistic });
 ```
 
 or
 
 ```c#
-//Result1 will now store the average statistic value. Result 2 can be disposed or or re-used for additional RoboCopy commands.
+// Result1 will now store the average statistic value. Result 2 can be disposed or or re-used for additional RoboCopy commands.
 results1.AverageStatistic(results2);
 ```
 
