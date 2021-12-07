@@ -447,6 +447,47 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
+        #region < Workaround for Issue #116  - WorkingDirectoryConflict Property >
+
+        /// <summary>
+        /// Check <see cref="CopyOptions.Source"/> to see if it is set to the root of the same drive of the current working directory <br/>
+        /// - If this occurs, robocopy will copy the working directory instead of the source directory. This is an issue with RoboCopy.exe itself. <br/>
+        /// - This will typically only occur on applications that are portable. Meaning they are installed onto a Removable Drive with the goal of copying files off the root of the same removable drive. <br/>
+        /// - As such, this property should able to be safely ignored if the app will not be running on a removable drive.
+        /// <para>
+        /// For example: <br/>
+        /// - Program exists at  E:\Apps\CopyProgram\RoboCopyProgram.exe <br/>
+        /// - Source:       E:\<br/>
+        /// - Destination:  C:\Test<br/>
+        /// - Expected Result: Files within "E:\" will be copied into "C:\Test" <br/>
+        /// - Actual Result: Files within "E:\Apps\CopyProgram\" will be copied into "C:\Test" instead.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// Workaround: <br/>
+        /// - Update the Working Directory to be the same as the source directory. (Set Working Directory to E:\ in example above) <br/>
+        /// - This workaround may be problematic if paths relative to the expected working directory are used.<br/>
+        /// - It is up to the calling app to work around this issue if it occurs.  <br/>
+        /// - See this article (remarks section) for more information on best practices regarding updating the working directory: <br/>
+        /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setcurrentdirectory"/>
+        /// </remarks>
+        /// <returns>
+        /// TRUE if the issue described above can occur. Otherwise false.
+        /// </returns>
+        public bool WorkingDirectoryConflictExists
+        {
+            get
+            {
+                if (CopyOptions.Source.IsNullOrWhiteSpace()) return false;      //No Conflict if path is not set
+                if (!Path.IsPathRooted(CopyOptions.Source)) return false;       //No Conflict if path is not root
+                string workingDir = System.IO.Directory.GetCurrentDirectory();
+                if (workingDir == Path.GetFullPath(CopyOptions.Source)) return false;        //No Conflict if working directory is same as source (Using Path.GetFullPath to sanitize source)
+                return Path.GetPathRoot(workingDir) == Path.GetPathRoot(CopyOptions.Source); //Conflict if source is root of same drive as working directory.
+            }
+        }
+
+        #endregion
+
         #region IDisposable Implementation
 
         bool disposed = false;
