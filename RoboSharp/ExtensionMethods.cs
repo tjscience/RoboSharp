@@ -2,7 +2,7 @@ using System.IO;
 
 namespace RoboSharp
 {
-    public static class ExtensionMethods
+    internal static class ExtensionMethods
     {
         public static string CleanOptionInput(this string option)
         {
@@ -23,8 +23,18 @@ namespace RoboSharp
             // Get rid of padding
             path = path.Trim();
 
+            return path.RemoveTrailingSlashes();
+        }
+
+        /// <summary>
+        ///  Get rid of trailing Directory Seperator Chars
+        /// </summary>
+        public static string RemoveTrailingSlashes(this string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return string.Empty;
+
             // Get rid of trailing Directory Seperator Chars
-            while(path.Length > 0 && (path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString())))
+            while (path.Length > 0 && (path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString())))
             {
                 path = path.Substring(0, path.Length - 1);
             }

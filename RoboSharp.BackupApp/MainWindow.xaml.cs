@@ -114,6 +114,9 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
 
+            //Removable Drive Fix
+            copy.SetWorkingDirectoryToSource();
+
             copy.Start();
         }
 

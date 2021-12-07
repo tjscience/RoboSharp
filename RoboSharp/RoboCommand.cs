@@ -323,7 +323,7 @@ namespace RoboSharp
 
             #endregion
 
-	    isRunning = !cancellationToken.IsCancellationRequested;	
+	    isRunning = !cancellationToken.IsCancellationRequested;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -467,9 +467,7 @@ namespace RoboSharp
         /// Workaround: <br/>
         /// - Update the Working Directory to be the same as the source directory. (Set Working Directory to E:\ in example above) <br/>
         /// - This workaround may be problematic if paths relative to the expected working directory are used.<br/>
-        /// - It is up to the calling app to work around this issue if it occurs.  <br/>
-        /// - See this article (remarks section) for more information on best practices regarding updating the working directory: <br/>
-        /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setcurrentdirectory"/>
+        /// - It is up to the calling app to work around this issue if it occurs.  <see cref="SetWorkingDirectoryToSource"/> is provided if needed. <br/>
         /// </remarks>
         /// <returns>
         /// TRUE if the issue described above can occur. Otherwise false.
@@ -478,12 +476,32 @@ namespace RoboSharp
         {
             get
             {
-                if (CopyOptions.Source.IsNullOrWhiteSpace()) return false;      //No Conflict if path is not set
-                if (!Path.IsPathRooted(CopyOptions.Source)) return false;       //No Conflict if path is not root
-                string workingDir = System.IO.Directory.GetCurrentDirectory();
-                if (workingDir == Path.GetFullPath(CopyOptions.Source)) return false;        //No Conflict if working directory is same as source (Using Path.GetFullPath to sanitize source)
-                return Path.GetPathRoot(workingDir) == Path.GetPathRoot(CopyOptions.Source); //Conflict if source is root of same drive as working directory.
+                if (CopyOptions.Source.IsNullOrWhiteSpace()) return false;  //No Conflict if path is not set
+                if (CopyOptions.Source.Length > 2) return false;            //No Conflict -> Conflict only occurs if source is root of a drive, such as E:
+                
+                string WorkingDir = System.IO.Directory.GetCurrentDirectory().RemoveTrailingSlashes();
+                if (CopyOptions.Source == WorkingDir) return false;             //No Conflict if working directory is same as source
+                
+                string WorkingDirRoot = Path.GetPathRoot(WorkingDir).RemoveTrailingSlashes();
+                return CopyOptions.Source == WorkingDirRoot; //Conflict if source is root of same drive as working directory.
             }
+        }
+
+        /// <summary>
+        /// Evaluates <see cref="WorkingDirectoryConflictExists"/>. <br/>
+        /// - If TRUE: Sets the application's current working directory to <see cref="CopyOptions.Source"/> <br/>
+        /// - If FALSE: Does nothing. <br/>
+        /// </summary>
+        /// <remarks>
+        /// Prior to calling this method in your app, you should read and understand the description of the " <see cref="WorkingDirectoryConflictExists"/> " property. <br/>
+        /// - Modifying the working directory may break relative paths if your app uses paths relative to the default working directory. <br/>
+        /// - See this article (remarks section) for more information on the danger regarding updating the working directory: <br/>
+        /// <see href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setcurrentdirectory"/>
+        /// </remarks>
+        public void SetWorkingDirectoryToSource()
+        {
+            if (WorkingDirectoryConflictExists)
+                System.IO.Directory.SetCurrentDirectory(CopyOptions.Source + System.IO.Path.DirectorySeparatorChar);
         }
 
         #endregion
