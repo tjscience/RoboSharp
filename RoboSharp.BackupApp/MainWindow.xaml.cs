@@ -114,9 +114,6 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
 
-            // Working Directory / Root Source Conflict Fix
-            copy.SetWorkingDirectoryToSource();
-
             copy.Start();
         }
 

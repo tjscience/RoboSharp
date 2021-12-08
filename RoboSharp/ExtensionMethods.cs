@@ -23,23 +23,29 @@ namespace RoboSharp
             // Get rid of padding
             path = path.Trim();
 
-            return path.RemoveTrailingSlashes();
-        }
-
-        /// <summary>
-        ///  Get rid of trailing Directory Seperator Chars
-        /// </summary>
-        public static string RemoveTrailingSlashes(this string path)
-        {
-            if (string.IsNullOrWhiteSpace(path)) return string.Empty;
-
             // Get rid of trailing Directory Seperator Chars
-            while (path.Length > 0 && (path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString())))
+            // Length greater than 3 because E:\ is the shortest valid path
+            while (path.Length > 3 && path.EndsWithDirectorySeperator())
             {
                 path = path.Substring(0, path.Length - 1);
             }
 
+            // Fix UNC paths that are the root directory of a UNC drive
+            if (new System.Uri(path).IsUnc)
+            {
+                if (path.EndsWith("$"))
+                {
+                    path += '\\';
+                }
+            }
+
             return path;
         }
+
+        /// <summary>
+        /// Check if the string ends with a directory seperator character
+        /// </summary>
+        public static bool EndsWithDirectorySeperator(this string path) => path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString());
+
     }
 }
