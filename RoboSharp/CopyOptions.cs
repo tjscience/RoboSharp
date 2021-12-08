@@ -298,7 +298,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// 
+        /// Parse the class properties and generate the command arguments
         /// </summary>
         /// <returns></returns>
         internal string Parse()

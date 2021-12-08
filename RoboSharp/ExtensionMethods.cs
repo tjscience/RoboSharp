@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace RoboSharp
 {
@@ -17,8 +18,11 @@ namespace RoboSharp
         public static string CleanDirectoryPath(this string path)
         {
             // Get rid of single and double quotes
-            path = path.Replace("\"", "");
-            path = path.Replace("\'", "");
+            path = path?.Replace("\"", "");
+            path = path?.Replace("\'", "");
+
+            //Validate against null / empty strings. 
+            if (string.IsNullOrWhiteSpace(path)) return string.Empty;
 
             // Get rid of padding
             path = path.Trim();
@@ -28,6 +32,15 @@ namespace RoboSharp
             while (path.Length > 3 && path.EndsWithDirectorySeperator())
             {
                 path = path.Substring(0, path.Length - 1);
+            }
+
+            //Sanitize invalid paths -- Convert E: to E:\
+            if (path.Length <= 2)
+            {
+                if (DriveRootRegex.IsMatch(path))
+                    return path += '\\';
+                else
+                    return path;
             }
 
             // Fix UNC paths that are the root directory of a UNC drive
@@ -41,6 +54,8 @@ namespace RoboSharp
 
             return path;
         }
+
+        private static readonly Regex DriveRootRegex = new Regex("[A-Z]:", RegexOptions.Compiled);
 
         /// <summary>
         /// Check if the string ends with a directory seperator character
