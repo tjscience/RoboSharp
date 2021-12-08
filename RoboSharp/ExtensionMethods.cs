@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -44,7 +45,7 @@ namespace RoboSharp
             }
 
             // Fix UNC paths that are the root directory of a UNC drive
-            if (new System.Uri(path).IsUnc)
+            if (Uri.TryCreate(path, UriKind.Absolute, out Uri URI) && URI.IsUnc)
             {
                 if (path.EndsWith("$"))
                 {
