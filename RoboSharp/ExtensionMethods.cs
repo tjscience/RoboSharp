@@ -39,7 +39,7 @@ namespace RoboSharp
             if (path.Length <= 2)
             {
                 if (DriveRootRegex.IsMatch(path))
-                    return path += '\\';
+                    return path.ToUpper() + '\\';
                 else
                     return path;
             }
@@ -56,7 +56,7 @@ namespace RoboSharp
             return path;
         }
 
-        private static readonly Regex DriveRootRegex = new Regex("[A-Z]:", RegexOptions.Compiled);
+        private static readonly Regex DriveRootRegex = new Regex("[A-Za-z]:", RegexOptions.Compiled);
 
         /// <summary>
         /// Check if the string ends with a directory seperator character
