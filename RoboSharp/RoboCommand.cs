@@ -226,7 +226,7 @@ namespace RoboSharp
             }
         }
 
-#if NET45
+#if NET45 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
         /// <summary>
         /// Start the RoboCopy Process, then return the results.
         /// </summary>
