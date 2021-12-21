@@ -8,11 +8,11 @@ using System.Collections.Specialized;
 namespace RoboSharp.Results
 {
     /// <summary>
-    /// Object used to represent reults from multiple <see cref="RoboCommand"/>s. <br/>
+    /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
     /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.
     /// </summary>
     /// <remarks>
-    /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>.
+    /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </remarks>
     public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>
     {
