@@ -80,19 +80,19 @@ namespace RoboSharp.Results
         #region < Public Properties >
 
         /// <summary> Sum of all DirectoryStatistics objects </summary>
-        public Statistic Total_DirectoriesStatistic => Total_DirStatsField.Value;
+        public Statistic DirectoriesStatistic => Total_DirStatsField.Value;
 
         /// <summary> Sum of all ByteStatistics objects </summary>
-        public Statistic Total_BytesStatistic => Total_ByteStatsField.Value;
+        public Statistic BytesStatistic => Total_ByteStatsField.Value;
 
         /// <summary> Sum of all FileStatistics objects </summary>
-        public Statistic Total_FilesStatistic => Total_FileStatsField.Value;
+        public Statistic FilesStatistic => Total_FileStatsField.Value;
 
         /// <summary> Average of all SpeedStatistics objects </summary>
-        public SpeedStatistic Average_SpeedStatistic => Average_SpeedStatsField.Value;
+        public SpeedStatistic SpeedStatistic => Average_SpeedStatsField.Value;
 
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
-        public RoboCopyExitStatus ExitStatusSummary => ExitStatusSummaryField.Value;
+        public RoboCopyExitStatus Status => ExitStatusSummaryField.Value;
 
         #endregion
 
