@@ -173,22 +173,27 @@ namespace RoboSharp.Results
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             //Process New Items
-            int i = 0;
-            int i2 = e.NewItems.Count;
-            foreach (RoboCopyResults r in e.NewItems)
+            if (e.NewItems != null)
             {
-                i++;
-                AddItem(r, i == i2);
+                int i = 0;
+                int i2 = e.NewItems.Count;
+                foreach (RoboCopyResults r in e?.NewItems)
+                {
+                    i++;
+                    AddItem(r, i == i2);
+                }
             }
             //Process Removed Items
-            i = 0;
-            i2 = e.OldItems.Count;
-            foreach (RoboCopyResults r in e.OldItems)
+            if (e.OldItems != null)
             {
-                i++;
-                SubtractItem(r, i == i2);
+                int i = 0;
+                int i2 = e.OldItems.Count;
+                foreach (RoboCopyResults r in e?.OldItems)
+                {
+                    i++;
+                    SubtractItem(r, i == i2);
+                }
             }
-
             //Raise the event
             base.OnCollectionChanged(e);
         }
