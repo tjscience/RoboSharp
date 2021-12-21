@@ -10,7 +10,17 @@ namespace RoboSharp.Results
     /// </summary>
     internal class ResultsBuilder
     {
+         
         private readonly List<string> outputLines = new List<string>();
+        
+        /// <see cref="RoboCommand.CommandOptions"/>
+        internal string CommandOptions { get; set; }
+
+        /// <inheritdoc cref="CopyOptions.Source"/>
+        internal string Source { get; set; }
+        
+        /// <inheritdoc cref="CopyOptions.Destination"/>
+        internal string Destination { get; set; }
 
         internal void AddOutput(string output)
         {
@@ -44,6 +54,9 @@ namespace RoboSharp.Results
 
             res.LogLines = outputLines.ToArray();
 
+            res.Source = this.Source;
+            res.Destination = this.Destination;
+            res.CommandOptions = this.CommandOptions;
             return res;
         }
 

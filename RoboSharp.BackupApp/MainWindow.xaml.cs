@@ -241,6 +241,8 @@ namespace RoboSharp.BackupApp
             Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
             string NL = Environment.NewLine;
             lbl_SelectedItemTotals.Content = $"Selected Job:" +
+                $"{NL}Source: {result.Source}" +
+                $"{NL}Destination: {result.Destination}" +
                 $"{NL}Total Directories: {result.DirectoriesStatistic.Total}" +
                 $"{NL}Total Files: {result.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {result.BytesStatistic.Total}" +

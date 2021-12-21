@@ -42,7 +42,7 @@ namespace RoboSharp
         public bool IsRunning { get { return isRunning; } }
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
-        /// <summary>  </summary>
+        /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
         public CopyOptions CopyOptions
@@ -362,7 +362,10 @@ namespace RoboSharp
                 process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 process.StartInfo.CreateNoWindow = true;
                 process.StartInfo.FileName = Configuration.RoboCopyExe;
-                process.StartInfo.Arguments = GenerateParameters();
+                resultsBuilder.Source = CopyOptions.Source;
+                resultsBuilder.Destination = CopyOptions.Destination;
+                resultsBuilder.CommandOptions = GenerateParameters();
+                process.StartInfo.Arguments = resultsBuilder.CommandOptions;
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
                 process.EnableRaisingEvents = true;
@@ -430,6 +433,9 @@ namespace RoboSharp
             return results;
         }
 
+        /// <summary>
+        /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
+        /// </summary>
         private string GenerateParameters()
         {
             Debugger.Instance.DebugMessage("Generating parameters...");

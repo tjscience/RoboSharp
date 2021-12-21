@@ -7,6 +7,12 @@ namespace RoboSharp.Results
     /// </summary>
     public class RoboCopyResults
     {
+        /// <inheritdoc cref="CopyOptions.Source"/>
+        public string Source { get; internal set; }
+        /// <inheritdoc cref="CopyOptions.Destination"/>
+        public string Destination { get; internal set; }
+        /// <inheritdoc cref="RoboCommand.CommandOptions"/>
+        public string CommandOptions { get; internal set; }
         /// <inheritdoc cref="RoboCopyExitStatus"/>
         public RoboCopyExitStatus Status { get; internal set; }
         /// <summary> Information about number of Directories Copied, Skipped, Failed, etc.</summary>
