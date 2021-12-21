@@ -18,10 +18,14 @@ namespace RoboSharp.BackupApp
 
         public ObservableCollection<FileError> Errors = new ObservableCollection<FileError>();
 
+        private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+
         public MainWindow()
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
+            JobResults.ListModification += UpdateOverallLabel;
+            ListBox_JobResults.ItemsSource = JobResults;
             ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
@@ -170,6 +174,7 @@ namespace RoboSharp.BackupApp
                 var results = e.Results;
                 Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
                 Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
+                JobResults.Add(e.Results);
             }));
         }
 
@@ -229,6 +234,27 @@ namespace RoboSharp.BackupApp
                 copy.Stop();
                 copy.Dispose();
             }
+        }
+
+        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e)
+        {
+            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
+            string NL = Environment.NewLine;
+            lbl_SelectedItemTotals.Content = $"Selected Job:" +
+                $"{NL}Total Directories: {result.DirectoriesStatistic.Total}" +
+                $"{NL}Total Files: {result.FilesStatistic.Total}" +
+                $"{NL}Total Size (bytes): {result.BytesStatistic.Total}" +
+                $"{NL}Status: {result.Status.ToString()}";
+        }
+
+        private void UpdateOverallLabel(object sender, EventArgs e)
+        {
+            string NL = Environment.NewLine;
+            lbl_OveralTotals.Content = $"Job History:" +
+                $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
+                $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
+                $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
+                $"{NL}Status: {JobResults.Status.ToString()}";
         }
     }
 

@@ -225,6 +225,13 @@
             <TabItem Header="Errors" Name="ErrorsTab">
                 <DataGrid Name="ErrorGrid"></DataGrid>
             </TabItem>
+            <TabItem Header="TabItem" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="57">
+                <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5">
+                    <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,10,0,0" VerticalAlignment="Top" Width="241" SelectionChanged="UpdateSelectedItemsLabel"/>
+                    <Label x:Name="lbl_OveralTotals" Content="Label" HorizontalAlignment="Left" Height="123" Margin="256,10,0,0" VerticalAlignment="Top" Width="234"/>
+                    <Label x:Name="lbl_SelectedItemTotals" Content="Label" HorizontalAlignment="Left" Height="123" Margin="256,197,0,0" VerticalAlignment="Top" Width="234"/>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>
