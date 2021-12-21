@@ -259,6 +259,7 @@ namespace RoboSharp.BackupApp
                 $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
                 $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
+                $"{NL}Any Jobs Cancelled: {(JobResults.Status.WasCancelled ? "YES" : "NO")}" +
                 $"{NL}{JobResults.Status.ToString()}";
         }
     }

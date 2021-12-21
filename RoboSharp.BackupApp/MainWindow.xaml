@@ -225,12 +225,12 @@
             <TabItem Header="Errors" Name="ErrorsTab">
                 <DataGrid Name="ErrorGrid"></DataGrid>
             </TabItem>
-            <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="57">
+            <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="94" Margin="-2,-2,-35,0">
                 <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5">
                     <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="241" SelectionChanged="UpdateSelectedItemsLabel"/>
-                    <Label x:Name="lbl_OveralTotals" Content="Total History Results" HorizontalAlignment="Left" Height="123" Margin="256,187,0,0" VerticalAlignment="Top" Width="234"/>
-                    <Label x:Name="lbl_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="123" Margin="256,59,0,0" VerticalAlignment="Top" Width="234"/>
-                    <Label x:Name="lbl_OveralTotals_Copy" Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
+                    <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="123" Margin="256,187,0,0" VerticalAlignment="Top" Width="367"/>
+                    <Label x:Name="lbl_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="123" Margin="256,59,0,0" VerticalAlignment="Top" Width="367"/>
+                    <Label x:Name="lbl_JobHistoryHeader" Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
                 </Grid>
             </TabItem>
         </TabControl>
