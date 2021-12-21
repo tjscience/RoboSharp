@@ -32,7 +32,7 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="List{T}.List(IEnumerable{T})"/>
         public RoboCopyResultsList(IEnumerable<RoboCopyResults> collection) :base(collection) { Init(); }
 
-        private void Init() 
+        private void Init()
         {
             Total_DirStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetDirectoriesStatistics()));
             Total_ByteStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetByteStatistics()));
@@ -51,6 +51,7 @@ namespace RoboSharp.Results
                         return SpeedStatistic.AverageStatistics(this.GetSpeedStatistics());
                     }
                 });
+            ExitStatusSummaryField = new Lazy<RoboCopyExitStatus>(() => RoboCopyExitStatus.CombineStatuses(this.GetStatuses()));
         }
 
         #endregion
@@ -66,7 +67,8 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_ByteStatsField;
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<SpeedStatistic> Average_SpeedStatsField;
-        
+        private Lazy<RoboCopyExitStatus> ExitStatusSummaryField;
+
         /// <summary> 
         /// Speed Stat can be averaged only if the first value was supplied by an actual result. <br/> 
         /// Set TRUE after first item was added to the list, set FALSE if list is cleared.
@@ -88,6 +90,9 @@ namespace RoboSharp.Results
 
         /// <summary> Average of all SpeedStatistics objects </summary>
         public SpeedStatistic Average_SpeedStatistic => Average_SpeedStatsField.Value;
+
+        /// <summary> Sum of all RoboCopyExitStatus objects </summary>
+        public RoboCopyExitStatus ExitStatusSummary => ExitStatusSummaryField.Value;
 
         #endregion
 
@@ -188,6 +193,10 @@ namespace RoboSharp.Results
             //Files
             if (Total_FileStatsField.IsValueCreated)
                 Total_FileStatsField.Value.AddStatistic(item?.FilesStatistic, RaiseValueChangeEvent);
+            //Exit Status
+            if (ExitStatusSummaryField.IsValueCreated)
+                ExitStatusSummaryField.Value.CombineStatus(item?.Status);
+            
             //Speed
             if (Average_SpeedStatsField.IsValueCreated)
             {
