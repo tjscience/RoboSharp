@@ -53,7 +53,7 @@ namespace RoboSharp.Results
                         return SpeedStatistic.AverageStatistics(this.GetSpeedStatistics());
                     }
                 });
-            ExitStatusSummaryField = new Lazy<RoboCopyExitStatus>(() => RoboCopyExitStatus.CombineStatuses(this.GetStatuses()));
+            ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
         }
 
         #endregion
@@ -69,7 +69,7 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_ByteStatsField;
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<SpeedStatistic> Average_SpeedStatsField;
-        private Lazy<RoboCopyExitStatus> ExitStatusSummaryField;
+        private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
 
         /// <summary> 
         /// Speed Stat can be averaged only if the first value was supplied by an actual result. <br/> 
@@ -250,6 +250,12 @@ namespace RoboSharp.Results
             //Files
             if (Total_FileStatsField.IsValueCreated)
                 Total_FileStatsField.Value.Subtract(item?.FilesStatistic, ReCalculateSpeedNow);
+            //Exit Status
+            if (ExitStatusSummaryField.IsValueCreated && ReCalculateSpeedNow)
+            {
+                ExitStatusSummaryField.Value.Reset();
+                ExitStatusSummaryField.Value.CombineStatus(GetStatuses());
+            }
             //Speed
             if (Average_SpeedStatsField.IsValueCreated && ReCalculateSpeedNow)
             {
