@@ -65,14 +65,14 @@ namespace RoboSharp.Results
             if (status == null) return;
             if (status.WasCancelled)
             {
-                this.wascancelled = true;
+                wascancelled = true;
             }
             else
             {
-                RoboCopyExitCodes code = this.ExitCode & status.ExitCode;
-                this.ExitCodeValue = (int)code;
+                RoboCopyExitCodes code = ExitCode | status.ExitCode;
+                ExitCodeValue = (int)code;
             }
-            this.IsCombinedStatus = true;
+            IsCombinedStatus = true;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace RoboSharp.Results
         {
             foreach (RoboCopyExitStatus s in status)
             {
-                this.CombineStatus(s);
+                CombineStatus(s);
             }
         }
 
