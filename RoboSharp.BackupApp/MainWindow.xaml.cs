@@ -244,7 +244,7 @@ namespace RoboSharp.BackupApp
                 $"{NL}Total Directories: {result.DirectoriesStatistic.Total}" +
                 $"{NL}Total Files: {result.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {result.BytesStatistic.Total}" +
-                $"{NL}Status: {result.Status.ToString()}";
+                $"{NL}{result.Status.ToString()}";
         }
 
         /// <summary>
@@ -259,8 +259,7 @@ namespace RoboSharp.BackupApp
                 $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
                 $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
-                $"{NL}Status: {JobResults.Status.ToString()}";
-            ListBox_JobResults.Items.Refresh();
+                $"{NL}{JobResults.Status.ToString()}";
         }
     }
 
