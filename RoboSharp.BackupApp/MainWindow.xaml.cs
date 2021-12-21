@@ -255,7 +255,7 @@ namespace RoboSharp.BackupApp
         private void UpdateOverallLabel(object sender, EventArgs e)
         {
             string NL = Environment.NewLine;
-            lbl_OveralTotals.Content = $"Job History:" +
+            lbl_OverallTotals.Content = $"Job History:" +
                 $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
                 $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
