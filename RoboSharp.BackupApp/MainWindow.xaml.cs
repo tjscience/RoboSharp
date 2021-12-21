@@ -24,7 +24,7 @@ namespace RoboSharp.BackupApp
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
-            JobResults.ListModification += UpdateOverallLabel;
+            JobResults.CollectionChanged += UpdateOverallLabel;
             ListBox_JobResults.ItemsSource = JobResults;
             ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
@@ -247,6 +247,11 @@ namespace RoboSharp.BackupApp
                 $"{NL}Status: {result.Status.ToString()}";
         }
 
+        /// <summary>
+        /// Runs every time the JobResults list is updated.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void UpdateOverallLabel(object sender, EventArgs e)
         {
             string NL = Environment.NewLine;
@@ -255,6 +260,7 @@ namespace RoboSharp.BackupApp
                 $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
                 $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
                 $"{NL}Status: {JobResults.Status.ToString()}";
+            ListBox_JobResults.Items.Refresh();
         }
     }
 

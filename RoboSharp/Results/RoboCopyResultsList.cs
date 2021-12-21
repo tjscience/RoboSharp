@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 namespace RoboSharp.Results
 {
@@ -12,7 +14,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>.
     /// </remarks>
-    public sealed class RoboCopyResultsList : ListWithEvents<RoboCopyResults>
+    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>
     {
         #region < Constructors >
 
@@ -164,17 +166,31 @@ namespace RoboSharp.Results
 
         /// <summary>Overrides the Event Listener check since this class always processes added/removed items.</summary>
         /// <returns>True</returns>
-        protected override bool HasEventListener_ListModification() => true;
+        protected override bool HasEventListener_CollectionChanged() => true;
 
         /// <summary>Process the Added/Removed items, then fire the event</summary>
-        /// <inheritdoc cref="ListWithEvents{T}.OnListModification(ListWithEvents{T}.ListModificationEventArgs)"/>
-        protected override void OnListModification(ListModificationEventArgs e)
+        /// <inheritdoc cref="ObservableList{T}.OnCollectionChanged(NotifyCollectionChangedEventArgs)"/>
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            foreach (RoboCopyResults r in e.ItemsAdded)
-                AddItem(r, e.ItemsAdded.Last() == r);
-            foreach (RoboCopyResults r in e.ItemsRemoved)
-                SubtractItem(r, e.ItemsRemoved.Last() == r);
-            base.OnListModification(e);
+            //Process New Items
+            int i = 0;
+            int i2 = e.NewItems.Count;
+            foreach (RoboCopyResults r in e.NewItems)
+            {
+                i++;
+                AddItem(r, i == i2);
+            }
+            //Process Removed Items
+            i = 0;
+            i2 = e.OldItems.Count;
+            foreach (RoboCopyResults r in e.OldItems)
+            {
+                i++;
+                SubtractItem(r, i == i2);
+            }
+
+            //Raise the event
+            base.OnCollectionChanged(e);
         }
 
         /// <summary>
