@@ -85,27 +85,27 @@ namespace RoboSharp
         #region Events
 
         /// <summary>Handles <see cref="OnFileProcessed"/></summary>
-        public delegate void FileProcessedHandler(object sender, FileProcessedEventArgs e);
+        public delegate void FileProcessedHandler(RoboCommand sender, FileProcessedEventArgs e);
         /// <summary>Occurs each time a new item has started processing</summary>
         public event FileProcessedHandler OnFileProcessed;
 
         /// <summary>Handles <see cref="OnCommandError"/></summary>
-        public delegate void CommandErrorHandler(object sender, CommandErrorEventArgs e);
+        public delegate void CommandErrorHandler(RoboCommand sender, CommandErrorEventArgs e);
         /// <summary>Occurs when an error occurs while generating the command</summary>
         public event CommandErrorHandler OnCommandError;
 
         /// <summary>Handles <see cref="OnError"/></summary>
-        public delegate void ErrorHandler(object sender, ErrorEventArgs e);
+        public delegate void ErrorHandler(RoboCommand sender, ErrorEventArgs e);
         /// <summary>Occurs when the command exits due to an error</summary>
         public event ErrorHandler OnError;
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
-        public delegate void CommandCompletedHandler(object sender, RoboCommandCompletedEventArgs e);
+        public delegate void CommandCompletedHandler(RoboCommand sender, RoboCommandCompletedEventArgs e);
         /// <summary>Occurs when the command exits</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
-        public delegate void CopyProgressHandler(object sender, CopyProgressEventArgs e);
+        public delegate void CopyProgressHandler(RoboCommand sender, CopyProgressEventArgs e);
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 

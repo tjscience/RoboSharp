@@ -5,26 +5,112 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp.Results
 {
     /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
     /// </summary>
-    public class Statistic
+    public class Statistic : INotifyPropertyChanged
     {
+        #region < Fields, Events, Properties >
+
+        private long TotalField;
+        private long CopiedField;
+        private long SkippedField;
+        private long MismatchField;
+        private long FailedField;
+        private long ExtrasField;
+
+        /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
+        private bool EnablePropertyChangeEvent = true;
+
+        /// <summary>This event will fire when the value of the statistic is updated via Adding / Subtracting methods </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
         /// <summary> Total Scanned during the run</summary>
-        public long Total { get; private set; }
+        public long Total { 
+            get => TotalField;
+            private set
+            {
+                if (TotalField != value)
+                {
+                    TotalField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Total"));
+                }
+            }
+        }
+
         /// <summary> Total Copied </summary>
-        public long Copied { get; private set; }
+        public long Copied { 
+            get => CopiedField;
+            private set
+            {
+                if (CopiedField != value)
+                {
+                    CopiedField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Copied"));
+                }
+            }
+        }
+
         /// <summary> Total Skipped </summary>
-        public long Skipped { get; private set; }
+        public long Skipped { 
+            get => SkippedField;
+            private set
+            {
+                if (SkippedField != value)
+                {
+                    SkippedField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Skipped"));
+                }
+            }
+        }
+
         /// <summary>  </summary>
-        public long Mismatch { get; private set; }
+        public long Mismatch { 
+            get => MismatchField;
+            private set
+            {
+                if (MismatchField != value)
+                {
+                    MismatchField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Mismatch"));
+                }
+            }
+        }
+
         /// <summary> Total that failed to copy or move </summary>
-        public long Failed { get; private set; }
+        public long Failed { 
+            get => FailedField; 
+            private set
+            {
+                if (FailedField != value)
+                {
+                    FailedField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Failed"));
+                }
+            }
+        }
+
         /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
-        public long Extras { get; private set; }
+        public long Extras { 
+            get => ExtrasField;
+            private set 
+            {
+                if (ExtrasField != value)
+                {
+                    ExtrasField = value;
+                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Extras"));
+                }
+            }
+        }
+
+        #endregion
+
+        #region < Methods >
 
         /// <summary>
         /// Returns a string that represents the current object.
@@ -120,21 +206,66 @@ namespace RoboSharp.Results
             return 0;
         }
 
-        #region ADD
+        #endregion
+
+        /// <summary>
+        /// Reset all values to Zero ( 0 ) -- Used by <see cref="RoboCopyResultsList"/> for the properties
+        /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        public void Reset()
+        {
+            Copied = 0;
+            Extras = 0;
+            Failed = 0;
+            Mismatch = 0;
+            Skipped = 0;
+            Total = 0;
+        }
+
+        /// <summary>
+        /// Set the values for this object to 0
+        /// </summary>
+        internal void Reset(bool enablePropertyChangeEvent)
+        {
+            EnablePropertyChangeEvent = enablePropertyChangeEvent;
+            Reset();
+            EnablePropertyChangeEvent = true;
+        }
+
+        #region < ADD Methods >
 
         /// <summary>
         /// Add the results of the supplied Statistics object to this Statistics object.
         /// </summary>
         /// <param name="stats">Statistics Item to add</param>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
         public void AddStatistic(Statistic stats)
         {
-            this.Total += stats.Total;
-            this.Copied += stats.Copied;
-            this.Extras += stats.Extras;
-            this.Failed += stats.Failed;
-            this.Mismatch += stats.Mismatch;
-            this.Skipped += stats.Skipped;
+            Total += stats?.Total ?? 0;
+            Copied += stats?.Copied ?? 0;
+            Extras += stats?.Extras ?? 0;
+            Failed += stats?.Failed ?? 0;
+            Mismatch += stats?.Mismatch ?? 0;
+            Skipped += stats?.Skipped ?? 0;
         }
+
+        
+        #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+        /// <param name="enablePropertyChangedEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/></param>
+        /// <inheritdoc cref="AddStatistic(Statistic)"/>        
+        internal void AddStatistic(Statistic stats, bool enablePropertyChangedEvent)
+        {
+            EnablePropertyChangeEvent = enablePropertyChangedEvent;
+            AddStatistic(stats);
+            EnablePropertyChangeEvent = true;
+
+        }
+        #pragma warning restore CS1573
+
 
         /// <summary>
         /// Add the results of the supplied Statistics objects to this Statistics object.
@@ -143,7 +274,10 @@ namespace RoboSharp.Results
         public void AddStatistic(IEnumerable<Statistic> stats)
         {
             foreach (Statistic stat in stats)
+            {
+                EnablePropertyChangeEvent = stat == stats.Last();
                 AddStatistic(stat);
+            }
         }
 
         /// <summary>
@@ -160,7 +294,7 @@ namespace RoboSharp.Results
 
         #endregion ADD
 
-        #region AVERAGE
+        #region < AVERAGE Methods >
 
         /// <summary>
         /// Combine the supplied <see cref="Statistic"/> objects, then get the average.
@@ -198,5 +332,50 @@ namespace RoboSharp.Results
         }
 
         #endregion AVERAGE
+
+        #region < Subtract Methods >
+
+        /// <summary>
+        /// Subtract Method used by <see cref="RoboCopyResultsList"/>
+        /// </summary>
+        /// <param name="stat">Statistics Item to subtract</param>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        public void Subtract(Statistic stat)
+        {
+            Copied -= stat?.Copied ?? 0;
+            Extras -= stat?.Extras ?? 0;
+            Failed -= stat?.Failed ?? 0;
+            Mismatch -= stat?.Mismatch ?? 0;
+            Skipped -= stat?.Skipped ?? 0;
+            Total -= stat?.Total ?? 0;
+        }
+
+        #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+        /// <param name="enablePropertyChangedEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/></param>
+        /// <inheritdoc cref="Subtract(Statistic)"/>        
+        internal void Subtract(Statistic stats, bool enablePropertyChangedEvent)
+        {
+            EnablePropertyChangeEvent = enablePropertyChangedEvent;
+            Subtract(stats);
+            EnablePropertyChangeEvent = true;
+        }
+        #pragma warning restore CS1573
+
+        /// <summary>
+        /// Add the results of the supplied Statistics objects to this Statistics object.
+        /// </summary>
+        /// <param name="stats">Statistics Item to add</param>
+        public void Subtract(IEnumerable<Statistic> stats)
+        {
+            foreach (Statistic stat in stats)
+            {
+                EnablePropertyChangeEvent = stat == stats.Last();
+                Subtract(stat);
+            }
+        }
+
+        #endregion Subtract
     }
 }
