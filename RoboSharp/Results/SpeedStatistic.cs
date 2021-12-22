@@ -10,7 +10,10 @@ using System.Runtime.CompilerServices;
 
 namespace RoboSharp.Results
 {
-    /// <summary> Contains information regarding average Transfer Speed </summary>
+    /// <summary>
+    /// Contains information regarding average Transfer Speed. <br/>
+    /// Note: Runs that do not perform any copy operations or that exited prematurely ( <see cref="RoboCopyExitCodes.Cancelled"/> ) will result in a null <see cref="SpeedStatistic"/> object.
+    /// </summary>
     public class SpeedStatistic : INotifyPropertyChanged
     {
         #region < Fields, Events, Properties >
@@ -90,7 +93,7 @@ namespace RoboSharp.Results
 
     /// <summary>
     /// This object represents the Average of several <see cref="SpeedStatistic"/> objects, and contains 
-    /// methods to facilitate that functionality. 
+    /// methods to facilitate that functionality.
     /// </summary>
     public class AverageSpeedStatistic : SpeedStatistic
     {

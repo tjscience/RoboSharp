@@ -177,6 +177,7 @@ namespace RoboSharp.Results
                     //Speed
                     if (Average_SpeedStatsField.IsValueCreated)
                         Average_SpeedStatsField.Value.Add(r?.SpeedStatistic);
+                    if (RaiseValueChangeEvent) Average_SpeedStatsField.Value.CalculateAverage();
                 }
             }
 
@@ -185,10 +186,10 @@ namespace RoboSharp.Results
             {
                 int i = 0;
                 int i2 = e.OldItems.Count;
-                bool RaiseValueChangeEvent = i == i2;
                 foreach (RoboCopyResults r in e?.OldItems)
                 {
                     i++;
+                    bool RaiseValueChangeEvent = i == i2;
                     //Bytes
                     if (Total_ByteStatsField.IsValueCreated)
                         Total_ByteStatsField.Value.Subtract(r?.BytesStatistic, RaiseValueChangeEvent);
@@ -211,7 +212,6 @@ namespace RoboSharp.Results
                             Average_SpeedStatsField.Value.Reset();
                         else
                             Average_SpeedStatsField.Value.Subtract(r.SpeedStatistic);
-
                         if (RaiseValueChangeEvent) Average_SpeedStatsField.Value.CalculateAverage();
                     }
                 }
