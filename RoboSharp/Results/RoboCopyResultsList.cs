@@ -39,20 +39,7 @@ namespace RoboSharp.Results
             Total_DirStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetDirectoriesStatistics()));
             Total_ByteStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetByteStatistics()));
             Total_FileStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetFilesStatistics()));
-            Average_SpeedStatsField = new Lazy<SpeedStatistic>(
-                () =>
-                {
-                    if (this.Count == 0)
-                    {
-                        this.SpeedStatValid = false;
-                        return new SpeedStatistic();
-                    }
-                    else
-                    {
-                        this.SpeedStatValid = true;
-                        return SpeedStatistic.AverageStatistics(this.GetSpeedStatistics());
-                    }
-                });
+            Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>( () => AverageSpeedStatistic.GetAverage(this.GetSpeedStatistics()));
             ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
         }
 
@@ -68,14 +55,8 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_DirStatsField;
         private Lazy<Statistic> Total_ByteStatsField;
         private Lazy<Statistic> Total_FileStatsField;
-        private Lazy<SpeedStatistic> Average_SpeedStatsField;
+        private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
-
-        /// <summary> 
-        /// Speed Stat can be averaged only if the first value was supplied by an actual result. <br/> 
-        /// Set TRUE after first item was added to the list, set FALSE if list is cleared.
-        /// </summary>
-        private bool SpeedStatValid { get; set; }
 
         #endregion
 
@@ -180,108 +161,65 @@ namespace RoboSharp.Results
                 foreach (RoboCopyResults r in e?.NewItems)
                 {
                     i++;
-                    AddItem(r, i == i2);
+                    bool RaiseValueChangeEvent = i == i2;
+                    //Bytes
+                    if (Total_ByteStatsField.IsValueCreated)
+                        Total_ByteStatsField.Value.AddStatistic(r?.BytesStatistic, RaiseValueChangeEvent);
+                    //Directories
+                    if (Total_DirStatsField.IsValueCreated)
+                        Total_DirStatsField.Value.AddStatistic(r?.DirectoriesStatistic, RaiseValueChangeEvent);
+                    //Files
+                    if (Total_FileStatsField.IsValueCreated)
+                        Total_FileStatsField.Value.AddStatistic(r?.FilesStatistic, RaiseValueChangeEvent);
+                    //Exit Status
+                    if (ExitStatusSummaryField.IsValueCreated)
+                        ExitStatusSummaryField.Value.CombineStatus(r?.Status);
+                    //Speed
+                    if (Average_SpeedStatsField.IsValueCreated)
+                        Average_SpeedStatsField.Value.Add(r?.SpeedStatistic);
                 }
             }
+
             //Process Removed Items
             if (e.OldItems != null)
             {
                 int i = 0;
                 int i2 = e.OldItems.Count;
+                bool RaiseValueChangeEvent = i == i2;
                 foreach (RoboCopyResults r in e?.OldItems)
                 {
                     i++;
-                    SubtractItem(r, i == i2);
+                    //Bytes
+                    if (Total_ByteStatsField.IsValueCreated)
+                        Total_ByteStatsField.Value.Subtract(r?.BytesStatistic, RaiseValueChangeEvent);
+                    //Directories
+                    if (Total_DirStatsField.IsValueCreated)
+                        Total_DirStatsField.Value.Subtract(r?.DirectoriesStatistic, RaiseValueChangeEvent);
+                    //Files
+                    if (Total_FileStatsField.IsValueCreated)
+                        Total_FileStatsField.Value.Subtract(r?.FilesStatistic, RaiseValueChangeEvent);
+                    //Exit Status
+                    if (ExitStatusSummaryField.IsValueCreated && RaiseValueChangeEvent)
+                    {
+                        ExitStatusSummaryField.Value.Reset();
+                        ExitStatusSummaryField.Value.CombineStatus(GetStatuses());
+                    }
+                    //Speed
+                    if (Average_SpeedStatsField.IsValueCreated)
+                    {
+                        if (this.Count == 0)
+                            Average_SpeedStatsField.Value.Reset();
+                        else
+                            Average_SpeedStatsField.Value.Subtract(r.SpeedStatistic);
+
+                        if (RaiseValueChangeEvent) Average_SpeedStatsField.Value.CalculateAverage();
+                    }
                 }
             }
-            //Raise the event
+
+            //Raise the CollectionChanged event
             base.OnCollectionChanged(e);
         }
-
-        /// <summary>
-        /// Adds item to the private Statistics objects
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="RaiseValueChangeEvent"><inheritdoc cref="Statistic.EnablePropertyChangeEvent" path="*"/></param>
-        private void AddItem(RoboCopyResults item, bool RaiseValueChangeEvent)
-        {
-            //Bytes
-            if (Total_ByteStatsField.IsValueCreated)
-                Total_ByteStatsField.Value.AddStatistic(item?.BytesStatistic, RaiseValueChangeEvent);
-            //Directories
-            if (Total_DirStatsField.IsValueCreated)
-                Total_DirStatsField.Value.AddStatistic(item?.DirectoriesStatistic, RaiseValueChangeEvent);
-            //Files
-            if (Total_FileStatsField.IsValueCreated)
-                Total_FileStatsField.Value.AddStatistic(item?.FilesStatistic, RaiseValueChangeEvent);
-            //Exit Status
-            if (ExitStatusSummaryField.IsValueCreated)
-                ExitStatusSummaryField.Value.CombineStatus(item?.Status);
-            
-            //Speed
-            if (Average_SpeedStatsField.IsValueCreated)
-            {
-                if (SpeedStatValid)
-                    //Average the new value with the previous average
-                    Average_SpeedStatsField.Value.AverageStatistic(item?.SpeedStatistic);
-                else
-                {
-                    //The previous value was not valid since it was not based off a RoboCopy Result. 
-                    //Set the value starting average to this item's value.
-                    Average_SpeedStatsField.Value.SetValues(item?.SpeedStatistic);
-                    SpeedStatValid = item?.SpeedStatistic != null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Subtracts item from the private Statistics objects
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="ReCalculateSpeedNow">Triggers Recalculating the Average Speed Stats if needed.<para/><inheritdoc cref="Statistic.EnablePropertyChangeEvent" path="*"/></param>
-        private void SubtractItem(RoboCopyResults item, bool ReCalculateSpeedNow)
-        {
-            //Bytes
-            if (Total_ByteStatsField.IsValueCreated)
-                Total_ByteStatsField.Value.Subtract(item?.BytesStatistic, ReCalculateSpeedNow);
-            //Directories
-            if (Total_DirStatsField.IsValueCreated)
-                Total_DirStatsField.Value.Subtract(item?.DirectoriesStatistic, ReCalculateSpeedNow);
-            //Files
-            if (Total_FileStatsField.IsValueCreated)
-                Total_FileStatsField.Value.Subtract(item?.FilesStatistic, ReCalculateSpeedNow);
-            //Exit Status
-            if (ExitStatusSummaryField.IsValueCreated && ReCalculateSpeedNow)
-            {
-                ExitStatusSummaryField.Value.Reset();
-                ExitStatusSummaryField.Value.CombineStatus(GetStatuses());
-            }
-            //Speed
-            if (Average_SpeedStatsField.IsValueCreated && ReCalculateSpeedNow)
-            {
-                if (this.Count == 0)
-                {
-                    Average_SpeedStatsField.Value.Reset();
-                    SpeedStatValid = false;
-                }
-                if (this.Count == 1)
-                {
-                    Average_SpeedStatsField.Value.SetValues(item?.SpeedStatistic);
-                    SpeedStatValid = true;
-                }
-                else
-                {
-                    List<SpeedStatistic> tmpList = new List<SpeedStatistic>();
-                    foreach (RoboCopyResults r in this)
-                        tmpList.Add(r?.SpeedStatistic);
-                    SpeedStatistic tmp = SpeedStatistic.AverageStatistics(tmpList);
-                    Average_SpeedStatsField.Value.SetValues(tmp);
-                    SpeedStatValid = true;
-                }
-            }
-        }
-
-
 
         #endregion
 

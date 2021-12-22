@@ -15,19 +15,19 @@ namespace RoboSharp.Results
     {
         #region < Fields, Events, Properties >
 
-        private decimal BytesPerSecField;
-        private decimal MegaBytesPerMinField;
+        private decimal BytesPerSecField = 0;
+        private decimal MegaBytesPerMinField = 0;
 
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
-        private bool EnablePropertyChangeEvent { get; set; } = true;
+        protected bool EnablePropertyChangeEvent { get; set; } = true;
 
         /// <summary>This event will fire when the value of the SpeedStatistic is updated </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary> Average Transfer Rate in Bytes/Second </summary>
-        public decimal BytesPerSec {
+        public virtual decimal BytesPerSec {
             get => BytesPerSecField;
-            private set
+            protected set
             {
                 if (BytesPerSecField != value)
                 {
@@ -38,9 +38,9 @@ namespace RoboSharp.Results
         }
 
         /// <summary> Average Transfer Rate in MB/Minute</summary>
-        public decimal MegaBytesPerMin {
+        public virtual decimal MegaBytesPerMin {
             get => MegaBytesPerMinField;
-            private set
+            protected set
             {
                 if (MegaBytesPerMinField != value)
                 {
@@ -85,14 +85,76 @@ namespace RoboSharp.Results
         }
 
         #endregion
+ 
+    }
 
-        #region < Set Value Methods >
+    /// <summary>
+    /// This object represents the Average of several <see cref="SpeedStatistic"/> objects, and contains 
+    /// methods to facilitate that functionality. 
+    /// </summary>
+    public class AverageSpeedStatistic : SpeedStatistic
+    {
+        #region < Constructors >
+
+        /// <summary>
+        /// Initialize a new <see cref="AverageSpeedStatistic"/> object with the default values.
+        /// </summary>
+        public AverageSpeedStatistic() : base() { }
+
+        /// <summary>
+        /// Initialize a new <see cref="AverageSpeedStatistic"/> object. <br/>
+        /// Values will be set to the return values of <see cref="SpeedStatistic.BytesPerSec"/> and <see cref="SpeedStatistic.MegaBytesPerMin"/> <br/>
+        /// </summary>
+        /// <param name="speedStat">
+        /// Either a <see cref="SpeedStatistic"/> or a <see cref="AverageSpeedStatistic"/> object. <br/>
+        /// If a <see cref="AverageSpeedStatistic"/> is passed into this constructor, it wil be treated as the base <see cref="SpeedStatistic"/> instead.
+        /// </param>
+        public AverageSpeedStatistic(SpeedStatistic speedStat) : base() 
+        {
+            Divisor = 1;
+            Combined_BytesPerSec = speedStat.BytesPerSec;
+            Combined_MegaBytesPerMin = speedStat.MegaBytesPerMin;
+            CalculateAverage();
+        }
+
+        /// <summary>
+        /// Initialize a new <see cref="AverageSpeedStatistic"/> object using <see cref="AverageSpeedStatistic.Average(IEnumerable{SpeedStatistic})"/>. <br/>
+        /// </summary>
+        /// <param name="speedStats"><inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/></param>
+        /// <inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/>
+        public AverageSpeedStatistic(IEnumerable<SpeedStatistic> speedStats) : base() 
+        {
+            Average(speedStats); 
+        }
+
+        #endregion
+
+        #region < Fields >
+
+        /// <summary> Sum of all <see cref="SpeedStatistic.BytesPerSec"/> </summary>
+        private decimal Combined_BytesPerSec = 0;
+
+        /// <summary>  Sum of all <see cref="SpeedStatistic.MegaBytesPerMin"/> </summary>
+        private decimal Combined_MegaBytesPerMin = 0;
+
+        /// <summary> Total number of SpeedStats that were combined to produce the Combined_* values </summary>
+        private long Divisor = 0;
+
+        #endregion
+
+        #region < Reset Value Methods >
 
         /// <summary>
         /// Set the values for this object to 0
         /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
         public void Reset()
         {
+            Combined_BytesPerSec = 0;
+            Combined_MegaBytesPerMin = 0;
+            Divisor = 0;
             BytesPerSec = 0;
             MegaBytesPerMin = 0;
         }
@@ -100,117 +162,162 @@ namespace RoboSharp.Results
         /// <summary>
         /// Set the values for this object to 0
         /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
         internal void Reset(bool enablePropertyChangeEvent)
         {
             EnablePropertyChangeEvent = enablePropertyChangeEvent;
-            BytesPerSec = 0;
-            MegaBytesPerMin = 0;
-            EnablePropertyChangeEvent = true;
-        }
-
-        /// <inheritdoc cref="SetValues(SpeedStatistic, bool)"/>
-        public void SetValues(SpeedStatistic speedStat) 
-        {
-            MegaBytesPerMin = speedStat?.MegaBytesPerMin ?? 0;
-            BytesPerSec = speedStat?.BytesPerSec ?? 0;
-        }
-
-        /// <summary>
-        /// Set the values of this object to the values of another <see cref="SpeedStatistic"/> object.
-        /// </summary>
-        /// <param name="speedStat">SpeedStatistic to copy the values from</param>
-        /// <param name="enablePropertyChangeEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/><para/> After updating the values, this property will be set back to TRUE.</param>
-        internal void SetValues(SpeedStatistic speedStat, bool enablePropertyChangeEvent)
-        {
-            EnablePropertyChangeEvent = enablePropertyChangeEvent;
-            MegaBytesPerMin = speedStat.MegaBytesPerMin;
-            BytesPerSec = speedStat.BytesPerSec;
+            Reset();
             EnablePropertyChangeEvent = true;
         }
 
         #endregion
 
-        #region ADD
+        // Add / Subtract methods are internal to allow usage within the RoboCopyResultsList object.
+        // The 'Average' Methods will first Add the statistics to the current one, then recalculate the average.
+        // Subtraction is only used when an item is removed from a RoboCopyResultsList 
+        // As such, public consumers should typically not require the use of subtract methods 
 
-        //The Adding methods exists solely to facilitate the averaging method. Adding speeds together over consecutive runs makes little sense. 
+        #region < ADD >
 
         /// <summary>
-        /// Add the results of the supplied SpeedStatistic objects to this Statistics object.
+        /// Add the results of the supplied SpeedStatistic objects to this object. <br/>
+        /// Does not automatically recalculate the average, and triggers no events.
+        /// </summary>
+        /// <remarks>
+        /// If any supplied Speedstat object is actually an <see cref="AverageSpeedStatistic"/> object, default functionality will combine the private fields
+        /// used to calculate the average speed instead of using the publicly reported speeds. <br/>
+        /// This ensures that combining the average of multiple <see cref="AverageSpeedStatistic"/> objects returns the correct value. <br/>
+        /// Ex: One object with 2 runs and one with 3 runs will return the average of all 5 runs instead of the average of two averages.
+        /// </remarks>
+        /// <param name="stat">SpeedStatistic Item to add</param>
+        /// <param name="ForceTreatAsSpeedStat">        
+        /// Setting this to TRUE will instead combine the calculated average of the <see cref="AverageSpeedStatistic"/>, treating it as a single <see cref="SpeedStatistic"/> object. <br/>
+        /// Ignore the private fields, and instead use the calculated speeds)
+        /// </param>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        internal void Add(SpeedStatistic stat, bool ForceTreatAsSpeedStat = false)
+        {
+            if (stat == null) return;
+            bool IsAverageStat = !ForceTreatAsSpeedStat && stat.GetType() == typeof(AverageSpeedStatistic);
+            AverageSpeedStatistic AvgStat = IsAverageStat ? (AverageSpeedStatistic)stat : null;
+            Divisor += IsAverageStat ? AvgStat.Divisor : 1;
+            Combined_BytesPerSec += IsAverageStat ? AvgStat.Combined_BytesPerSec : stat.BytesPerSec;
+            Combined_MegaBytesPerMin += IsAverageStat ? AvgStat.Combined_MegaBytesPerMin : stat.MegaBytesPerMin;
+        }
+
+
+        /// <summary>
+        /// Add the supplied SpeedStatistic collection to this object.
+        /// </summary>
+        /// <param name="stats">SpeedStatistic collection to add</param>
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
+        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        internal void Add(IEnumerable<SpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
+        {
+            foreach (SpeedStatistic stat in stats)
+                Add(stat, ForceTreatAsSpeedStat);
+        }
+
+        #endregion
+
+        #region < Subtract >
+
+        /// <summary>
+        /// Subtract the results of the supplied SpeedStatistic objects from this object.<br/>
         /// </summary>
         /// <param name="stat">Statistics Item to add</param>
-        /// 
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        private void AddStatistic(SpeedStatistic stat)
+        internal void Subtract(SpeedStatistic stat, bool ForceTreatAsSpeedStat = false)
         {
-            EnablePropertyChangeEvent = false;
-            BytesPerSec += stat?.BytesPerSec ?? 0;
-            MegaBytesPerMin += stat?.MegaBytesPerMin ?? 0;
-            EnablePropertyChangeEvent = true;
+            if (stat == null) return;
+            bool IsAverageStat = !ForceTreatAsSpeedStat && stat.GetType() == typeof(AverageSpeedStatistic);
+            AverageSpeedStatistic AvgStat = IsAverageStat ? (AverageSpeedStatistic)stat : null;
+            Divisor -= IsAverageStat ? AvgStat.Divisor : 1;
+            //Combine the values if Divisor is still valid
+            if (Divisor >= 1) {
+                Combined_BytesPerSec -= IsAverageStat ? AvgStat.Combined_BytesPerSec : stat.BytesPerSec;
+                Combined_MegaBytesPerMin -= IsAverageStat ? AvgStat.Combined_MegaBytesPerMin : stat.MegaBytesPerMin;
+            }
+            //Cannot have negative speeds or divisors -> Reset all values
+            if (Divisor < 1 || Combined_BytesPerSec < 0 || Combined_MegaBytesPerMin < 0) {
+                Combined_BytesPerSec = 0;
+                Combined_MegaBytesPerMin = 0;
+                Divisor = 0;
+            }
         }
 
         /// <summary>
-        /// Add the results of the supplied SpeedStatistic objects to this Statistics object.
+        /// Subtract the supplied SpeedStatistic collection from this object.
         /// </summary>
-        /// <param name="stats">Statistics Items to add</param>
+        /// <param name="stats">SpeedStatistic collection to subtract</param>
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        private void AddStatistic(IEnumerable<SpeedStatistic> stats)
+        internal void Subtract(IEnumerable<SpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
         {
-            EnablePropertyChangeEvent = false;
             foreach (SpeedStatistic stat in stats)
-            {
-                BytesPerSec += stat?.BytesPerSec ?? 0;
-                MegaBytesPerMin += stat?.MegaBytesPerMin ?? 0;
-            }
-            EnablePropertyChangeEvent = true;
+                Subtract(stat, ForceTreatAsSpeedStat);
         }
 
-        #endregion ADD
+        #endregion
 
-        #region AVERAGE
+        #region < AVERAGE >
+
+        /// <summary>
+        /// Immediately recalculate the BytesPerSec and MegaBytesPerMin values
+        /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        internal void CalculateAverage()
+        {
+            BytesPerSec = Divisor < 1 ? 0 : Combined_BytesPerSec / Divisor;
+            MegaBytesPerMin = Divisor < 1 ? 0 : Combined_MegaBytesPerMin / Divisor;
+        }
 
         /// <summary>
         /// Combine the supplied <see cref="SpeedStatistic"/> objects, then get the average.
         /// </summary>
         /// <param name="stat">Stats object</param>
-        public void AverageStatistic(SpeedStatistic stat)
+        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
+        public void Average(SpeedStatistic stat)
         {
-            this.AddStatistic(stat);
-            BytesPerSec /= 2;
-            MegaBytesPerMin /= 2;
+            Add(stat);
+            CalculateAverage();
         }
 
         /// <summary>
         /// Combine the supplied <see cref="SpeedStatistic"/> objects, then get the average.
         /// </summary>
-        /// <param name="stats">Array of Stats objects</param>
-        public void AverageStatistic(IEnumerable<SpeedStatistic> stats)
+        /// <param name="stats">Collection of <see cref="SpeedStatistic"/> objects</param>
+        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
+        public void Average(IEnumerable<SpeedStatistic> stats)
         {
-            this.AddStatistic(stats);
-            int cnt = stats.Count() + 1;
-            BytesPerSec /= cnt;
-            MegaBytesPerMin /= cnt;
+            Add(stats);
+            CalculateAverage();
         }
 
         /// <returns>New Statistics Object</returns>
-        /// <inheritdoc cref=" AverageStatistic(IEnumerable{SpeedStatistic})"/>
-        public static SpeedStatistic AverageStatistics(IEnumerable<SpeedStatistic> stats)
+        /// <inheritdoc cref=" Average(IEnumerable{SpeedStatistic})"/>
+        public static AverageSpeedStatistic GetAverage(IEnumerable<SpeedStatistic> stats)
         {
-            SpeedStatistic stat = new SpeedStatistic();
-            stat.AddStatistic(stats);
-            int cnt = stats.Count();
-            if (cnt > 1)
-            {
-                stat.BytesPerSec /= cnt;
-                stat.MegaBytesPerMin /= cnt;
-            }
+            AverageSpeedStatistic stat = new AverageSpeedStatistic();
+            stat.Average(stats);
             return stat;
         }
 
-        #endregion AVERAGE
+        #endregion 
 
     }
 }
