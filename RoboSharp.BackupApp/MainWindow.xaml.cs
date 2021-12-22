@@ -243,9 +243,9 @@ namespace RoboSharp.BackupApp
             lbl_SelectedItemTotals.Content = $"Selected Job:" +
                 $"{NL}Source: {result.Source}" +
                 $"{NL}Destination: {result.Destination}" +
-                $"{NL}Total Directories: {result.DirectoriesStatistic.Total}" +
-                $"{NL}Total Files: {result.FilesStatistic.Total}" +
-                $"{NL}Total Size (bytes): {result.BytesStatistic.Total}" +
+                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
+                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
+                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
                 $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
                 $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
                 $"{NL}{result.Status.ToString()}";
