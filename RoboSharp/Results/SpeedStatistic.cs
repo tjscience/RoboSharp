@@ -28,7 +28,8 @@ namespace RoboSharp.Results
         public event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary> Average Transfer Rate in Bytes/Second </summary>
-        public virtual decimal BytesPerSec {
+        public virtual decimal BytesPerSec
+        {
             get => BytesPerSecField;
             protected set
             {
@@ -41,7 +42,8 @@ namespace RoboSharp.Results
         }
 
         /// <summary> Average Transfer Rate in MB/Minute</summary>
-        public virtual decimal MegaBytesPerMin {
+        public virtual decimal MegaBytesPerMin
+        {
             get => MegaBytesPerMinField;
             protected set
             {
@@ -88,7 +90,7 @@ namespace RoboSharp.Results
         }
 
         #endregion
- 
+
     }
 
     /// <summary>
@@ -112,7 +114,7 @@ namespace RoboSharp.Results
         /// Either a <see cref="SpeedStatistic"/> or a <see cref="AverageSpeedStatistic"/> object. <br/>
         /// If a <see cref="AverageSpeedStatistic"/> is passed into this constructor, it wil be treated as the base <see cref="SpeedStatistic"/> instead.
         /// </param>
-        public AverageSpeedStatistic(SpeedStatistic speedStat) : base() 
+        public AverageSpeedStatistic(SpeedStatistic speedStat) : base()
         {
             Divisor = 1;
             Combined_BytesPerSec = speedStat.BytesPerSec;
@@ -125,9 +127,9 @@ namespace RoboSharp.Results
         /// </summary>
         /// <param name="speedStats"><inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/></param>
         /// <inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/>
-        public AverageSpeedStatistic(IEnumerable<SpeedStatistic> speedStats) : base() 
+        public AverageSpeedStatistic(IEnumerable<SpeedStatistic> speedStats) : base()
         {
-            Average(speedStats); 
+            Average(speedStats);
         }
 
         #endregion
@@ -247,12 +249,14 @@ namespace RoboSharp.Results
             AverageSpeedStatistic AvgStat = IsAverageStat ? (AverageSpeedStatistic)stat : null;
             Divisor -= IsAverageStat ? AvgStat.Divisor : 1;
             //Combine the values if Divisor is still valid
-            if (Divisor >= 1) {
+            if (Divisor >= 1)
+            {
                 Combined_BytesPerSec -= IsAverageStat ? AvgStat.Combined_BytesPerSec : stat.BytesPerSec;
                 Combined_MegaBytesPerMin -= IsAverageStat ? AvgStat.Combined_MegaBytesPerMin : stat.MegaBytesPerMin;
             }
             //Cannot have negative speeds or divisors -> Reset all values
-            if (Divisor < 1 || Combined_BytesPerSec < 0 || Combined_MegaBytesPerMin < 0) {
+            if (Divisor < 1 || Combined_BytesPerSec < 0 || Combined_MegaBytesPerMin < 0)
+            {
                 Combined_BytesPerSec = 0;
                 Combined_MegaBytesPerMin = 0;
                 Divisor = 0;
