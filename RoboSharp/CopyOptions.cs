@@ -282,6 +282,25 @@ namespace RoboSharp
 
         #endregion Public Properties
 
+        /// <summary>
+        /// Used by the Parse method to sanitize path for the command options.<br/>
+        /// Evaluate the path. If needed, wrap it in quotes.  <br/>
+        /// If the path ends in a DirectorySeperatorChar, santize it to work as expected. <br/>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns>Each return string includes a space at the end of the string to seperate it from the next option variable.</returns>
+        private string WrapPath(string path)
+        {
+            if (!path.Contains(" ")) return $"{path} "; //No spaces, just return the path
+            //Below this line, the path contains a space, so it must be wrapped in quotes.
+            if (path.EndsWithDirectorySeperator()) return $"\"{path}.\" "; // Ends with a directory seperator - Requires a '.' to denote using that directory. ex: "F:\."
+            return $"\"{path}\" ";
+        }
+
+        /// <summary>
+        /// Parse the class properties and generate the command arguments
+        /// </summary>
+        /// <returns></returns>
         internal string Parse()
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
@@ -289,8 +308,8 @@ namespace RoboSharp
             var options = new StringBuilder();
 
             // Set Source and Destination
-            options.Append($"\"{Source}\" ");
-            options.Append($"\"{Destination}\" ");
+            options.Append(WrapPath(Source));
+            options.Append(WrapPath(Destination));
 
             // Set FileFilter
             // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.

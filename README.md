@@ -146,7 +146,6 @@ void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
         }
 ```
 
-
 N.B. The below has been superseded by changes in PR #127 - documentation will be updated shortly to cover all new methods
 
 .AverageStatistics

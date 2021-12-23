@@ -1,8 +1,13 @@
 ﻿namespace RoboSharp
 {
-    public static class StringExtensions
+    /// <summary>
+    /// Static Class - Houses Extension Methods for strings
+    /// </summary>
+    internal static class StringExtensions
     {
-        public static bool IsNullOrWhiteSpace(this string value)
+        /// <remarks> Extension method provided by RoboSharp package </remarks>
+        /// <inheritdoc cref="System.String.IsNullOrWhiteSpace(string)"/>
+        internal static bool IsNullOrWhiteSpace(this string value)
         {
             if (value == null)
             {
