@@ -274,7 +274,15 @@ namespace RoboSharp.BackupApp
             Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
 
             JobResults.Remove(result);
-                       
+
+            {
+                if (ListBox_JobResults.Items.Count == 0)
+                {
+                    lbl_OverallTotals.Content = "";
+                    lbl_SelectedItemTotals.Content = "";
+                }
+            }
+
         }
 
     }
