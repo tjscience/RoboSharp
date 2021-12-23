@@ -52,7 +52,7 @@ void backup_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
 }
 ```
 
-Extended Results:
+#### Extended Results:
 
 See below examples on how to access the extended results where you can get total, copied, skipped, mismatch, failed and extra statistics for directories and files and bytes, as well as additional speed info e.g. bytes per sec and megabytes per minute
 
@@ -101,6 +101,72 @@ cmd.OnCommandCompleted += (args) =>
 }
 cmd.Start();
 ```
+
+.AddStatistic
+
+This is useful if you are running multiple RoboCopy tasks as it allows you to add all the statistics to each other to generating overall results
+
+```c#
+RoboSharp.Results.Statistic FileStats = new RoboSharp.Results.Statistic();
+RoboSharp.Results.Statistic DirStats = new RoboSharp.Results.Statistic();
+
+test = new RoboCommand();
+
+// Run first task and add results
+test.CopyOptions.Source = @"C:\SOURCE_1";
+test.CopyOptions.Destination = @"C:\DESTINATION";
+
+RoboSharp.Results.RoboCopyResults results1 = await test.StartAsync();
+
+FileStats.AddStatistic(results1.FilesStatistic);
+DirStats.AddStatistic(results1.DirectoriesStatistic);
+
+// Run second task and add results
+test.CopyOptions.Source = @"C:\SOURCE_2";
+test.CopyOptions.Destination = @"C:\DESTINATION";
+
+RoboSharp.Results.RoboCopyResults results2 = await test.StartAsync();
+
+FileStats.AddStatistic(results2.FilesStatistic);
+DirStats.AddStatistic(results2.DirectoriesStatistic);
+```
+
+You could also use .AddStatistic in the OnCommandCompleted event e.g.
+
+```c#
+void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
+        {
+            this.BeginInvoke((Action)(() =>
+            {
+                // Get robocopy results 
+                RoboSharp.Results.RoboCopyResults AnalysisResults = e.Results;
+
+                FileStats.AddStatistic(AnalysisResults.FilesStatistic);
+            }));
+        }
+```
+
+
+N.B. The below has been superseded by changes in PR #127 - documentation will be updated shortly to cover all new methods
+
+.AverageStatistics
+
+Again if running multiple RoboCopy tasks you can use this to get average results for BytesPerSec and MegaBytesPerMin 
+
+Based on above example
+
+```c#
+// Call Static Method to return new object with the average
+RoboSharp.Results.SpeedStatistic avg = RoboSharp.Results.SpeedStatistic.AverageStatistics(new RoboSharp.Results.SpeedStatistic[] { results1.SpeedStatistic, results2.SpeedStatistic });
+```
+
+or
+
+```c#
+// Result1 will now store the average statistic value. Result 2 can be disposed or or re-used for additional RoboCopy commands.
+results1.AverageStatistic(results2);
+```
+
 =======
 
 # Contributing to RoboSharp
