@@ -162,7 +162,45 @@ namespace RoboSharp.Results
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (Disposed) return;
+            if (e.Action == NotifyCollectionChangedAction.Move) goto RaiseEvent; // Sorting causes no change in math -> Simply raise the event
 
+            //Reset means a drastic change -> Recalculate everything, then goto RaiseEvent
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                //Bytes
+                if (Total_ByteStatsField.IsValueCreated)
+                {
+                    Total_ByteStatsField.Value.Reset(false);
+                    Total_ByteStatsField.Value.AddStatistic(GetByteStatistics());
+                }
+                //Directories
+                if (Total_DirStatsField.IsValueCreated)
+                {
+                    Total_DirStatsField.Value.Reset(false);
+                    Total_DirStatsField.Value.AddStatistic(GetDirectoriesStatistics());
+                }
+                //Files
+                if (Total_FileStatsField.IsValueCreated)
+                {
+                    Total_FileStatsField.Value.Reset(false);
+                    Total_FileStatsField.Value.AddStatistic(GetFilesStatistics());
+                }
+                //Exit Status
+                if (ExitStatusSummaryField.IsValueCreated)
+                {
+                    ExitStatusSummaryField.Value.Reset(false);
+                    ExitStatusSummaryField.Value.CombineStatus(GetStatuses());
+                }
+                //Speed
+                if (Average_SpeedStatsField.IsValueCreated)
+                {
+                    Average_SpeedStatsField.Value.Reset(false);
+                    Average_SpeedStatsField.Value.Average(GetSpeedStatistics());
+                }
+
+                goto RaiseEvent;
+            }
+                
             //Process New Items
             if (e.NewItems != null)
             {
@@ -171,7 +209,7 @@ namespace RoboSharp.Results
                 foreach (RoboCopyResults r in e?.NewItems)
                 {
                     i++;
-                    bool RaiseValueChangeEvent = i == i2;
+                    bool RaiseValueChangeEvent = (e.OldItems == null || e.OldItems.Count == 0 ) && ( i == i2 ); //Prevent raising the event if more calculation needs to be performed either from NewItems or from OldItems
                     //Bytes
                     if (Total_ByteStatsField.IsValueCreated)
                         Total_ByteStatsField.Value.AddStatistic(r?.BytesStatistic, RaiseValueChangeEvent);
@@ -186,8 +224,10 @@ namespace RoboSharp.Results
                         ExitStatusSummaryField.Value.CombineStatus(r?.Status);
                     //Speed
                     if (Average_SpeedStatsField.IsValueCreated)
+                    {
                         Average_SpeedStatsField.Value.Add(r?.SpeedStatistic);
-                    if (RaiseValueChangeEvent) Average_SpeedStatsField.Value.CalculateAverage();
+                        if (RaiseValueChangeEvent) Average_SpeedStatsField.Value.CalculateAverage();
+                    }
                 }
             }
 
@@ -227,6 +267,7 @@ namespace RoboSharp.Results
                 }
             }
 
+            RaiseEvent:
             //Raise the CollectionChanged event
             base.OnCollectionChanged(e);
         }
