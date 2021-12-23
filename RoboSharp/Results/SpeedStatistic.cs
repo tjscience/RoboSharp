@@ -97,7 +97,7 @@ namespace RoboSharp.Results
     /// This object represents the Average of several <see cref="SpeedStatistic"/> objects, and contains 
     /// methods to facilitate that functionality.
     /// </summary>
-    public class AverageSpeedStatistic : SpeedStatistic
+    public sealed class AverageSpeedStatistic : SpeedStatistic
     {
         #region < Constructors >
 
