@@ -221,7 +221,7 @@ namespace RoboSharp.Results
                         Total_FileStatsField.Value.AddStatistic(r?.FilesStatistic, RaiseValueChangeEvent);
                     //Exit Status
                     if (ExitStatusSummaryField.IsValueCreated)
-                        ExitStatusSummaryField.Value.CombineStatus(r?.Status);
+                        ExitStatusSummaryField.Value.CombineStatus(r?.Status, RaiseValueChangeEvent);
                     //Speed
                     if (Average_SpeedStatsField.IsValueCreated)
                     {
