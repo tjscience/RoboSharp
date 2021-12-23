@@ -102,6 +102,8 @@ cmd.OnCommandCompleted += (args) =>
 cmd.Start();
 ```
 
+N.B. The below has been superseded by changes in PR #127 - documentation will be updated shortly to cover all new methods
+
 .AddStatistic
 
 This is useful if you are running multiple RoboCopy tasks as it allows you to add all the statistics to each other to generating overall results

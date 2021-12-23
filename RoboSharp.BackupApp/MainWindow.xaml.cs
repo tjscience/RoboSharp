@@ -18,10 +18,14 @@ namespace RoboSharp.BackupApp
 
         public ObservableCollection<FileError> Errors = new ObservableCollection<FileError>();
 
+        private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+
         public MainWindow()
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
+            JobResults.CollectionChanged += UpdateOverallLabel;
+            ListBox_JobResults.ItemsSource = JobResults;
             ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
@@ -166,10 +170,11 @@ namespace RoboSharp.BackupApp
             {
                 OptionsGrid.IsEnabled = true;
                 ProgressGrid.IsEnabled = false;
-                
+
                 var results = e.Results;
                 Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
                 Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
+                JobResults.Add(e.Results);
             }));
         }
 
@@ -230,6 +235,56 @@ namespace RoboSharp.BackupApp
                 copy.Dispose();
             }
         }
+
+        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e)
+        {
+            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
+            string NL = Environment.NewLine;
+            lbl_SelectedItemTotals.Content = $"Selected Job:" +
+                $"{NL}Source: {result?.Source ?? ""}" +
+                $"{NL}Destination: {result?.Destination ?? ""}" +
+                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
+                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
+                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
+                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
+                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
+                $"{NL}{result?.Status.ToString() ?? ""}";
+        }
+        
+        /// <summary>
+        /// Runs every time the JobResults list is updated.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UpdateOverallLabel(object sender, EventArgs e)
+        {
+            string NL = Environment.NewLine;
+            lbl_OverallTotals.Content = $"Job History:" +
+                $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
+                $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
+                $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
+                $"{NL}Speed (Bytes/Second): {JobResults.SpeedStatistic.BytesPerSec}" +
+                $"{NL}Speed (MB/Min): {JobResults.SpeedStatistic.MegaBytesPerMin}" +
+                $"{NL}Any Jobs Cancelled: {(JobResults.Status.WasCancelled ? "YES" : "NO")}" +
+                $"{NL}{JobResults.Status.ToString()}";
+        }
+
+        private void Remove_Selected_Click(object sender, RoutedEventArgs e)
+        {
+            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
+
+            JobResults.Remove(result);
+
+            {
+                if (ListBox_JobResults.Items.Count == 0)
+                {
+                    lbl_OverallTotals.Content = "";
+                    lbl_SelectedItemTotals.Content = "";
+                }
+            }
+
+        }
+
     }
 
     public class FileError
