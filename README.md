@@ -102,7 +102,7 @@ cmd.OnCommandCompleted += (args) =>
 cmd.Start();
 ```
 
-**N.B. The below has been superseded by changes in PR #127 - documentation will be updated shortly to cover all new methods**
+**N.B. The below has been superseded by changes in PR [#127](https://github.com/tjscience/RoboSharp/pull/127) - documentation will be updated shortly to cover all new methods**
 
 .AddStatistic
 
