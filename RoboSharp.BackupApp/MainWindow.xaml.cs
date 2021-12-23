@@ -20,6 +20,11 @@ namespace RoboSharp.BackupApp
 
         private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
 
+        /// <summary>
+        /// List of RoboCommand objects to start at same time
+        /// </summary>
+        //private RoboSharp.RoboCommand RoboQueue = new RoboSharp.RoboCommandList();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,11 +53,10 @@ namespace RoboSharp.BackupApp
             Backup();
         }
 
-        public void Backup()
+        private RoboCommand GetCommand()
         {
             Debugger.Instance.DebugMessageEvent += DebugMessage;
-
-            copy = new RoboCommand();
+            RoboCommand copy = new RoboCommand();
             copy.OnFileProcessed += copy_OnFileProcessed;
             copy.OnCommandError += copy_OnCommandError;
             copy.OnError += copy_OnError;
@@ -117,8 +121,12 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
+            return copy;
+        }
 
-            copy.Start();
+        public void Backup()
+        {
+            GetCommand().Start();
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
@@ -285,6 +293,15 @@ namespace RoboSharp.BackupApp
 
         }
 
+        private void btnAddToQueue(object sender, RoutedEventArgs e)
+        {
+            //RoboQueue.Add(GetCommand());
+        }
+
+        private void btn_StartQueue(object sender, RoutedEventArgs e)
+        {
+            //RoboQueue.Start();
+        }
     }
 
     public class FileError
