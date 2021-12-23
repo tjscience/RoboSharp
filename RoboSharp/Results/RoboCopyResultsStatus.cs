@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace RoboSharp.Results
@@ -47,8 +49,10 @@ namespace RoboSharp.Results
     /// <summary>
     /// Represents the combination of multiple Exit Statuses
     /// </summary>
-    public class RoboCopyCombinedExitStatus : RoboCopyExitStatus
+    public sealed class RoboCopyCombinedExitStatus : RoboCopyExitStatus, INotifyPropertyChanged
     {
+        #region < Constructor >
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RoboCopyCombinedExitStatus"/> class.
         /// </summary>
@@ -59,9 +63,21 @@ namespace RoboSharp.Results
         /// </summary>
         public RoboCopyCombinedExitStatus(int exitCodeValue) : base(exitCodeValue) { }
 
+        #endregion
+
+        #region < Fields and Event >
+
         //Private bools for the Combine methods
         private bool wascancelled;
         private bool noCopyNoError;
+        private bool EnablePropertyChangeEvent = true;
+
+        /// <summary>This event when the ExitStatus summary has changed </summary>
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        #region < Public Properties >
 
         /// <summary>Overides <see cref="RoboCopyExitStatus.WasCancelled"/></summary>
         /// <returns> <see cref="AnyWasCancelled"/></returns>
@@ -87,6 +103,41 @@ namespace RoboSharp.Results
         /// </summary>
         public bool AllSuccessful_WithWarnings => !WasCancelled && Successful && ExitCodeValue > 0x1;
 
+        #endregion
+
+        #region < RaiseEvent Methods >
+
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        private object[] StoreCurrentValues()
+        {
+            return new object[10] 
+            { 
+                WasCancelled, AnyNoCopyNoError, AnyWasCancelled, AllSuccessful, AllSuccessful_WithWarnings, HasErrors, HasWarnings, Successful, ExitCode, ExitCodeValue
+            };
+        }
+
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        private void CompareAndRaiseEvents(object[] OriginalValues)
+        {
+            object[] CurrentValues = StoreCurrentValues();
+            if (CurrentValues[0] != OriginalValues[0]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("WasCancelled"));
+            if (CurrentValues[1] != OriginalValues[1]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AnyNoCopyNoError"));
+            if (CurrentValues[2] != OriginalValues[2]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AnyWasCancelled"));
+            if (CurrentValues[3] != OriginalValues[3]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AllSuccessful"));
+            if (CurrentValues[4] != OriginalValues[4]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AllSuccessful_WithWarnings"));
+            if (CurrentValues[5] != OriginalValues[5]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("HasErrors"));
+            if (CurrentValues[6] != OriginalValues[6]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("HasWarnings"));
+            if (CurrentValues[7] != OriginalValues[7]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Successful"));
+            if (CurrentValues[8] != OriginalValues[8]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ExitCode"));
+            if (CurrentValues[9] != OriginalValues[9]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ExitCodeValue"));
+        }
+
+        #endregion
+
         /// <summary>
         /// Combine the RoboCopyExitCodes of the supplied ExitStatus with this ExitStatus.
         /// </summary>
@@ -98,6 +149,8 @@ namespace RoboSharp.Results
         public void CombineStatus(RoboCopyExitStatus status)
         {
             if (status == null) return;
+            object[] OriginalValues = EnablePropertyChangeEvent ? StoreCurrentValues() : null;
+            //Combine the status
             if (status.WasCancelled)
             {
                 wascancelled = true;
@@ -108,6 +161,15 @@ namespace RoboSharp.Results
                 RoboCopyExitCodes code = this.ExitCode | status.ExitCode;
                 this.ExitCodeValue = (int)code;
             }
+            //Raise Property Change Events
+            if (EnablePropertyChangeEvent) CompareAndRaiseEvents(OriginalValues);
+        }
+
+        internal void CombineStatus(RoboCopyExitStatus status, bool enablePropertyChangeEvent)
+        {
+            EnablePropertyChangeEvent = enablePropertyChangeEvent;
+            CombineStatus(status);
+            EnablePropertyChangeEvent = enablePropertyChangeEvent;
         }
 
         /// <summary>
@@ -118,6 +180,7 @@ namespace RoboSharp.Results
         {
             foreach (RoboCopyExitStatus s in status)
             {
+                EnablePropertyChangeEvent = s == status.Last();
                 CombineStatus(s);
             }
         }
@@ -137,11 +200,26 @@ namespace RoboSharp.Results
         /// <summary>
         /// Reset the value of the object
         /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
         public void Reset()
         {
+            object[] OriginalValues = EnablePropertyChangeEvent ? StoreCurrentValues() : null;
             this.wascancelled = false;
             this.noCopyNoError = false;
             this.ExitCodeValue = 0;
+            if (EnablePropertyChangeEvent) CompareAndRaiseEvents(OriginalValues);
+        }
+
+        /// <summary>
+        /// Reset the value of the object
+        /// </summary>
+        internal void Reset(bool enablePropertyChangeEvent)
+        {
+            EnablePropertyChangeEvent = enablePropertyChangeEvent;
+            Reset();
+            EnablePropertyChangeEvent = true;
         }
 
 
