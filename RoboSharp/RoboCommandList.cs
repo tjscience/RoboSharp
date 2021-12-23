@@ -47,8 +47,6 @@ namespace RoboSharp
         #region < Fields >
 
         private readonly List<RoboCommand> CommandList = new List<RoboCommand>();
-        private Task ListTask;
-        private Task RunTask;
         private bool disposedValue;
         private bool isDisposing;
         private CancellationTokenSource TaskCancelSource;
@@ -90,13 +88,13 @@ namespace RoboSharp
         public bool AnyCancelled => CommandList.Any(c => c.IsCancelled);
 
         /// <summary>
-        /// This list will be cleared and repopulated every time the <see cref="StartAll"/> method is called. If this object is disposed, this list will be as well. <br/>
+        /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetListOnlyResults"/>.
         /// </summary>
         public RoboCopyResultsList ListOnlyResults { get; } = new RoboCopyResultsList();
 
         /// <summary>
-        /// This list will be cleared and repopulated every time the <see cref="StartAll"/> method is called. If this object is disposed, this list will be as well. <br/>
+        /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetRunOperationResults"/>.
         /// </summary>
         public RoboCopyResultsList RunOperationResults { get; } = new RoboCopyResultsList();
