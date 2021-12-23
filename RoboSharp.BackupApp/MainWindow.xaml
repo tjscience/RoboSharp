@@ -204,8 +204,9 @@
                     </ScrollViewer>
 
                     <Button Content="Backup" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
-                    <Button Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,601,10" VerticalAlignment="Bottom" Width="98" Click="btnAddToQueue"/>
-                    <Button Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,495,10" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue"/>
+                    <Button x:Name="btn_AddToQueue" Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,601,10" VerticalAlignment="Bottom" Width="98" Click="btnAddToQueue"/>
+                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,495,10" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue"/>
+                    <Button x:Name="btnPauseQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,389,10" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Progress" Name="ProgressTab">
