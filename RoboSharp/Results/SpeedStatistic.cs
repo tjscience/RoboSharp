@@ -289,8 +289,8 @@ namespace RoboSharp.Results
 #endif
         internal void CalculateAverage()
         {
-            BytesPerSec = Divisor < 1 ? 0 : Combined_BytesPerSec / Divisor;
-            MegaBytesPerMin = Divisor < 1 ? 0 : Combined_MegaBytesPerMin / Divisor;
+            BytesPerSec = Divisor < 1 ? 0 : Math.Round(Combined_BytesPerSec / Divisor, 3);
+            MegaBytesPerMin = Divisor < 1 ? 0 : Math.Round(Combined_MegaBytesPerMin / Divisor, 3);
         }
 
         /// <summary>
