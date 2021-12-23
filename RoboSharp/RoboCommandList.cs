@@ -51,6 +51,7 @@ namespace RoboSharp
         private Task RunTask;
         private bool disposedValue;
         private bool isDisposing;
+        private CancellationTokenSource TaskCancelSource;
 
         #endregion
 
@@ -121,10 +122,16 @@ namespace RoboSharp
         /// </summary>
         public void StopAll()
         {
-            CommandList.ForEach((c) => c.Stop());
-            IsCopyOperationRunning = false;
-            IsListOnlyRunning = false;
-            IsPaused = false;
+            //If a TaskCancelSource is present, request cancellation. The continuation tasks null the value out then call this method to ensure everything stopped once they complete. 
+            if (TaskCancelSource != null && !TaskCancelSource.IsCancellationRequested)
+                TaskCancelSource.Cancel();
+            else if (TaskCancelSource == null)
+            {
+                CommandList.ForEach((c) => c.Stop());
+                IsCopyOperationRunning = false;
+                IsListOnlyRunning = false;
+                IsPaused = false;
+            }
         }
 
         /// <summary>
@@ -233,8 +240,8 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("Starting Synchronous execution of RoboCommandList");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
+            TaskCancelSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = TaskCancelSource.Token;
 
             RoboCopyResultsList returnList = new RoboCopyResultsList();
 
@@ -245,6 +252,7 @@ namespace RoboSharp
                 {
                     Task RunTask = cmd.Start(domain, username, password);
                     RunTask.Wait();
+                    if (TaskCancelSource.IsCancellationRequested) break;
                 }
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
@@ -254,15 +262,17 @@ namespace RoboSharp
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
                     Debugger.Instance.DebugMessage("RunSynchronous Task Was Cancelled");
+                    TaskCancelSource = null;
                     StopAll();
                 }
                 else
                 {
                     Debugger.Instance.DebugMessage("RunSynchronous Task Completed");
                 }
-                CommandList.ForEach((c) => returnList.Add(c.GetResults())); //Loop through the list, adding the results of each command to the list
-                return returnList;
 
+                CommandList.ForEach((c) => returnList.Add(c.GetResults())); //Loop through the list, adding the results of each command to the list
+                
+                return returnList;
             });
 
             return ContinueWithTask;
@@ -278,8 +288,8 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboCommandList");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
+            TaskCancelSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = TaskCancelSource.Token;
 
             RoboCopyResultsList returnList = new RoboCopyResultsList();
             List<Task> TaskList = new List<Task>();
@@ -287,6 +297,7 @@ namespace RoboSharp
             //Start all commands, adding each one to the TaskList
             foreach (RoboCommand cmd in CommandList)
             {
+                if (TaskCancelSource.IsCancellationRequested) break;
                 TaskList.Add(cmd.Start(domain, username, password));
             }
 
@@ -299,6 +310,7 @@ namespace RoboSharp
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
                     Debugger.Instance.DebugMessage("RunParrallel Task Was Cancelled");
+                    TaskCancelSource = null;
                     StopAll();
                 }
                 else
