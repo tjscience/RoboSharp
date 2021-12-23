@@ -23,7 +23,7 @@ namespace RoboSharp.BackupApp
         /// <summary>
         /// List of RoboCommand objects to start at same time
         /// </summary>
-        //private RoboSharp.RoboCommand RoboQueue = new RoboSharp.RoboCommandList();
+        private RoboSharp.RoboCommandList RoboQueue = new RoboSharp.RoboCommandList();
 
         public MainWindow()
         {
@@ -295,12 +295,15 @@ namespace RoboSharp.BackupApp
 
         private void btnAddToQueue(object sender, RoutedEventArgs e)
         {
-            //RoboQueue.Add(GetCommand());
+            RoboQueue.AddCommand(GetCommand());
         }
 
-        private void btn_StartQueue(object sender, RoutedEventArgs e)
+        private async void btn_StartQueue(object sender, RoutedEventArgs e)
         {
-            //RoboQueue.Start();
+            await RoboQueue.StartAll_Synchronous();
+            JobResults.Clear();
+            JobResults.AddRange(RoboQueue.RunOperationResults);
+            RoboQueue.ClearCommandList();
         }
     }
 
