@@ -252,7 +252,7 @@ namespace RoboSharp.Results
                     //Exit Status
                     if (ExitStatusSummaryField.IsValueCreated && RaiseValueChangeEvent)
                     {
-                        ExitStatusSummaryField.Value.Reset();
+                        ExitStatusSummaryField.Value.Reset(false);
                         ExitStatusSummaryField.Value.CombineStatus(GetStatuses());
                     }
                     //Speed
