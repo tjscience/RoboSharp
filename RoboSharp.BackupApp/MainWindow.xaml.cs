@@ -56,15 +56,18 @@ namespace RoboSharp.BackupApp
             Backup();
         }
 
-        private RoboCommand GetCommand()
+        private RoboCommand GetCommand(bool BindEvents)
         {
             Debugger.Instance.DebugMessageEvent += DebugMessage;
             RoboCommand copy = new RoboCommand();
-            copy.OnFileProcessed += copy_OnFileProcessed;
-            copy.OnCommandError += copy_OnCommandError;
-            copy.OnError += copy_OnError;
-            copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
-            copy.OnCommandCompleted += copy_OnCommandCompleted;
+            if (BindEvents)
+            {
+                copy.OnFileProcessed += copy_OnFileProcessed;
+                copy.OnCommandError += copy_OnCommandError;
+                copy.OnError += copy_OnError;
+                copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
+                copy.OnCommandCompleted += copy_OnCommandCompleted;
+            }
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
@@ -129,7 +132,7 @@ namespace RoboSharp.BackupApp
 
         public void Backup()
         {
-            GetCommand().Start();
+            GetCommand(true).Start();
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
@@ -300,7 +303,7 @@ namespace RoboSharp.BackupApp
         {
             if (!RoboQueue.IsRunning)
             {
-                RoboQueue.AddCommand(GetCommand());
+                RoboQueue.AddCommand(GetCommand(false));
                 btn_AddToQueue.IsEnabled = true;
             }
             else
