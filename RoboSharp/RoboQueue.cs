@@ -286,11 +286,11 @@ namespace RoboSharp
                     Task C = cmd.Start(domain, username, password);
                     Task T = C.ContinueWith((t) =>
                     {
-                        cmd.OnCommandCompleted += this.OnCommandCompleted;
-                        cmd.OnCommandError += this.OnCommandError;
-                        cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
-                        cmd.OnError += this.OnError;
-                        cmd.OnFileProcessed += this.OnFileProcessed;
+                        cmd.OnCommandCompleted -= this.OnCommandCompleted;
+                        cmd.OnCommandError -= this.OnCommandError;
+                        cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
+                        cmd.OnError -= this.OnError;
+                        cmd.OnFileProcessed -= this.OnFileProcessed;
                     });
 
                     TaskList.Add(T);                    //Add the continuation task to the list.
