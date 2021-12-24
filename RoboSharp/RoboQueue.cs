@@ -14,30 +14,30 @@ namespace RoboSharp
     /// <see cref="IEnumerable"/> <br/>
     /// <see cref="IDisposable"/>
     /// </summary>
-    public sealed class RoboCommandList : IEnumerable, IDisposable
+    public sealed class RoboQueue : IEnumerable, IDisposable
     {
         #region < Constructors >
 
         /// <summary>
-        /// Initialize a new (empty) <see cref="RoboCommandList"/> object.
+        /// Initialize a new (empty) <see cref="RoboQueue"/> object.
         /// </summary>
-        public RoboCommandList()
+        public RoboQueue()
         {
 
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboCommandList"/> object that contains the supplied <see cref="RoboCommand"/>
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>
         /// </summary>
-        public RoboCommandList(RoboCommand roboCommand)
+        public RoboQueue(RoboCommand roboCommand)
         {
             CommandList.Add(roboCommand);
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboCommandList"/> object that contains the supplied <see cref="RoboCommand"/> collection
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/> collection
         /// </summary>
-        public RoboCommandList(IEnumerable<RoboCommand> roboCommands)
+        public RoboQueue(IEnumerable<RoboCommand> roboCommands)
         {
             CommandList.AddRange(roboCommands);
         }
@@ -236,7 +236,7 @@ namespace RoboSharp
         /// <inheritdoc cref="StartMethodParameterTooltips"/>
         private Task<RoboCopyResultsList> RunSynchronous(string domain = "", string username = "", string password = "")
         {
-            Debugger.Instance.DebugMessage("Starting Synchronous execution of RoboCommandList");
+            Debugger.Instance.DebugMessage("Starting Synchronous execution of RoboQueue");
 
             TaskCancelSource = new CancellationTokenSource();
             CancellationToken cancellationToken = TaskCancelSource.Token;
@@ -284,7 +284,7 @@ namespace RoboSharp
         /// <inheritdoc cref="StartMethodParameterTooltips"/>
         private Task<RoboCopyResultsList> RunParallel(string domain = "", string username = "", string password = "")
         {
-            Debugger.Instance.DebugMessage("Starting Parallel execution of RoboCommandList");
+            Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
             TaskCancelSource = new CancellationTokenSource();
             CancellationToken cancellationToken = TaskCancelSource.Token;
@@ -362,7 +362,7 @@ namespace RoboSharp
         /// <summary>
         /// Finalizer -> Ensures that all RoboCommand objects get disposed of properly when program exits
         /// </summary>
-        ~RoboCommandList()
+        ~RoboQueue()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: false);
@@ -395,13 +395,13 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Exception thrown when attempting to run a method accesses the list backing a RoboCommandList object while the tasks are in progress.
+        /// Exception thrown when attempting to run a method accesses the list backing a RoboQueue object while the tasks are in progress.
         /// </summary>
         public class ListAccessDeniedException : Exception
         {
             /// <remarks>This functionality is disabled if <see cref="IsRunning"/> == true.</remarks>
             /// <exception cref="ListAccessDeniedException"/>
-            private const string StandardMsg = "Running methods that modify the list of RoboCommands methods while RoboCommandList.IsRunning = TRUE is prohibited.";
+            private const string StandardMsg = "Running methods that modify the list of RoboCommands methods while RoboQueue.IsRunning = TRUE is prohibited.";
             internal ListAccessDeniedException() : base(StandardMsg) { }
             internal ListAccessDeniedException(string message) : base($"{StandardMsg}\n{message}") { }
             internal ListAccessDeniedException(string message, Exception innerException) : base(message, innerException) { }
