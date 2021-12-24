@@ -36,6 +36,8 @@ namespace RoboSharp
         #endregion Private Vars
 
         #region Public Vars
+        /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
+        public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
         public bool IsPaused { get { return isPaused; } }
         /// <summary> Value indicating if process is currently running </summary>
