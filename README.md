@@ -102,7 +102,51 @@ cmd.OnCommandCompleted += (args) =>
 cmd.Start();
 ```
 
-**N.B. The below has been superseded by changes in PR [#127](https://github.com/tjscience/RoboSharp/pull/127) - documentation will be updated shortly to cover all new methods**
+RoboCopyResultsList:
+
+PR [#127](https://github.com/tjscience/RoboSharp/pull/127) adds some great new methods for handling results which can be used when running multiple jobs. This then allows you to view combined totals for files, directories and bytes as well as averages for speed, along with log, status and exit code information for each job
+
+Basic usage example shown below - the new methods are all demonstrated in more detail in the included example BackupApp
+
+```c#
+private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+
+void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
+{
+   Dispatcher.BeginInvoke((Action)(() =>
+   {
+       OptionsGrid.IsEnabled = true;
+       ProgressGrid.IsEnabled = false;
+
+       var results = e.Results;
+       JobResults.Add(e.Results);
+   }));
+}
+
+Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
+string NL = Environment.NewLine;
+lbl_SelectedItemTotals.Content = $"Selected Job:" +
+    $"{NL}Source: {result?.Source ?? ""}" +
+    $"{NL}Destination: {result?.Destination ?? ""}" +
+    $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
+    $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
+    $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
+    $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
+    $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
+    $"{NL}{result?.Status.ToString() ?? ""}";
+
+string NL = Environment.NewLine;
+lbl_OverallTotals.Content = $"Job History:" +
+    $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
+    $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
+    $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
+    $"{NL}Speed (Bytes/Second): {JobResults.SpeedStatistic.BytesPerSec}" +
+    $"{NL}Speed (MB/Min): {JobResults.SpeedStatistic.MegaBytesPerMin}" +
+    $"{NL}Any Jobs Cancelled: {(JobResults.Status.WasCancelled ? "YES" : "NO")}" +
+    $"{NL}{JobResults.Status.ToString()}";
+```
+
+**N.B. The below has been superseded by changes in PR [#127](https://github.com/tjscience/RoboSharp/pull/127) but is still available to be used if required**
 
 .AddStatistic
 
@@ -148,23 +192,9 @@ void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
         }
 ```
 
+**N.B. The below have been replaced by improvement methods in PR [#127](https://github.com/tjscience/RoboSharp/pull/127)**
+
 .AverageStatistics
-
-Again if running multiple RoboCopy tasks you can use this to get average results for BytesPerSec and MegaBytesPerMin 
-
-Based on above example
-
-```c#
-// Call Static Method to return new object with the average
-RoboSharp.Results.SpeedStatistic avg = RoboSharp.Results.SpeedStatistic.AverageStatistics(new RoboSharp.Results.SpeedStatistic[] { results1.SpeedStatistic, results2.SpeedStatistic });
-```
-
-or
-
-```c#
-// Result1 will now store the average statistic value. Result 2 can be disposed or or re-used for additional RoboCopy commands.
-results1.AverageStatistic(results2);
-```
 
 =======
 
