@@ -192,7 +192,7 @@ void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
         }
 ```
 
-**N.B. The below have been replaced by improvement methods in PR [#127](https://github.com/tjscience/RoboSharp/pull/127)**
+**N.B. The below have been replaced by improved methods in PR [#127](https://github.com/tjscience/RoboSharp/pull/127)**
 
 .AverageStatistics
 
