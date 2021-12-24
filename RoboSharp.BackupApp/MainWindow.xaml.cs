@@ -23,7 +23,7 @@ namespace RoboSharp.BackupApp
         /// <summary>
         /// List of RoboCommand objects to start at same time
         /// </summary>
-        private RoboSharp.RoboCommandList RoboQueue = new RoboSharp.RoboCommandList();
+        private RoboSharp.RoboQueue RoboQueue = new RoboSharp.RoboQueue();
 
         public MainWindow()
         {
@@ -312,7 +312,7 @@ namespace RoboSharp.BackupApp
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = true;
             btn_AddToQueue.Content = "Stop Queued Jobs";
-            await RoboQueue.StartAll_Synchronous();
+            await RoboQueue.StartAll();
             JobResults.Clear();
             JobResults.AddRange(RoboQueue.RunOperationResults);
             RoboQueue.ClearCommandList();

@@ -37,9 +37,12 @@ namespace RoboSharp
         /// <summary>
         /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/> collection
         /// </summary>
-        public RoboQueue(IEnumerable<RoboCommand> roboCommands)
+        /// <param name="maxConcurrentJobs"><inheritdoc cref="MaxConcurrentJobs"/></param>
+        /// <param name="roboCommands">Collection of RoboCommands</param>
+        public RoboQueue(IEnumerable<RoboCommand> roboCommands, int maxConcurrentJobs = 1)
         {
             CommandList.AddRange(roboCommands);
+            MaxConcurrentJobs = maxConcurrentJobs;
         }
 
         #endregion
@@ -50,6 +53,7 @@ namespace RoboSharp
         private bool disposedValue;
         private bool isDisposing;
         private CancellationTokenSource TaskCancelSource;
+        private int MaxConcurrentJobsField = 1;
 
         #endregion
 
@@ -87,6 +91,25 @@ namespace RoboSharp
         /// <summary> Checks <see cref="RoboCommand.IsCancelled"/> property of all items in the list. </summary>
         public bool AnyCancelled => CommandList.Any(c => c.IsCancelled);
 
+        /// <summary> 
+        /// Check the list and get the count of RoboCommands that are either in the 'Run' or 'Paused' state. <br/>
+        /// (Paused state is included since these can be resumed at any time) 
+        /// </summary>
+        public int JobsCurrentlyRunning => CommandList.Where((C) => C.IsRunning | C.IsPaused).Count();
+
+        /// <summary>
+        /// Specify the max number of RoboCommands to execute at the same time. <br/>
+        /// Set Value to 0 to allow infinite number of jobs (Will issue all start commands at same time)
+        /// Default Value = 1; <br/>
+        /// </summary>
+        public int MaxConcurrentJobs { 
+            get => MaxConcurrentJobsField;
+            set {
+                MaxConcurrentJobsField = value > 0 ? value : //Allow > 0 at all times
+                    IsRunning & MaxConcurrentJobsField > 0 ? 1 : 0;  //If running, set value to 1
+                ; } 
+        }
+        
         /// <summary>
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetListOnlyResults"/>.
@@ -98,6 +121,26 @@ namespace RoboSharp
         /// To store these results for future use, call <see cref="GetRunOperationResults"/>.
         /// </summary>
         public RoboCopyResultsList RunOperationResults { get; } = new RoboCopyResultsList();
+
+        #endregion
+
+        #region < RoboCommand Events >
+
+        /// <inheritdoc cref="RoboCommand.OnFileProcessed"/>
+        public event RoboCommand.FileProcessedHandler OnFileProcessed;
+        
+        /// <inheritdoc cref="RoboCommand.OnCommandError"/>
+        public event RoboCommand.CommandErrorHandler OnCommandError;
+
+        /// <inheritdoc cref="RoboCommand.OnError"/>
+        public event RoboCommand.ErrorHandler OnError;
+
+        /// <inheritdoc cref="RoboCommand.OnCommandCompleted"/>
+        public event RoboCommand.CommandCompletedHandler OnCommandCompleted;
+
+        /// <inheritdoc cref="RoboCommand.OnCopyProgressChanged"/>
+        public event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
+
 
         #endregion
 
@@ -154,19 +197,11 @@ namespace RoboSharp
 
         #region < Run List-Only Mode >
 
-        /// METHOD IS WORK IN PROGRESS
-        /// 
-        public Task StartAll_ListOnly_Parrallel(string domain = "", string username = "", string password = "") => ListOnlyTask(domain, username, password, true);
-
-        /// METHOD IS WORK IN PROGRESS
-        /// <inheritdoc cref="StartMethodParameterTooltips"/>
-        public Task StartAll_ListOnly_Synchronous(string domain = "", string username = "", string password = "") => ListOnlyTask(domain, username, password, false);
-
         /// <summary>
-        /// Generate the return task when running in ListOnly mode
+        /// Set all RoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
         /// </summary>
-        /// <returns></returns>
-        private Task ListOnlyTask(string domain, string username, string password, bool RunInParrallel )
+        /// <inheritdoc cref="StartJobs"/>
+        public Task StartAll_ListOnly(string domain = "", string username = "", string password = "")
         {
             IsListOnlyRunning = true;
             ListOnlyResults.Clear();
@@ -177,7 +212,7 @@ namespace RoboSharp
                 c.LoggingOptions.ListOnly = true;
             });
             //Run the commands
-            Task<RoboCopyResultsList> Run = RunInParrallel ? RunParallel(domain, username, password) : RunSynchronous(domain, username, password);
+            Task<RoboCopyResultsList> Run = StartJobs(domain, username, password);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
                 //Store the results then restore the ListOnly values
@@ -196,23 +231,12 @@ namespace RoboSharp
 
         #region < Run User-Set Parameters >
 
-        /// METHOD IS WORK IN PROGRESS
-        /// <inheritdoc cref="StartMethodParameterTooltips"/>
-        public Task StartAll_Parrallel(string domain = "", string username = "", string password = "") => RunOperationTask(domain, username, password, true);
-
-        /// <summary>
-        /// METHOD IS WORK IN PROGRESS
-        /// </summary>
-        /// <returns></returns>
-        /// <inheritdoc cref="StartMethodParameterTooltips"/>
-        public Task StartAll_Synchronous(string domain = "", string username = "", string password = "") => RunOperationTask(domain, username, password, false);
-
-
-        private Task RunOperationTask(string domain, string username, string password, bool RunInParrallel)
+        /// <inheritdoc cref="StartJobs"/>
+        public Task StartAll(string domain = "", string username = "", string password = "")
         {
             IsCopyOperationRunning = true;
             RunOperationResults.Clear();
-            Task<RoboCopyResultsList> Run = RunInParrallel ? RunParallel(domain, username, password) : RunSynchronous(domain, username, password);
+            Task<RoboCopyResultsList> Run = StartJobs(domain, username, password);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
                 RunOperationResults.AddRange(Run.Result);
@@ -222,67 +246,17 @@ namespace RoboSharp
             );
             return ResultsTask;
         }
-    
-        
 
         #endregion
 
-        #region < Private Start Methods >
+        #region < StartJobs Method >
 
         /// <summary>
-        /// Loop through all <see cref="RoboCommand"/> objects in the list. Operations will run one at a time. ( The first operation must finish prior to the second operation starting )
+        /// Create Task that Starts all RoboCommands. 
         /// </summary>
-        /// <returns> Returns new task that runs all the commands in the list consecutively </returns>
-        /// <inheritdoc cref="StartMethodParameterTooltips"/>
-        private Task<RoboCopyResultsList> RunSynchronous(string domain = "", string username = "", string password = "")
-        {
-            Debugger.Instance.DebugMessage("Starting Synchronous execution of RoboQueue");
-
-            TaskCancelSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = TaskCancelSource.Token;
-
-            RoboCopyResultsList returnList = new RoboCopyResultsList();
-
-            Task LoopTask = Task.Factory.StartNew(() =>
-            {
-                //Start the task, wait for it to finish, move on to the next task
-                foreach (RoboCommand cmd in CommandList)
-                {
-                    Task RunTask = cmd.Start(domain, username, password);
-                    RunTask.Wait();
-                    if (TaskCancelSource.IsCancellationRequested) break;
-                }
-            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
-
-            Task<RoboCopyResultsList> ContinueWithTask = LoopTask.ContinueWith((continuation) =>
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    //If cancellation was requested -> Issue the STOP command to all commands in the list
-                    Debugger.Instance.DebugMessage("RunSynchronous Task Was Cancelled");
-                    TaskCancelSource = null;
-                    StopAll();
-                }
-                else
-                {
-                    Debugger.Instance.DebugMessage("RunSynchronous Task Completed");
-                }
-
-                CommandList.ForEach((c) => returnList.Add(c.GetResults())); //Loop through the list, adding the results of each command to the list
-                
-                return returnList;
-            });
-
-            return ContinueWithTask;
-        }
-
-
-        /// <summary>
-        /// Generates a task that runs all the commands in parallel. Once all operations are complete, the returned task will resolve.
-        /// </summary>
-        /// <returns>Returns a new task that will finish after all commands have completed their tasks. -> Task.WhenAll() </returns>
-        /// <inheritdoc cref="StartMethodParameterTooltips"/>
-        private Task<RoboCopyResultsList> RunParallel(string domain = "", string username = "", string password = "")
+        /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
+        /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
+        private Task<RoboCopyResultsList> StartJobs(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
@@ -292,16 +266,46 @@ namespace RoboSharp
             RoboCopyResultsList returnList = new RoboCopyResultsList();
             List<Task> TaskList = new List<Task>();
 
-            //Start all commands, adding each one to the TaskList
-            foreach (RoboCommand cmd in CommandList)
+            //Create a Task to Start all the RoboCommands
+            Task StartAll = Task.Factory.StartNew(() =>
             {
-                if (TaskCancelSource.IsCancellationRequested) break;
-                TaskList.Add(cmd.Start(domain, username, password));
-            }
+                //Start all commands, running as many as allowed
+                foreach (RoboCommand cmd in CommandList)
+                {
+                    if (TaskCancelSource.IsCancellationRequested) break;
+                    
+                    //Assign the events
+                    cmd.OnCommandCompleted += this.OnCommandCompleted;
+                    cmd.OnCommandError+= this.OnCommandError;
+                    cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
+                    cmd.OnError += this.OnError;
+                    cmd.OnFileProcessed += this.OnFileProcessed;
 
-            //Create Task.WhenAll() to wait for all robocommands to run to completion
-            Task WhenAll = Task.Factory.StartNew(() => Task.WaitAll(TaskList.ToArray()), cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+                    //Start the job
+                    //Once the job ends, unsubscribe events
+                    Task C = cmd.Start(domain, username, password);
+                    Task T = C.ContinueWith((t) =>
+                    {
+                        cmd.OnCommandCompleted += this.OnCommandCompleted;
+                        cmd.OnCommandError += this.OnCommandError;
+                        cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
+                        cmd.OnError += this.OnError;
+                        cmd.OnFileProcessed += this.OnFileProcessed;
+                    });
 
+                    TaskList.Add(T);                    //Add the continuation task to the list.
+                    C.WaitUntil(TaskStatus.Running);    //Wait until the RoboCopy operation has begun
+
+                    //Check if more jobs are allowed to run
+                    while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
+                        Thread.Sleep(500);
+                }
+            } , cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+
+            //After all commands have started, continue with waiting for all commands to complete.
+            Task WhenAll = StartAll.ContinueWith( (continuation) => Task.WaitAll(TaskList.ToArray()), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
+
+            //Continuation Task return results to caller
             Task<RoboCopyResultsList> ContinueWithTask = WhenAll.ContinueWith((continuation) =>
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -323,14 +327,6 @@ namespace RoboSharp
 
             return ContinueWithTask;
         }
-
-
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-        /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
-        /// <inheritdoc cref="RoboCommand.Start(string, string, string)"/>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used for XML ToolTips on other methods")]
-        private void StartMethodParameterTooltips(string domain, string username, string password, CancellationTokenSource cancellationTokenSource) { } //This method exists primarily to avoid introducing repetetive xml tags for all the exposed Start() methods
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
         #endregion
 
@@ -479,6 +475,15 @@ namespace RoboSharp
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Clear();
         }
+
+        /// <inheritdoc cref="List{T}.FindAll(Predicate{T})"/>
+        public List<RoboCommand> FindAll(Predicate<RoboCommand> predicate) => CommandList.FindAll(predicate);
+
+        /// <inheritdoc cref="List{T}.Find(Predicate{T})"/>
+        public RoboCommand Find(Predicate<RoboCommand> predicate) => CommandList.Find(predicate);
+
+        /// <inheritdoc cref="List{T}.IndexOf(T)"/>
+        public int IndexOf(RoboCommand item) => CommandList.IndexOf(item);
 
         #endregion
 

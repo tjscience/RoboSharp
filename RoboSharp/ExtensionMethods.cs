@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace RoboSharp
 {
@@ -62,6 +63,15 @@ namespace RoboSharp
         /// Check if the string ends with a directory seperator character
         /// </summary>
         public static bool EndsWithDirectorySeperator(this string path) => path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString());
+
+        /// <summary>
+        /// Wait synchronously until this task has reached the specified <see cref="TaskStatus"/>
+        /// </summary>
+        public static void WaitUntil(this Task t, TaskStatus status )
+        {
+            while (t.Status < status)
+                System.Threading.Thread.Sleep(150);
+        }
 
     }
 }
