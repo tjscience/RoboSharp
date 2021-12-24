@@ -20,23 +20,28 @@ namespace RoboSharp.BackupApp
 
         private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
 
-        /// <summary>
-        /// List of RoboCommand objects to start at same time
-        /// </summary>
+        /// <summary> List of RoboCommand objects to start at same time </summary>
         private RoboSharp.RoboQueue RoboQueue = new RoboSharp.RoboQueue();
 
         public MainWindow()
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
-            JobResults.CollectionChanged += UpdateOverallLabel;
             ListBox_JobResults.ItemsSource = JobResults;
             ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
+            //Button Setup
             btn_AddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
+            //Event subscribe
+            JobResults.CollectionChanged += UpdateOverallLabel;
+            RoboQueue.OnFileProcessed += copy_OnFileProcessed;
+            RoboQueue.OnCommandError += copy_OnCommandError;
+            RoboQueue.OnError += copy_OnError;
+            RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
+            RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
