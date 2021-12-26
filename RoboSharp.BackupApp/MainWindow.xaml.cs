@@ -32,7 +32,7 @@ namespace RoboSharp.BackupApp
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
             //Button Setup
-            btn_AddToQueue.IsEnabled = true;
+            btnAddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
             //Event subscribe
@@ -304,12 +304,12 @@ namespace RoboSharp.BackupApp
 
         }
 
-        private void btnAddToQueue(object sender, RoutedEventArgs e)
+        private void btn_AddToQueue(object sender, RoutedEventArgs e)
         {
             if (!RoboQueue.IsRunning)
             {
                 RoboQueue.AddCommand(GetCommand(false));
-                btn_AddToQueue.IsEnabled = true;
+                btnAddToQueue.IsEnabled = true;
             }
             else
                 RoboQueue.StopAll();
@@ -319,13 +319,13 @@ namespace RoboSharp.BackupApp
         {
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = true;
-            btn_AddToQueue.Content = "Stop Queued Jobs";
+            btnAddToQueue.Content = "Stop Queued Jobs";
             await RoboQueue.StartAll();
             JobResults.Clear();
             JobResults.AddRange(RoboQueue.RunOperationResults);
             RoboQueue.ClearCommandList();
             btnPauseQueue.IsEnabled = false;
-            btn_AddToQueue.Content = "Add to Queue";
+            btnAddToQueue.Content = "Add to Queue";
             btnStartJobQueue.IsEnabled = true;
         }
 
@@ -335,6 +335,11 @@ namespace RoboSharp.BackupApp
                 RoboQueue.PauseAll();
             else
                 RoboQueue.ResumeAll();
+        }
+
+        private void btn_RemoveSelected(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 

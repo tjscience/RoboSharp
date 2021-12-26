@@ -1,6 +1,7 @@
-﻿<Window x:Class="RoboSharp.BackupApp.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="RoboSharp.BackupApp.MainWindow"
         Title="Backup App" Height="550" Width="725" ResizeMode="NoResize">
     <Grid>
         <TabControl>
@@ -204,9 +205,6 @@
                     </ScrollViewer>
 
                     <Button Content="Backup" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
-                    <Button x:Name="btn_AddToQueue" Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,601,10" VerticalAlignment="Bottom" Width="98" Click="btnAddToQueue"/>
-                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,495,10" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue"/>
-                    <Button x:Name="btnPauseQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,389,10" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Progress" Name="ProgressTab">
@@ -228,7 +226,16 @@
             <TabItem Header="Errors" Name="ErrorsTab">
                 <DataGrid Name="ErrorGrid"></DataGrid>
             </TabItem>
-            <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Width="94" Margin="-2,0,0,0">
+            <TabItem Header="Jobs" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Width="40" Margin="-2,0,0,0">
+                <Grid x:Name="JobsGrid">
+                    <Button x:Name="btnAddToQueue" Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,571,446" VerticalAlignment="Bottom" Width="98" Click="btn_AddToQueue" Grid.Column="2"/>
+                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,465,446" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue" Grid.Column="2"/>
+                    <Button x:Name="btnPauseQueue" Content="Pause Job Queue" HorizontalAlignment="Right" Margin="0,0,359,446" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue" Grid.Column="2"/>
+                    <ListBox x:Name="ListBox_Jobs"  Margin="50,80,283,253"/>
+                    <Button x:Name="btnRemoveSelectedJob" Content="Remove Selected" HorizontalAlignment="Right" Margin="0,0,571,215" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Width="86" Margin="-2,0,0,0">
                 <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5">
                     <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="321" SelectionChanged="UpdateSelectedItemsLabel"/>
                     <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="336,251,0,0" VerticalAlignment="Top" Width="367"/>
