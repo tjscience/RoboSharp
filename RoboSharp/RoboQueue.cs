@@ -110,6 +110,15 @@ namespace RoboSharp
                 ; } 
         }
         
+        /// <summary> Number of RoboCommands in the list </summary>
+        public int ListCount => CommandList.Count;
+        
+        /// <summary>
+        /// Report how many <see cref="RoboCommand.Start"/> tasks has completed during the run. <br/>
+        /// This value is reset to 0 when a new run starts, and increments as each job exits.
+        /// </summary>
+        public int JobsComplete { get; private set; } = 0;
+
         /// <summary>
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetListOnlyResults"/>.
@@ -265,6 +274,7 @@ namespace RoboSharp
 
             RoboCopyResultsList returnList = new RoboCopyResultsList();
             List<Task> TaskList = new List<Task>();
+            JobsComplete = 0;
 
             //Create a Task to Start all the RoboCommands
             Task StartAll = Task.Factory.StartNew(() =>
@@ -291,6 +301,7 @@ namespace RoboSharp
                         cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
                         cmd.OnError -= this.OnError;
                         cmd.OnFileProcessed -= this.OnFileProcessed;
+                        JobsComplete++;
                     });
 
                     TaskList.Add(T);                    //Add the continuation task to the list.
