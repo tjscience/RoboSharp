@@ -45,6 +45,7 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
+        private CancellationTokenSource tokenSource;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -286,7 +287,7 @@ namespace RoboSharp
             
             isRunning = true;
 
-            var tokenSource = new CancellationTokenSource();
+            tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
             resultsBuilder = new Results.ResultsBuilder(this.Configuration);
@@ -423,6 +424,9 @@ namespace RoboSharp
                     // always build results
                     results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 }
+                //Null out the TokenSource to allow Stop() to kill the process.
+                tokenSource.Dispose();
+                tokenSource = null;
                 Stop();
             });
 
@@ -442,11 +446,15 @@ namespace RoboSharp
         {
             hasExited = true;
         }
-
+        
         /// <summary>Kill the process</summary>
         public void Stop()
         {
-            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
+            if (tokenSource != null)
+            {
+                if (!tokenSource.IsCancellationRequested) tokenSource.Cancel(true);
+            }
+            else if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
             {
                 process?.Kill();
                 hasExited = true;
@@ -511,6 +519,8 @@ namespace RoboSharp
 
             if (StopIfDisposing && process != null && !hasExited)
             {
+                tokenSource.Dispose();
+                tokenSource = null;
                 process.Kill();
                 hasExited = true;
                 isCancelled = true;
