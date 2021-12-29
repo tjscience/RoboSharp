@@ -15,7 +15,28 @@ namespace RoboSharp
     /// </summary>
     public class RoboCommand : IDisposable, IRoboCommand
     {
-        #region Private Vars
+        #region < Constructors >
+	
+        /// <summary>Create a new RoboCommand object</summary>
+        public RoboCommand() { }
+	
+        /// <summary>Create a new RoboCommand object</summary>
+        public RoboCommand(string name) 
+        { 
+            Name = name;
+        }
+	
+        /// <summary>Create a new RoboCommand object</summary>
+        public RoboCommand(string source, string destination, string name = "") 
+        { 
+            CopyOptions.Source = source;
+            CopyOptions.Destination = destination;
+            Name = name;
+        }
+	
+        #endregion 
+	
+        #region < Private Vars >
 
         private Process process;
         private Task backupTask;
@@ -35,7 +56,8 @@ namespace RoboSharp
 
         #endregion Private Vars
 
-        #region Public Vars
+        #region < Public Vars >
+	
         /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
         public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
@@ -84,7 +106,7 @@ namespace RoboSharp
 
         #endregion Public Vars
 
-        #region Events
+        #region < Events >
 
         /// <summary>Handles <see cref="OnFileProcessed"/></summary>
         public delegate void FileProcessedHandler(RoboCommand sender, FileProcessedEventArgs e);
@@ -112,12 +134,6 @@ namespace RoboSharp
         public event CopyProgressHandler OnCopyProgressChanged;
 
         #endregion
-
-        /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand()
-        {
-
-        }
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
@@ -378,7 +394,6 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
-                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
@@ -386,16 +401,14 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    // backup is complete
-                    if (OnCommandCompleted != null)
-                    {
+                    // backup is complete -> Raise event if needed and was not cancelled
+                    if (OnCommandCompleted != null && !cancellationToken.IsCancellationRequested)
                         OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
-                        isRunning = false;
-                    }
+                    // always build results
+                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 }
-
                 Stop();
-            }, cancellationToken);
+            });
 
             return continueWithTask;
         }
@@ -434,7 +447,15 @@ namespace RoboSharp
         {
             return results;
         }
-
+	
+        /// <summary>
+        /// Set the results to null - This is to prevent adding results from a previous run being added to the results list by RoboQueue
+        /// </summary>
+        internal void ResetResults()
+        {
+            results = null;
+        }
+	
         /// <summary>
         /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
         /// </summary>
@@ -455,7 +476,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-        #region IDisposable Implementation
+        #region < IDisposable Implementation >
 
         bool disposed = false;
 
