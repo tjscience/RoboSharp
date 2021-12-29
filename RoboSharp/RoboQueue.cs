@@ -62,7 +62,7 @@ namespace RoboSharp
         /// <param name="maxConcurrentJobs"><inheritdoc cref="MaxConcurrentJobs"/></param>
         public RoboQueue(IEnumerable<RoboCommand> roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
-            CommandList.AddRange(roboCommands);
+            CommandList.AddRange(roboCommand);
             Init(name, maxConcurrentJobs);
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
         }
