@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +36,7 @@ namespace RoboSharp
         /// <summary>
         /// Initialize a new (empty) <see cref="RoboQueue"/> object with a specificed Name.
         /// </summary>
-        /// <inheritdoc cref="RoboQueue(IEnumerable<RoboCommand>, string, int)"/>
+        /// <inheritdoc cref="RoboQueue(IEnumerable{RoboCommand}, string, int)"/>
         public RoboQueue(string name, int maxConcurrentJobs = 1)
         {
             Init(name, maxConcurrentJobs);
@@ -46,7 +46,7 @@ namespace RoboSharp
         /// <summary>
         /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>.
         /// </summary>
-        /// <inheritdoc cref="RoboQueue(IEnumerable<RoboCommand>, string, int)"/>
+        /// <inheritdoc cref="RoboQueue(IEnumerable{RoboCommand}, string, int)"/>
         public RoboQueue(RoboCommand roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.Add(roboCommand);
