@@ -29,28 +29,48 @@ namespace RoboSharp
         /// </summary>
         public RoboQueue()
         {
+            Init();
+            Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+        }
+        
+        /// <summary>
+        /// Initialize a new (empty) <see cref="RoboQueue"/> object with a specificed Name.
+        /// </summary>
+        /// <inheritdoc cref="RoboQueue(IEnumerable<RoboCommand>, string, int)"/>
+        public RoboQueue(string name, int maxConcurrentJobs = 1)
+        {
+            Init(name, maxConcurrentJobs);
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>.
         /// </summary>
-        public RoboQueue(RoboCommand roboCommand)
+        /// <inheritdoc cref="RoboQueue(IEnumerable<RoboCommand>, string, int)"/>
+        public RoboQueue(RoboCommand roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.Add(roboCommand);
+            Init(name, maxConcurrentJobs);
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/> collection
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/> collection.
         /// </summary>
+        /// <param name="roboCommand">RoboCommand(s) to populate the list with.</param>
+        /// <param name="name"><inheritdoc cref="Name"/></param>
         /// <param name="maxConcurrentJobs"><inheritdoc cref="MaxConcurrentJobs"/></param>
-        /// <param name="roboCommands">Collection of RoboCommands</param>
-        public RoboQueue(IEnumerable<RoboCommand> roboCommands, int maxConcurrentJobs = 1)
+        public RoboQueue(IEnumerable<RoboCommand> roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.AddRange(roboCommands);
-            MaxConcurrentJobs = maxConcurrentJobs;
+            Init(name, maxConcurrentJobs);
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+        }
+        
+        private void Init(string name = "", int maxConcurrentJobs = 1)
+        {
+            NameField = name;
+            MaxConcurrentJobsField = maxConcurrentJobs;
         }
 
         #endregion
@@ -61,7 +81,8 @@ namespace RoboSharp
         private bool disposedValue;
         private bool isDisposing;
         private CancellationTokenSource TaskCancelSource;
-        private int MaxConcurrentJobsField = 1;
+        private int MaxConcurrentJobsField;
+        private string NameField;
 
         private bool WasCancelledField = false;
         private bool IsPausedField = false;
@@ -74,6 +95,19 @@ namespace RoboSharp
 
         #region < Properties >
 
+        /// <summary>
+        /// Name of this collection of RoboCommands
+        /// </summary>
+        public string Name { 
+            get => NameField;
+            private set {
+                if (value != NameField) {
+                    NameField = value;
+                    OnPropertyChanged("Name");
+                }
+            }
+        }
+        
         /// <summary>
         /// Wraps the private <see cref="ObservableList{T}"/> into a ReadOnlyCollection for public consumption and data binding.
         /// </summary>
@@ -126,7 +160,7 @@ namespace RoboSharp
             }
         }
 
-        /// <summary> Indicates if the ListOnly task is currently running. </summary>
+        /// <summary> Indicates if the StartAll_ListOnly task is currently running. </summary>
         public bool IsListOnlyRunning {
             get => IsListOperationRunningField; 
             private set {
@@ -139,7 +173,7 @@ namespace RoboSharp
             } 
         }
 
-        /// <summary> Indicates if the ListOnly() operation has been completed. </summary>
+        /// <summary> Indicates if the StartAll_ListOnly() operation has been completed. </summary>
         public bool ListOnlyCompleted {
             get => ListOnlyCompletedField;
             private set {
@@ -187,7 +221,7 @@ namespace RoboSharp
 
         /// <summary>
         /// Specify the max number of RoboCommands to execute at the same time. <br/>
-        /// Set Value to 0 to allow infinite number of jobs (Will issue all start commands at same time)
+        /// Set Value to 0 to allow infinite number of jobs (Will issue all start commands at same time) <br/>
         /// Default Value = 1; <br/>
         /// </summary>
         public int MaxConcurrentJobs { 
@@ -375,6 +409,10 @@ namespace RoboSharp
             //Create a Task to Start all the RoboCommands
             Task StartAll = Task.Factory.StartNew(() =>
             {
+                //Reset results of all commands in the list
+                foreach (RoboCommand cmd in CommandList)
+                    cmd.ResetResults();
+                
                 //Start all commands, running as many as allowed
                 foreach (RoboCommand cmd in CommandList)
                 {
