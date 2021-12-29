@@ -402,11 +402,12 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    // backup is complete -> Raise event if needed and was not cancelled
-                    if (OnCommandCompleted != null && !cancellationToken.IsCancellationRequested)
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
                     // always build results
                     results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+		    // backup is complete -> Raise event if needed and was not cancelled
+                    if (OnCommandCompleted != null && !cancellationToken.IsCancellationRequested)
+                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
+                    
                 }
                 //Null out the TokenSource to allow Stop() to kill the process.
                 tokenSource.Dispose();
