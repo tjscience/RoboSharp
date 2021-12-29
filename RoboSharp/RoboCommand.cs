@@ -447,19 +447,17 @@ namespace RoboSharp
         {
             hasExited = true;
         }
-        
+
         /// <summary>Kill the process</summary>
         public void Stop()
         {
-            if (tokenSource != null)
+            //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
+            //If the removal of that check broke your application, please create a new issue thread on the repo.
+            if (process != null)
             {
-                if (!tokenSource.IsCancellationRequested) tokenSource.Cancel(true);
-            }
-            else if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
-            {
-                process?.Kill();
+                if (!process.HasExited) process.Kill();
                 hasExited = true;
-                process?.Dispose();
+                process.Dispose();
                 process = null;
                 isCancelled = true;
             }
