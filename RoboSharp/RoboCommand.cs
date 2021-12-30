@@ -16,19 +16,19 @@ namespace RoboSharp
     public class RoboCommand : IDisposable, IRoboCommand
     {
         #region < Constructors >
-	
+
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand() { Init(); }
-	
+
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand(string name) 
+        public RoboCommand(string name)
         {
             Init(name);
         }
-	
+
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand(string source, string destination, string name = "") 
-        { 
+        public RoboCommand(string source, string destination, string name = "")
+        {
             CopyOptions.Source = source;
             CopyOptions.Destination = destination;
             Init(name);
@@ -39,9 +39,9 @@ namespace RoboSharp
             Name = name;
             ErrorTokenRegex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
         }
-	
-        #endregion 
-	
+
+        #endregion
+
         #region < Private Vars >
 
         private Process process;
@@ -64,7 +64,7 @@ namespace RoboSharp
         #endregion Private Vars
 
         #region < Public Vars >
-	
+
         /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
         public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
@@ -159,11 +159,12 @@ namespace RoboSharp
             }
             else
             {
-                if (OnFileProcessed != null)
-                {
-                    var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                //Parse the string to determine which event to raise
+                var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    if (splitData.Length == 2)
+                if (splitData.Length == 2) // Directory
+                {
+                    if (OnFileProcessed != null)
                     {
                         var file = new ProcessedFileInfo();
                         file.FileClass = "New Dir";
@@ -174,7 +175,10 @@ namespace RoboSharp
                         file.Name = splitData[1];
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
                     }
-                    else if (splitData.Length == 3)
+                }
+                else if (splitData.Length == 3) // File
+                {
+                    if (OnFileProcessed != null)
                     {
                         var file = new ProcessedFileInfo();
                         file.FileClass = splitData[0].Trim();
@@ -185,47 +189,46 @@ namespace RoboSharp
                         file.Name = splitData[2];
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
                     }
+                }
+                else if (OnError != null && ErrorTokenRegex.IsMatch(data)) // Error Message
+                {
+                    // parse error code
+                    var match = ErrorTokenRegex.Match(data);
+                    string value = match.Groups[1].Value;
+                    int parsedValue = Int32.Parse(value);
+
+                    var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                    if (errorCode.Key != null)
+                    {
+                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
+                    }
                     else
                     {
-                        if (OnError != null && ErrorTokenRegex.IsMatch(data))
-                        {
-                            // parse error code
-                            var match = ErrorTokenRegex.Match(data);
-                            string value = match.Groups[1].Value;
-                            int parsedValue = Int32.Parse(value);
+                        OnError(this, new ErrorEventArgs(data, parsedValue));
+                    }
+                }
+                else if (!data.StartsWith("----------")) // System Message
+                {
+                    if (OnFileProcessed != null)
+                    {
+                        // Do not log errors that have already been logged
+                        var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
 
-                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
-                            if (errorCode.Key != null)
-                            {
-                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
-                            }
-                            else
-                            {
-                                OnError(this, new ErrorEventArgs(data, parsedValue));
-                            }
-                        }
-                        else
+                        if (errorCode.Key == null)
                         {
-                            if (!data.StartsWith("----------"))
-                            {
-                                // Do not log errors that have already been logged
-                                var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
-
-                                if (errorCode.Key == null)
-                                {
-                                    var file = new ProcessedFileInfo();
-                                    file.FileClass = "System Message";
-                                    file.FileClassType = FileClassType.SystemMessage;
-                                    file.Size = 0;
-                                    file.Name = data;
-                                    OnFileProcessed(this, new FileProcessedEventArgs(file));
-                                }
-                            }
+                            var file = new ProcessedFileInfo();
+                            file.FileClass = "System Message";
+                            file.FileClassType = FileClassType.SystemMessage;
+                            file.Size = 0;
+                            file.Name = data;
+                            OnFileProcessed(this, new FileProcessedEventArgs(file));
                         }
                     }
                 }
             }
         }
+    
+    
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
