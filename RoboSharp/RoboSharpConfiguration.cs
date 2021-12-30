@@ -17,14 +17,34 @@ namespace RoboSharp
         };
 
         /// <summary>
-        /// 
+        /// Error Token Identifier -- EN = "ERROR", DE = "FEHLER", etc <br/>
+        /// Leave as / Set to null to use system default.
         /// </summary>
         public string ErrorToken
         {
             get { return errorToken ?? GetDefaultConfiguration().ErrorToken; }
-            set { errorToken = value; }
+            set {
+                if (value != errorToken) ErrRegexInitRequired = true;
+                errorToken = value;
+            }
         }
         private string errorToken = null;
+
+        /// <summary>
+        /// Regex to identify Error Tokens with during LogLine parsing
+        /// </summary>
+        internal Regex ErrorTokenRegex
+        {
+            get
+            {
+                if (ErrRegexInitRequired | errorTokenRegex == null)
+                    errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+                ErrRegexInitRequired = false;
+                return errorTokenRegex;
+            }
+        }
+        private Regex errorTokenRegex;
+        private bool ErrRegexInitRequired;
 
         /// <summary>
         /// Specify the path to RoboCopy.exe here. If not set, use the default copy.
