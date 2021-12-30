@@ -27,8 +27,8 @@ namespace RoboSharp
         }
 	
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand(string source, string destination, string name = "") 
-        { 
+        public RoboCommand(string source, string destination, string name = "")
+        {
             CopyOptions.Source = source;
             CopyOptions.Destination = destination;
             Init(name);
@@ -158,7 +158,7 @@ namespace RoboSharp
             }
             else
             {
-
+                //Parse the string to determine which event to raise
                 var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (splitData.Length == 2) // Directory
