@@ -18,12 +18,12 @@ namespace RoboSharp
         #region < Constructors >
 	
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand() { }
+        public RoboCommand() { Init(); }
 	
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand(string name) 
-        { 
-            Name = name;
+        {
+            Init(name);
         }
 	
         /// <summary>Create a new RoboCommand object</summary>
@@ -31,6 +31,11 @@ namespace RoboSharp
         { 
             CopyOptions.Source = source;
             CopyOptions.Destination = destination;
+            Init(name);
+        }
+
+        private void Init(string name = "")
+        {
             Name = name;
         }
 	
@@ -417,7 +422,7 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed and was not cancelled
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed
                 }
 
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
@@ -440,7 +445,7 @@ namespace RoboSharp
         {
             hasExited = true;
         }
-        
+
         /// <summary>Kill the process</summary>
         public void Stop()
         {
