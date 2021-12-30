@@ -130,6 +130,7 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
+                if (data == "100%") resultsBuilder?.AddFileCopied();
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
             }
             else
@@ -140,6 +141,8 @@ namespace RoboSharp
 
                     if (splitData.Length == 2)
                     {
+                        resultsBuilder?.AddDir();
+                        if (!this.LoggingOptions.ListOnly) resultsBuilder?.AddDirCopied();
                         var file = new ProcessedFileInfo();
                         file.FileClass = "New Dir";
                         file.FileClassType = FileClassType.NewDir;
@@ -151,6 +154,7 @@ namespace RoboSharp
                     }
                     else if (splitData.Length == 3)
                     {
+                        resultsBuilder?.AddFile();
                         var file = new ProcessedFileInfo();
                         file.FileClass = splitData[0].Trim();
                         file.FileClassType = FileClassType.File;

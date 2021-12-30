@@ -12,7 +12,9 @@ namespace RoboSharp.Results
     {
          
         private readonly List<string> outputLines = new List<string>();
-        
+
+        #region < Command Options Properties >
+
         /// <see cref="RoboCommand.CommandOptions"/>
         internal string CommandOptions { get; set; }
 
@@ -21,6 +23,31 @@ namespace RoboSharp.Results
         
         /// <inheritdoc cref="CopyOptions.Destination"/>
         internal string Destination { get; set; }
+
+        #endregion
+
+        #region < Counters in case cancellation >
+
+        /// <summary> Internal counter used to generate statistics if job is cancelled </summary>
+        internal long TotalDirs { get; private set; } = 0;
+        /// <summary> Internal counter used to generate statistics if job is cancelled </summary>
+        internal long TotalDirsCopied { get; private set; } = 0;
+        /// <summary> Internal counter used to generate statistics if job is cancelled </summary>
+        internal long TotalFiles { get; private set; } = 0;
+        /// <summary> Internal counter used to generate statistics if job is cancelled </summary>
+        internal long TotalFilesCopied { get; private set; } = 0;
+
+        // Methods to add to internal counters -> created as methods to allow inline null check since results?.TotalDirs++; won't compile
+        /// <summary>Increment <see cref="TotalDirs"/></summary>
+        internal void AddDir() => TotalDirs++;
+        /// <summary>Increment <see cref="TotalDirsCopied"/></summary>
+        internal void AddDirCopied() => TotalDirsCopied++;
+        /// <summary>Increment <see cref="TotalFiles"/></summary>
+        internal void AddFile() => TotalFiles++;
+        /// <summary>Increment <see cref="TotalFilesCopied"/></summary>
+        internal void AddFileCopied() => TotalFilesCopied++;
+
+        #endregion
 
         internal void AddOutput(string output)
         {
@@ -40,16 +67,20 @@ namespace RoboSharp.Results
 
             var statisticLines = GetStatisticLines();
 
-            if (statisticLines.Count >= 1)
+            if (exitCode >= 0 && statisticLines.Count >= 1)
                 res.DirectoriesStatistic = Statistic.Parse(statisticLines[0]);
+            else
+                res.DirectoriesStatistic = new Statistic() { Total = TotalDirs, Copied = TotalDirsCopied};
 
-            if (statisticLines.Count >= 2)
+            if (exitCode >= 0 && statisticLines.Count >= 2)
                 res.FilesStatistic = Statistic.Parse(statisticLines[1]);
+            else
+                res.FilesStatistic = new Statistic() { Total = TotalFiles, Copied = TotalFilesCopied };
 
-            if (statisticLines.Count >= 3)
+            if (exitCode >= 0 && statisticLines.Count >= 3)
                 res.BytesStatistic = Statistic.Parse(statisticLines[2]);
 
-            if (statisticLines.Count >= 6)
+            if (exitCode >= 0 && statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
             res.LogLines = outputLines.ToArray();
