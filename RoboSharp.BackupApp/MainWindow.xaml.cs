@@ -137,7 +137,8 @@ namespace RoboSharp.BackupApp
 
         public void Backup()
         {
-            GetCommand(true).Start();
+            copy = GetCommand(true);
+            copy.Start();
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
@@ -255,11 +256,13 @@ namespace RoboSharp.BackupApp
             }
         }
 
-        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e)
+        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e) => UpdateSelectedResultsLabel((ListBox)sender, e, lbl_SelectedItemTotals);
+        
+        private void UpdateSelectedResultsLabel(object listboxSender, SelectionChangedEventArgs e, Label LabelToUpdate)
         {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
+            Results.RoboCopyResults result = (Results.RoboCopyResults)((ListBox)listboxSender).SelectedItem;
             string NL = Environment.NewLine;
-            lbl_SelectedItemTotals.Content = $"Selected Job:" +
+            LabelToUpdate.Content = $"Selected Job:" +
                 $"{NL}Source: {result?.Source ?? ""}" +
                 $"{NL}Destination: {result?.Destination ?? ""}" +
                 $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
@@ -267,9 +270,10 @@ namespace RoboSharp.BackupApp
                 $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
                 $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
                 $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
+                $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
                 $"{NL}{result?.Status.ToString() ?? ""}";
         }
-        
+
         /// <summary>
         /// Runs every time the JobResults list is updated.
         /// </summary>
