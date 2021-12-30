@@ -45,7 +45,11 @@ namespace RoboSharp.Results
         private long TotalBytes { get; set; } = 0;
         private long TotalBytes_Copied { get; set; } = 0;
         private long TotalBytes_Failed { get; set; } = 0;
+        private long TotalBytes_Skipped { get; set; } = 0;
+        private long TotalBytes_Extra { get; set; } = 0;
+        private long TotalBytes_MisMatch { get; set; } = 0;
 
+        private bool SkippingFile;
         private bool CopyOpStarted;
         private ProcessedFileInfo CurrentDir;
         private ProcessedFileInfo CurrentFile;
@@ -69,38 +73,67 @@ namespace RoboSharp.Results
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
             TotalFiles++;
-            CopyOpStarted = false;
+            if (SkippingFile)
+            {
+                TotalFiles_Skipped++;
+                TotalBytes_Skipped += CurrentFile?.Size ?? 0;
+            }
             CurrentFile = currentFile;
             TotalBytes += currentFile.Size;
+            SkippingFile = false;
+            CopyOpStarted = false;
 
-            if (currentFile.FileClass.ToLower().Contains("extra")) TotalFiles_Extras++;
-            else if (currentFile.FileClass.ToLower().Contains("mismatch")) TotalFiles_Mismatch++;
+            // EXTRA FILES
+            if (currentFile.FileClass.ToLower().Contains("extra"))
+            {
+                TotalFiles_Extras++;
+                TotalBytes_Extra += CurrentFile.Size;
+            }
+
+            //MisMatch
+            else if (currentFile.FileClass.ToLower().Contains("mismatch"))
+            {
+                TotalFiles_Mismatch++;
+                TotalBytes_MisMatch += CurrentFile.Size;
+            }
+
+            //Failed Files
             else if (currentFile.FileClass.ToLower().Contains("fail"))
             {
                 TotalFiles_Failed++;
                 TotalBytes_Failed += currentFile.Size;
             }
+
+
+            //Identical Files
+            else if (currentFile.FileClass == "same")
+            {
+                TotalFiles_Skipped++; //File is the same -> It will be skipped
+                TotalBytes_Skipped += CurrentFile.Size;
+                CurrentFile = null;
+            }
+
+            //Files to be Copied/Skipped
             else
             {
-                if (CopyOperation) TotalFiles_Skipped++; //Assume Skipped, adjusted when CopyProgress is updated
-
+                SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
                 if (currentFile.FileClass.ToLower() == "new file") { }
                 else if (currentFile.FileClass.ToLower().Contains("older")) { }
                 else if (currentFile.FileClass.ToLower().Contains("newer")) { }
             }
         }
 
-        /// <summary>Increment <see cref="TotalFiles_Copied"/></summary>
+        /// <summary>Catch start copy progress of large files</summary>
         internal void SetCopyOpStarted()
         {
-            if (!CopyOpStarted) TotalFiles_Skipped--; //Catch start copy progress of large files
+            SkippingFile = false;
             CopyOpStarted = true;
         }
 
         /// <summary>Increment <see cref="TotalFiles_Copied"/></summary>
         internal void AddFileCopied()
         {
-            if (!CopyOpStarted) TotalFiles_Skipped--; //Some files are small enough they only get the first report wher it reports 100% -> this catches that scenario
+            SkippingFile = false;
             CopyOpStarted = false;
             TotalFiles_Copied++;
             TotalBytes_Copied += CurrentFile?.Size ?? 0;
@@ -148,7 +181,7 @@ namespace RoboSharp.Results
             else
             {
                 TotalBytes_Failed += CopyOpStarted ? ( CurrentFile?.Size ?? 0 ) : 0;
-                res.BytesStatistic = new Statistic() { Copied = TotalBytes_Copied, Total = TotalBytes, Failed = TotalBytes_Failed };
+                res.BytesStatistic = new Statistic() { Total = TotalBytes, Copied = TotalBytes_Copied, Failed = TotalBytes_Failed, Extras = TotalBytes_Extra, Skipped = TotalBytes_Skipped, Mismatch = TotalBytes_MisMatch };
             }
 
             //Speed Stats
