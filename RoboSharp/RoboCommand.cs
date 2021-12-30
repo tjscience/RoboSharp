@@ -18,12 +18,12 @@ namespace RoboSharp
         #region < Constructors >
 	
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand() { }
+        public RoboCommand() { Init(); }
 	
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand(string name) 
-        { 
-            Name = name;
+        {
+            Init(name);
         }
 	
         /// <summary>Create a new RoboCommand object</summary>
@@ -31,7 +31,13 @@ namespace RoboSharp
         { 
             CopyOptions.Source = source;
             CopyOptions.Destination = destination;
+            Init(name);
+        }
+
+        private void Init(string name = "")
+        {
             Name = name;
+            ErrorTokenRegex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
         }
 	
         #endregion 
@@ -45,6 +51,7 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
+        private Regex ErrorTokenRegex;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -180,12 +187,10 @@ namespace RoboSharp
                     }
                     else
                     {
-                        var regex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
-
-                        if (OnError != null && regex.IsMatch(data))
+                        if (OnError != null && ErrorTokenRegex.IsMatch(data))
                         {
                             // parse error code
-                            var match = regex.Match(data);
+                            var match = ErrorTokenRegex.Match(data);
                             string value = match.Groups[1].Value;
                             int parsedValue = Int32.Parse(value);
 
@@ -402,7 +407,7 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed and was not cancelled
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed
                 }
 
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token

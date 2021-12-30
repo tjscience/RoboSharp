@@ -17,7 +17,7 @@ namespace RoboSharp
         };
 
         /// <summary>
-        /// 
+        /// Error Token for the system language  -- EN = "ERROR", DE = "FEHLER", etc
         /// </summary>
         public string ErrorToken
         {
