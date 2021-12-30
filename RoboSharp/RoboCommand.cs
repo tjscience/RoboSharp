@@ -45,7 +45,6 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
-        private CancellationTokenSource tokenSource;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -272,7 +271,7 @@ namespace RoboSharp
             
             isRunning = true;
 
-            tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
             resultsBuilder = new Results.ResultsBuilder();
@@ -341,8 +340,8 @@ namespace RoboSharp
             #endif
 
             #endregion
-
-	    isRunning = !cancellationToken.IsCancellationRequested;
+            
+            isRunning = !cancellationToken.IsCancellationRequested;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -395,6 +394,7 @@ namespace RoboSharp
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
                 process.WaitForExit();
+                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
@@ -402,17 +402,11 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    // always build results
-                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
-		    // backup is complete -> Raise event if needed and was not cancelled
-                    if (OnCommandCompleted != null && !cancellationToken.IsCancellationRequested)
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
-                    
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed and was not cancelled
                 }
-                //Null out the TokenSource to allow Stop() to kill the process.
-                tokenSource.Dispose();
-                tokenSource = null;
-                Stop();
+
+                tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
+                Stop(); //Ensure process is disposed of
             });
 
             return continueWithTask;
@@ -431,23 +425,22 @@ namespace RoboSharp
         {
             hasExited = true;
         }
-        
+
         /// <summary>Kill the process</summary>
         public void Stop()
         {
             //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
-	    //If the removal of that check broke your application, please create a new issue thread on the repo.
-	    if (tokenSource != null)
+            //If the removal of that check broke your application, please create a new issue thread on the repo.
+            if (process != null)
             {
-                if (!tokenSource.IsCancellationRequested) tokenSource.Cancel(true);
-            }
-            else if (process != null)
-            {
-                if (!hasExited) process.Kill();
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    isCancelled = true;
+                }
                 hasExited = true;
                 process.Dispose();
                 process = null;
-                isCancelled = true;
             }
             isRunning = !hasExited;
         }
@@ -504,15 +497,13 @@ namespace RoboSharp
             if (disposed)
                 return;
 
-            if (StopIfDisposing && process != null && !hasExited)
+            if (StopIfDisposing && process != null && !process.HasExited)
             {
-                tokenSource.Dispose();
-                tokenSource = null;
                 process.Kill();
                 hasExited = true;
-                isCancelled = true;
-                isRunning = false;
+                isCancelled = true;    
             }
+            
 
             if (disposing)
             {
@@ -520,8 +511,12 @@ namespace RoboSharp
             }
 
             if (process != null)
+            {
                 process.Dispose();
+                process = null;
+            }
 
+            isRunning = false;
             disposed = true;
         }
 
