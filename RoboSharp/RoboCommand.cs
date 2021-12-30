@@ -20,24 +20,29 @@ namespace RoboSharp
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand() { Init(); }
 
-        /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand(string name)
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string name, bool stopIfDisposing = true)
         {
             Init(name);
         }
 
-        /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand(string source, string destination, string name = "")
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name = "", bool stopIfDisposing = true)
         {
-            CopyOptions.Source = source;
-            CopyOptions.Destination = destination;
-            Init(name);
+            Init(name, stopIfDisposing, source, destination);
         }
 
-        private void Init(string name = "")
+        /// <summary>Create a new RoboCommand object</summary>
+        /// <param name="name"><inheritdoc cref="Name" path="*"/></param>
+        /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
+        /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
+        /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
+        private void Init(string name = "", bool stopIfDisposing = false, string source = "", string destination = "")
         {
             Name = name;
-            ErrorTokenRegex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+            StopIfDisposing = stopIfDisposing;
+            CopyOptions.Source = source;
+            CopyOptions.Destination = destination;
         }
 
         #endregion
@@ -51,7 +56,6 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
-        private Regex ErrorTokenRegex;
         private CopyOptions copyOptions = new CopyOptions();
         private SelectionOptions selectionOptions = new SelectionOptions();
         private RetryOptions retryOptions = new RetryOptions();
@@ -190,10 +194,10 @@ namespace RoboSharp
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
                     }
                 }
-                else if (OnError != null && ErrorTokenRegex.IsMatch(data)) // Error Message
+                else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
                 {
                     // parse error code
-                    var match = ErrorTokenRegex.Match(data);
+                    var match = Configuration.ErrorTokenRegex.Match(data);
                     string value = match.Groups[1].Value;
                     int parsedValue = Int32.Parse(value);
 
