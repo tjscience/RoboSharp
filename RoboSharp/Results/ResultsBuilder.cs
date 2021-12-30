@@ -173,7 +173,7 @@ namespace RoboSharp.Results
                 if (line.StartsWith("-----------------------"))
                     break;
 
-                if (line.Contains(":"))
+                if (line.Contains(":") && !line.Contains("\\"))
                     res.Add(line);
             }
 
