@@ -10,7 +10,7 @@ namespace RoboSharp.Results
         internal RoboCopyResults() { }
 
         #region < Properties >
-
+        
         /// <inheritdoc cref="CopyOptions.Source"/>
         public string Source { get; internal set; }
 
@@ -25,25 +25,26 @@ namespace RoboSharp.Results
 
         /// <summary> Information about number of Directories Copied, Skipped, Failed, etc.</summary>
         /// <remarks> 
-        /// If the job was cancelled, this will contain incomplete/inaccurate results, showing only total number of directories handled. <br/>
-        /// The 'Copied' stat may be inaccurate, as it assumes a directory was created if not running in List-Only mode. <br/>
-        /// Extras, Mismatch, Errors &amp; Failed are not tracked if job was cancelled.
+        /// If the job was cancelled, or run without a Job Summary, this will attempt to provide approximate results based on the Process.StandardOutput from Robocopy. <br/>
+        /// Results should only be treated as accurate if <see cref="Status"/>.ExitCodeValue >= 0 and the job was run with <see cref="LoggingOptions.NoJobSummary"/> = FALSE
         /// </remarks>
         public Statistic DirectoriesStatistic { get; internal set; }
 
         /// <summary> Information about number of Files Copied, Skipped, Failed, etc.</summary>
         /// <remarks> 
-        /// If the job was cancelled, this will contain incomplete / inaccurate results, showing only total number of files handled and how many hit 100% copy progress. <br/>
-        /// Extras, Mismatch, Errors, &amp; Failed are not tracked if job was cancelled, and the number of files may be inaccurate if a failure or error occurred.
+        /// If the job was cancelled, or run without a Job Summary, this will attempt to provide approximate results based on the Process.StandardOutput from Robocopy. <br/>
+        /// Results should only be treated as accurate if <see cref="Status"/>.ExitCodeValue >= 0 and the job was run with <see cref="LoggingOptions.NoJobSummary"/> = FALSE
         /// </remarks>
         public Statistic FilesStatistic { get; internal set; }
 
         /// <summary> Information about number of Bytes processed.</summary>
-        /// <remarks> If the job was cancelled, this be null.</remarks>
+        /// <remarks> 
+        /// If the job was cancelled, or run without a Job Summary, this will attempt to provide approximate results based on the Process.StandardOutput from Robocopy. <br/>
+        /// Results should only be treated as accurate if <see cref="Status"/>.ExitCodeValue >= 0 and the job was run with <see cref="LoggingOptions.NoJobSummary"/> = FALSE
+        /// </remarks>
         public Statistic BytesStatistic { get; internal set; }
 
         /// <inheritdoc cref="RoboSharp.Results.SpeedStatistic"/>
-        /// <remarks> If the job was cancelled, this be null.</remarks>
         public SpeedStatistic SpeedStatistic { get; internal set; }
 
         /// <summary> Output Text reported by RoboCopy </summary>

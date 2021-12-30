@@ -130,7 +130,7 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
-                if (data == "100%") resultsBuilder?.AddFileCopied();
+                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
             }
             else
@@ -141,20 +141,36 @@ namespace RoboSharp
 
                     if (splitData.Length == 2)
                     {
-                        resultsBuilder?.AddDir();
-                        if (!this.LoggingOptions.ListOnly) resultsBuilder?.AddDirCopied();
+                        // Regex to parse the string for FileCount, Path, and Type (Description)
+                        Regex DirRegex = new Regex("^(?<Type>\\*?[a-zA-Z]{0,10}\\s?[a-zA-Z]{0,3})\\s*(?<FileCount>[-]{0,1}[0-9]{1,100})\\t(?<Path>.+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+                        
                         var file = new ProcessedFileInfo();
-                        file.FileClass = "New Dir";
                         file.FileClassType = FileClassType.NewDir;
-                        long size;
-                        long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out size);
-                        file.Size = size;
-                        file.Name = splitData[1];
+
+                        if (DirRegex.IsMatch(data))
+                        {
+                            //New Method - Parsed using Regex
+                            GroupCollection MatchData = DirRegex.Match(data).Groups;
+                            file.FileClass = MatchData["Type"].Value.Trim();
+                            if (file.FileClass == "") file.FileClass = "Existing Dir";
+                            long.TryParse(MatchData["FileCount"].Value, out long size);
+                            file.Size = size;
+                            file.Name = MatchData["Path"].Value.Trim();
+                        }
+                        else
+                        {
+                            //Old Method -> Left Intact for other language compatibilty / unforseen cases
+                            file.FileClass = "New Dir";
+                            long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out long size);
+                            file.Size = size;
+                            file.Name = splitData[1];
+                        }
+                        
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
+                        resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
                     }
                     else if (splitData.Length == 3)
                     {
-                        resultsBuilder?.AddFile();
                         var file = new ProcessedFileInfo();
                         file.FileClass = splitData[0].Trim();
                         file.FileClassType = FileClassType.File;
@@ -163,6 +179,7 @@ namespace RoboSharp
                         file.Size = size;
                         file.Name = splitData[2];
                         OnFileProcessed(this, new FileProcessedEventArgs(file));
+                        resultsBuilder?.AddFile(file, !LoggingOptions.ListOnly);
                     }
                     else
                     {
@@ -184,6 +201,7 @@ namespace RoboSharp
                             {
                                 OnError(this, new ErrorEventArgs(data, parsedValue));
                             }
+
                         }
                         else
                         {
@@ -207,6 +225,7 @@ namespace RoboSharp
                 }
             }
         }
+    
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
@@ -421,9 +440,9 @@ namespace RoboSharp
         {
             if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
             {
-                process.Kill();
+                process?.Kill();
                 hasExited = true;
-                process.Dispose();
+                process?.Dispose();
                 process = null;
                 isCancelled = true;
             }
