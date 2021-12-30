@@ -10,8 +10,13 @@ namespace RoboSharp.Results
     /// </summary>
     internal class ResultsBuilder
     {
-         
+        private ResultsBuilder() { }
+
+        internal ResultsBuilder(RoboSharpConfiguration config) { Config = config; }
+
         private readonly List<string> outputLines = new List<string>();
+
+        private RoboSharpConfiguration Config { get; }
 
         #region < Command Options Properties >
 
@@ -60,9 +65,9 @@ namespace RoboSharp.Results
         {
             TotalDirs++;
             CurrentDir = currentDir;
-            if (currentDir.FileClass.Contains("Existing")) { /* No Action */ }
-            else if (currentDir.FileClass == "New Dir") { if (CopyOperation) TotalDirs_Copied++; }
-            else if (currentDir.FileClass.Contains("EXTRA")) TotalDirs_Extras++;
+            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { /* No Action */ }
+            else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) TotalDirs_Copied++; }
+            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) TotalDirs_Extras++;
             else
             {
                 
@@ -84,21 +89,21 @@ namespace RoboSharp.Results
             CopyOpStarted = false;
 
             // EXTRA FILES
-            if (currentFile.FileClass.ToLower().Contains("extra"))
+            if (currentFile.FileClass == Config.LogParsing_ExtraFile)
             {
                 TotalFiles_Extras++;
                 TotalBytes_Extra += CurrentFile.Size;
             }
 
             //MisMatch
-            else if (currentFile.FileClass.ToLower().Contains("mismatch"))
+            else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
             {
                 TotalFiles_Mismatch++;
                 TotalBytes_MisMatch += CurrentFile.Size;
             }
 
             //Failed Files
-            else if (currentFile.FileClass.ToLower().Contains("fail"))
+            else if (currentFile.FileClass == Config.LogParsing_FailedFile)
             {
                 TotalFiles_Failed++;
                 TotalBytes_Failed += currentFile.Size;
@@ -106,7 +111,7 @@ namespace RoboSharp.Results
 
 
             //Identical Files
-            else if (currentFile.FileClass == "same")
+            else if (currentFile.FileClass == Config.LogParsing_SameFile)
             {
                 TotalFiles_Skipped++; //File is the same -> It will be skipped
                 TotalBytes_Skipped += CurrentFile.Size;
@@ -117,9 +122,9 @@ namespace RoboSharp.Results
             else
             {
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass.ToLower() == "new file") { }
-                else if (currentFile.FileClass.ToLower().Contains("older")) { }
-                else if (currentFile.FileClass.ToLower().Contains("newer")) { }
+                if (currentFile.FileClass == Config.LogParsing_NewFile) { }
+                else if (currentFile.FileClass == Config.LogParsing_OlderFile) { }
+                else if (currentFile.FileClass == Config.LogParsing_NewerFile) { }
             }
         }
 

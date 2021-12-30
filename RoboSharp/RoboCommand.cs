@@ -151,7 +151,7 @@ namespace RoboSharp
                         //New Method - Parsed using Regex
                         GroupCollection MatchData = DirRegex.Match(data).Groups;
                         file.FileClass = MatchData["Type"].Value.Trim();
-                        if (file.FileClass == "") file.FileClass = "Existing Dir";
+                        if (file.FileClass == "") file.FileClass = configuration.LogParsing_ExistingDir;
                         long.TryParse(MatchData["FileCount"].Value, out long size);
                         file.Size = size;
                         file.Name = MatchData["Path"].Value.Trim();
@@ -271,7 +271,7 @@ namespace RoboSharp
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
-            resultsBuilder = new Results.ResultsBuilder();
+            resultsBuilder = new Results.ResultsBuilder(this.Configuration);
             results = null;
 
             #region Check Source and Destination
@@ -379,6 +379,7 @@ namespace RoboSharp
                 process.StartInfo.FileName = Configuration.RoboCopyExe;
                 resultsBuilder.Source = CopyOptions.Source;
                 resultsBuilder.Destination = CopyOptions.Destination;
+                this.loggingOptions.NoJobSummary = true;
                 resultsBuilder.CommandOptions = GenerateParameters();
                 process.StartInfo.Arguments = resultsBuilder.CommandOptions;
                 process.OutputDataReceived += process_OutputDataReceived;
