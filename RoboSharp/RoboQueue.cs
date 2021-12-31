@@ -454,7 +454,7 @@ namespace RoboSharp
             } , cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //After all commands have started, continue with waiting for all commands to complete.
-            Task WhenAll = StartAll.ContinueWith( (continuation) => Task.WaitAll(TaskList.ToArray()), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
+            Task WhenAll = StartAll.ContinueWith( (continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //Continuation Task return results to caller
             Task<RoboCopyResultsList> ContinueWithTask = WhenAll.ContinueWith((continuation) =>
