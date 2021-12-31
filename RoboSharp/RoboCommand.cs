@@ -16,7 +16,7 @@ namespace RoboSharp
     public class RoboCommand : IDisposable, IRoboCommand
     {
         #region < Constructors >
-	
+
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand() { Init(); }
 
@@ -44,9 +44,9 @@ namespace RoboSharp
             CopyOptions.Source = source;
             CopyOptions.Destination = destination;
         }
-	
-        #endregion 
-	
+
+        #endregion
+
         #region < Private Vars >
 
         private Process process;
@@ -68,7 +68,7 @@ namespace RoboSharp
         #endregion Private Vars
 
         #region < Public Vars >
-	
+
         /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
         public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
@@ -476,7 +476,7 @@ namespace RoboSharp
         {
             return results;
         }
-	
+
         /// <summary>
         /// Set the results to null - This is to prevent adding results from a previous run being added to the results list by RoboQueue
         /// </summary>
