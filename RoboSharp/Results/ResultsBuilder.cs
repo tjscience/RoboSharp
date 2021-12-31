@@ -35,17 +35,18 @@ namespace RoboSharp.Results
 
         //Counters used to generate statistics if job is cancelled 
 
-        private long TotalDirs { get; set; } = 0;
-        private long TotalDirs_Copied { get; set; } = 0;
-        private long TotalDirs_Skipped { get; set; } = 0;
-        private long TotalDirs_Extras { get; set; } = 0;
+        public long TotalDirs { get; private set; } = 0;
+        public long TotalDirs_Copied { get; private set; } = 0;
+        public long TotalDirs_Skipped { get; private set; } = 0;
+        public long TotalDirs_Extras { get; private set; } = 0;
+        public long TotalDirs_MisMatch { get; private set; } = 0;
 
-        private long TotalFiles { get; set; } = 0;
-        private long TotalFiles_Copied { get; set; } = 0;
-        private long TotalFiles_Skipped { get; set; } = 0;
-        private long TotalFiles_Extras { get; set; } = 0;
-        private long TotalFiles_Mismatch { get; set; } = 0;
-        private long TotalFiles_Failed { get; set; } = 0;
+        public long TotalFiles { get; private set; } = 0;
+        public long TotalFiles_Copied { get; private set; } = 0;
+        public long TotalFiles_Skipped { get; private set; } = 0;
+        public long TotalFiles_Extras { get; private set; } = 0;
+        public long TotalFiles_Mismatch { get; private set; } = 0;
+        public long TotalFiles_Failed { get; private set; } = 0;
 
         private long TotalBytes { get; set; } = 0;
         private long TotalBytes_Copied { get; set; } = 0;
@@ -158,12 +159,18 @@ namespace RoboSharp.Results
             outputLines.Add(output);
         }
 
-        internal RoboCopyResults BuildResults(int exitCode)
+        /// <summary>
+        /// Builds the results from parsing the logLines.
+        /// </summary>
+        /// <param name="exitCode"></param>
+        /// <param name="IsProgressUpdateEvent">This is used by the ProgressUpdateEventArgs to ignore the loglines when generating the estimate </param>
+        /// <returns></returns>
+        internal RoboCopyResults BuildResults(int exitCode, bool IsProgressUpdateEvent = false)
         {
             var res = new RoboCopyResults();
             res.Status = new RoboCopyExitStatus(exitCode);
 
-            var statisticLines = GetStatisticLines();
+            var statisticLines = IsProgressUpdateEvent ? new List<string>() : GetStatisticLines();
 
             //Dir Stats
             if (exitCode >= 0 && statisticLines.Count >= 1)
@@ -176,7 +183,7 @@ namespace RoboSharp.Results
                 res.FilesStatistic = Statistic.Parse(statisticLines[1]);
             else
             {
-                if (CopyOpStarted) TotalFiles_Failed++;
+                if (!IsProgressUpdateEvent && CopyOpStarted) TotalFiles_Failed++;
                 res.FilesStatistic = new Statistic() { Total = TotalFiles, Copied = TotalFiles_Copied, Failed = TotalFiles_Failed, Extras = TotalFiles_Extras, Skipped = TotalFiles_Skipped, Mismatch = TotalFiles_Mismatch };
             }
 
@@ -185,7 +192,7 @@ namespace RoboSharp.Results
                 res.BytesStatistic = Statistic.Parse(statisticLines[2]);
             else
             {
-                TotalBytes_Failed += CopyOpStarted ? ( CurrentFile?.Size ?? 0 ) : 0;
+                if (!IsProgressUpdateEvent) TotalBytes_Failed += CopyOpStarted ? ( CurrentFile?.Size ?? 0 ) : 0;
                 res.BytesStatistic = new Statistic() { Total = TotalBytes, Copied = TotalBytes_Copied, Failed = TotalBytes_Failed, Extras = TotalBytes_Extra, Skipped = TotalBytes_Skipped, Mismatch = TotalBytes_MisMatch };
             }
 
