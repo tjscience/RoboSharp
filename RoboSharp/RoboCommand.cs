@@ -144,10 +144,6 @@ namespace RoboSharp
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 
-        /// <summary>Handles <see cref="OnProgressUpdate"/></summary>
-        public delegate void ProgressUpdateHandler(RoboCommand sender, ProgressUpdateEventArgs e);
-        /// <summary>Provides preview of the results based on the LogLines currently reported by RoboCopy. <br/> Fires every time a new folder is selected and when a file finishes copying.</summary>
-        public event ProgressUpdateHandler OnProgressUpdate;
 
         #endregion
 
@@ -164,15 +160,7 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
-                if (data == "100%")
-                {
-                    resultsBuilder?.AddFileCopied();
-                    OnProgressUpdate?.Invoke(this, new ProgressUpdateEventArgs(resultsBuilder));
-                }
-                else
-                {
-                    resultsBuilder?.SetCopyOpStarted();
-                }
+                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture), resultsBuilder?.CurrentFile, resultsBuilder?.CurrentDir));
             }
             else
@@ -209,7 +197,6 @@ namespace RoboSharp
 
                     resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
-                    OnProgressUpdate?.Invoke(this, new ProgressUpdateEventArgs(resultsBuilder));
                 }
                 else if (splitData.Length == 3) // File
                 {

@@ -35,18 +35,17 @@ namespace RoboSharp.Results
 
         //Counters used to generate statistics if job is cancelled 
 
-        public long TotalDirs { get; private set; } = 0;
-        public long TotalDirs_Copied { get; private set; } = 0;
-        public long TotalDirs_Skipped { get; private set; } = 0;
-        public long TotalDirs_Extras { get; private set; } = 0;
-        public long TotalDirs_MisMatch { get; private set; } = 0;
+        private long TotalDirs { get; set; } = 0;
+        private long TotalDirs_Copied { get; set; } = 0;
+        private long TotalDirs_Skipped { get; set; } = 0;
+        private long TotalDirs_Extras { get; set; } = 0;
 
-        public long TotalFiles { get; private set; } = 0;
-        public long TotalFiles_Copied { get; private set; } = 0;
-        public long TotalFiles_Skipped { get; private set; } = 0;
-        public long TotalFiles_Extras { get; private set; } = 0;
-        public long TotalFiles_Mismatch { get; private set; } = 0;
-        public long TotalFiles_Failed { get; private set; } = 0;
+        private long TotalFiles { get; set; } = 0;
+        private long TotalFiles_Copied { get; set; } = 0;
+        private long TotalFiles_Skipped { get; set; } = 0;
+        private long TotalFiles_Extras { get; set; } = 0;
+        private long TotalFiles_Mismatch { get; set; } = 0;
+        private long TotalFiles_Failed { get; set; } = 0;
 
         private long TotalBytes { get; set; } = 0;
         private long TotalBytes_Copied { get; set; } = 0;
@@ -159,36 +158,30 @@ namespace RoboSharp.Results
             outputLines.Add(output);
         }
 
-        /// <summary>
-        /// Builds the results from parsing the logLines.
-        /// </summary>
-        /// <param name="exitCode"></param>
-        /// <param name="UseEstimateValues">This is used by the ProgressUpdateEventArgs to ignore the loglines when generating the estimate </param>
-        /// <returns></returns>
-        internal RoboCopyResults BuildResults(int exitCode, bool UseEstimateValues = false)
+        internal RoboCopyResults BuildResults(int exitCode)
         {
             var res = new RoboCopyResults();
             res.Status = new RoboCopyExitStatus(exitCode);
 
-            var statisticLines = UseEstimateValues ? GetStatisticLines() : null;
+            var statisticLines = GetStatisticLines();
 
             //Dir Stats
-            if (!UseEstimateValues && exitCode >= 0 && statisticLines.Count >= 1)
+            if (exitCode >= 0 && statisticLines.Count >= 1)
                 res.DirectoriesStatistic = Statistic.Parse(statisticLines[0]);
             else
                 res.DirectoriesStatistic = new Statistic() { Total = TotalDirs, Copied = TotalDirs_Copied, Extras = TotalDirs_Extras};
 
             //File Stats
-            if (!UseEstimateValues && exitCode >= 0 && statisticLines.Count >= 2)
+            if (exitCode >= 0 && statisticLines.Count >= 2)
                 res.FilesStatistic = Statistic.Parse(statisticLines[1]);
             else
             {
-                if (!UseEstimateValues && CopyOpStarted) TotalFiles_Failed++;
+                if (CopyOpStarted) TotalFiles_Failed++;
                 res.FilesStatistic = new Statistic() { Total = TotalFiles, Copied = TotalFiles_Copied, Failed = TotalFiles_Failed, Extras = TotalFiles_Extras, Skipped = TotalFiles_Skipped, Mismatch = TotalFiles_Mismatch };
             }
 
             //Bytes
-            if (!UseEstimateValues && exitCode >= 0 && statisticLines.Count >= 3)
+            if (exitCode >= 0 && statisticLines.Count >= 3)
                 res.BytesStatistic = Statistic.Parse(statisticLines[2]);
             else
             {
@@ -197,7 +190,7 @@ namespace RoboSharp.Results
             }
 
             //Speed Stats
-            if (!UseEstimateValues && exitCode >= 0 && statisticLines.Count >= 6)
+            if (exitCode >= 0 && statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
             else
                 res.SpeedStatistic = new SpeedStatistic();
