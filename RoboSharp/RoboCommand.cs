@@ -130,79 +130,94 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
+                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
             }
             else
             {
-                if (OnFileProcessed != null)
-                {
-                    var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-                    if (splitData.Length == 2)
+                var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (splitData.Length == 2) // Directory
+                {
+                    // Regex to parse the string for FileCount, Path, and Type (Description)
+                    Regex DirRegex = new Regex("^(?<Type>\\*?[a-zA-Z]{0,10}\\s?[a-zA-Z]{0,3})\\s*(?<FileCount>[-]{0,1}[0-9]{1,100})\\t(?<Path>.+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+                    var file = new ProcessedFileInfo();
+                    file.FileClassType = FileClassType.NewDir;
+
+                    if (DirRegex.IsMatch(data))
                     {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = "New Dir";
-                        file.FileClassType = FileClassType.NewDir;
-                        long size;
-                        long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out size);
+                        //New Method - Parsed using Regex
+                        GroupCollection MatchData = DirRegex.Match(data).Groups;
+                        file.FileClass = MatchData["Type"].Value.Trim();
+                        if (file.FileClass == "") file.FileClass = configuration.LogParsing_ExistingDir;
+                        long.TryParse(MatchData["FileCount"].Value, out long size);
                         file.Size = size;
-                        file.Name = splitData[1];
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
-                    }
-                    else if (splitData.Length == 3)
-                    {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = splitData[0].Trim();
-                        file.FileClassType = FileClassType.File;
-                        long size = 0;
-                        long.TryParse(splitData[1].Trim(), out size);
-                        file.Size = size;
-                        file.Name = splitData[2];
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
+                        file.Name = MatchData["Path"].Value.Trim();
                     }
                     else
                     {
-                        var regex = new Regex($" {Configuration.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+                        //Old Method -> Left Intact for other language compatibilty / unforseen cases
+                        file.FileClass = "New Dir";
+                        long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out long size);
+                        file.Size = size;
+                        file.Name = splitData[1];
+                    }
 
-                        if (OnError != null && regex.IsMatch(data))
-                        {
-                            // parse error code
-                            var match = regex.Match(data);
-                            string value = match.Groups[1].Value;
-                            int parsedValue = Int32.Parse(value);
+                    resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
+                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                }
+                else if (splitData.Length == 3) // File
+                {
+                    var file = new ProcessedFileInfo();
+                    file.FileClass = splitData[0].Trim();
+                    file.FileClassType = FileClassType.File;
+                    long size = 0;
+                    long.TryParse(splitData[1].Trim(), out size);
+                    file.Size = size;
+                    file.Name = splitData[2];
+                    resultsBuilder?.AddFile(file, !LoggingOptions.ListOnly);
+                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                }
+                else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
+                {
 
-                            var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
-                            if (errorCode.Key != null)
-                            {
-                                OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
-                            }
-                            else
-                            {
-                                OnError(this, new ErrorEventArgs(data, parsedValue));
-                            }
-                        }
-                        else
-                        {
-                            if (!data.StartsWith("----------"))
-                            {
-                                // Do not log errors that have already been logged
-                                var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
+                    // parse error code
+                    var match = Configuration.ErrorTokenRegex.Match(data);
+                    string value = match.Groups[1].Value;
+                    int parsedValue = Int32.Parse(value);
 
-                                if (errorCode.Key == null)
-                                {
-                                    var file = new ProcessedFileInfo();
-                                    file.FileClass = "System Message";
-                                    file.FileClassType = FileClassType.SystemMessage;
-                                    file.Size = 0;
-                                    file.Name = data;
-                                    OnFileProcessed(this, new FileProcessedEventArgs(file));
-                                }
-                            }
-                        }
+                    var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
+                    if (errorCode.Key != null)
+                    {
+                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
+                    }
+                    else
+                    {
+                        OnError(this, new ErrorEventArgs(data, parsedValue));
+                    }
+
+                }
+                else if (!data.StartsWith("----------")) // System Message
+                {
+                    // Do not log errors that have already been logged
+                    var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
+
+                    if (errorCode.Key == null)
+                    {
+                        var file = new ProcessedFileInfo();
+                        file.FileClass = "System Message";
+                        file.FileClassType = FileClassType.SystemMessage;
+                        file.Size = 0;
+                        file.Name = data;
+                        OnFileProcessed(this, new FileProcessedEventArgs(file));
                     }
                 }
             }
         }
+        
+    
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
@@ -256,7 +271,7 @@ namespace RoboSharp
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
-            resultsBuilder = new Results.ResultsBuilder();
+            resultsBuilder = new Results.ResultsBuilder(this.Configuration);
             results = null;
 
             #region Check Source and Destination
@@ -364,6 +379,7 @@ namespace RoboSharp
                 process.StartInfo.FileName = Configuration.RoboCopyExe;
                 resultsBuilder.Source = CopyOptions.Source;
                 resultsBuilder.Destination = CopyOptions.Destination;
+                this.loggingOptions.NoJobSummary = true;
                 resultsBuilder.CommandOptions = GenerateParameters();
                 process.StartInfo.Arguments = resultsBuilder.CommandOptions;
                 process.OutputDataReceived += process_OutputDataReceived;
@@ -417,9 +433,9 @@ namespace RoboSharp
         {
             if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
             {
-                process.Kill();
+                process?.Kill();
                 hasExited = true;
-                process.Dispose();
+                process?.Dispose();
                 process = null;
                 isCancelled = true;
             }

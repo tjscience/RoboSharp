@@ -33,7 +33,7 @@ namespace RoboSharp.Results
         /// <summary> Total Scanned during the run</summary>
         public long Total { 
             get => TotalField;
-            private set
+            internal set
             {
                 if (TotalField != value)
                 {
@@ -46,7 +46,7 @@ namespace RoboSharp.Results
         /// <summary> Total Copied </summary>
         public long Copied { 
             get => CopiedField;
-            private set
+            internal set
             {
                 if (CopiedField != value)
                 {
@@ -59,7 +59,7 @@ namespace RoboSharp.Results
         /// <summary> Total Skipped </summary>
         public long Skipped { 
             get => SkippedField;
-            private set
+            internal set
             {
                 if (SkippedField != value)
                 {
@@ -72,7 +72,7 @@ namespace RoboSharp.Results
         /// <summary>  </summary>
         public long Mismatch { 
             get => MismatchField;
-            private set
+            internal set
             {
                 if (MismatchField != value)
                 {
@@ -84,8 +84,8 @@ namespace RoboSharp.Results
 
         /// <summary> Total that failed to copy or move </summary>
         public long Failed { 
-            get => FailedField; 
-            private set
+            get => FailedField;
+            internal set
             {
                 if (FailedField != value)
                 {
@@ -98,7 +98,7 @@ namespace RoboSharp.Results
         /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
         public long Extras { 
             get => ExtrasField;
-            private set 
+            internal set
             {
                 if (ExtrasField != value)
                 {
