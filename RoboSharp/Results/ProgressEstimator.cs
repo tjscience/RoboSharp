@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -15,8 +16,8 @@ namespace RoboSharp.Results
         internal ProgressEstimator(RoboSharpConfiguration config)
         {
             Config = config;
-            DirStats = new Statistic(Statistic.StatType.Directory, "Directory Stats Estimate");
-            FileStats = new Statistic(Statistic.StatType.File, "File Stats Estimate");
+            DirStats = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
+            FileStats = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
             ByteStats = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
         }
 
@@ -24,6 +25,7 @@ namespace RoboSharp.Results
 
         private bool SkippingFile;
         private bool CopyOpStarted;
+        private List<Statistic> SubscribedStats;
         internal ProcessedFileInfo CurrentDir;
         internal ProcessedFileInfo CurrentFile;
 
@@ -203,6 +205,59 @@ namespace RoboSharp.Results
             return code;
 
         }
+
+        #region < Event Binding for Auto-Updates >
+
+        private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStats.AddStatistic((StatChangedEventArg)e);
+        private void BindFileStat(object o, PropertyChangedEventArgs e) => this.FileStats.AddStatistic((StatChangedEventArg)e);
+        private void BindByteStat(object o, PropertyChangedEventArgs e) => this.ByteStats.AddStatistic((StatChangedEventArg)e);
+
+        /// <summary>
+        /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
+        /// </summary>
+        internal void BindToProgressEstimator(ProgressEstimator estimator)
+        {
+            BindToStatistic(estimator.ByteStats);
+            BindToStatistic(estimator.DirStats);
+            BindToStatistic(estimator.FileStats);
+        }
+
+        /// <summary>
+        /// Subscribe to the update events of a <see cref="Statistic"/> object
+        /// </summary>
+        internal void BindToStatistic(Statistic StatObject)
+        {
+            //SubScribe
+            if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
+            else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
+            else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
+            
+            //Add to binding list
+            if (StatObject.Type != Statistic.StatType.Unknown)
+            {
+                if (SubscribedStats == null) SubscribedStats = new List<Statistic>();
+                SubscribedStats.Add(StatObject);
+            }
+        }
+
+        /// <summary>
+        /// Unsubscribe from all bound Statistic objects
+        /// </summary>
+        internal void UnBind()
+        {
+            if (SubscribedStats != null)
+            {
+                foreach (var c in SubscribedStats)
+                {
+                    c.PropertyChanged -= BindDirStat;
+                    c.PropertyChanged -= BindFileStat;
+                    c.PropertyChanged -= BindByteStat;
+                }
+                SubscribedStats.Clear();
+            }
+        }
+
+        #endregion
     }
 
 }
