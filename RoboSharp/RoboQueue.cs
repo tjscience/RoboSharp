@@ -263,7 +263,7 @@ namespace RoboSharp
 
         #endregion
 
-        #region < RoboCommand Events >
+        #region < Events >
 
         /// <inheritdoc cref="RoboCommand.OnFileProcessed"/>
         public event RoboCommand.FileProcessedHandler OnFileProcessed;
@@ -287,6 +287,24 @@ namespace RoboSharp
         /// This event will occur once per Start.
         /// </summary>
         public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
+
+        /// <summary>Handles <see cref="OnCommandStarted"/></summary>
+        public delegate void CommandStartedHandler(RoboQueue sender, CommandStartedEventArgs e);
+        /// <summary>
+        /// Occurs after a Command has started succesffully
+        /// </summary>
+        public event CommandStartedHandler OnCommandStarted;
+
+        /// <summary>
+        /// EventArgs to declare when a RoboCommand process starts
+        /// </summary>
+        public class CommandStartedEventArgs : EventArgs
+        {
+            private CommandStartedEventArgs():base() { }
+            internal CommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = System.DateTime.Now; }
+            RoboCommand Command { get; }
+            System.DateTime StartTime { get; }
+        }
 
         #endregion
 
@@ -459,9 +477,9 @@ namespace RoboSharp
                         }
                         OnPropertyChanged("JobsCurrentlyRunning");
                     });
-
                     TaskList.Add(T);                    //Add the continuation task to the list.
                     C.WaitUntil(TaskStatus.Running);    //Wait until the RoboCopy operation has begun
+                    if (C.Status < TaskStatus.RanToCompletion) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
                     OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                     //Check if more jobs are allowed to run
