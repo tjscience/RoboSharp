@@ -13,6 +13,9 @@ namespace RoboSharp.Results
     /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
     /// </summary>
+    /// <remarks>
+    /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
+    /// </remarks>
     public class Statistic : INotifyPropertyChanged
     {
         #region < Fields, Events, Properties >
@@ -24,11 +27,36 @@ namespace RoboSharp.Results
         private long FailedField;
         private long ExtrasField;
 
+        #region < Events >
+        
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
         private bool EnablePropertyChangeEvent = true;
 
         /// <summary>This event will fire when the value of the statistic is updated via Adding / Subtracting methods </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>Handles any statistic updates </summary>
+        public delegate void StatChangedHandler(Statistic sender, PropertyChangedEventArgs e);
+
+        /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
+        public event StatChangedHandler OnTotalChanged;
+
+        /// <summary> Occurs when the <see cref="Copied"/> Property is updated. </summary>
+        public event StatChangedHandler OnCopiedChanged;
+
+        /// <summary> Occurs when the <see cref="Skipped"/> Property is updated. </summary>
+        public event StatChangedHandler OnSkippedChanged;
+
+        /// <summary> Occurs when the <see cref="Mismatch"/> Property is updated. </summary>
+        public event StatChangedHandler OnMisMatchChanged;
+
+        /// <summary> Occurs when the <see cref="Failed"/> Property is updated. </summary>
+        public event StatChangedHandler OnFailedChanged;
+
+        /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
+        public event StatChangedHandler OnExtrasChanged;
+
+        #endregion
 
         /// <summary> Total Scanned during the run</summary>
         public long Total { 
@@ -37,8 +65,14 @@ namespace RoboSharp.Results
             {
                 if (TotalField != value)
                 {
+                    long oldVal = TotalField;
                     TotalField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Total"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Total");
+                        PropertyChanged?.Invoke(this, e);
+                        OnTotalChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -50,8 +84,14 @@ namespace RoboSharp.Results
             {
                 if (CopiedField != value)
                 {
+                    long oldVal = CopiedField;
                     CopiedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Copied"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Copied");
+                        PropertyChanged?.Invoke(this, e);
+                        OnCopiedChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -63,8 +103,14 @@ namespace RoboSharp.Results
             {
                 if (SkippedField != value)
                 {
+                    long oldVal = SkippedField;
                     SkippedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Skipped"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Skipped");
+                        PropertyChanged?.Invoke(this, e);
+                        OnSkippedChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -76,8 +122,14 @@ namespace RoboSharp.Results
             {
                 if (MismatchField != value)
                 {
+                    long oldVal = MismatchField;
                     MismatchField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Mismatch"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Mismatch");
+                        PropertyChanged?.Invoke(this, e);
+                        OnMisMatchChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -89,8 +141,14 @@ namespace RoboSharp.Results
             {
                 if (FailedField != value)
                 {
+                    long oldVal = FailedField;
                     FailedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Failed"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Failed");
+                        PropertyChanged?.Invoke(this, e);
+                        OnFailedChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -102,8 +160,14 @@ namespace RoboSharp.Results
             {
                 if (ExtrasField != value)
                 {
+                    long oldVal = ExtrasField;
                     ExtrasField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Extras"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        var e = new StatChangedEventArg(oldVal, value, "Extras");
+                        PropertyChanged?.Invoke(this, e);
+                        OnExtrasChanged?.Invoke(this, e);
+                    }
                 }
             }
         }
@@ -378,4 +442,23 @@ namespace RoboSharp.Results
 
         #endregion Subtract
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class StatChangedEventArg : PropertyChangedEventArgs
+    {
+        private StatChangedEventArg():base("") { }
+        internal StatChangedEventArg(long oldValue, long newValue, string PropertyName) : base(PropertyName)
+        {
+            OldValue = oldValue;
+            NewValue = newValue;
+        }
+        /// <summary> </summary>
+        public long OldValue { get; }
+        /// <summary> </summary>
+        public long NewValue { get; }
+    }
+
+
 }
