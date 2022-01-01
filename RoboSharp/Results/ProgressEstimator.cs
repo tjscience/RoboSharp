@@ -6,7 +6,7 @@ using System.Text;
 namespace RoboSharp.Results
 {
     /// <summary>
-    /// Object that provides <see cref="Statistic"/> objects that can be bound to report estimated RoboCommand progress periodically.
+    /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
     public class ProgressEstimator
     {
@@ -174,6 +174,34 @@ namespace RoboSharp.Results
                 FilesStatistic = FileStats,
                 SpeedStatistic = new SpeedStatistic(),
             };
+        }
+
+        /// <summary>
+        /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
+        /// </summary>
+        /// <returns></returns>
+        public RoboCopyExitCodes GetExitCode()
+        {
+            Results.RoboCopyExitCodes code = 0;
+
+            //Files Copied
+            if (FileStats.Copied > 0)
+                code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
+
+            //Extra
+            if (DirStats.Extras > 0 | FileStats.Extras > 0)
+                code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
+
+            //MisMatch
+            if (DirStats.Mismatch > 0 | FileStats.Mismatch > 0)
+                code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
+
+            //Failed
+            if (DirStats.Failed > 0 | FileStats.Failed > 0)
+                code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
+
+            return code;
+
         }
     }
 

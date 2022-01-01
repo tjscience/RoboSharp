@@ -73,6 +73,11 @@ namespace RoboSharp
         {
             get { return configuration; }
         }
+        /// <inheritdoc cref="Results.ProgressEstimator"/>
+        /// <remarks>
+        /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
+        /// </remarks>
+        public Results.ProgressEstimator ProgressEstimator { get; private set; }
 
         /// <summary>
         /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called. <br/>
@@ -109,15 +114,15 @@ namespace RoboSharp
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 
-        #endregion
-                
-        /// <summary>Handles <see cref="OnProgressUpdate"/></summary>
-        public delegate void ProgressUpdateHandler(RoboCommand sender, ProgressUpdateEventArgs e);
+        /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
+        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e);
         /// <summary>
-        /// Provides preview of the results based on the LogLines currently reported by RoboCopy. <br/> 
-        /// This event raises every time a new folder is selected and when a file finishes copying.
+        /// Occurs when a <see cref="Results.ProgressEstimator"/> is created during <see cref="Start"/>, allowing binding to occur within the event subscriber. <br/>
+        /// This event will occur once per Start.
         /// </summary>
-        public event ProgressUpdateHandler OnProgressUpdate;
+        public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
+
+        #endregion
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
@@ -133,15 +138,7 @@ namespace RoboSharp
             {
                 // copy progress data
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
-                if (data == "100%")
-                {
-                    resultsBuilder?.AddFileCopied();
-                    OnProgressUpdate?.Invoke(this, new ProgressUpdateEventArgs(resultsBuilder));
-                }
-                else
-                {
-                    resultsBuilder?.SetCopyOpStarted();
-                }
+                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
             }
             else
             {
@@ -177,7 +174,6 @@ namespace RoboSharp
 
                     resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
                     OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
-                    OnProgressUpdate?.Invoke(this, new ProgressUpdateEventArgs(resultsBuilder));
                 }
                 else if (splitData.Length == 3) // File
                 {
@@ -354,6 +350,11 @@ namespace RoboSharp
             backupTask = Task.Factory.StartNew(() =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
+                ProgressEstimator = resultsBuilder.Estimator;
+                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator)); 
+                
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
