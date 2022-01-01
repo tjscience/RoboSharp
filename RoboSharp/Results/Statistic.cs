@@ -18,7 +18,31 @@ namespace RoboSharp.Results
     /// </remarks>
     public class Statistic : INotifyPropertyChanged
     {
+        
+        /// <summary> Create a new Statistic object of <see cref="StatType.Unknown"/> </summary>
+        public Statistic() { Type = StatType.Unknown; }
+
+        /// <summary> Create a new Statistic object </summary>
+        public Statistic(StatType type) { Type = type; }
+
+        /// <summary> Create a new Statistic object </summary>
+        public Statistic(StatType type, string name) { Type = type; Name = name; }
+
+
         #region < Fields, Events, Properties >
+
+        /// <summary> Describe the Type of Statistics Object </summary>
+        public enum StatType
+        {
+            /// <summary> </summary>
+            Directory,
+            /// <summary> </summary>
+            File,
+            /// <summary> </summary>
+            Bytes,
+            /// <summary> </summary>
+            Unknown
+        }
 
         private long TotalField;
         private long CopiedField;
@@ -58,6 +82,16 @@ namespace RoboSharp.Results
 
         #endregion
 
+        /// <summary>
+        /// Name of the Statistics Object
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Name of the Statistics Object
+        /// </summary>
+        public StatType Type { get; }
+
         /// <summary> Total Scanned during the run</summary>
         public long Total { 
             get => TotalField;
@@ -69,7 +103,7 @@ namespace RoboSharp.Results
                     TotalField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Total");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Total");
                         PropertyChanged?.Invoke(this, e);
                         OnTotalChanged?.Invoke(this, e);
                     }
@@ -88,7 +122,7 @@ namespace RoboSharp.Results
                     CopiedField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Copied");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Copied");
                         PropertyChanged?.Invoke(this, e);
                         OnCopiedChanged?.Invoke(this, e);
                     }
@@ -107,7 +141,7 @@ namespace RoboSharp.Results
                     SkippedField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Skipped");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Skipped");
                         PropertyChanged?.Invoke(this, e);
                         OnSkippedChanged?.Invoke(this, e);
                     }
@@ -126,7 +160,7 @@ namespace RoboSharp.Results
                     MismatchField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Mismatch");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Mismatch");
                         PropertyChanged?.Invoke(this, e);
                         OnMisMatchChanged?.Invoke(this, e);
                     }
@@ -145,7 +179,7 @@ namespace RoboSharp.Results
                     FailedField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Failed");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Failed");
                         PropertyChanged?.Invoke(this, e);
                         OnFailedChanged?.Invoke(this, e);
                     }
@@ -164,7 +198,7 @@ namespace RoboSharp.Results
                     ExtrasField = value;
                     if (EnablePropertyChangeEvent)
                     {
-                        var e = new StatChangedEventArg(oldVal, value, "Extras");
+                        var e = new StatChangedEventArg(this, oldVal, value, "Extras");
                         PropertyChanged?.Invoke(this, e);
                         OnExtrasChanged?.Invoke(this, e);
                     }
@@ -189,9 +223,9 @@ namespace RoboSharp.Results
         /// </summary>
         /// <param name="line"></param>
         /// <returns>New Statistic Object</returns>
-        public static Statistic Parse(string line)
+        public static Statistic Parse(StatType type, string line)
         {
-            var res = new Statistic();
+            var res = new Statistic(type);
 
             var tokenNames = new[] { nameof(Total), nameof(Copied), nameof(Skipped), nameof(Mismatch), nameof(Failed), nameof(Extras) };
             var patternBuilder = new StringBuilder(@"^.*:");
@@ -351,7 +385,14 @@ namespace RoboSharp.Results
         /// <returns>New Statistics Object</returns>
         public static Statistic AddStatistics(IEnumerable<Statistic> stats)
         {
-            Statistic ret = new Statistic();
+
+            Statistic ret;
+            if ((stats?.Count() ?? 0 ) == 0) ret = new Statistic(StatType.Unknown);
+            else if (stats.All((c) => c.Type == StatType.Directory)) ret = new Statistic(StatType.Directory);
+            else if (stats.All((c) => c.Type == StatType.File)) ret = new Statistic(StatType.File);
+            else if (stats.All((c) => c.Type == StatType.Bytes)) ret = new Statistic(StatType.Bytes);
+            else ret = new Statistic(StatType.Unknown);
+
             ret.AddStatistic(stats);
             return ret;
         }
@@ -449,15 +490,27 @@ namespace RoboSharp.Results
     public class StatChangedEventArg : PropertyChangedEventArgs
     {
         private StatChangedEventArg():base("") { }
-        internal StatChangedEventArg(long oldValue, long newValue, string PropertyName) : base(PropertyName)
+        internal StatChangedEventArg(Statistic stat, long oldValue, long newValue, string PropertyName) : base(PropertyName)
         {
+            StatType = stat.Type;
             OldValue = oldValue;
             NewValue = newValue;
         }
+
+
+        /// <summary> </summary>
+        public Statistic.StatType StatType { get; }
+
         /// <summary> </summary>
         public long OldValue { get; }
+        
         /// <summary> </summary>
         public long NewValue { get; }
+
+        /// <summary>
+        /// Result of NewValue - OldValue
+        /// </summary>
+        public long Difference => NewValue - OldValue;
     }
 
 

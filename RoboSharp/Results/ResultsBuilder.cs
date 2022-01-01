@@ -83,15 +83,15 @@ namespace RoboSharp.Results
 
             //Dir Stats
             if (exitCode >= 0 && statisticLines.Count >= 1)
-                res.DirectoriesStatistic = Statistic.Parse(statisticLines[0]);
+                res.DirectoriesStatistic = Statistic.Parse(Statistic.StatType.Directory, statisticLines[0]);
 
             //File Stats
             if (exitCode >= 0 && statisticLines.Count >= 2)
-                res.FilesStatistic = Statistic.Parse(statisticLines[1]);
+                res.FilesStatistic = Statistic.Parse(Statistic.StatType.File, statisticLines[1]);
 
             //Bytes
             if (exitCode >= 0 && statisticLines.Count >= 3)
-                res.BytesStatistic = Statistic.Parse(statisticLines[2]);
+                res.BytesStatistic = Statistic.Parse(Statistic.StatType.Bytes, statisticLines[2]);
 
             //Speed Stats
             if (exitCode >= 0 && statisticLines.Count >= 6)

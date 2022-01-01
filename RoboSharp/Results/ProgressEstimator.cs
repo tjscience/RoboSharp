@@ -15,17 +15,17 @@ namespace RoboSharp.Results
         internal ProgressEstimator(RoboSharpConfiguration config)
         {
             Config = config;
-            DirStats = new Statistic();
-            FileStats = new Statistic();
-            ByteStats = new Statistic();
+            DirStats = new Statistic(Statistic.StatType.Directory, "Directory Stats Estimate");
+            FileStats = new Statistic(Statistic.StatType.File, "File Stats Estimate");
+            ByteStats = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
         }
 
         #region < Private Members >
 
         private bool SkippingFile;
         private bool CopyOpStarted;
-        private ProcessedFileInfo CurrentDir;
-        private ProcessedFileInfo CurrentFile;
+        internal ProcessedFileInfo CurrentDir;
+        internal ProcessedFileInfo CurrentFile;
 
         #endregion
 
