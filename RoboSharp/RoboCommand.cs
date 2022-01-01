@@ -110,10 +110,7 @@ namespace RoboSharp
         public event CopyProgressHandler OnCopyProgressChanged;
 
         #endregion
-
-        /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand()
-        {
+                
         /// <summary>Handles <see cref="OnProgressUpdate"/></summary>
         public delegate void ProgressUpdateHandler(RoboCommand sender, ProgressUpdateEventArgs e);
         /// <summary>
@@ -121,8 +118,6 @@ namespace RoboSharp
         /// This event raises every time a new folder is selected and when a file finishes copying.
         /// </summary>
         public event ProgressUpdateHandler OnProgressUpdate;
-
-        }
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {

@@ -16,19 +16,19 @@ namespace RoboSharp
             Results.RoboCopyExitCodes code = 0;
             
             //Files Copied
-            if (resultsBuilder.TotalFiles_Copied > 0) 
+            if (resultsBuilder.Estimator.FileStats.Copied > 0) 
                 code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
             
             //Extra
-            if (resultsBuilder.TotalDirs_Extras > 0 | resultsBuilder.TotalFiles_Extras > 0) 
+            if (resultsBuilder.Estimator.DirStats.Extras > 0 | resultsBuilder.Estimator.FileStats.Extras > 0) 
                 code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
             
             //MisMatch
-            if (resultsBuilder.TotalDirs_MisMatch > 0 | resultsBuilder.TotalFiles_Mismatch > 0) 
+            if (resultsBuilder.Estimator.DirStats.Mismatch > 0 | resultsBuilder.Estimator.FileStats.Mismatch > 0) 
                 code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
             
             //Failed
-            if (resultsBuilder.TotalFiles_Failed > 0) 
+            if (resultsBuilder.Estimator.DirStats.Failed > 0 | resultsBuilder.Estimator.FileStats.Failed > 0) 
                 code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
             
             //Build Results Object

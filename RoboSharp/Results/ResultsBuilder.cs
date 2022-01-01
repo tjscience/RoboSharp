@@ -12,11 +12,15 @@ namespace RoboSharp.Results
     {
         private ResultsBuilder() { }
 
-        internal ResultsBuilder(RoboSharpConfiguration config) { Config = config; }
+        internal ResultsBuilder(RoboSharpConfiguration config) { 
+            Estimator = new ProgressEstimator(config);
+        }
+
+        #region < Private Members >
 
         private readonly List<string> outputLines = new List<string>();
 
-        private RoboSharpConfiguration Config { get; }
+        #endregion
 
         #region < Command Options Properties >
 
@@ -33,121 +37,26 @@ namespace RoboSharp.Results
 
         #region < Counters in case cancellation >
 
-        //Counters used to generate statistics if job is cancelled 
+        /// <inheritdoc cref="ProgressEstimator"/>
+        internal ProgressEstimator Estimator { get; }
 
-        public long TotalDirs { get; private set; } = 0;
-        public long TotalDirs_Copied { get; private set; } = 0;
-        public long TotalDirs_Skipped { get; private set; } = 0;
-        public long TotalDirs_Extras { get; private set; } = 0;
-        public long TotalDirs_MisMatch { get; private set; } = 0;
+        /// <inheritdoc cref="ProgressEstimator.AddDir(ProcessedFileInfo, bool)"/>
+        internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation) => Estimator.AddDir(currentDir, CopyOperation);
 
-        public long TotalFiles { get; private set; } = 0;
-        public long TotalFiles_Copied { get; private set; } = 0;
-        public long TotalFiles_Skipped { get; private set; } = 0;
-        public long TotalFiles_Extras { get; private set; } = 0;
-        public long TotalFiles_Mismatch { get; private set; } = 0;
-        public long TotalFiles_Failed { get; private set; } = 0;
+        /// <inheritdoc cref="ProgressEstimator.AddFile(ProcessedFileInfo, bool)"/>
+        internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation) => Estimator.AddFile(currentFile, CopyOperation);
 
-        private long TotalBytes { get; set; } = 0;
-        private long TotalBytes_Copied { get; set; } = 0;
-        private long TotalBytes_Failed { get; set; } = 0;
-        private long TotalBytes_Skipped { get; set; } = 0;
-        private long TotalBytes_Extra { get; set; } = 0;
-        private long TotalBytes_MisMatch { get; set; } = 0;
+        /// <inheritdoc cref="ProgressEstimator.AddFileCopied"/>
+        internal void AddFileCopied() => Estimator.AddFileCopied();
 
-        private bool SkippingFile;
-        private bool CopyOpStarted;
-        private ProcessedFileInfo CurrentDir;
-        private ProcessedFileInfo CurrentFile;
-
-        // Methods to add to internal counters -> created as methods to allow inline null check since results?.TotalDirs++; won't compile
-        /// <summary>Increment <see cref="TotalDirs"/></summary>
-        internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
-        {
-            TotalDirs++;
-            CurrentDir = currentDir;
-            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { /* No Action */ }
-            else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) TotalDirs_Copied++; }
-            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) TotalDirs_Extras++;
-            else
-            {
-                
-            }
-        }
-
-        /// <summary>Increment <see cref="TotalFiles"/></summary>
-        internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
-        {
-            TotalFiles++;
-            if (SkippingFile)
-            {
-                TotalFiles_Skipped++;
-                TotalBytes_Skipped += CurrentFile?.Size ?? 0;
-            }
-            CurrentFile = currentFile;
-            TotalBytes += currentFile.Size;
-            SkippingFile = false;
-            CopyOpStarted = false;
-
-            // EXTRA FILES
-            if (currentFile.FileClass == Config.LogParsing_ExtraFile)
-            {
-                TotalFiles_Extras++;
-                TotalBytes_Extra += CurrentFile.Size;
-            }
-
-            //MisMatch
-            else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
-            {
-                TotalFiles_Mismatch++;
-                TotalBytes_MisMatch += CurrentFile.Size;
-            }
-
-            //Failed Files
-            else if (currentFile.FileClass == Config.LogParsing_FailedFile)
-            {
-                TotalFiles_Failed++;
-                TotalBytes_Failed += currentFile.Size;
-            }
-
-
-            //Identical Files
-            else if (currentFile.FileClass == Config.LogParsing_SameFile)
-            {
-                TotalFiles_Skipped++; //File is the same -> It will be skipped
-                TotalBytes_Skipped += CurrentFile.Size;
-                CurrentFile = null;
-            }
-
-            //Files to be Copied/Skipped
-            else
-            {
-                SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass == Config.LogParsing_NewFile) { }
-                else if (currentFile.FileClass == Config.LogParsing_OlderFile) { }
-                else if (currentFile.FileClass == Config.LogParsing_NewerFile) { }
-            }
-        }
-
-        /// <summary>Catch start copy progress of large files</summary>
-        internal void SetCopyOpStarted()
-        {
-            SkippingFile = false;
-            CopyOpStarted = true;
-        }
-
-        /// <summary>Increment <see cref="TotalFiles_Copied"/></summary>
-        internal void AddFileCopied()
-        {
-            SkippingFile = false;
-            CopyOpStarted = false;
-            TotalFiles_Copied++;
-            TotalBytes_Copied += CurrentFile?.Size ?? 0;
-            CurrentFile = null;
-        }
+        /// <inheritdoc cref="ProgressEstimator.SetCopyOpStarted"/>
+        internal void SetCopyOpStarted() => Estimator.SetCopyOpStarted();
 
         #endregion
 
+        /// <summary>
+        /// Add a LogLine reported by RoboCopy to the LogLines list.
+        /// </summary>
         internal void AddOutput(string output)
         {
             if (output == null)
@@ -167,7 +76,7 @@ namespace RoboSharp.Results
         /// <returns></returns>
         internal RoboCopyResults BuildResults(int exitCode, bool IsProgressUpdateEvent = false)
         {
-            var res = new RoboCopyResults();
+            var res = Estimator.GetResults(); //Start off with the estimated results, and replace if able
             res.Status = new RoboCopyExitStatus(exitCode);
 
             var statisticLines = IsProgressUpdateEvent ? new List<string>() : GetStatisticLines();
@@ -175,32 +84,18 @@ namespace RoboSharp.Results
             //Dir Stats
             if (exitCode >= 0 && statisticLines.Count >= 1)
                 res.DirectoriesStatistic = Statistic.Parse(statisticLines[0]);
-            else
-                res.DirectoriesStatistic = new Statistic() { Total = TotalDirs, Copied = TotalDirs_Copied, Extras = TotalDirs_Extras};
 
             //File Stats
             if (exitCode >= 0 && statisticLines.Count >= 2)
                 res.FilesStatistic = Statistic.Parse(statisticLines[1]);
-            else
-            {
-                if (!IsProgressUpdateEvent && CopyOpStarted) TotalFiles_Failed++;
-                res.FilesStatistic = new Statistic() { Total = TotalFiles, Copied = TotalFiles_Copied, Failed = TotalFiles_Failed, Extras = TotalFiles_Extras, Skipped = TotalFiles_Skipped, Mismatch = TotalFiles_Mismatch };
-            }
 
             //Bytes
             if (exitCode >= 0 && statisticLines.Count >= 3)
                 res.BytesStatistic = Statistic.Parse(statisticLines[2]);
-            else
-            {
-                if (!IsProgressUpdateEvent) TotalBytes_Failed += CopyOpStarted ? ( CurrentFile?.Size ?? 0 ) : 0;
-                res.BytesStatistic = new Statistic() { Total = TotalBytes, Copied = TotalBytes_Copied, Failed = TotalBytes_Failed, Extras = TotalBytes_Extra, Skipped = TotalBytes_Skipped, Mismatch = TotalBytes_MisMatch };
-            }
 
             //Speed Stats
             if (exitCode >= 0 && statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
-            else
-                res.SpeedStatistic = new SpeedStatistic();
 
             res.LogLines = outputLines.ToArray();
             res.Source = this.Source;
