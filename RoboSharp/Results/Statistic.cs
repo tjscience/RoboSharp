@@ -458,13 +458,13 @@ namespace RoboSharp.Results
                 switch (e.PropertyName)
                 {
                     case "Copied":
-                        this.Copied+= e.Difference;
+                        this.Copied += e.Difference;
                         break;
                     case "Extras":
-                        this.Extras+= e.Difference;
+                        this.Extras += e.Difference;
                         break;
                     case "Failed":
-                        this.Failed+= e.Difference;
+                        this.Failed += e.Difference;
                         break;
                     case "Mismatch":
                         this.Mismatch += e.Difference;
