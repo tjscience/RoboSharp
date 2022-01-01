@@ -302,8 +302,16 @@ namespace RoboSharp
         {
             private CommandStartedEventArgs():base() { }
             internal CommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = System.DateTime.Now; }
-            RoboCommand Command { get; }
-            System.DateTime StartTime { get; }
+            
+            /// <summary>
+            /// Command that started
+            /// </summary>
+            public RoboCommand Command { get; }
+            
+            /// <summary>
+            /// Local time the command started.
+            /// </summary>
+            public System.DateTime StartTime { get; }
         }
 
         #endregion
