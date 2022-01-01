@@ -94,7 +94,7 @@ namespace RoboSharp
         #endregion
 
         #region < Properties >
-
+        
         /// <summary>
         /// Name of this collection of RoboCommands
         /// </summary>
@@ -112,6 +112,11 @@ namespace RoboSharp
         /// Wraps the private <see cref="ObservableList{T}"/> into a ReadOnlyCollection for public consumption and data binding.
         /// </summary>
         public ReadOnlyCollection<RoboCommand> Commands { get; }
+
+        /// <summary>
+        /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
+        /// </summary>
+        public ProgressEstimator ProgressEstimator { get; private set; }
 
         /// <summary> 
         /// Indicates if a task is currently running or paused. <br/>
@@ -275,6 +280,14 @@ namespace RoboSharp
         /// <inheritdoc cref="RoboCommand.OnCopyProgressChanged"/>
         public event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
 
+        /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
+        public delegate void ProgressUpdaterCreatedHandler(RoboQueue sender, ProgressEstimatorCreatedEventArgs e);
+        /// <summary>
+        /// Occurs when a <see cref="Results.ProgressEstimator"/> is created when starting a new task, allowing binding to occur within the event subscriber. <br/>
+        /// This event will occur once per Start.
+        /// </summary>
+        public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
+
         #endregion
 
         #region < Methods >
@@ -412,7 +425,10 @@ namespace RoboSharp
                 //Reset results of all commands in the list
                 foreach (RoboCommand cmd in CommandList)
                     cmd.ResetResults();
-                
+
+                ProgressEstimator = new ProgressEstimator(null);
+                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(ProgressEstimator));
+
                 //Start all commands, running as many as allowed
                 foreach (RoboCommand cmd in CommandList)
                 {
@@ -424,6 +440,7 @@ namespace RoboSharp
                     cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                     cmd.OnError += this.OnError;
                     cmd.OnFileProcessed += this.OnFileProcessed;
+                    cmd.OnProgressEstimatorCreated += Cmd_OnProgressEstimatorCreated;
 
                     //Start the job
                     //Once the job ends, unsubscribe events
@@ -459,6 +476,7 @@ namespace RoboSharp
             //Continuation Task return results to caller
             Task<RoboCopyResultsList> ContinueWithTask = WhenAll.ContinueWith((continuation) =>
             {
+                ProgressEstimator?.UnBind();
                 if (cancellationToken.IsCancellationRequested)
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
@@ -479,6 +497,12 @@ namespace RoboSharp
             return ContinueWithTask;
         }
 
+        private void Cmd_OnProgressEstimatorCreated(RoboCommand sender, ProgressEstimatorCreatedEventArgs e)
+        {
+            ProgressEstimator?.BindToProgressEstimator(e.ResultsEstimate);
+            sender.OnProgressEstimatorCreated -= Cmd_OnProgressEstimatorCreated;
+        }
+
         #endregion
 
         #region < IDisposable Implementation >
@@ -494,6 +518,7 @@ namespace RoboSharp
                     // TODO: dispose managed state (managed objects)
                     ListOnlyResults.Dispose();
                     RunOperationResults.Dispose();
+                    ProgressEstimator?.UnBind();
                 }
 
                 //RoboCommand objects attach to a process, so must be in the 'unmanaged' section.

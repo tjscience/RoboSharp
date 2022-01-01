@@ -42,6 +42,7 @@ namespace RoboSharp.BackupApp
             RoboQueue.OnError += copy_OnError;
             RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
             RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
+            RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -142,11 +143,14 @@ namespace RoboSharp.BackupApp
             copy.Start();
         }
 
-        private void Copy_OnProgressEstimatorCreated(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e)
+        /// <summary>
+        /// Bind the ProgressEstimator to the text controls on the PROGRESS tab
+        /// </summary>
+        private void Copy_OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e)
         {
-            copy.ProgressEstimator.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
-            copy.ProgressEstimator.DirStats.PropertyChanged += DirStats_PropertyChanged;
-            copy.ProgressEstimator.FileStats.PropertyChanged += FileStats_PropertyChanged;
+            e.ResultsEstimate.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
+            e.ResultsEstimate.DirStats.PropertyChanged += DirStats_PropertyChanged;
+            e.ResultsEstimate.FileStats.PropertyChanged += FileStats_PropertyChanged;
         }
 
         private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
