@@ -13,9 +13,36 @@ namespace RoboSharp.Results
     /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
     /// </summary>
+    /// <remarks>
+    /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
+    /// </remarks>
     public class Statistic : INotifyPropertyChanged
     {
-        #region < Fields, Events, Properties >
+        
+        /// <summary> Create a new Statistic object of <see cref="StatType.Unknown"/> </summary>
+        public Statistic() { Type = StatType.Unknown; }
+
+        /// <summary> Create a new Statistic object </summary>
+        public Statistic(StatType type) { Type = type; }
+
+        /// <summary> Create a new Statistic object </summary>
+        public Statistic(StatType type, string name) { Type = type; Name = name; }
+
+
+        #region < Fields >
+
+        /// <summary> Describe the Type of Statistics Object </summary>
+        public enum StatType
+        {
+            /// <summary> Statistics object represents count of Directories </summary>
+            Directories,
+            /// <summary> Statistics object represents count of Files </summary>
+            Files,
+            /// <summary> Statistics object represents a Size ( number of bytes )</summary>
+            Bytes,
+            /// <summary> Unknown Type - Not specified during construction or Multiple types were combined to generate the result </summary>
+            Unknown
+        }
 
         private long TotalField;
         private long CopiedField;
@@ -24,11 +51,59 @@ namespace RoboSharp.Results
         private long FailedField;
         private long ExtrasField;
 
+        #endregion
+
+        #region < Events >
+
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
         private bool EnablePropertyChangeEvent = true;
 
-        /// <summary>This event will fire when the value of the statistic is updated via Adding / Subtracting methods </summary>
+        /// <summary>
+        /// This event will fire when the value of the statistic is updated via Adding / Subtracting methods. <br/>
+        /// Provides <see cref="StatChangedEventArg"/> object.
+        /// </summary>
+        /// <remarks>
+        /// Allows use with both binding to controls and <see cref="ProgressEstimator"/> binding. <br/>
+        /// EventArgs can be passed into <see cref="AddStatistic(StatChangedEventArg)"/> after casting.
+        /// </remarks>
         public event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary>Handles any statistic updates </summary>
+        public delegate void StatChangedHandler(Statistic sender, PropertyChangedEventArgs e);
+
+        /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
+        public event StatChangedHandler OnTotalChanged;
+
+        /// <summary> Occurs when the <see cref="Copied"/> Property is updated. </summary>
+        public event StatChangedHandler OnCopiedChanged;
+
+        /// <summary> Occurs when the <see cref="Skipped"/> Property is updated. </summary>
+        public event StatChangedHandler OnSkippedChanged;
+
+        /// <summary> Occurs when the <see cref="Mismatch"/> Property is updated. </summary>
+        public event StatChangedHandler OnMisMatchChanged;
+
+        /// <summary> Occurs when the <see cref="Failed"/> Property is updated. </summary>
+        public event StatChangedHandler OnFailedChanged;
+
+        /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
+        public event StatChangedHandler OnExtrasChanged;
+
+        private Lazy<StatChangedEventArg> PrepEventArgs(long OldValue, long NewValue, string PropertyName) => new Lazy<StatChangedEventArg>(() => new StatChangedEventArg(this, OldValue, NewValue, PropertyName));
+
+        #endregion
+
+        #region < Properties >
+
+        /// <summary>
+        /// Name of the Statistics Object
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <inheritdoc cref="StatType"/>
+        /// </summary>
+        public StatType Type { get; }
 
         /// <summary> Total Scanned during the run</summary>
         public long Total { 
@@ -37,8 +112,13 @@ namespace RoboSharp.Results
             {
                 if (TotalField != value)
                 {
+                    var e = PrepEventArgs(TotalField, value, "Total");
                     TotalField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Total"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnTotalChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
@@ -50,8 +130,13 @@ namespace RoboSharp.Results
             {
                 if (CopiedField != value)
                 {
+                    var e = PrepEventArgs(CopiedField, value, "Copied");
                     CopiedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Copied"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnCopiedChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
@@ -63,8 +148,13 @@ namespace RoboSharp.Results
             {
                 if (SkippedField != value)
                 {
+                    var e = PrepEventArgs(SkippedField, value, "Skipped");
                     SkippedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Skipped"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnSkippedChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
@@ -76,8 +166,13 @@ namespace RoboSharp.Results
             {
                 if (MismatchField != value)
                 {
+                    var e = PrepEventArgs(MismatchField, value, "Mismatch");
                     MismatchField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Mismatch"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnMisMatchChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
@@ -89,8 +184,13 @@ namespace RoboSharp.Results
             {
                 if (FailedField != value)
                 {
+                    var e = PrepEventArgs(FailedField, value, "Failed");
                     FailedField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Failed"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnFailedChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
@@ -102,32 +202,94 @@ namespace RoboSharp.Results
             {
                 if (ExtrasField != value)
                 {
+                    var e = PrepEventArgs(ExtrasField, value, "Extras");
                     ExtrasField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Extras"));
+                    if (EnablePropertyChangeEvent)
+                    {
+                        PropertyChanged?.Invoke(this, e.Value);
+                        OnExtrasChanged?.Invoke(this, e.Value);
+                    }
                 }
             }
         }
 
         #endregion
 
-        #region < Methods >
+        #region < ToString Methods >
 
         /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
-        public override string ToString()
+        public override string ToString() => ToString(false, true, ", ");
+
+        /// <summary>
+        /// Customize the returned string
+        /// </summary>
+        /// <param name="IncludeType">Include string representation of <see cref="Type"/></param>
+        /// <param name="IncludePrefix">Include "Total:" / "Copied:" / etc in the string to identify the values</param>
+        /// <param name="Delimiter">Value Delimieter</param>
+        /// <param name="DelimiterAfterType">
+        /// Include the delimiter after the 'Type' - Only used if <paramref name="IncludeType"/> us also true. <br/>
+        /// When <paramref name="IncludeType"/> is true, a space always exist after the type string. This would add delimiter instead of the space. 
+        /// </param>
+        /// <returns>
+        /// TRUE, TRUE, "," --> $"{Type} Total: {Total}, Copied: {Copied}, Skipped: {Skipped}, Mismatch: {Mismatch}, Failed: {Failed}, Extras: {Extras}" <para/>
+        /// FALSE, TRUE, "," --> $"Total: {Total}, Copied: {Copied}, Skipped: {Skipped}, Mismatch: {Mismatch}, Failed: {Failed}, Extras: {Extras}" <para/>
+        /// FALSE, FALSE, "," --> $"{Total}, {Copied}, {Skipped}, {Mismatch}, {Failed}, {Extras}"
+        /// </returns>
+        public string ToString(bool IncludeType, bool IncludePrefix, string Delimiter, bool DelimiterAfterType = false)
         {
-            return $"Total: {Total}, Copied: {Copied}, Skipped: {Skipped}, Mismatch: {Mismatch}, Failed: {Failed}, Extras: {Extras}";
+            return $"{ToString_Type(IncludeType, DelimiterAfterType)}" + $"{(IncludeType && DelimiterAfterType ? Delimiter : "")}" +
+                $"{ToString_Total(false, IncludePrefix)}{Delimiter}" +
+                $"{ToString_Copied(false, IncludePrefix)}{Delimiter}" +
+                $"{ToString_Skipped(false, IncludePrefix)}{Delimiter}" +
+                $"{ToString_Mismatch(false, IncludePrefix)}{Delimiter}" +
+                $"{ToString_Failed(false, IncludePrefix)}{Delimiter}" +
+                $"{ToString_Extras(false, IncludePrefix)}";
         }
+
+        /// <summary> Get the <see cref="Type"/> as a string </summary>
+        public string ToString_Type() => ToString_Type(true).Trim();
+        private string ToString_Type(bool IncludeType, bool Trim = false) => IncludeType ? $"{Type}{(Trim? "" : " ")}" : "";
+
+        /// <summary>Get the string describing the <see cref="Total"/></summary>
+        /// <returns></returns>
+        /// <inheritdoc cref="ToString(bool, bool, string, bool)"/>
+        public string ToString_Total(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix? "Total: " : "")}{Total}";
+
+        /// <summary>Get the string describing the <see cref="Copied"/></summary>
+        /// <inheritdoc cref="ToString_Total"/>
+        public string ToString_Copied(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix ? "Copied: " : "")}{Copied}";
+
+        /// <summary>Get the string describing the <see cref="Extras"/></summary>
+        /// <inheritdoc cref="ToString_Total"/>
+        public string ToString_Extras(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix ? "Extras: " : "")}{Extras}";
+
+        /// <summary>Get the string describing the <see cref="Failed"/></summary>
+        /// <inheritdoc cref="ToString_Total"/>
+        public string ToString_Failed(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix ? "Failed: " : "")}{Failed}";
+
+        /// <summary>Get the string describing the <see cref="Mismatch"/></summary>
+        /// <inheritdoc cref="ToString_Total"/>
+        public string ToString_Mismatch(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix ? "Mismatch: " : "")}{Mismatch}";
+
+        /// <summary>Get the string describing the <see cref="Skipped"/></summary>
+        /// <inheritdoc cref="ToString_Total"/>
+        public string ToString_Skipped(bool IncludeType = false, bool IncludePrefix = true) => $"{ToString_Type(IncludeType)}{(IncludePrefix ? "Skipped: " : "")}{Skipped}";
+
+        #endregion
+
+        #region < Parsing Methods >
 
         /// <summary>
         /// Parse a string and for the tokens reported by RoboCopy
         /// </summary>
-        /// <param name="line"></param>
+        /// <param name="type">Statistic Type to produce</param>
+        /// <param name="line">LogLine produced by RoboCopy in Summary Section</param>
         /// <returns>New Statistic Object</returns>
-        public static Statistic Parse(string line)
+        public static Statistic Parse(StatType type, string line)
         {
-            var res = new Statistic();
+            var res = new Statistic(type);
 
             var tokenNames = new[] { nameof(Total), nameof(Copied), nameof(Skipped), nameof(Mismatch), nameof(Failed), nameof(Extras) };
             var patternBuilder = new StringBuilder(@"^.*:");
@@ -169,10 +331,10 @@ namespace RoboSharp.Results
                 return 0;
 
             tokenString = tokenString.Trim();
-            if (Regex.IsMatch(tokenString, @"^\d+$"))
+            if (Regex.IsMatch(tokenString, @"^\d+$", RegexOptions.Compiled))
                 return long.Parse(tokenString);
 
-            var match = Regex.Match(tokenString, @"(?<Mains>[\d\.,]+)(\.(?<Fraction>\d+))\s(?<Unit>\w)");
+            var match = Regex.Match(tokenString, @"(?<Mains>[\d\.,]+)(\.(?<Fraction>\d+))\s(?<Unit>\w)", RegexOptions.Compiled);
             if (match.Success)
             {
                 var mains = match.Groups["Mains"].Value.Replace(".", "").Replace(",", "");
@@ -208,6 +370,8 @@ namespace RoboSharp.Results
 
         #endregion
 
+        #region < Reset Method >
+
         /// <summary>
         /// Reset all values to Zero ( 0 ) -- Used by <see cref="RoboCopyResultsList"/> for the properties
         /// </summary>
@@ -227,12 +391,14 @@ namespace RoboSharp.Results
         /// <summary>
         /// Set the values for this object to 0
         /// </summary>
-        internal void Reset(bool enablePropertyChangeEvent)
+        public void Reset(bool enablePropertyChangeEvent)
         {
             EnablePropertyChangeEvent = enablePropertyChangeEvent;
             Reset();
             EnablePropertyChangeEvent = true;
         }
+
+        #endregion
 
         #region < ADD Methods >
 
@@ -281,16 +447,57 @@ namespace RoboSharp.Results
         }
 
         /// <summary>
+        /// Adds <see cref="StatChangedEventArg.Difference"/> to the appropriate property based on the 'PropertyChanged' value. <br/>
+        /// Will only add the value if the <see cref="StatChangedEventArg.StatType"/> == <see cref="Type"/>.
+        /// </summary>
+        /// <param name="e">Arg provided by either <see cref="PropertyChanged"/> or a Statistic's object's On*Changed events</param>
+        public void AddStatistic(StatChangedEventArg e)
+        {
+            if (e.StatType == this.Type)
+            {
+                switch (e.PropertyName)
+                {
+                    case "Copied":
+                        this.Copied += e.Difference;
+                        break;
+                    case "Extras":
+                        this.Extras += e.Difference;
+                        break;
+                    case "Failed":
+                        this.Failed += e.Difference;
+                        break;
+                    case "Mismatch":
+                        this.Mismatch += e.Difference;
+                        break;
+                    case "Skipped":
+                        this.Skipped += e.Difference;
+                        break;
+                    case "Total":
+                        this.Total += e.Difference;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
         /// Combine the results of the supplied statistics objects
         /// </summary>
         /// <param name="stats">Statistics Item to add</param>
         /// <returns>New Statistics Object</returns>
         public static Statistic AddStatistics(IEnumerable<Statistic> stats)
         {
-            Statistic ret = new Statistic();
+
+            Statistic ret;
+            if ((stats?.Count() ?? 0 ) == 0) ret = new Statistic(StatType.Unknown);
+            else if (stats.All((c) => c.Type == StatType.Directories)) ret = new Statistic(StatType.Directories);
+            else if (stats.All((c) => c.Type == StatType.Files)) ret = new Statistic(StatType.Files);
+            else if (stats.All((c) => c.Type == StatType.Bytes)) ret = new Statistic(StatType.Bytes);
+            else ret = new Statistic(StatType.Unknown);
+
             ret.AddStatistic(stats);
             return ret;
         }
+
 
         #endregion ADD
 
@@ -378,4 +585,35 @@ namespace RoboSharp.Results
 
         #endregion Subtract
     }
+
+    /// <summary>
+    /// EventArgs provided by <see cref="Statistic.PropertyChanged"/> and other Events generated from a <see cref="Statistic"/> object.
+    /// </summary>
+    public class StatChangedEventArg : PropertyChangedEventArgs
+    {
+        private StatChangedEventArg():base("") { }
+        internal StatChangedEventArg(Statistic stat, long oldValue, long newValue, string PropertyName) : base(PropertyName)
+        {
+            StatType = stat.Type;
+            OldValue = oldValue;
+            NewValue = newValue;
+        }
+
+
+        /// <inheritdoc cref="Statistic.Type"/>
+        public Statistic.StatType StatType { get; }
+
+        /// <summary> Old Value of the object </summary>
+        public long OldValue { get; }
+        
+        /// <summary> Current Value of the object </summary>
+        public long NewValue { get; }
+
+        /// <summary>
+        /// Result of NewValue - OldValue
+        /// </summary>
+        public long Difference => NewValue - OldValue;
+    }
+
+
 }

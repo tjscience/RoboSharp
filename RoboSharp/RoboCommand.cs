@@ -73,6 +73,11 @@ namespace RoboSharp
         {
             get { return configuration; }
         }
+        /// <inheritdoc cref="Results.ProgressEstimator"/>
+        /// <remarks>
+        /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
+        /// </remarks>
+        public Results.ProgressEstimator ProgressEstimator { get; private set; }
 
         /// <summary>
         /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called. <br/>
@@ -109,13 +114,15 @@ namespace RoboSharp
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 
+        /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
+        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e);
+        /// <summary>
+        /// Occurs when a <see cref="Results.ProgressEstimator"/> is created during <see cref="Start"/>, allowing binding to occur within the event subscriber. <br/>
+        /// This event will occur once per Start.
+        /// </summary>
+        public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
+
         #endregion
-
-        /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand()
-        {
-
-        }
 
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
@@ -130,8 +137,8 @@ namespace RoboSharp
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
                 // copy progress data
-                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
                 OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
+                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
             }
             else
             {
@@ -343,6 +350,11 @@ namespace RoboSharp
             backupTask = Task.Factory.StartNew(() =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
+                ProgressEstimator = resultsBuilder.Estimator;
+                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator)); 
+                
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))

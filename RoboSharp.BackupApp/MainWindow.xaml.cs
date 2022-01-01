@@ -58,6 +58,8 @@ namespace RoboSharp.BackupApp
             copy.OnError += copy_OnError;
             copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
             copy.OnCommandCompleted += copy_OnCommandCompleted;
+            //Progress Estimator
+            copy.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
@@ -119,6 +121,28 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
 
             copy.Start();
+        }
+
+        private void Copy_OnProgressEstimatorCreated(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e)
+        {
+            copy.ProgressEstimator.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
+            copy.ProgressEstimator.DirStats.PropertyChanged += DirStats_PropertyChanged;
+            copy.ProgressEstimator.FileStats.PropertyChanged += FileStats_PropertyChanged;
+        }
+
+        private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() => this.ProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+        }
+
+        private void DirStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() => ProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+        }
+
+        private void ByteStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() => this.ProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)

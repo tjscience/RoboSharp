@@ -220,6 +220,9 @@
                     <TextBlock Name="FileProgressPercent" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" Margin="615,218,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="1.76,-0.062"/>
                     <Button Name="PauseResumeButton" Click="PauseResumeButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,95,10" Content="Pause" Width="75" />
                     <Button Name="CancelButton" Click="CancelButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,10" Content="Cancel" Width="75" />
+                    <TextBlock x:Name="ProgressEstimator_Directories" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="40,275,0,0"/>
+                    <TextBlock x:Name="ProgressEstimator_Files" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="225,275,0,0"/>
+                    <TextBlock x:Name="ProgressEstimator_Bytes" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="400,275,0,0"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Errors" Name="ErrorsTab">
