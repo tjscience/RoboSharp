@@ -9,7 +9,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
-    public class ProgressEstimator
+    public class ProgressEstimator : IDisposable
     {
         private ProgressEstimator() { }
 
@@ -28,6 +28,7 @@ namespace RoboSharp.Results
         private List<Statistic> SubscribedStats;
         internal ProcessedFileInfo CurrentDir;
         internal ProcessedFileInfo CurrentFile;
+        private bool disposedValue;
 
         #endregion
 
@@ -247,14 +248,57 @@ namespace RoboSharp.Results
         {
             if (SubscribedStats != null)
             {
-                foreach (var c in SubscribedStats)
+                foreach (Statistic c in SubscribedStats)
                 {
-                    c.PropertyChanged -= BindDirStat;
-                    c.PropertyChanged -= BindFileStat;
-                    c.PropertyChanged -= BindByteStat;
+                    if (c != null)
+                    {
+                        c.PropertyChanged -= BindDirStat;
+                        c.PropertyChanged -= BindFileStat;
+                        c.PropertyChanged -= BindByteStat;
+                    }
                 }
                 SubscribedStats.Clear();
             }
+        }
+
+        #endregion
+
+        #region < Disposing >
+        
+        /// <summary></summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    UnBind(); //Unbind to show that those Statistics objects aren't required anymore
+                    SubscribedStats = null;
+                }
+
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~ProgressEstimator()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        /// <summary>
+        /// <inheritdoc cref="IDisposable.Dispose"/>
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         #endregion
