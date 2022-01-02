@@ -240,15 +240,15 @@
                     <TextBlock x:Name="ProgressEstimator_Bytes" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="400,275,0,0"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Errors" Name="ErrorsTab">
-                <DataGrid Name="ErrorGrid"></DataGrid>
-            </TabItem>
-            <TabItem Header="Jobs" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Width="40" Margin="-2,0,0,0">
-                <Grid x:Name="JobsGrid">
+           <TabItem Header="Progress - Multi Job" Name="MultiJobProgressTab">
+                <Grid x:Name="MultiJobProgressGrid">
                     <Button x:Name="btnPauseQueue" Content="Pause Job Queue" HorizontalAlignment="Right" Margin="0,0,359,446" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue" Grid.Column="2"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Width="86" Margin="-2,0,0,0">
+            <TabItem Header="Errors" Name="ErrorsTab">
+                <DataGrid Name="ErrorGrid"></DataGrid>
+            </TabItem>
+           <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Margin="-2,0,0,0">
                 <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5">
                     <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="321" SelectionChanged="UpdateSelectedItemsLabel"/>
                     <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="336,251,0,0" VerticalAlignment="Top" Width="367"/>
