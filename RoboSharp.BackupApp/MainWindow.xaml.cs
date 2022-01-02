@@ -54,7 +54,7 @@ namespace RoboSharp.BackupApp
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void StartButton_Click(object sender, RoutedEventArgs e)
         {
             OptionsGrid.IsEnabled = false;
             ProgressTab.IsSelected = true;
@@ -83,7 +83,7 @@ namespace RoboSharp.BackupApp
             var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
                 .Cast<Match>()
                 .Select(m => m.Value);
-
+            
             copy.CopyOptions.FileFilter = fileFilterItems;
             copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
             copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
@@ -369,6 +369,11 @@ namespace RoboSharp.BackupApp
         }
 
         private void btn_RemoveSelected(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void btn_UpdateSelected(object sender, RoutedEventArgs e)
         {
 
         }
