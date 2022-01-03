@@ -118,6 +118,8 @@ namespace System.Collections.Generic
 
         #region < Methods that Override List<T> Methods >
 
+        #region < Add >
+
         ///<inheritdoc cref="List{T}.Insert(int, T)"/>
         new public virtual void Insert(int index, T item)
         {
@@ -139,12 +141,17 @@ namespace System.Collections.Generic
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
         }
 
+
+        #endregion
+
+        #region < Remove >
+
         ///<inheritdoc cref="List{T}.Clear"/>
         new public virtual void Clear()
         {
             T[] removedItems = HasEventListener_CollectionChanged() ? base.ToArray() : new T[] { };
             base.Clear();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, newItems: new List<T>(), oldItems: removedItems.ToList()));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, removedItems.ToList()));
         }
 
         ///<inheritdoc cref="List{T}.Remove(T)"/>
@@ -172,64 +179,130 @@ namespace System.Collections.Generic
         {
             List<T> removedItems = HasEventListener_CollectionChanged() ? base.GetRange(index, count) : null;
             base.RemoveRange(index, count);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, newItems: new List<T>(), oldItems: removedItems.ToList()));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, removedItems.ToList(), index));
         }
 
-        /// <remarks> Triggers a single <see cref="NotifyCollectionChangedAction.Move"/> event with no other parameters.</remarks>
-        ///<inheritdoc cref="List{T}.Reverse()"/>
-        new public virtual void Reverse()
-        {
-            base.Reverse();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
-        }
+        #endregion
 
-        /// <remarks> Triggers a single <see cref="NotifyCollectionChangedAction.Move"/> event. EventArgs will report the original order of the items in the list. </remarks>
+        #region < Move >
+
+        #region < Hide base members >
+
+        ///<inheritdoc cref="List{T}.Sort(int, int, IComparer{T})"/>
+        new public virtual void Sort(int index, int count, IComparer<T> comparer) => Sort(index, count, comparer, false);
+        ///<inheritdoc cref="List{T}.Sort(IComparer{T})"/>
+        new public virtual void Sort(IComparer<T> comparer) => Sort(comparer, false);
+        ///<inheritdoc cref="List{T}.Sort(Comparison{T})"/>
+        new public virtual void Sort(Comparison<T> comparison) => Sort(comparison, false);
+        ///<inheritdoc cref="List{T}.Sort()"/>
+        new public virtual void Sort() => Sort(false);
         ///<inheritdoc cref="List{T}.Reverse(int, int)"/>
-        new public virtual void Reverse(int index, int count)
+        new public virtual void Reverse(int index, int count) => Reverse(index, count, false);
+        ///<inheritdoc cref="List{T}.Reverse()"/>
+        new public virtual void Reverse() => Reverse(false);
+
+        #endregion
+
+        ///<inheritdoc cref="List{T}.Reverse()"/>
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Reverse(bool verbose = false)
+        {
+            PerformMove(new Action(() => base.Reverse()), this, verbose);
+        }
+
+        ///<inheritdoc cref="List{T}.Reverse(int, int)"/>
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Reverse(int index, int count, bool verbose = false)
         {
             List<T> OriginalOrder = HasEventListener_CollectionChanged() ? base.GetRange(index, count) : null;
-            base.Reverse(index, count);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: OriginalOrder, index));
-
-            //Move Event for every moved object
-            //foreach ( T obj in OriginalOrder)
-            //{
-            //    int newIndex = this.IndexOf(obj);
-            //    int oldIndex = index + OriginalOrder.IndexOf(obj);
-            //    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, obj, newIndex, oldIndex));
-            //}
-
+            PerformMove(new Action(() => base.Reverse(index, count)), OriginalOrder, verbose);
         }
 
         ///<inheritdoc cref="List{T}.Sort()"/>
-        new public virtual void Sort()
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Sort(bool verbose = false)
         {
-            base.Sort();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+            PerformMove(new Action(() => base.Sort()), this, verbose);
         }
 
         ///<inheritdoc cref="List{T}.Sort(Comparison{T})"/>
-        new public virtual void Sort(Comparison<T> comparison)
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Sort(Comparison<T> comparison, bool verbose = false)
         {
-            base.Sort(comparison);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+            PerformMove(new Action(() => base.Sort(comparison)), this, verbose);
         }
 
         ///<inheritdoc cref="List{T}.Sort(IComparer{T})"/>
-        new public virtual void Sort(IComparer<T> comparer)
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Sort(IComparer<T> comparer, bool verbose = false)
         {
-            base.Sort(comparer);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+            PerformMove(new Action(() => base.Sort(comparer)), this, verbose);
         }
 
-        /// <remarks> Triggers a single <see cref="NotifyCollectionChangedAction.Move"/> event. EventArgs will report the original order of the items in the list. </remarks>
         ///<inheritdoc cref="List{T}.Sort(int, int, IComparer{T})"/>
-        new public virtual void Sort(int index, int count, IComparer<T> comparer)
+        ///<inheritdoc cref="PerformMove"/>
+        public virtual void Sort(int index, int count, IComparer<T> comparer, bool verbose = false)
         {
-            List<T> OriginalOrder = HasEventListener_CollectionChanged() ? base.GetRange(index, count) : null;
-            base.Sort(index, count, comparer);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItems: OriginalOrder, index));
+            List<T> OriginalOrder = HasEventListener_CollectionChanged() ? base.GetRange(index, count) : new List<T>();
+            Action action = new Action( () => base.Sort(index, count, comparer));
+            PerformMove(action, OriginalOrder, verbose);
         }
+
+        /// <remarks>
+        /// 
+        /// </remarks>
+        /// <param name="MoveAction"/>
+        /// <param name="OriginalOrder"/>
+        /// <param name="verbose">
+        /// Create a 'Move' OnCollectionChange event for all items that were moved within the list. <para/>
+        /// If false, Triggers a single <see cref="NotifyCollectionChangedAction.Move"/> event. 
+        /// </param>
+        private void PerformMove(Action MoveAction, List<T>OriginalOrder, bool verbose)
+        {
+            List<MoveTracker> Tracker = new List<MoveTracker>();
+
+            foreach (T obj in OriginalOrder)
+                Tracker.Add(new MoveTracker(this, obj));
+
+            MoveAction.Invoke();
+
+            if (verbose)
+            {
+                foreach (MoveTracker objTracker in Tracker)
+                    objTracker.Notify();
+            }
+            else
+            {
+                if (Tracker.Any( c => c.OldIndex != c.NewIndex))
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move));
+            }
+            Tracker.Clear();
+            Tracker = null;
+        }
+
+        private struct MoveTracker
+        {
+            public MoveTracker(ObservableList<T> listRef, T obj) 
+            {
+                ListRef = listRef;
+                Obj = obj;
+                OldIndex = ListRef.IndexOf(obj);
+            }
+
+            private ObservableList<T> ListRef;
+            public T Obj;
+            public int OldIndex;
+            public int NewIndex => ListRef.IndexOf(Obj);
+            public void Notify()
+            {
+                if (OldIndex != NewIndex)
+                    ListRef.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: Obj, NewIndex, OldIndex));
+            }
+
+        }
+
+        #endregion
+
 
         #endregion
     }
