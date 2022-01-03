@@ -43,17 +43,21 @@ namespace RoboSharp.BackupApp
             btnAddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
-            //Event subscribe
-            //RoboQueue.OnFileProcessed += copy_OnFileProcessed;
-            //RoboQueue.OnCommandError += copy_OnCommandError;
-            //RoboQueue.OnError += copy_OnError;
-            //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
-            //RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
-            //RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
             
             //Setup SingleJob Tab
             SingleJobExpander_JobHistory.BindToList(SingleJobResults);
             SingleJobErrorGrid.ItemsSource = SingleJobErrors;
+
+            //RoboQueue Setup
+            MultiJobErrorGrid.ItemsSource = MultiJobErrors;
+            RoboQueue.OnCommandError += RoboQueue_OnCommandError;
+            RoboQueue.OnError += RoboQueue_OnError; ;
+            RoboQueue.OnCommandCompleted += RoboQueue_OnCommandCompleted; ;
+            RoboQueue.OnProgressEstimatorCreated += RoboQueue_OnProgressEstimatorCreated;
+            RoboQueue.OnCommandStarted += RoboQueue_OnCommandStarted;
+            RoboQueue.CollectionChanged += RoboQueue_CollectionChanged;
+            //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
+            //RoboQueue.OnFileProcessed += RoboQueue_OnFileProcessed; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -250,6 +254,42 @@ namespace RoboSharp.BackupApp
         {
 
         }
+
+        private void RoboQueue_OnProgressEstimatorCreated(RoboQueue sender, Results.ProgressEstimatorCreatedEventArgs e)
+        {
+            // TO DO : Bind to the estimators 
+        }
+
+        private void RoboQueue_OnCommandStarted(RoboQueue sender, RoboQueue.CommandStartedEventArgs e)
+        {
+            // TO DO : Add MultiJob_CommandProgressIndicator to window
+        }
+
+        private void RoboQueue_OnCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        {
+            // TO DO : Disable associated MultiJob_CommandProgressIndicator to window
+        }
+
+        private void RoboQueue_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            // TO DO : Remove associated MultiJob_CommandProgressIndicator
+        }
+
+        private void RoboQueue_OnError(RoboCommand sender, ErrorEventArgs e)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                MultiJobErrors.Insert(0, new FileError { Error = e.Error });
+                MultiJobExpander_Errors.Header = string.Format("Errors ({0})", MultiJobErrors.Count);
+            }));
+        }
+
+        private void RoboQueue_OnCommandError(RoboCommand sender, CommandErrorEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        
 
         #endregion
 

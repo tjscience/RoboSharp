@@ -5,33 +5,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:RoboSharp.BackupApp"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="550"
+             d:DesignHeight="435" d:DesignWidth="550"
           Name="Expander" 
           Background="PaleGoldenrod" 
           Header="Job History"
           RenderTransformOrigin="0.5,0.5"
           >
-    <Grid x:Name="ResultsGrid" Background="#FFE5E5E5" Margin="10">
+    <Grid x:Name="ResultsGrid" Margin="0">
         <Grid.RowDefinitions>
-            <RowDefinition MinHeight="200"  MaxHeight="325"/>
-            <RowDefinition Height="325"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition MinHeight="125" Height="125" MaxHeight="350"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="300"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <!-- Header Label, ListBox, RemoveBtn -->
-        <Label Name="DescriptionLbl" Content="This contains a list of the results from all previous runs during this session." Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-        <ListBox x:Name="ListBox_JobResults" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="282"/>
-        <Button Content="Remove Selected" Grid.Row="0" Grid.Column="0" Grid.RowSpan="2"  HorizontalAlignment="Left" Margin="175,385,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
-        <!-- Overall Results -->
-        <GroupBox Header="Overall Results"  Grid.Row="0" Grid.Column="1" Margin="0,50" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <local:SingleJobStats x:Name="OverallStats"  Margin="0,10" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        </GroupBox>
+        <Label Name="DescriptionLbl" Content="This contains a list of the results from all previous runs during this session." Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
+        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282"/>
+        <Button Content="Remove Selected" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2"  HorizontalAlignment="Left" Margin="175,330,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
         <!-- Selected Results -->
-        <GroupBox Header="Selected Job Results"  Grid.Row="1" Grid.Column="1" Margin="0,50"  HorizontalAlignment="Left" VerticalAlignment="Top">
-            <local:SingleJobStats x:Name="SelectedJobStats" Margin="0,10" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <GroupBox Header="Selected Job Results"  Grid.Row="1" Grid.Column="1" Margin="0,-10,0,0" MaxHeight="350" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <local:SingleJobStats x:Name="SelectedJobStats" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         </GroupBox>
-        
+        <!-- Overall Results -->
+        <GroupBox Header="Overall Results"  Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <local:SingleJobStats x:Name="OverallStats"  Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        </GroupBox>
+
     </Grid>
 </Expander>

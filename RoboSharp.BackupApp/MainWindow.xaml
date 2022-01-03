@@ -216,17 +216,11 @@
                     <CheckBox x:Name="chkListOnly" Content="ListOnly Mode" HorizontalAlignment="Left" Margin="497,460,0,0" VerticalAlignment="Top"/>
                     <TextBox x:Name="tbConcurrentJobs" HorizontalAlignment="Left" Margin="644,494,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="40"/>
                     <Label x:Name="lblConcurrentJobs" Content="Commands to run at once (0 = all):" HorizontalAlignment="Left" Margin="444,490,0,0" VerticalAlignment="Top"/>
-
                 </Grid>
             </TabItem>
+            <!-- Single-Job Tab -->
             <TabItem x:Name="SingleJobTab" Header="Single Job" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="83" Margin="0,0,0,0">
                 <Grid x:Name="SingleJobTabGrid" Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="17*"/>
-                        <ColumnDefinition Width="10*"/>
-                        <ColumnDefinition Width="12*"/>
-                        <ColumnDefinition Width="674*"/>
-                    </Grid.ColumnDefinitions>
                     <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693" Grid.ColumnSpan="4">
                         <StackPanel>
                             <local:MultiJob_CommandProgressIndicator x:Name="SingleJobExpander_Progress" RenderTransformOrigin="0.5,0.5" Background="LightBlue"/>
@@ -238,12 +232,36 @@
                     </ScrollViewer>
                 </Grid>
             </TabItem>
+            <!-- Multi-Job Tab -->
             <TabItem x:Name="MultiJobProgressTab" Header="Multi-Job">
                 <Grid Margin="5" Background="#FFE5E5E5">
                     <Button x:Name="btnPauseQueue" Content="Pause Job Queue" HorizontalAlignment="Right" Margin="0,0,359,446" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue" Grid.Column="2"/>
                     <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693">
                         <StackPanel>
-                            <Expander x:Name="MultiJobExpander_Jobs" Background="LightBlue" Header="RoboQueue" RenderTransformOrigin="0.5,0.5"/>
+                            <!-- RoboQueue Panel -->
+                            <Expander x:Name="MultiJobExpander_Jobs" Background="LightBlue" Header="RoboQueue" RenderTransformOrigin="0.5,0.5">
+                                <Grid Margin="15">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="150"/>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="300"/>
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- ListBox / Edit / Remove buttons -->
+                                    <ListBox x:Name="ListBox_Jobs_Copy" Grid.Row="0" Grid.Column="0"/>
+                                    <Button x:Name="btnUPdateSelectedJob_Copy" Content="Update Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="98" Click="btn_UpdateSelected"/>
+                                    <Button x:Name="btnRemoveSelectedJob_Copy" Content="Remove Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected"/>
+                                    <!-- Commands Count To Run -->
+                                    <Label x:Name="lblConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1"  Margin="5,0,40,0" Content="Commands to run at once (0 = all):" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                                    <TextBox x:Name="tbConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0" HorizontalAlignment="Right"  TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="40"/>
+                                    <!-- ListOnly and Start Btn -->
+                                    <CheckBox x:Name="chkListOnly_Copy" Grid.Row="0" Grid.Column="1"  Margin="50,0,0,30" Content="ListOnly Mode" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                    <Button x:Name="btnStartJobQueue_Copy" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Content="Start Job Queue" Click="btn_StartQueue"/>
+                                </Grid>
+                            </Expander>
+                            <!-- Progress Expander -->
                             <Expander x:Name="MultiJobExpander_Progress" Background="LightBlue" Header="Progress" RenderTransformOrigin="0.5,0.5">
                                 <Grid IsEnabled="true" Margin="10">
                                     <Grid.RowDefinitions>
@@ -263,37 +281,40 @@
                                         <ColumnDefinition Width="200" />
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    
+
                                     <TextBlock Text="Number of jobs running:" Grid.Row="0" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
                                     <TextBlock Name="MultiJob_JobRunningCount" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Foreground="#FF000099"/>
                                     <!-- Overall Estimate Grid -->
-                                    <Grid IsEnabled="true" Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Width="620"  HorizontalAlignment="Center">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition  Width="Auto"/>
-                                            <ColumnDefinition  Width="*"/>
-                                            <ColumnDefinition  Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock x:Name="ProgressEstimator_Directories" Grid.Column="0" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Directories"/>
-                                        <TextBlock x:Name="ProgressEstimator_Files" Grid.Column="1" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Files"/>
-                                        <TextBlock x:Name="ProgressEstimator_Bytes" Grid.Column="1" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Bytes" Margin="292,0,28,0"/>
-                                    </Grid>
+                                    <GroupBox Header="Total Estimate"  Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="650">
+                                        <Grid IsEnabled="true" Margin="15" VerticalAlignment="Center" Width="620"  HorizontalAlignment="Center">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition  Width="10"/>
+                                                <ColumnDefinition  Width="175"/>
+                                                <ColumnDefinition  Width="175"/>
+                                                <ColumnDefinition  Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="ProgressEstimator_Directories" Grid.Column="1" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="Black" Text="Directories"/>
+                                            <TextBlock x:Name="ProgressEstimator_Files" Grid.Column="2" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="Black" Text="Files"/>
+                                            <TextBlock x:Name="ProgressEstimator_Bytes" Grid.Column="3" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="Black" Text="Bytes"/>
+                                        </Grid>
+                                    </GroupBox>
                                     <!-- Progress Bar -->
                                     <TextBlock Text="Jobs Complete:" Grid.Row="2" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
                                     <TextBlock x:Name="MultiJob_JobsCompleteXofY" Grid.Row="2" Grid.Column="1" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" TextWrapping="Wrap" />
                                     <ProgressBar x:Name="MultiJobProgressBar_JobsComplete" Grid.Row="3" Grid.ColumnSpan="2" Minimum="0" Maximum="100" HorizontalAlignment="Center" Height="20" Width="625"/>
                                     <!-- Command Progress -->
                                     <local:MultiJob_CommandProgressIndicator Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
-
-
                                 </Grid>
                             </Expander>
+                            <!-- End Of Progress Expander -->
                             <Expander x:Name="MultiJobExpander_Errors" Background="LightGreen" Header="Errors">
                                 <DataGrid x:Name="MultiJobErrorGrid" MinHeight="100" Margin="10"/>
                             </Expander>
-                            
+                            <local:JobHistoryExpander x:Name="MultiJob_ListOnlyResults" Header="List-Only Results" RenderTransformOrigin="0.5,0.5"/>
+                            <local:JobHistoryExpander x:Name="MultiJob_RunResults" Header="Run Results" RenderTransformOrigin="0.5,0.5"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
