@@ -44,12 +44,12 @@ namespace RoboSharp.BackupApp
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
             //Event subscribe
-            RoboQueue.OnFileProcessed += copy_OnFileProcessed;
-            RoboQueue.OnCommandError += copy_OnCommandError;
-            RoboQueue.OnError += copy_OnError;
-            RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
-            RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
-            RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
+            //RoboQueue.OnFileProcessed += copy_OnFileProcessed;
+            //RoboQueue.OnCommandError += copy_OnCommandError;
+            //RoboQueue.OnError += copy_OnError;
+            //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
+            //RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
+            //RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
             //Setup SingleJob Tab
             ListBox_JobResults.ItemsSource = SingleJobResults;
             SingleJobErrorGrid.ItemsSource = SingleJobErrors;
@@ -75,12 +75,10 @@ namespace RoboSharp.BackupApp
             RoboCommand copy = new RoboCommand();
             if (BindEvents)
             {
-                copy.OnFileProcessed += copy_OnFileProcessed;
+                SingleJobExpander_Progress.BindToCommand(copy);
                 copy.OnCommandError += copy_OnCommandError;
                 copy.OnError += copy_OnError;
-                copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
                 copy.OnCommandCompleted += copy_OnCommandCompleted;
-                copy.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;//Progress Estimator
             }
             // copy options
             copy.CopyOptions.Source = Source.Text;
@@ -195,73 +193,14 @@ namespace RoboSharp.BackupApp
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
+            copy = GetCommand(true);
+            copy.Start();
             OptionsGrid.IsEnabled = false;
             SingleJobExpander_Progress.IsExpanded = true;
             SingleJobExpander_JobHistory.IsExpanded = false;
             SingleJobExpander_Errors.IsExpanded = false;
             SingleJobTab.IsSelected = true;
-            ProgressGrid.IsEnabled = true;
-            Backup();
-        }
-
-        public void Backup()
-        {
-            copy = GetCommand(true);
-            copy.Start();
-        }
-
-        private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (!copy.IsPaused)
-            {
-                copy.Pause();
-                PauseResumeButton.Content = "Resume";
-            }
-            else
-            {
-                copy.Resume();
-                PauseResumeButton.Content = "Pause";
-            }
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (copy != null)
-            {
-                copy.Stop();
-                copy.Dispose();
-            }
-
-        }
-
-        /// <summary> Bind the ProgressEstimator to the text controls on the PROGRESS tab </summary>
-        private void Copy_OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e)
-        {
-            e.ResultsEstimate.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
-            e.ResultsEstimate.DirStats.PropertyChanged += DirStats_PropertyChanged;
-            e.ResultsEstimate.FileStats.PropertyChanged += FileStats_PropertyChanged;
-        }
-
-
-        private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            SingleProgressEstimator_Files.Dispatcher.Invoke(() => SingleProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-            //Dispatcher.Invoke(() =>
-            //{
-            //    string s = SingleProgressEstimator_Files.Text;
-            //    SingleProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true);
-            //    string n = SingleProgressEstimator_Files.Text;
-            //});
-        }
-
-        private void DirStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            SingleProgressEstimator_Directories.Dispatcher.Invoke(() => SingleProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        private void ByteStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            SingleProgressEstimator_Bytes.Dispatcher.Invoke(() => SingleProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+            SingleJobExpander_Progress.ProgressGrid.IsEnabled = true;
         }
 
         void copy_OnCommandError(object sender, CommandErrorEventArgs e)
@@ -270,16 +209,7 @@ namespace RoboSharp.BackupApp
             {
                 MessageBox.Show(e.Error);
                 OptionsGrid.IsEnabled = true;
-                ProgressGrid.IsEnabled = false;
-            }));
-        }
-
-        void copy_OnCopyProgressChanged(object sender, CopyProgressEventArgs e)
-        {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                SingleJobFileProgressBar.Value = e.CurrentFileProgress;
-                FileProgressPercent.Text = string.Format("{0}%", e.CurrentFileProgress);
+                SingleJobExpander_Progress.ProgressGrid.IsEnabled = false;
             }));
         }
 
@@ -292,22 +222,12 @@ namespace RoboSharp.BackupApp
             }));
         }
 
-        void copy_OnFileProcessed(object sender, FileProcessedEventArgs e)
-        {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                CurrentOperation.Text = e.ProcessedFile.FileClass;
-                CurrentFile.Text = e.ProcessedFile.Name;
-                CurrentSize.Text = e.ProcessedFile.Size.ToString();
-            }));
-        }
-
         void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
                 OptionsGrid.IsEnabled = true;
-                ProgressGrid.IsEnabled = false;
+                SingleJobExpander_Progress.ProgressGrid.IsEnabled = false;
 
                 var results = e.Results;
                 Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
