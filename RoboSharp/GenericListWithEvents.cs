@@ -151,7 +151,7 @@ namespace System.Collections.Generic
         {
             T[] removedItems = HasEventListener_CollectionChanged() ? base.ToArray() : new T[] { };
             base.Clear();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, removedItems.ToList()));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
         ///<inheritdoc cref="List{T}.Remove(T)"/>
@@ -179,7 +179,7 @@ namespace System.Collections.Generic
         {
             List<T> removedItems = HasEventListener_CollectionChanged() ? base.GetRange(index, count) : null;
             base.RemoveRange(index, count);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, removedItems.ToList(), index));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems.ToList(), index));
         }
 
         #endregion
