@@ -142,7 +142,7 @@ namespace System.Collections.Generic
         ///<inheritdoc cref="List{T}.Clear"/>
         new public virtual void Clear()
         {
-            T[] removedItems = HasEventListener_CollectionChanged() ? base.ToArray() : null;
+            T[] removedItems = HasEventListener_CollectionChanged() ? base.ToArray() : new T[] { };
             base.Clear();
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, newItems: new List<T>(), oldItems: removedItems.ToList()));
         }
