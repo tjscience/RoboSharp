@@ -233,15 +233,7 @@
                             <Expander x:Name="SingleJobExpander_Errors" Background="LightGreen" Header="Errors">
                                 <DataGrid x:Name="SingleJobErrorGrid" MinHeight="100" Margin="10"/>
                             </Expander>
-                            <Expander x:Name="SingleJobExpander_JobHistory" Background="PaleGoldenrod" Header="Job History">
-                                <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5" Margin="10">
-                                    <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="282" SelectionChanged="UpdateSelectedItemsLabel"/>
-                                    <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="297,251,0,0" VerticalAlignment="Top" Width="367"/>
-                                    <Label x:Name="lbl_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="192" Margin="297,54,0,0" VerticalAlignment="Top" Width="367"/>
-                                    <Label x:Name="lbl_JobHistoryHeader" Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-                                    <Button Content="Remove Selected" HorizontalAlignment="Left" Margin="197,379,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
-                                </Grid>
-                            </Expander>
+                            <local:JobHistoryExpander x:Name="SingleJobExpander_JobHistory" RenderTransformOrigin="0.5,0.5"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
@@ -301,15 +293,7 @@
                             <Expander x:Name="MultiJobExpander_Errors" Background="LightGreen" Header="Errors">
                                 <DataGrid x:Name="MultiJobErrorGrid" MinHeight="100" Margin="10"/>
                             </Expander>
-                            <Expander x:Name="MultiJobExpander_ListOnlyResults" Background="PaleGoldenrod" Header="Job History">
-                                <Grid x:Name="MultiJobExpander_ListOnlyResultsGrid" Background="#FFE5E5E5" Margin="10">
-                                    <ListBox x:Name="ListBox_MultiJobResults_ListOnly" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="282" SelectionChanged="UpdateSelectedItemsLabel"/>
-                                    <Label x:Name="lbl_MultiJob_ListOnly_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="297,251,0,0" VerticalAlignment="Top" Width="367"/>
-                                    <Label x:Name="lbl_MultiJob_ListOnly_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="192" Margin="297,54,0,0" VerticalAlignment="Top" Width="367"/>
-                                    <Label Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-                                    <Button Content="Remove Selected" HorizontalAlignment="Left" Margin="197,379,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
-                                </Grid>
-                            </Expander>
+                            
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

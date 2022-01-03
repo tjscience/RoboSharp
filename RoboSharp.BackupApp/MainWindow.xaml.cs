@@ -50,10 +50,10 @@ namespace RoboSharp.BackupApp
             //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
             //RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
             //RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
+            
             //Setup SingleJob Tab
-            ListBox_JobResults.ItemsSource = SingleJobResults;
+            SingleJobExpander_JobHistory.BindToList(SingleJobResults);
             SingleJobErrorGrid.ItemsSource = SingleJobErrors;
-            SingleJobResults.CollectionChanged += ( _ , __ ) => UpdateOverallLabel(lbl_OverallTotals);
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -153,40 +153,6 @@ namespace RoboSharp.BackupApp
             return !regex.IsMatch(text);
         }
 
-        private void UpdateSelectedResultsLabel(object listboxSender, SelectionChangedEventArgs e, Label LabelToUpdate)
-        {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)((ListBox)listboxSender).SelectedItem;
-            string NL = Environment.NewLine;
-            LabelToUpdate.Content = $"Selected Job:" +
-                $"{NL}Source: {result?.Source ?? ""}" +
-                $"{NL}Destination: {result?.Destination ?? ""}" +
-                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
-                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
-                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
-                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
-                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
-                $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
-                $"{NL}{result?.Status.ToString() ?? ""}";
-        }
-
-        /// <summary>
-        /// Runs every time the SingleJobResults list is updated.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void UpdateOverallLabel(Label LabelToUpdate)
-        {
-            string NL = Environment.NewLine;
-            LabelToUpdate.Content = $"Job History:" +
-                $"{NL}Total Directories: {SingleJobResults.DirectoriesStatistic.Total}" +
-                $"{NL}Total Files: {SingleJobResults.FilesStatistic.Total}" +
-                $"{NL}Total Size (bytes): {SingleJobResults.BytesStatistic.Total}" +
-                $"{NL}Speed (Bytes/Second): {SingleJobResults.SpeedStatistic.BytesPerSec}" +
-                $"{NL}Speed (MB/Min): {SingleJobResults.SpeedStatistic.MegaBytesPerMin}" +
-                $"{NL}Any Jobs Cancelled: {(SingleJobResults.Status.WasCancelled ? "YES" : "NO")}" +
-                $"{NL}{SingleJobResults.Status}";
-        }
-
         #endregion
 
         #region < Single Job Methods >
@@ -236,23 +202,7 @@ namespace RoboSharp.BackupApp
             }));
         }
 
-        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e) => UpdateSelectedResultsLabel((ListBox)sender, e, lbl_SelectedItemTotals);
-
-        private void Remove_Selected_Click(object sender, RoutedEventArgs e)
-        {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
-
-            SingleJobResults.Remove(result);
-
-            {
-                if (ListBox_JobResults.Items.Count == 0)
-                {
-                    lbl_OverallTotals.Content = "";
-                    lbl_SelectedItemTotals.Content = "";
-                }
-            }
-
-        }
+        
 
         #endregion
 
