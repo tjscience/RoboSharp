@@ -14,21 +14,29 @@ namespace RoboSharp.BackupApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region < SingleJob Fields >
+
         RoboCommand copy;
+        public ObservableCollection<FileError> SingleJobErrors = new ObservableCollection<FileError>();
+        private Results.RoboCopyResultsList SingleJobResults = new Results.RoboCopyResultsList();
 
-        public ObservableCollection<FileError> Errors = new ObservableCollection<FileError>();
+        #endregion
 
-        private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+        #region < RoboQueue Fields >
 
         /// <summary> List of RoboCommand objects to start at same time </summary>
         private RoboSharp.RoboQueue RoboQueue = new RoboSharp.RoboQueue();
+        public ObservableCollection<FileError> MultiJobErrors = new ObservableCollection<FileError>();
+
+        #endregion
+
+        #region < Init >
 
         public MainWindow()
         {
             InitializeComponent();
             this.Closing += MainWindow_Closing;
-            ListBox_JobResults.ItemsSource = JobResults;
-            ErrorGrid.ItemsSource = Errors;
+
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
             //Button Setup
@@ -36,13 +44,16 @@ namespace RoboSharp.BackupApp
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
             //Event subscribe
-            JobResults.CollectionChanged += UpdateOverallLabel;
             RoboQueue.OnFileProcessed += copy_OnFileProcessed;
             RoboQueue.OnCommandError += copy_OnCommandError;
             RoboQueue.OnError += copy_OnError;
             RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged;
             RoboQueue.OnCommandCompleted += copy_OnCommandCompleted;
             RoboQueue.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
+            //Setup SingleJob Tab
+            ListBox_JobResults.ItemsSource = SingleJobResults;
+            SingleJobErrorGrid.ItemsSource = SingleJobErrors;
+            SingleJobResults.CollectionChanged += ( _ , __ ) => UpdateOverallLabel(lbl_OverallTotals);
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -54,13 +65,9 @@ namespace RoboSharp.BackupApp
             }
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            OptionsGrid.IsEnabled = false;
-            ProgressTab.IsSelected = true;
-            ProgressGrid.IsEnabled = true;
-            Backup();
-        }
+        #endregion
+
+        #region < Shared Methods >
 
         private RoboCommand GetCommand(bool BindEvents)
         {
@@ -83,7 +90,7 @@ namespace RoboSharp.BackupApp
             var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
                 .Cast<Match>()
                 .Select(m => m.Value);
-            
+
             copy.CopyOptions.FileFilter = fileFilterItems;
             copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
             copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
@@ -137,15 +144,97 @@ namespace RoboSharp.BackupApp
             return copy;
         }
 
+        void DebugMessage(object sender, Debugger.DebugMessageArgs e)
+        {
+            Console.WriteLine(e.Message);
+        }
+
+        public static bool IsInt(string text)
+        {
+            Regex regex = new Regex("[^0-9]+$", RegexOptions.Compiled);
+            return !regex.IsMatch(text);
+        }
+
+        private void UpdateSelectedResultsLabel(object listboxSender, SelectionChangedEventArgs e, Label LabelToUpdate)
+        {
+            Results.RoboCopyResults result = (Results.RoboCopyResults)((ListBox)listboxSender).SelectedItem;
+            string NL = Environment.NewLine;
+            LabelToUpdate.Content = $"Selected Job:" +
+                $"{NL}Source: {result?.Source ?? ""}" +
+                $"{NL}Destination: {result?.Destination ?? ""}" +
+                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
+                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
+                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
+                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
+                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
+                $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
+                $"{NL}{result?.Status.ToString() ?? ""}";
+        }
+
+        /// <summary>
+        /// Runs every time the SingleJobResults list is updated.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void UpdateOverallLabel(Label LabelToUpdate)
+        {
+            string NL = Environment.NewLine;
+            LabelToUpdate.Content = $"Job History:" +
+                $"{NL}Total Directories: {SingleJobResults.DirectoriesStatistic.Total}" +
+                $"{NL}Total Files: {SingleJobResults.FilesStatistic.Total}" +
+                $"{NL}Total Size (bytes): {SingleJobResults.BytesStatistic.Total}" +
+                $"{NL}Speed (Bytes/Second): {SingleJobResults.SpeedStatistic.BytesPerSec}" +
+                $"{NL}Speed (MB/Min): {SingleJobResults.SpeedStatistic.MegaBytesPerMin}" +
+                $"{NL}Any Jobs Cancelled: {(SingleJobResults.Status.WasCancelled ? "YES" : "NO")}" +
+                $"{NL}{SingleJobResults.Status}";
+        }
+
+        #endregion
+
+        #region < Single Job Methods >
+
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            OptionsGrid.IsEnabled = false;
+            SingleJobExpander_Progress.IsExpanded = true;
+            SingleJobExpander_JobHistory.IsExpanded = false;
+            SingleJobExpander_Errors.IsExpanded = false;
+            SingleJobTab.IsSelected = true;
+            ProgressGrid.IsEnabled = true;
+            Backup();
+        }
+
         public void Backup()
         {
             copy = GetCommand(true);
             copy.Start();
         }
 
-        /// <summary>
-        /// Bind the ProgressEstimator to the text controls on the PROGRESS tab
-        /// </summary>
+        private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (!copy.IsPaused)
+            {
+                copy.Pause();
+                PauseResumeButton.Content = "Resume";
+            }
+            else
+            {
+                copy.Resume();
+                PauseResumeButton.Content = "Pause";
+            }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (copy != null)
+            {
+                copy.Stop();
+                copy.Dispose();
+            }
+
+        }
+
+        /// <summary> Bind the ProgressEstimator to the text controls on the PROGRESS tab </summary>
         private void Copy_OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e)
         {
             e.ResultsEstimate.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
@@ -153,24 +242,26 @@ namespace RoboSharp.BackupApp
             e.ResultsEstimate.FileStats.PropertyChanged += FileStats_PropertyChanged;
         }
 
+
         private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Dispatcher.Invoke(() => this.ProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+            SingleProgressEstimator_Files.Dispatcher.Invoke(() => SingleProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+            //Dispatcher.Invoke(() =>
+            //{
+            //    string s = SingleProgressEstimator_Files.Text;
+            //    SingleProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true);
+            //    string n = SingleProgressEstimator_Files.Text;
+            //});
         }
 
         private void DirStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Dispatcher.Invoke(() => ProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
+            SingleProgressEstimator_Directories.Dispatcher.Invoke(() => SingleProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
         }
 
         private void ByteStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            Dispatcher.Invoke(() => this.ProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        void DebugMessage(object sender, Debugger.DebugMessageArgs e)
-        {
-            Console.WriteLine(e.Message);
+            SingleProgressEstimator_Bytes.Dispatcher.Invoke(() => SingleProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
         }
 
         void copy_OnCommandError(object sender, CommandErrorEventArgs e)
@@ -187,7 +278,7 @@ namespace RoboSharp.BackupApp
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                FileProgress.Value = e.CurrentFileProgress;
+                SingleJobFileProgressBar.Value = e.CurrentFileProgress;
                 FileProgressPercent.Text = string.Format("{0}%", e.CurrentFileProgress);
             }));
         }
@@ -196,8 +287,8 @@ namespace RoboSharp.BackupApp
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                Errors.Insert(0, new FileError { Error = e.Error });
-                ErrorsTab.Header = string.Format("Errors ({0})", Errors.Count);
+                SingleJobErrors.Insert(0, new FileError { Error = e.Error });
+                SingleJobExpander_Errors.Header = string.Format("Errors ({0})", SingleJobErrors.Count);
             }));
         }
 
@@ -221,109 +312,17 @@ namespace RoboSharp.BackupApp
                 var results = e.Results;
                 Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
                 Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
-                JobResults.Add(e.Results);
+                SingleJobResults.Add(e.Results);
             }));
         }
 
-        private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (!copy.IsPaused)
-            {
-                copy.Pause();
-                PauseResumeButton.Content = "Resume";
-            }
-            else
-            {
-                copy.Resume();
-                PauseResumeButton.Content = "Pause";
-            }
-        }
-
-        private void SourceBrowseButton_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            Source.Text = dialog.SelectedPath;
-        }
-
-        private void DestinationBrowseButton_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
-            Destination.Text = dialog.SelectedPath;
-        }
-
-        private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            e.Handled = !IsInt(e.Text);
-        }
-
-        private void IsAttribute_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$"))
-                e.Handled = true;
-            if ("bcefghijklmnpqrvwxyzBCEFGHIJKLMNPQRVWXYZ".Contains(e.Text))
-                e.Handled = true;
-            if (((TextBox)sender).Text.Contains(e.Text))
-                e.Handled = true;
-        }
-
-        public static bool IsInt(string text)
-        {
-            Regex regex = new Regex("[^0-9]+$");
-            return !regex.IsMatch(text);
-        }
-
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (copy != null)
-            {
-                copy.Stop();
-                copy.Dispose();
-            }
-        }
-
         private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e) => UpdateSelectedResultsLabel((ListBox)sender, e, lbl_SelectedItemTotals);
-        
-        private void UpdateSelectedResultsLabel(object listboxSender, SelectionChangedEventArgs e, Label LabelToUpdate)
-        {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)((ListBox)listboxSender).SelectedItem;
-            string NL = Environment.NewLine;
-            LabelToUpdate.Content = $"Selected Job:" +
-                $"{NL}Source: {result?.Source ?? ""}" +
-                $"{NL}Destination: {result?.Destination ?? ""}" +
-                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
-                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
-                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
-                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
-                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
-                $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
-                $"{NL}{result?.Status.ToString() ?? ""}";
-        }
-
-        /// <summary>
-        /// Runs every time the JobResults list is updated.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void UpdateOverallLabel(object sender, EventArgs e)
-        {
-            string NL = Environment.NewLine;
-            lbl_OverallTotals.Content = $"Job History:" +
-                $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
-                $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
-                $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
-                $"{NL}Speed (Bytes/Second): {JobResults.SpeedStatistic.BytesPerSec}" +
-                $"{NL}Speed (MB/Min): {JobResults.SpeedStatistic.MegaBytesPerMin}" +
-                $"{NL}Any Jobs Cancelled: {(JobResults.Status.WasCancelled ? "YES" : "NO")}" +
-                $"{NL}{JobResults.Status.ToString()}";
-        }
 
         private void Remove_Selected_Click(object sender, RoutedEventArgs e)
         {
             Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
 
-            JobResults.Remove(result);
+            SingleJobResults.Remove(result);
 
             {
                 if (ListBox_JobResults.Items.Count == 0)
@@ -334,6 +333,10 @@ namespace RoboSharp.BackupApp
             }
 
         }
+
+        #endregion
+
+        #region < Multi-Job >
 
         private void btn_AddToQueue(object sender, RoutedEventArgs e)
         {
@@ -352,8 +355,8 @@ namespace RoboSharp.BackupApp
             btnPauseQueue.IsEnabled = true;
             btnAddToQueue.Content = "Stop Queued Jobs";
             await RoboQueue.StartAll();
-            JobResults.Clear();
-            JobResults.AddRange(RoboQueue.RunOperationResults);
+            SingleJobResults.Clear();
+            SingleJobResults.AddRange(RoboQueue.RunOperationResults);
             RoboQueue.ClearCommandList();
             btnPauseQueue.IsEnabled = false;
             btnAddToQueue.Content = "Add to Queue";
@@ -377,6 +380,50 @@ namespace RoboSharp.BackupApp
         {
 
         }
+
+        #endregion
+
+        #region < Options Page >
+
+        private void SourceBrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            Source.Text = dialog.SelectedPath;
+        }
+
+        private void DestinationBrowseButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new System.Windows.Forms.FolderBrowserDialog();
+            System.Windows.Forms.DialogResult result = dialog.ShowDialog();
+            Destination.Text = dialog.SelectedPath;
+        }
+
+        #endregion
+
+        #region < Form Stuff >
+
+        private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !IsInt(e.Text);
+        }
+
+        private void IsAttribute_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
+                e.Handled = true;
+            if ("bcefghijklmnpqrvwxyzBCEFGHIJKLMNPQRVWXYZ".Contains(e.Text))
+                e.Handled = true;
+            if (((TextBox)sender).Text.Contains(e.Text))
+                e.Handled = true;
+        }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        #endregion
     }
 
     public class FileError

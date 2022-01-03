@@ -4,14 +4,12 @@
         xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="av" x:Class="RoboSharp.BackupApp.MainWindow"
         Title="Backup App" Height="700" Width="725" ResizeMode="NoResize">
     <Grid>
-        <TabControl>
+        <TabControl SelectionChanged="TabControl_SelectionChanged">
             <TabItem Header="Options" Name="OptionsTab">
                 <Grid Name="OptionsGrid">
-
                     <TextBlock HorizontalAlignment="Left" Margin="34,8,0,0" TextWrapping="Wrap" Text="Source" VerticalAlignment="Top"/>
                     <TextBox Name="Source" HorizontalAlignment="Left" Height="23" Margin="34,24,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560"/>
                     <Button Name="SourceBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="606,26,0,0" Click="SourceBrowseButton_Click"/>
-
                     <TextBlock HorizontalAlignment="Left" Margin="34,52,0,0" TextWrapping="Wrap" Text="Destination" VerticalAlignment="Top"/>
                     <TextBox Name="Destination" HorizontalAlignment="Left" Height="23" Margin="34,68,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560"/>
                     <Button Name="DestinationBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="606,69,0,0" Click="DestinationBrowseButton_Click"/>
@@ -221,42 +219,94 @@
 
                 </Grid>
             </TabItem>
-            <TabItem Header="Progress" Name="ProgressTab">
-                <Grid Name="ProgressGrid" IsEnabled="false">
-                    <TextBlock HorizontalAlignment="Left" Margin="40,27,0,0" TextWrapping="Wrap" Text="Current Operation" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <TextBlock Name="CurrentOperation" HorizontalAlignment="Left" Margin="158,27,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="#FF000099"/>
+            <TabItem x:Name="SingleJobTab" Header="Single Job" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="83" Margin="0,0,0,0">
+                <Grid x:Name="SingleJobTabGrid" Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="17*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="12*"/>
+                        <ColumnDefinition Width="674*"/>
+                    </Grid.ColumnDefinitions>
+                    <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693" Grid.ColumnSpan="4">
+                        <StackPanel>
+                            <Expander Name="SingleJobExpander_Progress" Background="LightBlue" Header="Progress" RenderTransformOrigin="0.5,0.5">
+                                <Grid Name="ProgressGrid" IsEnabled="true" Margin="10">
+                                    <Grid.RowDefinitions>
+                                        <!-- 0 -->
+                                        <RowDefinition MinHeight="30"/>
+                                        <!-- 1 -->
+                                        <RowDefinition MinHeight="30"/>
+                                        <!-- 2 -->
+                                        <RowDefinition MinHeight="30"/>
+                                        <!-- 3 - ProgressBar Label -->
+                                        <RowDefinition />
+                                        <!-- 4 - ProgressBar -->
+                                        <RowDefinition />
+                                        <!--Estimators -->
+                                        <RowDefinition MinHeight="140"/>
+                                        <!--Spacer between Estimator and PauseButtons-->
+                                        <RowDefinition MinHeight="5"/>
+                                        <!--Buttons -->
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200" />
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
 
-                    <TextBlock HorizontalAlignment="Left" Margin="37,93,0,0" TextWrapping="Wrap" Text="Name" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <TextBlock Name="CurrentFile" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" Margin="37,114,0,0" VerticalAlignment="Top" Width="636" Height="83" Foreground="#FF009900"/>
-                    <TextBlock HorizontalAlignment="Left" Margin="37,218,0,0" TextWrapping="Wrap" Text="Current File Copy Progress" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <ProgressBar Minimum="0" Maximum="100" Name="FileProgress" HorizontalAlignment="Left" Height="20" Margin="40,239,0,0" VerticalAlignment="Top" Width="625"/>
-                    <TextBlock HorizontalAlignment="Left" Margin="40,60,0,0" TextWrapping="Wrap" Text="Size (bytes)" VerticalAlignment="Top" FontWeight="Bold"/>
-                    <TextBlock Name="CurrentSize" HorizontalAlignment="Left" Margin="158,60,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="#FF444444"/>
-                    <TextBlock Name="FileProgressPercent" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" Margin="615,218,0,0" TextWrapping="Wrap" VerticalAlignment="Top" RenderTransformOrigin="1.76,-0.062"/>
-                    <Button Name="PauseResumeButton" Click="PauseResumeButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,95,10" Content="Pause" Width="75" />
-                    <Button Name="CancelButton" Click="CancelButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,10" Content="Cancel" Width="75" />
-                    <TextBlock x:Name="ProgressEstimator_Directories" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="40,275,0,0"/>
-                    <TextBlock x:Name="ProgressEstimator_Files" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="225,275,0,0"/>
-                    <TextBlock x:Name="ProgressEstimator_Bytes" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="120" Foreground="#FF009900" Margin="400,275,0,0"/>
+                                    <TextBlock Text="Current Operation" Grid.Row="0" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
+                                    <TextBlock Name="CurrentOperation" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" Foreground="#FF000099"/>
+
+                                    <TextBlock Text="Name" Grid.Row="1" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
+                                    <TextBlock Name="CurrentFile" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Foreground="#FF009900"/>
+
+                                    <TextBlock Text="Size (bytes)" Grid.Row="2" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
+                                    <TextBlock Name="CurrentSize" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Foreground="#FF444444"/>
+
+                                    <TextBlock Text="Current File Copy Progress" Grid.Row="3" Grid.Column="0" TextWrapping="Wrap" FontWeight="Bold"/>
+                                    <TextBlock Name="FileProgressPercent" Grid.Row="3" Grid.Column="1" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" TextWrapping="Wrap" />
+                                    <ProgressBar Name="SingleJobFileProgressBar" Grid.Row="4" Grid.ColumnSpan="2" Minimum="0" Maximum="100" HorizontalAlignment="Center" Height="20" Width="625"/>
+
+                                    <Grid IsEnabled="true" Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Center" Width="620"  HorizontalAlignment="Center">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition  Width="Auto"/>
+                                            <ColumnDefinition  Width="*"/>
+                                            <ColumnDefinition  Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="SingleProgressEstimator_Directories" Grid.Column="0" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Directories"/>
+                                        <TextBlock x:Name="SingleProgressEstimator_Files" Grid.Column="1" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Files"/>
+                                        <TextBlock x:Name="SingleProgressEstimator_Bytes" Grid.Column="2" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Width="150" Height="120" VerticalAlignment="Center" Foreground="Black" Text="Bytes"/>
+                                    </Grid>
+
+                                    <Button Name="PauseResumeButton" Grid.Row="7" Click="PauseResumeButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,95,0" Content="Pause" Width="75"  />
+                                    <Button Name="CancelButton" Grid.Row="7" Click="CancelButton_Click" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,0" Content="Cancel" Width="75" />
+                                </Grid>
+                            </Expander>
+                            <Expander Name="SingleJobExpander_Errors" Background="LightGreen" Header="Errors">
+                                <DataGrid Name="SingleJobErrorGrid" MinHeight="100" Margin="10"></DataGrid>
+                            </Expander>
+                            <Expander Name="SingleJobExpander_JobHistory" Background="PaleGoldenrod" Header="Job History">
+                                <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5" Margin="10">
+                                    <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="282" SelectionChanged="UpdateSelectedItemsLabel"/>
+                                    <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="297,251,0,0" VerticalAlignment="Top" Width="367"/>
+                                    <Label x:Name="lbl_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="192" Margin="297,54,0,0" VerticalAlignment="Top" Width="367"/>
+                                    <Label x:Name="lbl_JobHistoryHeader" Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
+                                    <Button Content="Remove Selected" HorizontalAlignment="Left" Margin="197,379,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
+                                </Grid>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
             </TabItem>
-           <TabItem Header="Progress - Multi Job" Name="MultiJobProgressTab">
-                <Grid x:Name="MultiJobProgressGrid">
+            <TabItem Header="Progress - Multi Job" Name="MultiJobProgressTab">
+                <Grid x:Name="MultiJobProgressGrid" Margin="5">
                     <Button x:Name="btnPauseQueue" Content="Pause Job Queue" HorizontalAlignment="Right" Margin="0,0,359,446" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue" Grid.Column="2"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Errors" Name="ErrorsTab">
-                <DataGrid Name="ErrorGrid"></DataGrid>
-            </TabItem>
-           <TabItem Header="Job History" HorizontalAlignment="Left" Height="20" VerticalAlignment="Center" Margin="-2,0,0,0">
-                <Grid x:Name="ResultsListGrid" Background="#FFE5E5E5">
-                    <ListBox x:Name="ListBox_JobResults" HorizontalAlignment="Left" Height="320" Margin="10,54,0,0" VerticalAlignment="Top" Width="321" SelectionChanged="UpdateSelectedItemsLabel"/>
-                    <Label x:Name="lbl_OverallTotals" Content="Total History Results" HorizontalAlignment="Left" Height="179" Margin="336,251,0,0" VerticalAlignment="Top" Width="367"/>
-                    <Label x:Name="lbl_SelectedItemTotals" Content="Selected Job Results" HorizontalAlignment="Left" Height="192" Margin="336,54,0,0" VerticalAlignment="Top" Width="367"/>
-                    <Label x:Name="lbl_JobHistoryHeader" Content="This tab contains a list of the results from all previous runs during this session." HorizontalAlignment="Left" Height="44" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-                    <Button Content="Remove Selected" HorizontalAlignment="Left" Margin="37,394,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
-                </Grid>
-            </TabItem>
+
         </TabControl>
     </Grid>
 </Window>
