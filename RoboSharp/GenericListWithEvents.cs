@@ -157,9 +157,11 @@ namespace System.Collections.Generic
         ///<inheritdoc cref="List{T}.Remove(T)"/>
         new public virtual bool Remove(T item)
         {
+            if (!base.Contains(item)) return false;
+            int i = base.IndexOf(item);
             if (base.Remove(item))
             {
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, i));
                 return true;
             }
             else

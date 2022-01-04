@@ -704,7 +704,20 @@ namespace RoboSharp
             OnPropertyChanged("Commands");
         }
 
+        /// <summary>Performs <see cref="RemoveCommand(int)"/> then <see cref="AddCommand(int, RoboCommand)"/></summary>
+        public void ReplaceCommand(RoboCommand item, int index)
+        {
+            if (IsRunning) throw new ListAccessDeniedException();            
+            RemoveCommand(index);
+            AddCommand(index, item);
+        }
+
         #endregion
+
+        #region < Find / Contains / Etc >
+
+        /// <inheritdoc cref="List{T}.Contains(T)"/>
+        public bool Contains(RoboCommand item) => CommandList.Contains(item);
 
         /// <inheritdoc cref="List{T}.ForEach(Action{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
@@ -722,6 +735,8 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.IndexOf(T)"/>
         public int IndexOf(RoboCommand item) => CommandList.IndexOf(item);
+
+        #endregion
 
         #endregion
 

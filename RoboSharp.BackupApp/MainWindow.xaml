@@ -7,16 +7,20 @@
         <TabControl SelectionChanged="TabControl_SelectionChanged">
             <TabItem Header="Options" x:Name="OptionsTab">
                 <Grid x:Name="OptionsGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="173*"/>
+                        <ColumnDefinition Width="540*"/>
+                    </Grid.ColumnDefinitions>
                     <TextBlock HorizontalAlignment="Left" Margin="34,8,0,0" TextWrapping="Wrap" Text="Source" VerticalAlignment="Top"/>
-                    <TextBox x:Name="Source" HorizontalAlignment="Left" Height="23" Margin="34,24,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560"/>
-                    <Button x:Name="SourceBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="606,26,0,0" Click="SourceBrowseButton_Click"/>
+                    <TextBox x:Name="Source" HorizontalAlignment="Left" Height="23" Margin="34,24,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" Grid.ColumnSpan="2"/>
+                    <Button x:Name="SourceBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="433,26,0,0" Click="SourceBrowseButton_Click" Grid.Column="1"/>
                     <TextBlock HorizontalAlignment="Left" Margin="34,52,0,0" TextWrapping="Wrap" Text="Destination" VerticalAlignment="Top"/>
-                    <TextBox x:Name="Destination" HorizontalAlignment="Left" Height="23" Margin="34,68,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560"/>
-                    <Button x:Name="DestinationBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="606,69,0,0" Click="DestinationBrowseButton_Click"/>
+                    <TextBox x:Name="Destination" HorizontalAlignment="Left" Height="23" Margin="34,68,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" Grid.ColumnSpan="2"/>
+                    <Button x:Name="DestinationBrowseButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Margin="433,69,0,0" Click="DestinationBrowseButton_Click" Grid.Column="1"/>
                     <TextBlock HorizontalAlignment="Left" Margin="34,104,0,0" TextWrapping="Wrap" Text="Job Name (Optional)" VerticalAlignment="Top" />
-                    <TextBox x:Name="JobName" HorizontalAlignment="Left" Height="23" Margin="159,102,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="175"/>
+                    <TextBox x:Name="JobName" HorizontalAlignment="Left" Height="23" Margin="159,102,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="175" Grid.ColumnSpan="2"/>
 
-                    <ScrollViewer Margin="34,135,20,300" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Margin="34,135,20,340" VerticalScrollBarVisibility="Auto" Grid.ColumnSpan="2">
                         <StackPanel>
                             <Expander Background="LightBlue" Header="Copy Options">
                                 <Grid Margin="10">
@@ -205,17 +209,20 @@
                         </StackPanel>
                     </ScrollViewer>
                     <TextBlock HorizontalAlignment="Left" Margin="34,308,0,0" TextWrapping="Wrap" Text="Single Job:-" VerticalAlignment="Top" />
-                    <Button Content="Backup" HorizontalAlignment="Right" Margin="0,334,600,0" VerticalAlignment="Top" Width="75" Click="StartButton_Click"/>
+                    <Button Content="Backup" HorizontalAlignment="Right" Margin="0,334,60,0" VerticalAlignment="Top" Width="75" Click="StartButton_Click"/>
 
                     <TextBlock HorizontalAlignment="Left" Margin="34,367,0,0" TextWrapping="Wrap" Text="Multiple Jobs:-" VerticalAlignment="Top" />
-                    <Button x:Name="btnAddToQueue" Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,577,218" VerticalAlignment="Bottom" Width="98" Click="btn_AddToQueue"/>
-                    <Button x:Name="btnRemoveSelectedJob" Content="Remove Selected" HorizontalAlignment="Right" Margin="0,0,463,218" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected"/>
-                    <Button x:Name="btnUPdateSelectedJob" Content="Update Selected" HorizontalAlignment="Right" Margin="0,0,349,218" VerticalAlignment="Bottom" Width="98" Click="btn_UpdateSelected"/>
-                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,124,55" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue"/>
-                    <ListBox x:Name="ListBox_Jobs"  Margin="44,447,289,25"/>
-                    <CheckBox x:Name="chkListOnly" Content="ListOnly Mode" HorizontalAlignment="Left" Margin="497,460,0,0" VerticalAlignment="Top"/>
-                    <TextBox x:Name="tbConcurrentJobs" HorizontalAlignment="Left" Margin="644,494,0,0" TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="40"/>
-                    <Label x:Name="lblConcurrentJobs" Content="Commands to run at once (0 = all):" HorizontalAlignment="Left" Margin="444,490,0,0" VerticalAlignment="Top"/>
+                    <Button x:Name="btnAddToQueue" Content="Add to Queue" HorizontalAlignment="Right" Margin="0,0,37,218" VerticalAlignment="Bottom" Width="98" Click="btn_AddToQueue"/>
+                    <Button x:Name="btnReplaceSelected" Content="Update Selected" HorizontalAlignment="Right" Margin="0,0,37,188" VerticalAlignment="Bottom" Width="98" Click="btn_ReplaceSelected" Grid.Column="0"/>
+                    <Button x:Name="btnRemoveSelectedJob" Content="Remove Selected" HorizontalAlignment="Right" Margin="0,0,289,188" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected" Grid.Column="1"/>
+                    <Button x:Name="btnLoadSelectedJob" Content="Load Selected" HorizontalAlignment="Right" Margin="0,0,432,188" VerticalAlignment="Bottom" Width="98" Click="btn_LoadSelected" Grid.Column="1"/>
+
+                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" HorizontalAlignment="Right" Margin="0,0,124,55" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue" Grid.Column="1"/>
+                    <ListBox x:Name="ListBox_RoboQueueJobs_OptionsPage"  Margin="38,465,289,25" Grid.ColumnSpan="2" SelectionChanged="RoboQueueListBoxSelectionChanged"/>
+                    <CheckBox x:Name="chkListOnly" Content="ListOnly Mode" HorizontalAlignment="Left" Margin="324,460,0,0" VerticalAlignment="Top" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked" Grid.Column="1"/>
+                    <ComboBox x:Name="cmbConcurrentJobs_OptionsPage" HorizontalAlignment="Left" Margin="471,494,0,0" VerticalAlignment="Top" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged" Grid.Column="1"/>
+                    <Label x:Name="lbloncurrentJobs" Content="Commands to run at once (0 = all):" HorizontalAlignment="Left" Margin="271,490,0,0" VerticalAlignment="Top" Grid.Column="1"/>
+
                 </Grid>
             </TabItem>
             <!-- Single-Job Tab -->
@@ -235,7 +242,6 @@
             <!-- Multi-Job Tab -->
             <TabItem x:Name="MultiJobProgressTab" Header="Multi-Job">
                 <Grid Margin="5" Background="#FFE5E5E5">
-                    <Button x:Name="btnPauseQueue" Content="Pause Job Queue" HorizontalAlignment="Right" Margin="0,0,359,446" VerticalAlignment="Bottom" Width="97" Click="btn_PauseResumeQueue" Grid.Column="2"/>
                     <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693">
                         <StackPanel>
                             <!-- RoboQueue Panel -->
@@ -250,15 +256,16 @@
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
                                     <!-- ListBox / Edit / Remove buttons -->
-                                    <ListBox x:Name="ListBox_Jobs_Copy" Grid.Row="0" Grid.Column="0"/>
-                                    <Button x:Name="btnUPdateSelectedJob_Copy" Content="Update Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="98" Click="btn_UpdateSelected"/>
+                                    <ListBox x:Name="ListBox_RoboQueueJobs_MultiJobPage" Grid.Row="0" Grid.Column="0" SelectionChanged="RoboQueueListBoxSelectionChanged"/>
+                                    <Button x:Name="btnUPdateSelectedJob_Copy" Content="Update Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="98" Click="btn_LoadSelected"/>
                                     <Button x:Name="btnRemoveSelectedJob_Copy" Content="Remove Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected"/>
                                     <!-- Commands Count To Run -->
                                     <Label x:Name="lblConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1"  Margin="5,0,40,0" Content="Commands to run at once (0 = all):" HorizontalAlignment="Right" VerticalAlignment="Top"/>
-                                    <TextBox x:Name="tbConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0" HorizontalAlignment="Right"  TextWrapping="Wrap" Text="1" VerticalAlignment="Top" Width="40"/>
+                                    <ComboBox x:Name="cmbConcurrentJobs_MultiJobPage" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged"/>
                                     <!-- ListOnly and Start Btn -->
-                                    <CheckBox x:Name="chkListOnly_Copy" Grid.Row="0" Grid.Column="1"  Margin="50,0,0,30" Content="ListOnly Mode" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                                    <CheckBox x:Name="chkListOnly_Copy" Grid.Row="0" Grid.Column="1"  Margin="50,0,0,30" Content="ListOnly Mode" HorizontalAlignment="Right" VerticalAlignment="Bottom" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked"/>
                                     <Button x:Name="btnStartJobQueue_Copy" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Content="Start Job Queue" Click="btn_StartQueue"/>
+                                    <Button x:Name="btnPauseQueue" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Content="Pause Job Queue" HorizontalAlignment="Right" VerticalAlignment="Top" Width="97" Click="btn_PauseResumeQueue"/>
                                 </Grid>
                             </Expander>
                             <!-- Progress Expander -->
@@ -306,7 +313,12 @@
                                     <TextBlock x:Name="MultiJob_JobsCompleteXofY" Grid.Row="2" Grid.Column="1" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" TextWrapping="Wrap" />
                                     <ProgressBar x:Name="MultiJobProgressBar_JobsComplete" Grid.Row="3" Grid.ColumnSpan="2" Minimum="0" Maximum="100" HorizontalAlignment="Center" Height="20" Width="625"/>
                                     <!-- Command Progress -->
-                                    <local:MultiJob_CommandProgressIndicator Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
+                                    <ScrollViewer Grid.Row="5" Grid.ColumnSpan="2" >
+                                        <StackPanel Name="RoboQueueProgressStackPanel" >
+                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
+                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
                                 </Grid>
                             </Expander>
                             <!-- End Of Progress Expander -->

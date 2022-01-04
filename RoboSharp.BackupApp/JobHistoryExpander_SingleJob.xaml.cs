@@ -79,6 +79,7 @@ namespace RoboSharp.BackupApp
             DirectoriesStatistic_PropertyChanged(null, null);
             FilesStatistic_PropertyChanged(null, null);
             BytesStatistic_PropertyChanged(null, null);
+            
             list.CollectionChanged += ResultsList_CollectionChanged;
             IsResultsListBound = true;
 
@@ -122,6 +123,8 @@ namespace RoboSharp.BackupApp
         {
             Results.RoboCopyResults result = ResultsObj;
             string NL = Environment.NewLine;
+            Dispatcher.Invoke(() => 
+
             lbl_SelectedItem_Totals.Content = $"Selected Job:" +
                 $"{NL}Source: {result?.Source ?? ""}" +
                 $"{NL}Destination: {result?.Destination ?? ""}" +
@@ -131,7 +134,9 @@ namespace RoboSharp.BackupApp
                 $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
                 $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
                 $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
-                $"{NL}{result?.Status.ToString() ?? ""}";
+                $"{NL}{result?.Status.ToString() ?? ""}"
+                
+                );
         }
 
         /// <summary>
@@ -144,18 +149,18 @@ namespace RoboSharp.BackupApp
             string NL = Environment.NewLine;
             if (ResultsList == null || ResultsList.Count == 0)
             {
-                lbl_SelectedItem_Totals.Content = "Job History: None";
+                Dispatcher.Invoke( () => lbl_SelectedItem_Totals.Content = "Job History: None");
             }
             else
             {
-                lbl_SelectedItem_Totals.Content = $"Job History:" +
+                Dispatcher.Invoke(() => lbl_SelectedItem_Totals.Content = $"Job History:" +
                     $"{NL}Total Directories: {ResultsList.DirectoriesStatistic.Total}" +
                     $"{NL}Total Files: {ResultsList.FilesStatistic.Total}" +
                     $"{NL}Total Size (bytes): {ResultsList.BytesStatistic.Total}" +
                     $"{NL}Speed (Bytes/Second): {ResultsList.SpeedStatistic.BytesPerSec}" +
                     $"{NL}Speed (MB/Min): {ResultsList.SpeedStatistic.MegaBytesPerMin}" +
                     $"{NL}Any Jobs Cancelled: {(ResultsList.Status.WasCancelled ? "YES" : "NO")}" +
-                    $"{NL}{ResultsList.Status}";
+                    $"{NL}{ResultsList.Status}");
             }
         }
 
