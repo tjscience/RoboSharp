@@ -506,13 +506,13 @@ namespace RoboSharp
                 if (cancellationToken.IsCancellationRequested)
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
-                    Debugger.Instance.DebugMessage("RunParrallel Task Was Cancelled");
+                    Debugger.Instance.DebugMessage("RunParallel Task Was Cancelled");
                     TaskCancelSource = null;
                     StopAll();
                 }
                 else
                 {
-                    Debugger.Instance.DebugMessage("RunParrallel Task Completed");
+                    Debugger.Instance.DebugMessage("RunParallel Task Completed");
                 }
 
                 CommandList.ForEach((c) => returnList.Add(c.GetResults())); //Loop through the list, adding the results of each command to the list
