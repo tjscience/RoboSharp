@@ -97,6 +97,8 @@ namespace RoboSharp.BackupApp
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
 
+            copy.Name = JobName.Text;
+
             // split user input by whitespace, mantaining those enclosed by quotes
             var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
                 .Cast<Match>()
