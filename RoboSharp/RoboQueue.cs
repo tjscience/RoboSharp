@@ -16,7 +16,7 @@ namespace RoboSharp
     /// Contains a private List{RoboCommand} object with controlled methods for access to it.  
     /// <para/>Implements the following: <br/>
     /// <see cref="IEnumerable"/> -- Allow enumerating through the collection that is stored in a private list -- Also see <see cref="Commands"/> <br/>
-    /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes  against the list <see cref="ObservableList{T}"/> <br/>
+    /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes against the list <see cref="ObservableList{T}"/> <br/>
     /// <see cref="INotifyPropertyChanged"/> -- Most properties will trigger <see cref="PropertyChanged"/> events when updated.<br/>
     /// <see cref="IDisposable"/> -- Allow disposal of all <see cref="RoboCommand"/> objects in the list.
     /// </summary>
@@ -304,10 +304,15 @@ namespace RoboSharp
             internal CommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = System.DateTime.Now; }
             
             /// <summary>
-            /// Command that started
+            /// Command that started.
             /// </summary>
             public RoboCommand Command { get; }
-            
+
+            /// <summary>
+            /// Returns TRUE if the command's <see cref="RoboSharp.Results.ProgressEstimator"/> is available for binding
+            /// </summary>
+            public bool ProgressEstimatorAvailable => Command.IsRunning;
+
             /// <summary>
             /// Local time the command started.
             /// </summary>
@@ -486,8 +491,7 @@ namespace RoboSharp
                         OnPropertyChanged("JobsCurrentlyRunning");
                     });
                     TaskList.Add(T);                    //Add the continuation task to the list.
-                    C.WaitUntil(TaskStatus.Running);    //Wait until the RoboCopy operation has begun
-                    if (C.Status < TaskStatus.RanToCompletion) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
+                    if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
                     OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                     //Check if more jobs are allowed to run

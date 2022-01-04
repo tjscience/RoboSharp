@@ -300,6 +300,10 @@ namespace RoboSharp.BackupApp
         {
             if (!RoboQueue.IsRunning)
             {
+                MultiJobProgressBar_JobsComplete.Value = 0;
+                MultiJobProgressBar_JobsComplete.Minimum = 0;
+                MultiJobProgressBar_JobsComplete.Maximum = RoboQueue.ListCount;
+
                 btnAddToQueue.IsEnabled = false;
                 btnRemoveSelectedJob.IsEnabled = false;
                 btnRemoveSelectedJob_Copy.IsEnabled = false;
@@ -409,8 +413,10 @@ namespace RoboSharp.BackupApp
         /// </summary>
         private void RoboQueue_OnCommandStarted(RoboQueue sender, RoboQueue.CommandStartedEventArgs e)
         {
-            MultiJob_CommandProgressIndicator ProgressIndicator = new MultiJob_CommandProgressIndicator(e.Command);
-            Dispatcher.Invoke(() => RoboQueueProgressStackPanel.Children.Add(ProgressIndicator));
+            Dispatcher.Invoke(() =>
+            {
+                RoboQueueProgressStackPanel.Children.Add( new MultiJob_CommandProgressIndicator(e.Command) );
+            });
             UpdateCommandsRunningBox();
         }
 
@@ -432,7 +438,11 @@ namespace RoboSharp.BackupApp
                }
            });
             UpdateCommandsRunningBox();
-            Dispatcher.Invoke(() => MultiJob_JobsCompleteXofY.Text = $"{RoboQueue.JobsComplete} of {RoboQueue.ListCount}");
+            Dispatcher.Invoke(() =>
+            {
+                MultiJob_JobsCompleteXofY.Text = $"{RoboQueue.JobsComplete} of {RoboQueue.ListCount}";
+                MultiJobProgressBar_JobsComplete.Value = RoboQueue.JobsComplete;
+            });
         }
 
         /// <summary>
