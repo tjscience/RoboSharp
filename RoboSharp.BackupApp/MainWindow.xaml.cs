@@ -36,6 +36,7 @@ namespace RoboSharp.BackupApp
         public MainWindow()
         {
             InitializeComponent();
+            //new CollectionTester().RunTest(); // Test ObservableList works properly
             this.Closing += MainWindow_Closing;
 
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;

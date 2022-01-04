@@ -153,10 +153,6 @@ namespace RoboSharp.Results
 
         #region < Methods that handle List Modifications >
 
-        /// <summary>Overrides the Event Listener check since this class always processes added/removed items.</summary>
-        /// <returns>True</returns>
-        protected override bool HasEventListener_CollectionChanged() => true;
-
         /// <summary>Process the Added/Removed items, then fire the event</summary>
         /// <inheritdoc cref="ObservableList{T}.OnCollectionChanged(NotifyCollectionChangedEventArgs)"/>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
