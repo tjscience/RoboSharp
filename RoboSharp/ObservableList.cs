@@ -11,7 +11,7 @@ namespace System.Collections.Generic
     /// <typeparam name="T">Type of object the list will contain</typeparam>
     /// <remarks>
     /// This class is being provided by the RoboSharp DLL <br/>
-    /// <see href="https://github.com/tjscience/RoboSharp/tree/dev/RoboSharp/GenericListWithEvents.cs"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/tree/dev/RoboSharp/ObservableList.cs"/>
     /// </remarks>
     public class ObservableList<T> : List<T>, INotifyCollectionChanged
     {
