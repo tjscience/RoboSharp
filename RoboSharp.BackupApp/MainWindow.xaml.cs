@@ -303,10 +303,10 @@ namespace RoboSharp.BackupApp
                 btnReplaceSelected.IsEnabled = false;
                 btnUPdateSelectedJob_Copy.IsEnabled = false;
 
-                btnStartJobQueue.IsEnabled = false;
+                btnStartJobQueue.IsEnabled = true;
                 btnStartJobQueue.Content = "Stop Queued Jobs";
 
-                btnStartJobQueue_Copy.IsEnabled = false;
+                btnStartJobQueue_Copy.IsEnabled = true;
                 btnStartJobQueue_Copy.Content = "Stop Queued Jobs";
 
                 btnPauseQueue.IsEnabled = true;
