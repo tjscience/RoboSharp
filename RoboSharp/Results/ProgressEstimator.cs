@@ -9,6 +9,17 @@ namespace RoboSharp.Results
     /// <summary>
     /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
+    /// <remarks>
+    /// Subscribe to <see cref="RoboCommand.OnProgressEstimatorCreated"/> or <see cref="RoboQueue.OnProgressEstimatorCreated"/> to be notified when the ProgressEstimator becomes available for binding <br/>
+    /// Create event handler to subscribe to the Events you want to handle: <para/>
+    /// <code>
+    /// private void OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e) { <br/>
+    /// e.ResultsEstimate.ByteStats.PropertyChanged += ByteStats_PropertyChanged;<br/>
+    /// e.ResultsEstimate.DirStats.PropertyChanged += DirStats_PropertyChanged;<br/>
+    /// e.ResultsEstimate.FileStats.PropertyChanged += FileStats_PropertyChanged;<br/>
+    /// }<br/>
+    /// </code>
+    /// </remarks>
     public class ProgressEstimator : IDisposable
     {
         private ProgressEstimator() { }
@@ -66,7 +77,7 @@ namespace RoboSharp.Results
         {
             DirStats.Total++;
             CurrentDir = currentDir;
-            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { /* No Action */ }
+            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStats.Skipped++; }
             else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) DirStats.Copied++; }
             else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStats.Extras++;
             else
