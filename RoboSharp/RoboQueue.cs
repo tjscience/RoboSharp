@@ -32,7 +32,7 @@ namespace RoboSharp
             Init();
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
         }
-        
+
         /// <summary>
         /// Initialize a new (empty) <see cref="RoboQueue"/> object with a specificed Name.
         /// </summary>
@@ -66,7 +66,7 @@ namespace RoboSharp
             Init(name, maxConcurrentJobs);
             Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
         }
-        
+
         private void Init(string name = "", int maxConcurrentJobs = 1)
         {
             NameField = name;
@@ -94,20 +94,23 @@ namespace RoboSharp
         #endregion
 
         #region < Properties >
-        
+
         /// <summary>
         /// Name of this collection of RoboCommands
         /// </summary>
-        public string Name { 
+        public string Name
+        {
             get => NameField;
-            private set {
-                if (value != NameField) {
+            private set
+            {
+                if (value != NameField)
+                {
                     NameField = value;
                     OnPropertyChanged("Name");
                 }
             }
         }
-        
+
         /// <summary>
         /// Wraps the private <see cref="ObservableList{T}"/> into a ReadOnlyCollection for public consumption and data binding.
         /// </summary>
@@ -127,10 +130,13 @@ namespace RoboSharp
         /// <summary>
         /// This is set true when <see cref="PauseAll"/> is called while any of the items in the list were running, and set false when <see cref="ResumeAll"/> or <see cref="StopAll"/> is called.
         /// </summary>
-        public bool IsPaused {
+        public bool IsPaused
+        {
             get => IsPausedField;
-            private set {
-                if (value != IsPausedField) {
+            private set
+            {
+                if (value != IsPausedField)
+                {
                     IsPausedField = value;
                     OnPropertyChanged("IsPaused");
                 }
@@ -143,18 +149,22 @@ namespace RoboSharp
         public bool WasCancelled
         {
             get => WasCancelledField;
-            private set {
-                if (value != WasCancelledField) {
-                    WasCancelledField = value;  
+            private set
+            {
+                if (value != WasCancelledField)
+                {
+                    WasCancelledField = value;
                     OnPropertyChanged("WasCancelled");
                 }
             }
         }
 
         /// <summary> Indicates if the StartAll task is currently running. </summary>
-        public bool IsCopyOperationRunning { 
+        public bool IsCopyOperationRunning
+        {
             get => IsCopyOperationRunningField;
-            private set {
+            private set
+            {
                 if (value != IsCopyOperationRunningField)
                 {
                     bool running = IsRunning;
@@ -166,23 +176,29 @@ namespace RoboSharp
         }
 
         /// <summary> Indicates if the StartAll_ListOnly task is currently running. </summary>
-        public bool IsListOnlyRunning {
-            get => IsListOperationRunningField; 
-            private set {
-                if (value != IsListOperationRunningField) {
+        public bool IsListOnlyRunning
+        {
+            get => IsListOperationRunningField;
+            private set
+            {
+                if (value != IsListOperationRunningField)
+                {
                     bool running = IsRunning;
                     IsListOperationRunningField = value;
                     OnPropertyChanged("IsListOnlyRunning");
                     if (IsRunning != running) OnPropertyChanged("IsRunning");
                 }
-            } 
+            }
         }
 
         /// <summary> Indicates if the StartAll_ListOnly() operation has been completed. </summary>
-        public bool ListOnlyCompleted {
+        public bool ListOnlyCompleted
+        {
             get => ListOnlyCompletedField;
-            private set {
-                if (value != ListOnlyCompletedField) {
+            private set
+            {
+                if (value != ListOnlyCompletedField)
+                {
                     ListOnlyCompletedField = value;
                     OnPropertyChanged("ListOnlyCompleted");
                 }
@@ -190,10 +206,13 @@ namespace RoboSharp
         }
 
         /// <summary> Indicates if the StartAll() operation has been completed. </summary>
-        public bool CopyOperationCompleted {
+        public bool CopyOperationCompleted
+        {
             get => CopyOpCompletedField;
-            private set {
-                if (value != CopyOpCompletedField) {
+            private set
+            {
+                if (value != CopyOpCompletedField)
+                {
                     CopyOpCompletedField = value;
                     OnPropertyChanged("CopyOperationCompleted");
                 }
@@ -229,20 +248,23 @@ namespace RoboSharp
         /// Set Value to 0 to allow infinite number of jobs (Will issue all start commands at same time) <br/>
         /// Default Value = 1; <br/>
         /// </summary>
-        public int MaxConcurrentJobs { 
+        public int MaxConcurrentJobs
+        {
             get => MaxConcurrentJobsField;
-            set {
+            set
+            {
                 int newVal = value > 0 ? value : IsRunning & MaxConcurrentJobsField > 0 ? 1 : 0;  //Allow > 0 at all times //If running, set value to 1
-                if (newVal != MaxConcurrentJobsField) {
+                if (newVal != MaxConcurrentJobsField)
+                {
                     MaxConcurrentJobsField = newVal;
                     OnPropertyChanged("MaxConcurrentJobs");
                 }
-            } 
+            }
         }
-        
+
         /// <summary> Number of RoboCommands in the list </summary>
         public int ListCount => CommandList.Count;
-        
+
         /// <summary>
         /// Report how many <see cref="RoboCommand.Start"/> tasks has completed during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job exits.
@@ -267,7 +289,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="RoboCommand.OnFileProcessed"/>
         public event RoboCommand.FileProcessedHandler OnFileProcessed;
-        
+
         /// <inheritdoc cref="RoboCommand.OnCommandError"/>
         public event RoboCommand.CommandErrorHandler OnCommandError;
 
@@ -300,9 +322,9 @@ namespace RoboSharp
         /// </summary>
         public class CommandStartedEventArgs : EventArgs
         {
-            private CommandStartedEventArgs():base() { }
+            private CommandStartedEventArgs() : base() { }
             internal CommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = System.DateTime.Now; }
-            
+
             /// <summary>
             /// Command that started.
             /// </summary>
@@ -386,7 +408,8 @@ namespace RoboSharp
             ListOnlyResults.Clear();
             //Store the setting for ListOnly prior to changing it
             List<Tuple<RoboCommand, bool>> OldListValues = new List<Tuple<RoboCommand, bool>>();
-            CommandList.ForEach((c) => {
+            CommandList.ForEach((c) =>
+            {
                 OldListValues.Add(new Tuple<RoboCommand, bool>(c, c.LoggingOptions.ListOnly));
                 c.LoggingOptions.ListOnly = true;
             });
@@ -480,11 +503,11 @@ namespace RoboSharp
                 //Start all commands, running as many as allowed
                 foreach (RoboCommand cmd in CommandList)
                 {
-                    if (TaskCancelSource.IsCancellationRequested) break;
-                    
+                    if (cancellationToken.IsCancellationRequested) break;
+
                     //Assign the events
                     cmd.OnCommandCompleted += this.OnCommandCompleted;
-                    cmd.OnCommandError+= this.OnCommandError;
+                    cmd.OnCommandError += this.OnCommandError;
                     cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                     cmd.OnError += this.OnError;
                     cmd.OnFileProcessed += this.OnFileProcessed;
@@ -501,7 +524,8 @@ namespace RoboSharp
                         cmd.OnError -= this.OnError;
                         cmd.OnFileProcessed -= this.OnFileProcessed;
                         //Notify the Property Changes
-                        if (!cmd.IsCancelled) {
+                        if (!cmd.IsCancelled)
+                        {
                             JobsComplete++;
                             OnPropertyChanged("JobsComplete");
                         }
@@ -515,10 +539,10 @@ namespace RoboSharp
                     while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
                         Thread.Sleep(500);
                 }
-            } , cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //After all commands have started, continue with waiting for all commands to complete.
-            Task WhenAll = StartAll.ContinueWith( (continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
+            Task WhenAll = StartAll.ContinueWith((continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //Continuation Task return results to caller
             Task ContinueWithTask = WhenAll.ContinueWith((continuation) =>
@@ -528,12 +552,14 @@ namespace RoboSharp
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
                     Debugger.Instance.DebugMessage("RunParallel Task Was Cancelled");
+                    TaskCancelSource.Dispose();
                     TaskCancelSource = null;
                     StopAll();
                 }
                 else
                 {
                     Debugger.Instance.DebugMessage("RunParallel Task Completed");
+                    TaskCancelSource?.Dispose();
                 }
             });
 
@@ -644,7 +670,7 @@ namespace RoboSharp
             CommandList.Add(item);
             OnPropertyChanged("ListCount");
             OnPropertyChanged("Commands");
-            
+
         }
 
         /// <inheritdoc cref="List{T}.Insert(int, T)"/>
@@ -724,9 +750,8 @@ namespace RoboSharp
         /// <summary>Performs <see cref="RemoveCommand(int)"/> then <see cref="AddCommand(int, RoboCommand)"/></summary>
         public void ReplaceCommand(RoboCommand item, int index)
         {
-            if (IsRunning) throw new ListAccessDeniedException();            
-            RemoveCommand(index);
-            AddCommand(index, item);
+            if (IsRunning) throw new ListAccessDeniedException();
+            CommandList.Replace(index, item);
         }
 
         #endregion
