@@ -204,7 +204,6 @@ namespace RoboSharp
                     {
                         OnError(this, new ErrorEventArgs(data, parsedValue));
                     }
-
                 }
                 else if (!data.StartsWith("----------")) // System Message
                 {
@@ -223,8 +222,6 @@ namespace RoboSharp
                 }
             }
         }
-        
-    
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
@@ -272,7 +269,7 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
-            
+
             isRunning = true;
 
             var tokenSource = new CancellationTokenSource();
@@ -283,12 +280,12 @@ namespace RoboSharp
 
             #region Check Source and Destination
 
-            #if NET40_OR_GREATER
+#if NET40_OR_GREATER
             // Authentificate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
-            #endif
-			
-	    // make sure source path is valid
+#endif
+
+            // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
@@ -337,15 +334,15 @@ namespace RoboSharp
             }
 
             #endregion
-			
-	    #if NET40_OR_GREATER
+
+#if NET40_OR_GREATER
             //Dispose Authentification
             impersonation?.Dispose();
-            #endif
+#endif
 
             #endregion
 
-	    isRunning = !cancellationToken.IsCancellationRequested;
+            isRunning = !cancellationToken.IsCancellationRequested;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -353,8 +350,8 @@ namespace RoboSharp
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator)); 
-                
+                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator));
+
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
