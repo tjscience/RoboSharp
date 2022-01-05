@@ -104,14 +104,14 @@ namespace RoboSharp.Results
             if (currentFile.FileClass == Config.LogParsing_ExtraFile)
             {
                 FileStats.Extras++;
-                ByteStats.Extras += CurrentFile.Size;
+                ByteStats.Extras += currentFile.Size;
             }
 
             //MisMatch
             else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
             {
                 FileStats.Mismatch++;
-                ByteStats.Mismatch += CurrentFile.Size;
+                ByteStats.Mismatch += currentFile.Size;
             }
 
             //Failed Files
@@ -126,7 +126,7 @@ namespace RoboSharp.Results
             else if (currentFile.FileClass == Config.LogParsing_SameFile)
             {
                 FileStats.Skipped++; //File is the same -> It will be skipped
-                ByteStats.Skipped += CurrentFile.Size;
+                ByteStats.Skipped += currentFile.Size;
                 CurrentFile = null;
             }
 
