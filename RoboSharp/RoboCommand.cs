@@ -136,7 +136,7 @@ namespace RoboSharp
 
         /// <summary>Handles <see cref="OnError"/></summary>
         public delegate void ErrorHandler(RoboCommand sender, ErrorEventArgs e);
-        /// <summary>Occurs when the command exits due to an error</summary>
+        /// <summary>Occurs an error is detected by RoboCopy </summary>
         public event ErrorHandler OnError;
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
@@ -177,7 +177,7 @@ namespace RoboSharp
             }
             else
             {
-
+                //Parse the string to determine which event to raise
                 var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (splitData.Length == 2) // Directory
