@@ -423,7 +423,6 @@ namespace RoboSharp
                 process.StartInfo.FileName = Configuration.RoboCopyExe;
                 resultsBuilder.Source = CopyOptions.Source;
                 resultsBuilder.Destination = CopyOptions.Destination;
-                this.loggingOptions.NoJobSummary = true;
                 resultsBuilder.CommandOptions = GenerateParameters();
                 process.StartInfo.Arguments = resultsBuilder.CommandOptions;
                 process.OutputDataReceived += process_OutputDataReceived;
