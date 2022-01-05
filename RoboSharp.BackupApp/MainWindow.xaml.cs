@@ -36,11 +36,15 @@ namespace RoboSharp.BackupApp
         public MainWindow()
         {
             InitializeComponent();
-            //new CollectionTester().RunTest(); // Test ObservableList works properly
+            this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
 
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
+
+            //UnitTests
+            new ObservableListTester().RunTest(); // Test ObservableList works properly
+
             //Button Setup
             btnAddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
@@ -68,6 +72,11 @@ namespace RoboSharp.BackupApp
             RoboQueue.CollectionChanged += RoboQueue_CollectionChanged;
             //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
             //RoboQueue.OnFileProcessed += RoboQueue_OnFileProcessed; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -425,18 +434,6 @@ namespace RoboSharp.BackupApp
         /// </summary>
         private void RoboQueue_OnCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
         {
-            Dispatcher.Invoke(() =>
-           {
-               foreach (UIElement element in RoboQueueProgressStackPanel.Children)
-               {
-                   if (element.GetType() == typeof(MultiJob_CommandProgressIndicator))
-                   {
-                       var el = (MultiJob_CommandProgressIndicator)element;
-                       if (el.Command == sender)
-                           el.IsEnabled = false;
-                   }
-               }
-           });
             UpdateCommandsRunningBox();
             Dispatcher.Invoke(() =>
             {
@@ -494,7 +491,8 @@ namespace RoboSharp.BackupApp
         /// </remarks>
         private void RoboQueue_OnCommandError(RoboCommand sender, CommandErrorEventArgs e)
         {
-            // TO DO: FIgure Out what to do
+            btn_StartQueue(null, null); // Stop Everything
+
         }
 
         #endregion

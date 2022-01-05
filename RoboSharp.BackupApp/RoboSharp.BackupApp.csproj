@@ -76,7 +76,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CollectionTester.cs" />
+    <Compile Include="ObservableListTester.cs" />
     <Compile Include="JobHistoryExpander.xaml.cs">
       <DependentUpon>JobHistoryExpander.xaml</DependentUpon>
     </Compile>
