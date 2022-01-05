@@ -44,6 +44,7 @@ namespace RoboSharp.Results
             Unknown
         }
 
+        private string NameField;
         private long TotalField;
         private long CopiedField;
         private long SkippedField;
@@ -98,7 +99,19 @@ namespace RoboSharp.Results
         /// <summary>
         /// Name of the Statistics Object
         /// </summary>
-        public string Name { get; set; }
+        public string Name
+        {
+            get => NameField;
+            set
+            {
+                if (value != NameField)
+                {
+                    NameField = value ?? "";
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Name"));
+                }
+            }
+        }
+        
 
         /// <summary>
         /// <inheritdoc cref="StatType"/>
@@ -450,9 +463,11 @@ namespace RoboSharp.Results
         /// Adds <see cref="StatChangedEventArg.Difference"/> to the appropriate property based on the 'PropertyChanged' value. <br/>
         /// Will only add the value if the <see cref="StatChangedEventArg.StatType"/> == <see cref="Type"/>.
         /// </summary>
-        /// <param name="e">Arg provided by either <see cref="PropertyChanged"/> or a Statistic's object's On*Changed events</param>
-        public void AddStatistic(StatChangedEventArg e)
+        /// <param name="eventArgs">Arg provided by either <see cref="PropertyChanged"/> or a Statistic's object's On*Changed events</param>
+        public void AddStatistic(PropertyChangedEventArgs eventArgs)
         {
+            if (eventArgs.GetType() != typeof(StatChangedEventArg)) return;
+            var e = (StatChangedEventArg)eventArgs;
             if (e.StatType == this.Type)
             {
                 switch (e.PropertyName)
@@ -480,21 +495,15 @@ namespace RoboSharp.Results
         }
 
         /// <summary>
-        /// Combine the results of the supplied statistics objects
+        /// Combine the results of the supplied statistics objects of the specified type.
         /// </summary>
-        /// <param name="stats">Statistics Item to add</param>
+        /// <param name="stats">Collection of <see cref="Statistic"/> objects</param>
+        /// <param name="statType">Create a new Statistic object of this type. If <see cref="StatType.Unknown"/> is specified, adds entire <paramref name="stats"/> collection. </param>
         /// <returns>New Statistics Object</returns>
-        public static Statistic AddStatistics(IEnumerable<Statistic> stats)
+        public static Statistic AddStatistics(IEnumerable<Statistic> stats, StatType statType)
         {
-
-            Statistic ret;
-            if ((stats?.Count() ?? 0 ) == 0) ret = new Statistic(StatType.Unknown);
-            else if (stats.All((c) => c.Type == StatType.Directories)) ret = new Statistic(StatType.Directories);
-            else if (stats.All((c) => c.Type == StatType.Files)) ret = new Statistic(StatType.Files);
-            else if (stats.All((c) => c.Type == StatType.Bytes)) ret = new Statistic(StatType.Bytes);
-            else ret = new Statistic(StatType.Unknown);
-
-            ret.AddStatistic(stats);
+            Statistic ret = new Statistic(statType);
+            ret.AddStatistic(statType == StatType.Unknown ? stats : stats.Where(s => s.Type == statType) );
             return ret;
         }
 
@@ -522,10 +531,11 @@ namespace RoboSharp.Results
 
         /// <returns>New Statistics Object</returns>
         /// <inheritdoc cref=" AverageStatistic(IEnumerable{Statistic})"/>
-        public static Statistic AverageStatistics(IEnumerable<Statistic> stats)
+        /// <inheritdoc cref="AddStatistics(IEnumerable{Statistic}, StatType)"/>
+        public static Statistic AverageStatistics(IEnumerable<Statistic> stats, StatType statType)
         {
-            Statistic stat = AddStatistics(stats);
-            int cnt = stats.Count();
+            Statistic stat = AddStatistics(stats, statType);
+            int cnt = statType == StatType.Unknown ? stats.Count() : stats.Count(s => s.Type == statType);
             if (cnt > 1)
             {
                 stat.Total /= cnt;
