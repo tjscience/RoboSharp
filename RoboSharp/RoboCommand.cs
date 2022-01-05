@@ -322,7 +322,7 @@ namespace RoboSharp
             #region Check Source and Destination
 
 #if NET40_OR_GREATER
-            // Authentificate on Target Server -- Create user if username is provided, else null
+            // Authenticate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
 #endif
 
