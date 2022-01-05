@@ -29,6 +29,10 @@ namespace RoboSharp.BackupApp
             ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
+
+            //UnitTests
+            new ObservableListTester().RunTest(); // Test ObservableList works properly
+
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
