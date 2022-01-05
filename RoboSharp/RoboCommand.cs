@@ -508,7 +508,7 @@ namespace RoboSharp
         {
             results = null;
         }
-	
+
         /// <summary>
         /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
         /// </summary>
