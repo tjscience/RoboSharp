@@ -506,7 +506,7 @@ namespace RoboSharp
                     if (cancellationToken.IsCancellationRequested) break;
 
                     //Assign the events
-                    cmd.OnCommandCompleted += this.OnCommandCompleted;
+                    cmd.OnCommandCompleted += RaiseCommandCompleted;
                     cmd.OnCommandError += this.OnCommandError;
                     cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                     cmd.OnError += this.OnError;
@@ -518,19 +518,12 @@ namespace RoboSharp
                     Task C = cmd.Start(domain, username, password);
                     Task T = C.ContinueWith((t) =>
                     {
-                        cmd.OnCommandCompleted -= this.OnCommandCompleted;
+                        cmd.OnCommandCompleted -= RaiseCommandCompleted;
                         cmd.OnCommandError -= this.OnCommandError;
                         cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
                         cmd.OnError -= this.OnError;
                         cmd.OnFileProcessed -= this.OnFileProcessed;
-                        //Notify the Property Changes
-                        if (!cmd.IsCancelled)
-                        {
-                            JobsComplete++;
-                            OnPropertyChanged("JobsComplete");
-                        }
-                        OnPropertyChanged("JobsCurrentlyRunning");
-                    });
+                    }, CancellationToken.None);
                     TaskList.Add(T);                    //Add the continuation task to the list.
                     if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
                     OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
@@ -570,6 +563,21 @@ namespace RoboSharp
         {
             ProgressEstimator?.BindToProgressEstimator(e.ResultsEstimate);
             sender.OnProgressEstimatorCreated -= Cmd_OnProgressEstimatorCreated;
+        }
+
+        /// <summary>
+        /// Intercept OnCommandCompleted from each RoboCommand, react, then raise this object's OnCommandCompleted event
+        /// </summary>
+        private void RaiseCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        {
+            //Notify the Property Changes
+            if (!sender.IsCancelled)
+            {
+                JobsComplete++;
+                OnPropertyChanged("JobsComplete");
+            }
+            OnPropertyChanged("JobsCurrentlyRunning");
+            OnCommandCompleted?.Invoke(sender, e);
         }
 
         #endregion
