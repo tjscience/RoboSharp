@@ -141,7 +141,7 @@ namespace RoboSharp
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
         public delegate void CommandCompletedHandler(RoboCommand sender, RoboCommandCompletedEventArgs e);
-        /// <summary>Occurs when the command exits</summary>
+        /// <summary>Occurs when the RoboCopy process has finished executing and results are available.</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
@@ -304,7 +304,8 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
-
+            isCancelled = false;
+            isPaused = false;
             isRunning = true;
 
             var tokenSource = new CancellationTokenSource();
@@ -441,14 +442,13 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) =>
             {
+                tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
+                Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
+                
+                //Raise event announcing results are available
                 if (!hasError)
-                {
-                        isRunning = false;
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed
-                }
-
-                Stop();
-            }, cancellationToken);
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
+            });
 
             return continueWithTask;
         }
