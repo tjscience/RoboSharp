@@ -15,7 +15,39 @@ namespace RoboSharp
     /// </summary>
     public class RoboCommand : IDisposable, IRoboCommand
     {
-        #region Private Vars
+        #region < Constructors >
+
+        /// <summary>Create a new RoboCommand object</summary>
+        public RoboCommand() { Init(); }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string name, bool stopIfDisposing = true)
+        {
+            Init(name);
+        }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name = "", bool stopIfDisposing = true)
+        {
+            Init(name, stopIfDisposing, source, destination);
+        }
+
+        /// <summary>Create a new RoboCommand object</summary>
+        /// <param name="name"><inheritdoc cref="Name" path="*"/></param>
+        /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
+        /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
+        /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
+        private void Init(string name = "", bool stopIfDisposing = false, string source = "", string destination = "")
+        {
+            Name = name;
+            StopIfDisposing = stopIfDisposing;
+            CopyOptions.Source = source;
+            CopyOptions.Destination = destination;
+        }
+
+        #endregion
+
+        #region < Private Vars >
 
         private Process process;
         private Task backupTask;
@@ -35,7 +67,10 @@ namespace RoboSharp
 
         #endregion Private Vars
 
-        #region Public Vars
+        #region < Public Vars >
+
+        /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
+        public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
         public bool IsPaused { get { return isPaused; } }
         /// <summary> Value indicating if process is currently running </summary>
@@ -87,7 +122,7 @@ namespace RoboSharp
 
         #endregion Public Vars
 
-        #region Events
+        #region < Events >
 
         /// <summary>Handles <see cref="OnFileProcessed"/></summary>
         public delegate void FileProcessedHandler(RoboCommand sender, FileProcessedEventArgs e);
@@ -101,12 +136,12 @@ namespace RoboSharp
 
         /// <summary>Handles <see cref="OnError"/></summary>
         public delegate void ErrorHandler(RoboCommand sender, ErrorEventArgs e);
-        /// <summary>Occurs when the command exits due to an error</summary>
+        /// <summary>Occurs an error is detected by RoboCopy </summary>
         public event ErrorHandler OnError;
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
         public delegate void CommandCompletedHandler(RoboCommand sender, RoboCommandCompletedEventArgs e);
-        /// <summary>Occurs when the command exits</summary>
+        /// <summary>Occurs when the RoboCopy process has finished executing and results are available.</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
@@ -142,7 +177,7 @@ namespace RoboSharp
             }
             else
             {
-
+                //Parse the string to determine which event to raise
                 var splitData = data.Split(new char[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
                 if (splitData.Length == 2) // Directory
@@ -173,7 +208,7 @@ namespace RoboSharp
                     }
 
                     resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
-                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                    OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File
                 {
@@ -185,7 +220,7 @@ namespace RoboSharp
                     file.Size = size;
                     file.Name = splitData[2];
                     resultsBuilder?.AddFile(file, !LoggingOptions.ListOnly);
-                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                    OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
                 {
@@ -204,7 +239,6 @@ namespace RoboSharp
                     {
                         OnError(this, new ErrorEventArgs(data, parsedValue));
                     }
-
                 }
                 else if (!data.StartsWith("----------")) // System Message
                 {
@@ -218,13 +252,11 @@ namespace RoboSharp
                         file.FileClassType = FileClassType.SystemMessage;
                         file.Size = 0;
                         file.Name = data;
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
+                        OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                     }
                 }
             }
         }
-        
-    
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
@@ -272,7 +304,8 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
-            
+            isCancelled = false;
+            isPaused = false;
             isRunning = true;
 
             var tokenSource = new CancellationTokenSource();
@@ -283,12 +316,12 @@ namespace RoboSharp
 
             #region Check Source and Destination
 
-            #if NET40_OR_GREATER
+#if NET40_OR_GREATER
             // Authentificate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
-            #endif
-			
-	    // make sure source path is valid
+#endif
+
+            // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
@@ -337,15 +370,15 @@ namespace RoboSharp
             }
 
             #endregion
-			
-	    #if NET40_OR_GREATER
+
+#if NET40_OR_GREATER
             //Dispose Authentification
             impersonation?.Dispose();
-            #endif
+#endif
 
             #endregion
 
-	    isRunning = !cancellationToken.IsCancellationRequested;
+            isRunning = !cancellationToken.IsCancellationRequested;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -353,8 +386,8 @@ namespace RoboSharp
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator)); 
-                
+                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator));
+
                 process = new Process();
 
                 if (!string.IsNullOrEmpty(domain))
@@ -391,7 +424,6 @@ namespace RoboSharp
                 process.StartInfo.FileName = Configuration.RoboCopyExe;
                 resultsBuilder.Source = CopyOptions.Source;
                 resultsBuilder.Destination = CopyOptions.Destination;
-                this.loggingOptions.NoJobSummary = true;
                 resultsBuilder.CommandOptions = GenerateParameters();
                 process.StartInfo.Arguments = resultsBuilder.CommandOptions;
                 process.OutputDataReceived += process_OutputDataReceived;
@@ -410,22 +442,18 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) =>
             {
+                tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
+                Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
+                
+                //Raise event announcing results are available
                 if (!hasError)
-                {
-                    // backup is complete
-                    if (OnCommandCompleted != null)
-                    {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
-                        isRunning = false;
-                    }
-                }
-
-                Stop();
-            }, cancellationToken);
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
+            });
 
             return continueWithTask;
         }
 
+        /// <summary> Occurs when the Process reports an error, not an 'error' from Robocopy </summary>
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
@@ -435,23 +463,30 @@ namespace RoboSharp
             }
         }
 
+        /// <summary> Process has either run to completion or has been killed prematurely </summary>
         void Process_Exited(object sender, System.EventArgs e)
         {
             hasExited = true;
         }
 
-        /// <summary>Kill the process</summary>
+        /// <summary> Immediately Kill the RoboCopy process</summary>
         public void Stop()
         {
-            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
+            //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
+            //If the removal of that check broke your application, please create a new issue thread on the repo.
+            if (process != null)
             {
-                process?.Kill();
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    isCancelled = true;
+                }
                 hasExited = true;
-                process?.Dispose();
+                process.Dispose();
                 process = null;
-                isCancelled = true;
             }
-            isRunning = !hasExited;
+            isRunning = false;
+            isPaused = false;
         }
 
         /// <inheritdoc cref="Results.RoboCopyResults"/>
@@ -481,7 +516,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-        #region IDisposable Implementation
+        #region < IDisposable Implementation >
 
         bool disposed = false;
 
@@ -498,21 +533,15 @@ namespace RoboSharp
             if (disposed)
                 return;
 
-            if (StopIfDisposing && process != null && !hasExited)
-            {
-                process.Kill();
-                hasExited = true;
-                isCancelled = true;
-                isRunning = false;
-            }
-
             if (disposing)
             {
 
             }
 
-            if (process != null)
-                process.Dispose();
+            if (StopIfDisposing)
+            {
+                Stop();
+            }
 
             disposed = true;
         }
