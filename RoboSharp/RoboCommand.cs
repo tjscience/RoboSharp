@@ -15,7 +15,39 @@ namespace RoboSharp
     /// </summary>
     public class RoboCommand : IDisposable, IRoboCommand
     {
-        #region Private Vars
+        #region < Constructors >
+
+        /// <summary>Create a new RoboCommand object</summary>
+        public RoboCommand() { Init(); }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string name, bool stopIfDisposing = true)
+        {
+            Init(name);
+        }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name = "", bool stopIfDisposing = true)
+        {
+            Init(name, stopIfDisposing, source, destination);
+        }
+
+        /// <summary>Create a new RoboCommand object</summary>
+        /// <param name="name"><inheritdoc cref="Name" path="*"/></param>
+        /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
+        /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
+        /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
+        private void Init(string name = "", bool stopIfDisposing = false, string source = "", string destination = "")
+        {
+            Name = name;
+            StopIfDisposing = stopIfDisposing;
+            CopyOptions.Source = source;
+            CopyOptions.Destination = destination;
+        }
+
+        #endregion
+
+        #region < Private Vars >
 
         private Process process;
         private Task backupTask;
@@ -35,7 +67,10 @@ namespace RoboSharp
 
         #endregion Private Vars
 
-        #region Public Vars
+        #region < Public Vars >
+
+        /// <summary> ID Tag for the job - Allows consumers to find/sort/remove/etc commands within a list via string comparison</summary>
+        public string Name { get; set; }
         /// <summary> Value indicating if process is currently paused </summary>
         public bool IsPaused { get { return isPaused; } }
         /// <summary> Value indicating if process is currently running </summary>
@@ -87,7 +122,7 @@ namespace RoboSharp
 
         #endregion Public Vars
 
-        #region Events
+        #region < Events >
 
         /// <summary>Handles <see cref="OnFileProcessed"/></summary>
         public delegate void FileProcessedHandler(RoboCommand sender, FileProcessedEventArgs e);
@@ -478,7 +513,7 @@ namespace RoboSharp
                 parsedRetryOptions, parsedLoggingOptions);
         }
 
-        #region IDisposable Implementation
+        #region < IDisposable Implementation >
 
         bool disposed = false;
 
