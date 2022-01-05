@@ -391,11 +391,12 @@ namespace RoboSharp
                 c.LoggingOptions.ListOnly = true;
             });
             //Run the commands
-            Task<RoboCopyResultsList> Run = StartJobs(domain, username, password);
+            OnCommandCompleted += OnListOnlyCommandCompleted;
+            Task Run = StartJobs(domain, username, password);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
                 //Store the results then restore the ListOnly values
-                ListOnlyResults.AddRange(Run.Result);
+                OnCommandCompleted -= OnListOnlyCommandCompleted;
                 foreach (var obj in OldListValues)
                     obj.Item1.LoggingOptions.ListOnly = obj.Item2;
                 //Set Flags
@@ -405,6 +406,14 @@ namespace RoboSharp
             }
             );
             return ResultsTask;
+        }
+
+        /// <summary>
+        /// Adds the results to the <see cref="ListOnlyResults"/> list once the command has completed.
+        /// </summary>
+        private void OnListOnlyCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        {
+            ListOnlyResults.Add(e.Results);
         }
 
         #endregion
@@ -417,16 +426,25 @@ namespace RoboSharp
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
             RunOperationResults.Clear();
-            Task<RoboCopyResultsList> Run = StartJobs(domain, username, password);
+            OnCommandCompleted += OnCopyCommandCompleted;
+            Task Run = StartJobs(domain, username, password);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
-                RunOperationResults.AddRange(Run.Result);
+                OnCommandCompleted -= OnCopyCommandCompleted;
                 IsCopyOperationRunning = false;
                 IsPaused = false;
                 CopyOperationCompleted = !WasCancelled;
             }
             );
             return ResultsTask;
+        }
+
+        /// <summary>
+        /// Adds the results to the <see cref="RunOperationResults"/> list once the command has completed.
+        /// </summary>
+        private void OnCopyCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        {
+            RunOperationResults.Add(e.Results);
         }
 
         #endregion
@@ -438,14 +456,13 @@ namespace RoboSharp
         /// </summary>
         /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
         /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
-        private Task<RoboCopyResultsList> StartJobs(string domain = "", string username = "", string password = "")
+        private Task StartJobs(string domain = "", string username = "", string password = "")
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
             TaskCancelSource = new CancellationTokenSource();
             CancellationToken cancellationToken = TaskCancelSource.Token;
 
-            RoboCopyResultsList returnList = new RoboCopyResultsList();
             List<Task> TaskList = new List<Task>();
             JobsComplete = 0; OnPropertyChanged("JobsComplete");
             WasCancelled = false;
@@ -504,7 +521,7 @@ namespace RoboSharp
             Task WhenAll = StartAll.ContinueWith( (continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //Continuation Task return results to caller
-            Task<RoboCopyResultsList> ContinueWithTask = WhenAll.ContinueWith((continuation) =>
+            Task ContinueWithTask = WhenAll.ContinueWith((continuation) =>
             {
                 ProgressEstimator?.UnBind();
                 if (cancellationToken.IsCancellationRequested)
@@ -518,10 +535,6 @@ namespace RoboSharp
                 {
                     Debugger.Instance.DebugMessage("RunParallel Task Completed");
                 }
-
-                CommandList.ForEach((c) => returnList.Add(c.GetResults())); //Loop through the list, adding the results of each command to the list
-
-                return returnList;
             });
 
             return ContinueWithTask;
