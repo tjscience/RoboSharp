@@ -208,7 +208,7 @@ namespace RoboSharp
                     }
 
                     resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
-                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                    OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File
                 {
@@ -220,7 +220,7 @@ namespace RoboSharp
                     file.Size = size;
                     file.Name = splitData[2];
                     resultsBuilder?.AddFile(file, !LoggingOptions.ListOnly);
-                    OnFileProcessed.Invoke(this, new FileProcessedEventArgs(file));
+                    OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
                 {
@@ -252,7 +252,7 @@ namespace RoboSharp
                         file.FileClassType = FileClassType.SystemMessage;
                         file.Size = 0;
                         file.Name = data;
-                        OnFileProcessed(this, new FileProcessedEventArgs(file));
+                        OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                     }
                 }
             }
@@ -444,12 +444,8 @@ namespace RoboSharp
             {
                 if (!hasError)
                 {
-                    // backup is complete
-                    if (OnCommandCompleted != null)
-                    {
-                        OnCommandCompleted(this, new RoboCommandCompletedEventArgs(results));
                         isRunning = false;
-                    }
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results)); // backup is complete -> Raise event if needed
                 }
 
                 Stop();
