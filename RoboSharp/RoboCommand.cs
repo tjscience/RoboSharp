@@ -453,6 +453,7 @@ namespace RoboSharp
             return continueWithTask;
         }
 
+        /// <summary> Occurs when the Process reports an error, not an 'error' from Robocopy </summary>
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
@@ -462,23 +463,30 @@ namespace RoboSharp
             }
         }
 
+        /// <summary> Process has either run to completion or has been killed prematurely </summary>
         void Process_Exited(object sender, System.EventArgs e)
         {
             hasExited = true;
         }
 
-        /// <summary>Kill the process</summary>
+        /// <summary> Immediately Kill the RoboCopy process</summary>
         public void Stop()
         {
-            if (process != null && CopyOptions.RunHours.IsNullOrWhiteSpace() && !hasExited)
+            //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
+            //If the removal of that check broke your application, please create a new issue thread on the repo.
+            if (process != null)
             {
-                process?.Kill();
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    isCancelled = true;
+                }
                 hasExited = true;
-                process?.Dispose();
+                process.Dispose();
                 process = null;
-                isCancelled = true;
             }
-            isRunning = !hasExited;
+            isRunning = false;
+            isPaused = false;
         }
 
         /// <inheritdoc cref="Results.RoboCopyResults"/>
@@ -525,21 +533,15 @@ namespace RoboSharp
             if (disposed)
                 return;
 
-            if (StopIfDisposing && process != null && !hasExited)
-            {
-                process.Kill();
-                hasExited = true;
-                isCancelled = true;
-                isRunning = false;
-            }
-
             if (disposing)
             {
 
             }
 
-            if (process != null)
-                process.Dispose();
+            if (StopIfDisposing)
+            {
+                Stop();
+            }
 
             disposed = true;
         }
