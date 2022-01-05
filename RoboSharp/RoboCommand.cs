@@ -171,8 +171,13 @@ namespace RoboSharp
 
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
-                // copy progress data
-                OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture)));
+                // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
+                OnCopyProgressChanged?.Invoke(this, 
+                    new CopyProgressEventArgs(
+                        Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture), 
+                        resultsBuilder?.Estimator?.CurrentFile,
+                        resultsBuilder?.Estimator?.CurrentDir
+                    ));
                 if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
             }
             else
