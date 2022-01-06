@@ -13,17 +13,13 @@ namespace RoboSharp.Results
     /// <summary>
     /// Provide Read-Only access to a SpeedStatistic
     /// </summary>
-    public interface ISpeedStatistic
+    public interface ISpeedStatistic : INotifyPropertyChanged
     {
-
         /// <summary> Average Transfer Rate in Bytes/Second </summary>
         decimal BytesPerSec { get; }
 
         /// <summary> Average Transfer Rate in MB/Minute</summary>
         decimal MegaBytesPerMin { get; }
-
-        /// <inheritdoc cref="SpeedStatistic.PropertyChanged"/>
-        event PropertyChangedEventHandler PropertyChanged;
 
         /// <inheritdoc cref="SpeedStatistic.ToString"/>
         string ToString();
@@ -35,13 +31,17 @@ namespace RoboSharp.Results
     /// </summary>
     public class SpeedStatistic : INotifyPropertyChanged, ISpeedStatistic
     {
-        #region < Fields, Events, Properties >
+        #region < Private & Protected Members >
 
         private decimal BytesPerSecField = 0;
         private decimal MegaBytesPerMinField = 0;
 
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
         protected bool EnablePropertyChangeEvent { get; set; } = true;
+
+        #endregion
+
+        #region < Public Properties & Events >
 
         /// <summary>This event will fire when the value of the SpeedStatistic is updated </summary>
         public event PropertyChangedEventHandler PropertyChanged;
@@ -203,7 +203,7 @@ namespace RoboSharp.Results
         // Subtraction is only used when an item is removed from a RoboCopyResultsList 
         // As such, public consumers should typically not require the use of subtract methods 
 
-        #region < ADD >
+        #region < ADD ( internal ) >
 
         /// <summary>
         /// Add the results of the supplied SpeedStatistic objects to this object. <br/>
@@ -251,7 +251,7 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Subtract >
+        #region < Subtract ( internal ) >
 
         /// <summary>
         /// Subtract the results of the supplied SpeedStatistic objects from this object.<br/>
@@ -298,7 +298,7 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < AVERAGE >
+        #region < AVERAGE ( public ) >
 
         /// <summary>
         /// Immediately recalculate the BytesPerSec and MegaBytesPerMin values
