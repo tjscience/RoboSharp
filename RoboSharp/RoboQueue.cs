@@ -272,6 +272,18 @@ namespace RoboSharp
         public int JobsComplete { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
 
         /// <summary>
+        /// Report how many <see cref="RoboCommand.Start"/> tasks has completed successfully during the run. <br/>
+        /// This value is reset to 0 when a new run starts, and increments as each job exits.
+        /// </summary>
+        public int JobsCompletedSuccessfully { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
+
+        /// <summary>
+        /// Report how many <see cref="RoboCommand.Start"/> tasks have been started during the run. <br/>
+        /// This value is reset to 0 when a new run starts, and increments as each job starts.
+        /// </summary>
+        public int JobsStarted { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
+
+        /// <summary>
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetListOnlyResults"/>.
         /// </summary>
@@ -301,6 +313,12 @@ namespace RoboSharp
 
         /// <inheritdoc cref="RoboCommand.OnCopyProgressChanged"/>
         public event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
+
+        /// <summary> OOccurs when the <see cref="ListOnlyResults"/> gets updated </summary>
+        public event EventHandler ListOnlyResultsUpdated;
+
+        /// <summary> OOccurs when the <see cref="RunOperationResults"/> gets updated </summary>
+        public event EventHandler RunOperationResultsUpdated;
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
         public delegate void ProgressUpdaterCreatedHandler(RoboQueue sender, ProgressEstimatorCreatedEventArgs e);
@@ -414,12 +432,9 @@ namespace RoboSharp
                 c.LoggingOptions.ListOnly = true;
             });
             //Run the commands
-            OnCommandCompleted += OnListOnlyCommandCompleted;
-            Task Run = StartJobs(domain, username, password);
+            Task Run = StartJobs(domain, username, password, true);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
-                //Store the results then restore the ListOnly values
-                OnCommandCompleted -= OnListOnlyCommandCompleted;
                 foreach (var obj in OldListValues)
                     obj.Item1.LoggingOptions.ListOnly = obj.Item2;
                 //Set Flags
@@ -429,14 +444,6 @@ namespace RoboSharp
             }
             );
             return ResultsTask;
-        }
-
-        /// <summary>
-        /// Adds the results to the <see cref="ListOnlyResults"/> list once the command has completed.
-        /// </summary>
-        private void OnListOnlyCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
-        {
-            ListOnlyResults.Add(e.Results);
         }
 
         #endregion
@@ -449,25 +456,15 @@ namespace RoboSharp
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
             RunOperationResults.Clear();
-            OnCommandCompleted += OnCopyCommandCompleted;
-            Task Run = StartJobs(domain, username, password);
+            Task Run = StartJobs(domain, username, password, false);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
-                OnCommandCompleted -= OnCopyCommandCompleted;
                 IsCopyOperationRunning = false;
                 IsPaused = false;
                 CopyOperationCompleted = !WasCancelled;
             }
             );
             return ResultsTask;
-        }
-
-        /// <summary>
-        /// Adds the results to the <see cref="RunOperationResults"/> list once the command has completed.
-        /// </summary>
-        private void OnCopyCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
-        {
-            RunOperationResults.Add(e.Results);
         }
 
         #endregion
@@ -479,7 +476,7 @@ namespace RoboSharp
         /// </summary>
         /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
         /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
-        private Task StartJobs(string domain = "", string username = "", string password = "")
+        private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyBinding = false)
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
@@ -487,7 +484,10 @@ namespace RoboSharp
             CancellationToken cancellationToken = TaskCancelSource.Token;
 
             List<Task> TaskList = new List<Task>();
+            JobsStarted = 0; OnPropertyChanged("JobsStarted");
             JobsComplete = 0; OnPropertyChanged("JobsComplete");
+            JobsCompletedSuccessfully = 0; OnPropertyChanged("JobsCompletedSuccessfully");
+
             WasCancelled = false;
 
             //Create a Task to Start all the RoboCommands
@@ -506,7 +506,7 @@ namespace RoboSharp
                     if (cancellationToken.IsCancellationRequested) break;
 
                     //Assign the events
-                    cmd.OnCommandCompleted += RaiseCommandCompleted;
+                    cmd.OnCommandCompleted += (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
                     cmd.OnCommandError += this.OnCommandError;
                     cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                     cmd.OnError += this.OnError;
@@ -524,7 +524,11 @@ namespace RoboSharp
                         cmd.OnError -= this.OnError;
                         cmd.OnFileProcessed -= this.OnFileProcessed;
                     }, CancellationToken.None);
+                    
                     TaskList.Add(T);                    //Add the continuation task to the list.
+                    
+                    //Raise Events
+                    JobsStarted++; OnPropertyChanged("JobsStarted");
                     if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
                     OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
@@ -568,14 +572,27 @@ namespace RoboSharp
         /// <summary>
         /// Intercept OnCommandCompleted from each RoboCommand, react, then raise this object's OnCommandCompleted event
         /// </summary>
-        private void RaiseCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        private void RaiseCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e, bool ListOnlyBinding)
         {
+            if (ListOnlyBinding)
+            {
+                ListOnlyResults.Add(sender.GetResults());
+                ListOnlyResultsUpdated?.Invoke(this, new EventArgs());
+            }
+            else
+            {
+                RunOperationResults.Add(sender.GetResults());
+                RunOperationResultsUpdated?.Invoke(this, new EventArgs());
+            }
+
             //Notify the Property Changes
             if (!sender.IsCancelled)
             {
-                JobsComplete++;
-                OnPropertyChanged("JobsComplete");
+                JobsCompletedSuccessfully++; 
+                OnPropertyChanged("JobsCompletedSuccessfully");
             }
+            JobsComplete++;
+            OnPropertyChanged("JobsComplete");
             OnPropertyChanged("JobsCurrentlyRunning");
             OnCommandCompleted?.Invoke(sender, e);
         }
