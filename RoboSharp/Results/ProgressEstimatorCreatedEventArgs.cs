@@ -20,7 +20,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// <inheritdoc cref="ProgressEstimator"/>
         /// </summary>
-        public ProgressEstimator ResultsEstimate { get; }
+        public IProgressEstimator ResultsEstimate { get; }
         
     }
 }

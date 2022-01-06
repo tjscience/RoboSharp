@@ -4,9 +4,79 @@ using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace RoboSharp.Results
 {
+    /// <summary>
+    /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
+    /// </summary>
+    public interface IRoboCopyResultsList
+    {
+        #region < Properties >
+
+        /// <summary> Sum of all DirectoryStatistics objects </summary>
+        IStatistic DirectoriesStatistic { get; }
+
+        /// <summary> Sum of all ByteStatistics objects </summary>
+        IStatistic BytesStatistic { get; }
+
+        /// <summary> Sum of all FileStatistics objects </summary>
+        IStatistic FilesStatistic { get; }
+
+        /// <summary> Average of all SpeedStatistics objects </summary>
+        ISpeedStatistic SpeedStatistic { get; }
+
+        /// <summary> Sum of all RoboCopyExitStatus objects </summary>
+        IRoboCopyCombinedExitStatus Status { get; }
+        
+        #endregion
+
+        #region < Methods >
+
+        /// <summary>
+        /// Get a snapshot of the ByteStatistics objects from this list.
+        /// </summary>
+        /// <returns>New array of the ByteStatistic objects</returns>
+        IStatistic[] GetByteStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the DirectoriesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the DirectoriesStatistic objects</returns>
+        IStatistic[] GetDirectoriesStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        IStatistic[] GetFilesStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        RoboCopyExitStatus[] GetStatuses();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        ISpeedStatistic[] GetSpeedStatistics();
+
+        #endregion
+
+        #region < Events >
+
+        /// <summary> This event fires whenever the List's array is updated. </summary>
+        event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary> "Count" PropertyChanged event is raised whenever CollectionChanged is raised. </summary>
+        event PropertyChangedEventHandler PropertyChanged;
+        
+        #endregion
+    }
+
     /// <summary>
     /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
     /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.
@@ -14,7 +84,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </remarks>
-    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IDisposable
+    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IDisposable, IRoboCopyResultsList
     {
         #region < Constructors >
 
@@ -66,19 +136,19 @@ namespace RoboSharp.Results
         #region < Public Properties >
 
         /// <summary> Sum of all DirectoryStatistics objects </summary>
-        public Statistic DirectoriesStatistic => Total_DirStatsField?.Value;
+        public IStatistic DirectoriesStatistic => Total_DirStatsField?.Value;
 
         /// <summary> Sum of all ByteStatistics objects </summary>
-        public Statistic BytesStatistic => Total_ByteStatsField?.Value;
+        public IStatistic BytesStatistic => Total_ByteStatsField?.Value;
 
         /// <summary> Sum of all FileStatistics objects </summary>
-        public Statistic FilesStatistic => Total_FileStatsField?.Value;
+        public IStatistic FilesStatistic => Total_FileStatsField?.Value;
 
         /// <summary> Average of all SpeedStatistics objects </summary>
-        public SpeedStatistic SpeedStatistic => Average_SpeedStatsField?.Value;
+        public ISpeedStatistic SpeedStatistic => Average_SpeedStatsField?.Value;
 
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
-        public RoboCopyExitStatus Status => ExitStatusSummaryField?.Value;
+        public IRoboCopyCombinedExitStatus Status => ExitStatusSummaryField?.Value;
 
         #endregion
 
@@ -88,7 +158,7 @@ namespace RoboSharp.Results
         /// Get a snapshot of the ByteStatistics objects from this list.
         /// </summary>
         /// <returns>New array of the ByteStatistic objects</returns>
-        public Statistic[] GetByteStatistics()
+        public IStatistic[] GetByteStatistics()
         {
             if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic>{ };
@@ -101,7 +171,7 @@ namespace RoboSharp.Results
         /// Get a snapshot of the DirectoriesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the DirectoriesStatistic objects</returns>
-        public Statistic[] GetDirectoriesStatistics()
+        public IStatistic[] GetDirectoriesStatistics()
         {
             if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
@@ -114,7 +184,7 @@ namespace RoboSharp.Results
         /// Get a snapshot of the FilesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
-        public Statistic[] GetFilesStatistics()
+        public IStatistic[] GetFilesStatistics()
         {
             if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
@@ -140,7 +210,7 @@ namespace RoboSharp.Results
         /// Get a snapshot of the FilesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
-        public SpeedStatistic[] GetSpeedStatistics()
+        public ISpeedStatistic[] GetSpeedStatistics()
         {
             if (Disposed) return null;
             List<SpeedStatistic> tmp = new List<SpeedStatistic> { };

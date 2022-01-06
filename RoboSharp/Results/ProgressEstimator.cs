@@ -7,6 +7,21 @@ using System.Text;
 namespace RoboSharp.Results
 {
     /// <summary>
+    /// Provde Read-Only Access to the a <see cref="ProgressEstimator"/> object
+    /// </summary>
+    public interface IProgressEstimator
+    {
+        /// <inheritdoc cref="ProgressEstimator.DirStats"/>
+        IStatistic DirStats { get; }
+
+        /// <inheritdoc cref="ProgressEstimator.FileStats"/>
+        IStatistic FileStats { get; }
+
+        /// <inheritdoc cref="ProgressEstimator.ByteStats"/>
+        IStatistic ByteStats { get; }
+    }
+    
+    /// <summary>
     /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
     /// <remarks>
@@ -20,26 +35,30 @@ namespace RoboSharp.Results
     /// }<br/>
     /// </code>
     /// </remarks>
-    public class ProgressEstimator : IDisposable
+    public class ProgressEstimator : IDisposable, IProgressEstimator
     {
         private ProgressEstimator() { }
 
         internal ProgressEstimator(RoboSharpConfiguration config)
         {
             Config = config;
-            DirStats = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
-            FileStats = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
-            ByteStats = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
+            DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
+            FileStatsField = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
+            ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
         }
 
         #region < Private Members >
 
         private bool SkippingFile;
         private bool CopyOpStarted;
-        private List<Statistic> SubscribedStats;
+        private List<IStatistic> SubscribedStats;
         internal ProcessedFileInfo CurrentDir;
         internal ProcessedFileInfo CurrentFile;
         private bool disposedValue;
+
+        private readonly Statistic DirStatField;
+        private readonly Statistic FileStatsField;
+        private readonly Statistic ByteStatsField;
 
         #endregion
 
@@ -49,19 +68,19 @@ namespace RoboSharp.Results
         /// Estimate of current number of directories processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public Statistic DirStats { get; }
+        public IStatistic DirStats => DirStatField;
 
         /// <summary>
         /// Estimate of current number of files processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public Statistic FileStats { get; }
+        public IStatistic FileStats => FileStatsField;
 
         /// <summary>
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public Statistic ByteStats { get; }
+        public IStatistic ByteStats => ByteStatsField;
 
         /// <summary>
         /// <inheritdoc cref="RoboSharpConfiguration"/>
@@ -72,61 +91,61 @@ namespace RoboSharp.Results
 
         #region < Counting Methods >
 
-        /// <summary>Increment <see cref="DirStats"/></summary>
+        /// <summary>Increment <see cref="DirStatField"/></summary>
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
-            DirStats.Total++;
+            DirStatField.Total++;
             CurrentDir = currentDir;
-            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStats.Skipped++; }
-            else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) DirStats.Copied++; }
-            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStats.Extras++;
+            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStatField.Skipped++; }
+            else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) DirStatField.Copied++; }
+            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStatField.Extras++;
             else
             {
 
             }
         }
 
-        /// <summary>Increment <see cref="FileStats"/></summary>
+        /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
-            FileStats.Total++;
+            FileStatsField.Total++;
             if (SkippingFile)
             {
-                FileStats.Skipped++;
-                ByteStats.Skipped += CurrentFile?.Size ?? 0;
+                FileStatsField.Skipped++;
+                ByteStatsField.Skipped += CurrentFile?.Size ?? 0;
             }
             CurrentFile = currentFile;
-            ByteStats.Total += currentFile.Size;
+            ByteStatsField.Total += currentFile.Size;
             SkippingFile = false;
             CopyOpStarted = false;
 
             // EXTRA FILES
             if (currentFile.FileClass == Config.LogParsing_ExtraFile)
             {
-                FileStats.Extras++;
-                ByteStats.Extras += CurrentFile.Size;
+                FileStatsField.Extras++;
+                ByteStatsField.Extras += currentFile.Size;
             }
 
             //MisMatch
             else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
             {
-                FileStats.Mismatch++;
-                ByteStats.Mismatch += CurrentFile.Size;
+                FileStatsField.Mismatch++;
+                ByteStatsField.Mismatch += currentFile.Size;
             }
 
             //Failed Files
             else if (currentFile.FileClass == Config.LogParsing_FailedFile)
             {
-                FileStats.Failed++;
-                ByteStats.Failed += currentFile.Size;
+                FileStatsField.Failed++;
+                ByteStatsField.Failed += currentFile.Size;
             }
 
 
             //Identical Files
             else if (currentFile.FileClass == Config.LogParsing_SameFile)
             {
-                FileStats.Skipped++; //File is the same -> It will be skipped
-                ByteStats.Skipped += CurrentFile.Size;
+                FileStatsField.Skipped++; //File is the same -> It will be skipped
+                ByteStatsField.Skipped += currentFile.Size;
                 CurrentFile = null;
             }
 
@@ -147,13 +166,13 @@ namespace RoboSharp.Results
             CopyOpStarted = true;
         }
 
-        /// <summary>Increment <see cref="FileStats"/>.Copied</summary>
+        /// <summary>Increment <see cref="FileStatsField"/>.Copied</summary>
         internal void AddFileCopied()
         {
             SkippingFile = false;
             CopyOpStarted = false;
-            FileStats.Copied++;
-            ByteStats.Copied += CurrentFile?.Size ?? 0;
+            FileStatsField.Copied++;
+            ByteStatsField.Copied += CurrentFile?.Size ?? 0;
             CurrentFile = null;
         }
 
@@ -171,21 +190,21 @@ namespace RoboSharp.Results
             // - if file was to be marked as 'skipped', then register it as skipped.
             if (CopyOpStarted && CurrentFile != null)
             {
-                FileStats.Failed++;
-                ByteStats.Failed += CurrentFile.Size;
+                FileStatsField.Failed++;
+                ByteStatsField.Failed += CurrentFile.Size;
             }
             else if (SkippingFile && CurrentFile != null)
             {
-                FileStats.Skipped++;
-                ByteStats.Skipped += CurrentFile.Size;
+                FileStatsField.Skipped++;
+                ByteStatsField.Skipped += CurrentFile.Size;
             }
 
             // Package up
             return new RoboCopyResults()
             {
-                BytesStatistic = this.ByteStats,
-                DirectoriesStatistic = DirStats,
-                FilesStatistic = FileStats,
+                BytesStatistic = this.ByteStatsField,
+                DirectoriesStatistic = DirStatField,
+                FilesStatistic = FileStatsField,
                 SpeedStatistic = new SpeedStatistic(),
             };
         }
@@ -199,19 +218,19 @@ namespace RoboSharp.Results
             Results.RoboCopyExitCodes code = 0;
 
             //Files Copied
-            if (FileStats.Copied > 0)
+            if (FileStatsField.Copied > 0)
                 code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
 
             //Extra
-            if (DirStats.Extras > 0 | FileStats.Extras > 0)
+            if (DirStatField.Extras > 0 | FileStatsField.Extras > 0)
                 code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
 
             //MisMatch
-            if (DirStats.Mismatch > 0 | FileStats.Mismatch > 0)
+            if (DirStatField.Mismatch > 0 | FileStatsField.Mismatch > 0)
                 code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
 
             //Failed
-            if (DirStats.Failed > 0 | FileStats.Failed > 0)
+            if (DirStatField.Failed > 0 | FileStatsField.Failed > 0)
                 code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
 
             return code;
@@ -220,14 +239,14 @@ namespace RoboSharp.Results
 
         #region < Event Binding for Auto-Updates >
 
-        private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStats.AddStatistic((StatChangedEventArg)e);
-        private void BindFileStat(object o, PropertyChangedEventArgs e) => this.FileStats.AddStatistic((StatChangedEventArg)e);
-        private void BindByteStat(object o, PropertyChangedEventArgs e) => this.ByteStats.AddStatistic((StatChangedEventArg)e);
+        private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStatField.AddStatistic((StatChangedEventArg)e);
+        private void BindFileStat(object o, PropertyChangedEventArgs e) => this.FileStatsField.AddStatistic((StatChangedEventArg)e);
+        private void BindByteStat(object o, PropertyChangedEventArgs e) => this.ByteStatsField.AddStatistic((StatChangedEventArg)e);
 
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
         /// </summary>
-        internal void BindToProgressEstimator(ProgressEstimator estimator)
+        internal void BindToProgressEstimator(IProgressEstimator estimator)
         {
             BindToStatistic(estimator.ByteStats);
             BindToStatistic(estimator.DirStats);
@@ -237,7 +256,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Subscribe to the update events of a <see cref="Statistic"/> object
         /// </summary>
-        internal void BindToStatistic(Statistic StatObject)
+        internal void BindToStatistic(IStatistic StatObject)
         {
             //SubScribe
             if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
@@ -247,7 +266,7 @@ namespace RoboSharp.Results
             //Add to binding list
             if (StatObject.Type != Statistic.StatType.Unknown)
             {
-                if (SubscribedStats == null) SubscribedStats = new List<Statistic>();
+                if (SubscribedStats == null) SubscribedStats = new List<IStatistic>();
                 SubscribedStats.Add(StatObject);
             }
         }
@@ -259,7 +278,7 @@ namespace RoboSharp.Results
         {
             if (SubscribedStats != null)
             {
-                foreach (Statistic c in SubscribedStats)
+                foreach (IStatistic c in SubscribedStats)
                 {
                     if (c != null)
                     {
