@@ -49,7 +49,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Read-Only interface for <see cref="RoboCopyCombinedExitStatus"/>
     /// </summary>
-    public interface IRoboCopyCombinedExitStatus
+    public interface IRoboCopyCombinedExitStatus : INotifyPropertyChanged
     {
         /// <inheritdoc cref="RoboCopyCombinedExitStatus.WasCancelled"/>
         bool WasCancelled { get; }
@@ -66,15 +66,12 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="RoboCopyCombinedExitStatus.AllSuccessful_WithWarnings"/>
         bool AllSuccessful_WithWarnings { get; }
 
-        /// <summary>This event when the ExitStatus summary has changed </summary>
-        event PropertyChangedEventHandler PropertyChanged;
-
     }
 
     /// <summary>
     /// Represents the combination of multiple Exit Statuses
     /// </summary>
-    public sealed class RoboCopyCombinedExitStatus : RoboCopyExitStatus, INotifyPropertyChanged, IRoboCopyCombinedExitStatus
+    public sealed class RoboCopyCombinedExitStatus : RoboCopyExitStatus, IRoboCopyCombinedExitStatus
     {
         #region < Constructor >
 

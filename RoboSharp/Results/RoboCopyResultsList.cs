@@ -11,7 +11,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
     /// </summary>
-    public interface IRoboCopyResultsList
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, INotifyCollectionChanged
     {
         #region < Properties >
 
@@ -65,13 +65,6 @@ namespace RoboSharp.Results
         ISpeedStatistic[] GetSpeedStatistics();
 
         #endregion
-
-        #region < Events >
-
-        /// <summary> This event fires whenever the List's array is updated. </summary>
-        event NotifyCollectionChangedEventHandler CollectionChanged;
-        
-        #endregion
     }
 
     /// <summary>
@@ -81,7 +74,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </remarks>
-    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IDisposable, IRoboCopyResultsList
+    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList
     {
         #region < Constructors >
 
@@ -124,9 +117,6 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
-        private bool disposedValue;
-        private bool startedDisposing;
-        private bool Disposed => disposedValue || startedDisposing;
 
         #endregion
 
@@ -149,7 +139,7 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Get Array Methods >
+        #region < Get Array Methods ( Public ) >
 
         /// <summary>
         /// Get a snapshot of the ByteStatistics objects from this list.
@@ -157,7 +147,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the ByteStatistic objects</returns>
         public IStatistic[] GetByteStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic>{ };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.BytesStatistic);
@@ -170,7 +159,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the DirectoriesStatistic objects</returns>
         public IStatistic[] GetDirectoriesStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.DirectoriesStatistic);
@@ -183,7 +171,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the FilesStatistic objects</returns>
         public IStatistic[] GetFilesStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.FilesStatistic);
@@ -196,7 +183,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the FilesStatistic objects</returns>
         public RoboCopyExitStatus[] GetStatuses()
         {
-            if (Disposed) return null;
             List<RoboCopyExitStatus> tmp = new List<RoboCopyExitStatus> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.Status);
@@ -209,7 +195,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the FilesStatistic objects</returns>
         public ISpeedStatistic[] GetSpeedStatistics()
         {
-            if (Disposed) return null;
             List<SpeedStatistic> tmp = new List<SpeedStatistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.SpeedStatistic);
@@ -224,7 +209,6 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="ObservableList{T}.OnCollectionChanged(NotifyCollectionChangedEventArgs)"/>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (Disposed) return;
             if (e.Action == NotifyCollectionChangedAction.Move) goto RaiseEvent; // Sorting causes no change in math -> Simply raise the event
 
             //Reset means a drastic change -> Recalculate everything, then goto RaiseEvent
@@ -333,50 +317,6 @@ namespace RoboSharp.Results
             RaiseEvent:
             //Raise the CollectionChanged event
             base.OnCollectionChanged(e);
-        }
-
-        #endregion
-
-        #region < IDisposable >
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                startedDisposing = true;
-
-                if (disposing)
-                {
-                    this.Clear();
-                    Total_ByteStatsField = null;
-                    Total_DirStatsField = null;
-                    Total_FileStatsField = null;
-                    Average_SpeedStatsField = null;
-                    ExitStatusSummaryField = null;
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~RoboCopyResultsList()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        /// <summary>
-        /// Clear the list and Set all the calculated statistics objects to null <br/>
-        /// This object uses no 'Unmanaged' resources, so this is not strictly required to be called.
-        /// </summary>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
 
         #endregion
