@@ -7,21 +7,6 @@ using System.Text;
 namespace RoboSharp.Results
 {
     /// <summary>
-    /// Provde Read-Only Access to the a <see cref="ProgressEstimator"/> object
-    /// </summary>
-    public interface IProgressEstimator
-    {
-        /// <inheritdoc cref="ProgressEstimator.DirStats"/>
-        IStatistic DirStats { get; }
-
-        /// <inheritdoc cref="ProgressEstimator.FileStats"/>
-        IStatistic FileStats { get; }
-
-        /// <inheritdoc cref="ProgressEstimator.ByteStats"/>
-        IStatistic ByteStats { get; }
-    }
-    
-    /// <summary>
     /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
     /// <remarks>
@@ -35,7 +20,7 @@ namespace RoboSharp.Results
     /// }<br/>
     /// </code>
     /// </remarks>
-    public class ProgressEstimator : IDisposable, IProgressEstimator
+    public class ProgressEstimator
     {
         private ProgressEstimator() { }
 
@@ -54,8 +39,8 @@ namespace RoboSharp.Results
         private List<IStatistic> SubscribedStats;
         internal ProcessedFileInfo CurrentDir;
         internal ProcessedFileInfo CurrentFile;
-        private bool disposedValue;
 
+        private readonly RoboSharpConfiguration Config;
         private readonly Statistic DirStatField;
         private readonly Statistic FileStatsField;
         private readonly Statistic ByteStatsField;
@@ -83,13 +68,11 @@ namespace RoboSharp.Results
         public IStatistic ByteStats => ByteStatsField;
 
         /// <summary>
-        /// <inheritdoc cref="RoboSharpConfiguration"/>
         /// </summary>
-        public RoboSharpConfiguration Config { get; }
 
         #endregion
 
-        #region < Counting Methods >
+        #region < Counting Methods ( Internal ) >
 
         /// <summary>Increment <see cref="DirStatField"/></summary>
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
@@ -237,7 +220,7 @@ namespace RoboSharp.Results
 
         }
 
-        #region < Event Binding for Auto-Updates >
+        #region < Event Binding for Auto-Updates ( Internal ) >
 
         private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStatField.AddStatistic((StatChangedEventArg)e);
         private void BindFileStat(object o, PropertyChangedEventArgs e) => this.FileStatsField.AddStatistic((StatChangedEventArg)e);
@@ -246,7 +229,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
         /// </summary>
-        internal void BindToProgressEstimator(IProgressEstimator estimator)
+        internal void BindToProgressEstimator(ProgressEstimator estimator)
         {
             BindToStatistic(estimator.ByteStats);
             BindToStatistic(estimator.DirStats);
@@ -258,7 +241,6 @@ namespace RoboSharp.Results
         /// </summary>
         internal void BindToStatistic(IStatistic StatObject)
         {
-            //SubScribe
             if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
             else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
             else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
@@ -286,45 +268,6 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Disposing >
-        
-        /// <summary></summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                    UnBind(); //Unbind to show that those Statistics objects aren't required anymore
-                    SubscribedStats = null;
-                }
-
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~ProgressEstimator()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        /// <summary>
-        /// <inheritdoc cref="IDisposable.Dispose"/>
-        /// </summary>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 
 }
