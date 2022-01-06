@@ -4,9 +4,69 @@ using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace RoboSharp.Results
 {
+    /// <summary>
+    /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
+    /// </summary>
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, INotifyCollectionChanged
+    {
+        #region < Properties >
+
+        /// <summary> Sum of all DirectoryStatistics objects </summary>
+        IStatistic DirectoriesStatistic { get; }
+
+        /// <summary> Sum of all ByteStatistics objects </summary>
+        IStatistic BytesStatistic { get; }
+
+        /// <summary> Sum of all FileStatistics objects </summary>
+        IStatistic FilesStatistic { get; }
+
+        /// <summary> Average of all SpeedStatistics objects </summary>
+        ISpeedStatistic SpeedStatistic { get; }
+
+        /// <summary> Sum of all RoboCopyExitStatus objects </summary>
+        IRoboCopyCombinedExitStatus Status { get; }
+        
+        #endregion
+
+        #region < Methods >
+
+        /// <summary>
+        /// Get a snapshot of the ByteStatistics objects from this list.
+        /// </summary>
+        /// <returns>New array of the ByteStatistic objects</returns>
+        IStatistic[] GetByteStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the DirectoriesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the DirectoriesStatistic objects</returns>
+        IStatistic[] GetDirectoriesStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        IStatistic[] GetFilesStatistics();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        RoboCopyExitStatus[] GetStatuses();
+
+        /// <summary>
+        /// Get a snapshot of the FilesStatistic objects from this list.
+        /// </summary>
+        /// <returns>New array of the FilesStatistic objects</returns>
+        ISpeedStatistic[] GetSpeedStatistics();
+
+        #endregion
+    }
+
     /// <summary>
     /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
     /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.
@@ -14,7 +74,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </remarks>
-    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IDisposable
+    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList
     {
         #region < Constructors >
 
@@ -36,9 +96,9 @@ namespace RoboSharp.Results
 
         private void Init()
         {
-            Total_DirStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetDirectoriesStatistics()));
-            Total_ByteStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetByteStatistics()));
-            Total_FileStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetFilesStatistics()));
+            Total_DirStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetDirectoriesStatistics(), Statistic.StatType.Directories));
+            Total_ByteStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetByteStatistics(), Statistic.StatType.Bytes));
+            Total_FileStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetFilesStatistics(), Statistic.StatType.Files));
             Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>( () => AverageSpeedStatistic.GetAverage(this.GetSpeedStatistics()));
             ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
         }
@@ -57,40 +117,36 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
-        private bool disposedValue;
-        private bool startedDisposing;
-        private bool Disposed => disposedValue || startedDisposing;
 
         #endregion
 
         #region < Public Properties >
 
         /// <summary> Sum of all DirectoryStatistics objects </summary>
-        public Statistic DirectoriesStatistic => Total_DirStatsField?.Value;
+        public IStatistic DirectoriesStatistic => Total_DirStatsField?.Value;
 
         /// <summary> Sum of all ByteStatistics objects </summary>
-        public Statistic BytesStatistic => Total_ByteStatsField?.Value;
+        public IStatistic BytesStatistic => Total_ByteStatsField?.Value;
 
         /// <summary> Sum of all FileStatistics objects </summary>
-        public Statistic FilesStatistic => Total_FileStatsField?.Value;
+        public IStatistic FilesStatistic => Total_FileStatsField?.Value;
 
         /// <summary> Average of all SpeedStatistics objects </summary>
-        public SpeedStatistic SpeedStatistic => Average_SpeedStatsField?.Value;
+        public ISpeedStatistic SpeedStatistic => Average_SpeedStatsField?.Value;
 
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
-        public RoboCopyExitStatus Status => ExitStatusSummaryField?.Value;
+        public IRoboCopyCombinedExitStatus Status => ExitStatusSummaryField?.Value;
 
         #endregion
 
-        #region < Get Array Methods >
+        #region < Get Array Methods ( Public ) >
 
         /// <summary>
         /// Get a snapshot of the ByteStatistics objects from this list.
         /// </summary>
         /// <returns>New array of the ByteStatistic objects</returns>
-        public Statistic[] GetByteStatistics()
+        public IStatistic[] GetByteStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic>{ };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.BytesStatistic);
@@ -101,9 +157,8 @@ namespace RoboSharp.Results
         /// Get a snapshot of the DirectoriesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the DirectoriesStatistic objects</returns>
-        public Statistic[] GetDirectoriesStatistics()
+        public IStatistic[] GetDirectoriesStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.DirectoriesStatistic);
@@ -114,9 +169,8 @@ namespace RoboSharp.Results
         /// Get a snapshot of the FilesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
-        public Statistic[] GetFilesStatistics()
+        public IStatistic[] GetFilesStatistics()
         {
-            if (Disposed) return null;
             List<Statistic> tmp = new List<Statistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.FilesStatistic);
@@ -129,7 +183,6 @@ namespace RoboSharp.Results
         /// <returns>New array of the FilesStatistic objects</returns>
         public RoboCopyExitStatus[] GetStatuses()
         {
-            if (Disposed) return null;
             List<RoboCopyExitStatus> tmp = new List<RoboCopyExitStatus> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.Status);
@@ -140,9 +193,8 @@ namespace RoboSharp.Results
         /// Get a snapshot of the FilesStatistic objects from this list.
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
-        public SpeedStatistic[] GetSpeedStatistics()
+        public ISpeedStatistic[] GetSpeedStatistics()
         {
-            if (Disposed) return null;
             List<SpeedStatistic> tmp = new List<SpeedStatistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.SpeedStatistic);
@@ -157,7 +209,6 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="ObservableList{T}.OnCollectionChanged(NotifyCollectionChangedEventArgs)"/>
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            if (Disposed) return;
             if (e.Action == NotifyCollectionChangedAction.Move) goto RaiseEvent; // Sorting causes no change in math -> Simply raise the event
 
             //Reset means a drastic change -> Recalculate everything, then goto RaiseEvent
@@ -266,50 +317,6 @@ namespace RoboSharp.Results
             RaiseEvent:
             //Raise the CollectionChanged event
             base.OnCollectionChanged(e);
-        }
-
-        #endregion
-
-        #region < IDisposable >
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                startedDisposing = true;
-
-                if (disposing)
-                {
-                    this.Clear();
-                    Total_ByteStatsField = null;
-                    Total_DirStatsField = null;
-                    Total_FileStatsField = null;
-                    Average_SpeedStatsField = null;
-                    ExitStatusSummaryField = null;
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                disposedValue = true;
-            }
-        }
-
-        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-        // ~RoboCopyResultsList()
-        // {
-        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-        //     Dispose(disposing: false);
-        // }
-
-        /// <summary>
-        /// Clear the list and Set all the calculated statistics objects to null <br/>
-        /// This object uses no 'Unmanaged' resources, so this is not strictly required to be called.
-        /// </summary>
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
         }
 
         #endregion

@@ -11,25 +11,119 @@ using System.Runtime.CompilerServices;
 namespace RoboSharp.Results
 {
     /// <summary>
+    /// Provide Read-Only access to a <see cref="Statistic"/> object
+    /// </summary>
+    public interface IStatistic : INotifyPropertyChanged
+    {
+
+        #region < Properties >
+
+        /// <summary>
+        /// Name of the Statistics Object
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// <inheritdoc cref="Statistic.StatType"/>
+        /// </summary>
+        Statistic.StatType Type { get; }
+
+        /// <summary> Total Scanned during the run</summary>
+        long Total { get; }
+
+        /// <summary> Total Copied </summary>
+        long Copied { get; }
+
+        /// <summary> Total Skipped </summary>
+        long Skipped { get; }
+
+        /// <summary>  </summary>
+        long Mismatch { get; }
+
+        /// <summary> Total that failed to copy or move </summary>
+        long Failed { get; }
+
+        /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
+        long Extras { get; }
+
+        #endregion
+
+        #region < Events >
+
+        /// <inheritdoc cref="Statistic.PropertyChanged"/>
+        new event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnTotalChanged;
+
+        /// <summary> Occurs when the <see cref="Copied"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnCopiedChanged;
+
+        /// <summary> Occurs when the <see cref="Skipped"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnSkippedChanged;
+
+        /// <summary> Occurs when the <see cref="Mismatch"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnMisMatchChanged;
+
+        /// <summary> Occurs when the <see cref="Failed"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnFailedChanged;
+
+        /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnExtrasChanged;
+
+        #endregion
+
+        #region < ToString Methods >
+
+        /// <inheritdoc cref="SpeedStatistic.ToString"/>
+        string ToString();
+
+        /// <inheritdoc cref="Statistic.ToString(bool, bool, string, bool)"/>
+        string ToString(bool IncludeType, bool IncludePrefix, string Delimiter, bool DelimiterAfterType=false);
+
+        /// <inheritdoc cref="Statistic.ToString_Type()"/>
+        string ToString_Type();
+
+        /// <inheritdoc cref="Statistic.ToString_Total(bool, bool)"/>
+        string ToString_Total(bool IncludeType = false, bool IncludePrefix = true);
+
+        /// <inheritdoc cref="Statistic.ToString_Copied"/>
+        string ToString_Copied(bool IncludeType = false, bool IncludePrefix = true);
+
+        /// <inheritdoc cref="Statistic.ToString_Extras"/>
+        string ToString_Extras(bool IncludeType = false, bool IncludePrefix = true);
+
+        /// <inheritdoc cref="Statistic.ToString_Failed"/>
+        string ToString_Failed(bool IncludeType = false, bool IncludePrefix = true);
+
+        /// <inheritdoc cref="Statistic.ToString_Mismatch"/>
+        string ToString_Mismatch(bool IncludeType = false, bool IncludePrefix = true);
+
+        /// <inheritdoc cref="Statistic.ToString_Skipped"/>
+        string ToString_Skipped(bool IncludeType = false, bool IncludePrefix = true);
+        
+        #endregion
+    }
+
+    /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
     /// </summary>
     /// <remarks>
     /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
     /// </remarks>
-    public class Statistic : INotifyPropertyChanged
+    public class Statistic : IStatistic
     {
-        
-        /// <summary> Create a new Statistic object of <see cref="StatType.Unknown"/> </summary>
-        public Statistic() { Type = StatType.Unknown; }
+        #region < Constructors >
+
+        /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>
+        [Obsolete("Statistic Types require Initialization with a StatType")]
+        private Statistic() { }
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type) { Type = type; }
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type, string name) { Type = type; Name = name; }
-
-
-        #region < Fields >
 
         /// <summary> Describe the Type of Statistics Object </summary>
         public enum StatType
@@ -39,11 +133,14 @@ namespace RoboSharp.Results
             /// <summary> Statistics object represents count of Files </summary>
             Files,
             /// <summary> Statistics object represents a Size ( number of bytes )</summary>
-            Bytes,
-            /// <summary> Unknown Type - Not specified during construction or Multiple types were combined to generate the result </summary>
-            Unknown
+            Bytes
         }
 
+        #endregion 
+
+        #region < Fields >
+
+        private string NameField;
         private long TotalField;
         private long CopiedField;
         private long SkippedField;
@@ -64,12 +161,12 @@ namespace RoboSharp.Results
         /// </summary>
         /// <remarks>
         /// Allows use with both binding to controls and <see cref="ProgressEstimator"/> binding. <br/>
-        /// EventArgs can be passed into <see cref="AddStatistic(StatChangedEventArg)"/> after casting.
+        /// EventArgs can be passed into <see cref="AddStatistic(PropertyChangedEventArgs)"/> after casting.
         /// </remarks>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>Handles any statistic updates </summary>
-        public delegate void StatChangedHandler(Statistic sender, PropertyChangedEventArgs e);
+        /// <summary>Handles any value changes </summary>
+        public delegate void StatChangedHandler(Statistic sender, StatChangedEventArg e);
 
         /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
         public event StatChangedHandler OnTotalChanged;
@@ -98,14 +195,26 @@ namespace RoboSharp.Results
         /// <summary>
         /// Name of the Statistics Object
         /// </summary>
-        public string Name { get; set; }
+        public string Name
+        {
+            get => NameField;
+            set
+            {
+                if (value != NameField)
+                {
+                    NameField = value ?? "";
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Name"));
+                }
+            }
+        }
+        
 
         /// <summary>
         /// <inheritdoc cref="StatType"/>
         /// </summary>
         public StatType Type { get; }
 
-        /// <summary> Total Scanned during the run</summary>
+        /// <inheritdoc cref="IStatistic.Total"/>
         public long Total { 
             get => TotalField;
             internal set
@@ -123,7 +232,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary> Total Copied </summary>
+        /// <inheritdoc cref="IStatistic.Copied"/>
         public long Copied { 
             get => CopiedField;
             internal set
@@ -141,7 +250,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary> Total Skipped </summary>
+        /// <inheritdoc cref="IStatistic.Skipped"/>
         public long Skipped { 
             get => SkippedField;
             internal set
@@ -159,7 +268,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary>  </summary>
+        /// <inheritdoc cref="IStatistic.Mismatch"/>
         public long Mismatch { 
             get => MismatchField;
             internal set
@@ -177,7 +286,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary> Total that failed to copy or move </summary>
+        /// <inheritdoc cref="IStatistic.Failed"/>
         public long Failed { 
             get => FailedField;
             internal set
@@ -195,7 +304,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
+        /// <inheritdoc cref="IStatistic.Extras"/>
         public long Extras { 
             get => ExtrasField;
             internal set
@@ -405,25 +514,26 @@ namespace RoboSharp.Results
         /// <summary>
         /// Add the results of the supplied Statistics object to this Statistics object.
         /// </summary>
-        /// <param name="stats">Statistics Item to add</param>
+        /// <param name="stat">Statistics Item to add</param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        public void AddStatistic(Statistic stats)
+        public void AddStatistic(IStatistic stat)
         {
-            Total += stats?.Total ?? 0;
-            Copied += stats?.Copied ?? 0;
-            Extras += stats?.Extras ?? 0;
-            Failed += stats?.Failed ?? 0;
-            Mismatch += stats?.Mismatch ?? 0;
-            Skipped += stats?.Skipped ?? 0;
+            if (stat.Type != this.Type) return;
+            Total += stat?.Total ?? 0;
+            Copied += stat?.Copied ?? 0;
+            Extras += stat?.Extras ?? 0;
+            Failed += stat?.Failed ?? 0;
+            Mismatch += stat?.Mismatch ?? 0;
+            Skipped += stat?.Skipped ?? 0;
         }
 
         
         #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
         /// <param name="enablePropertyChangedEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/></param>
-        /// <inheritdoc cref="AddStatistic(Statistic)"/>        
-        internal void AddStatistic(Statistic stats, bool enablePropertyChangedEvent)
+        /// <inheritdoc cref="AddStatistic(IStatistic)"/>        
+        internal void AddStatistic(IStatistic stats, bool enablePropertyChangedEvent)
         {
             EnablePropertyChangeEvent = enablePropertyChangedEvent;
             AddStatistic(stats);
@@ -437,7 +547,7 @@ namespace RoboSharp.Results
         /// Add the results of the supplied Statistics objects to this Statistics object.
         /// </summary>
         /// <param name="stats">Statistics Item to add</param>
-        public void AddStatistic(IEnumerable<Statistic> stats)
+        public void AddStatistic(IEnumerable<IStatistic> stats)
         {
             foreach (Statistic stat in stats)
             {
@@ -450,9 +560,11 @@ namespace RoboSharp.Results
         /// Adds <see cref="StatChangedEventArg.Difference"/> to the appropriate property based on the 'PropertyChanged' value. <br/>
         /// Will only add the value if the <see cref="StatChangedEventArg.StatType"/> == <see cref="Type"/>.
         /// </summary>
-        /// <param name="e">Arg provided by either <see cref="PropertyChanged"/> or a Statistic's object's On*Changed events</param>
-        public void AddStatistic(StatChangedEventArg e)
+        /// <param name="eventArgs">Arg provided by either <see cref="PropertyChanged"/> or a Statistic's object's On*Changed events</param>
+        public void AddStatistic(PropertyChangedEventArgs eventArgs)
         {
+            if (eventArgs.GetType() != typeof(StatChangedEventArg)) return;
+            var e = (StatChangedEventArg)eventArgs;
             if (e.StatType == this.Type)
             {
                 switch (e.PropertyName)
@@ -480,21 +592,15 @@ namespace RoboSharp.Results
         }
 
         /// <summary>
-        /// Combine the results of the supplied statistics objects
+        /// Combine the results of the supplied statistics objects of the specified type.
         /// </summary>
-        /// <param name="stats">Statistics Item to add</param>
+        /// <param name="stats">Collection of <see cref="Statistic"/> objects</param>
+        /// <param name="statType">Create a new Statistic object of this type.</param>
         /// <returns>New Statistics Object</returns>
-        public static Statistic AddStatistics(IEnumerable<Statistic> stats)
+        public static Statistic AddStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
-
-            Statistic ret;
-            if ((stats?.Count() ?? 0 ) == 0) ret = new Statistic(StatType.Unknown);
-            else if (stats.All((c) => c.Type == StatType.Directories)) ret = new Statistic(StatType.Directories);
-            else if (stats.All((c) => c.Type == StatType.Files)) ret = new Statistic(StatType.Files);
-            else if (stats.All((c) => c.Type == StatType.Bytes)) ret = new Statistic(StatType.Bytes);
-            else ret = new Statistic(StatType.Unknown);
-
-            ret.AddStatistic(stats);
+            Statistic ret = new Statistic(statType);
+            ret.AddStatistic(stats.Where(s => s.Type == statType) );
             return ret;
         }
 
@@ -507,7 +613,7 @@ namespace RoboSharp.Results
         /// Combine the supplied <see cref="Statistic"/> objects, then get the average.
         /// </summary>
         /// <param name="stats">Array of Stats objects</param>
-        public void AverageStatistic(IEnumerable<Statistic> stats)
+        public void AverageStatistic(IEnumerable<IStatistic> stats)
         {
             this.AddStatistic(stats);
             int cnt = stats.Count() + 1;
@@ -521,11 +627,11 @@ namespace RoboSharp.Results
         }
 
         /// <returns>New Statistics Object</returns>
-        /// <inheritdoc cref=" AverageStatistic(IEnumerable{Statistic})"/>
-        public static Statistic AverageStatistics(IEnumerable<Statistic> stats)
+        /// <inheritdoc cref=" AverageStatistic(IEnumerable{IStatistic})"/>
+        public static Statistic AverageStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
-            Statistic stat = AddStatistics(stats);
-            int cnt = stats.Count();
+            Statistic stat = AddStatistics(stats, statType);
+            int cnt = stats.Count(s => s.Type == statType);
             if (cnt > 1)
             {
                 stat.Total /= cnt;
@@ -549,7 +655,7 @@ namespace RoboSharp.Results
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        public void Subtract(Statistic stat)
+        public void Subtract(IStatistic stat)
         {
             Copied -= stat?.Copied ?? 0;
             Extras -= stat?.Extras ?? 0;
@@ -561,8 +667,8 @@ namespace RoboSharp.Results
 
         #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
         /// <param name="enablePropertyChangedEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/></param>
-        /// <inheritdoc cref="Subtract(Statistic)"/>        
-        internal void Subtract(Statistic stats, bool enablePropertyChangedEvent)
+        /// <inheritdoc cref="Subtract(IStatistic)"/>        
+        internal void Subtract(IStatistic stats, bool enablePropertyChangedEvent)
         {
             EnablePropertyChangeEvent = enablePropertyChangedEvent;
             Subtract(stats);
@@ -574,7 +680,7 @@ namespace RoboSharp.Results
         /// Add the results of the supplied Statistics objects to this Statistics object.
         /// </summary>
         /// <param name="stats">Statistics Item to add</param>
-        public void Subtract(IEnumerable<Statistic> stats)
+        public void Subtract(IEnumerable<IStatistic> stats)
         {
             foreach (Statistic stat in stats)
             {
