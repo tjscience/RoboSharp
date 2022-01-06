@@ -70,9 +70,6 @@ namespace RoboSharp.Results
 
         /// <summary> This event fires whenever the List's array is updated. </summary>
         event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        /// <summary> "Count" PropertyChanged event is raised whenever CollectionChanged is raised. </summary>
-        event PropertyChangedEventHandler PropertyChanged;
         
         #endregion
     }

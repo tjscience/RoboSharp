@@ -572,7 +572,7 @@ namespace RoboSharp.Results
         /// <param name="stats">Collection of <see cref="Statistic"/> objects</param>
         /// <param name="statType">Create a new Statistic object of this type. If <see cref="StatType.Unknown"/> is specified, adds entire <paramref name="stats"/> collection. </param>
         /// <returns>New Statistics Object</returns>
-        public static Statistic AddStatistics(IEnumerable<IStatistic> stats)
+        public static Statistic AddStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
             Statistic ret = new Statistic(statType);
             ret.AddStatistic(statType == StatType.Unknown ? stats : stats.Where(s => s.Type == statType) );
@@ -603,7 +603,7 @@ namespace RoboSharp.Results
 
         /// <returns>New Statistics Object</returns>
         /// <inheritdoc cref=" AverageStatistic(IEnumerable{IStatistic})"/>
-        public static Statistic AverageStatistics(IEnumerable<IStatistic> stats)
+        public static Statistic AverageStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
             Statistic stat = AddStatistics(stats, statType);
             int cnt = statType == StatType.Unknown ? stats.Count() : stats.Count(s => s.Type == statType);
