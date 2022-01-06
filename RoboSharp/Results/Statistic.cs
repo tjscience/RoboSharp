@@ -91,17 +91,14 @@ namespace RoboSharp.Results
     public class Statistic : INotifyPropertyChanged, IStatistic
     {
         
-        /// <summary> Create a new Statistic object of <see cref="StatType.Unknown"/> </summary>
-        public Statistic() { Type = StatType.Unknown; }
+        /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>
+        private Statistic() { }
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type) { Type = type; }
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type, string name) { Type = type; Name = name; }
-
-
-        #region < Fields >
 
         /// <summary> Describe the Type of Statistics Object </summary>
         public enum StatType
@@ -111,10 +108,10 @@ namespace RoboSharp.Results
             /// <summary> Statistics object represents count of Files </summary>
             Files,
             /// <summary> Statistics object represents a Size ( number of bytes )</summary>
-            Bytes,
-            /// <summary> Unknown Type - Not specified during construction or Multiple types were combined to generate the result </summary>
-            Unknown
+            Bytes
         }
+
+        #region < Fields >
 
         private string NameField;
         private long TotalField;
@@ -137,7 +134,7 @@ namespace RoboSharp.Results
         /// </summary>
         /// <remarks>
         /// Allows use with both binding to controls and <see cref="ProgressEstimator"/> binding. <br/>
-        /// EventArgs can be passed into <see cref="AddStatistic(StatChangedEventArg)"/> after casting.
+        /// EventArgs can be passed into <see cref="AddStatistic(PropertyChangedEventArgs)"/> after casting.
         /// </remarks>
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -490,18 +487,19 @@ namespace RoboSharp.Results
         /// <summary>
         /// Add the results of the supplied Statistics object to this Statistics object.
         /// </summary>
-        /// <param name="stats">Statistics Item to add</param>
+        /// <param name="stat">Statistics Item to add</param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        public void AddStatistic(IStatistic stats)
+        public void AddStatistic(IStatistic stat)
         {
-            Total += stats?.Total ?? 0;
-            Copied += stats?.Copied ?? 0;
-            Extras += stats?.Extras ?? 0;
-            Failed += stats?.Failed ?? 0;
-            Mismatch += stats?.Mismatch ?? 0;
-            Skipped += stats?.Skipped ?? 0;
+            if (stat.Type != this.Type) return;
+            Total += stat?.Total ?? 0;
+            Copied += stat?.Copied ?? 0;
+            Extras += stat?.Extras ?? 0;
+            Failed += stat?.Failed ?? 0;
+            Mismatch += stat?.Mismatch ?? 0;
+            Skipped += stat?.Skipped ?? 0;
         }
 
         
@@ -570,12 +568,12 @@ namespace RoboSharp.Results
         /// Combine the results of the supplied statistics objects of the specified type.
         /// </summary>
         /// <param name="stats">Collection of <see cref="Statistic"/> objects</param>
-        /// <param name="statType">Create a new Statistic object of this type. If <see cref="StatType.Unknown"/> is specified, adds entire <paramref name="stats"/> collection. </param>
+        /// <param name="statType">Create a new Statistic object of this type.</param>
         /// <returns>New Statistics Object</returns>
         public static Statistic AddStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
             Statistic ret = new Statistic(statType);
-            ret.AddStatistic(statType == StatType.Unknown ? stats : stats.Where(s => s.Type == statType) );
+            ret.AddStatistic(stats.Where(s => s.Type == statType) );
             return ret;
         }
 
@@ -606,7 +604,7 @@ namespace RoboSharp.Results
         public static Statistic AverageStatistics(IEnumerable<IStatistic> stats, StatType statType)
         {
             Statistic stat = AddStatistics(stats, statType);
-            int cnt = statType == StatType.Unknown ? stats.Count() : stats.Count(s => s.Type == statType);
+            int cnt = stats.Count(s => s.Type == statType);
             if (cnt > 1)
             {
                 stat.Total /= cnt;

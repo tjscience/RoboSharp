@@ -262,13 +262,6 @@ namespace RoboSharp.Results
             if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
             else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
             else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
-            
-            //Add to binding list
-            if (StatObject.Type != Statistic.StatType.Unknown)
-            {
-                if (SubscribedStats == null) SubscribedStats = new List<IStatistic>();
-                SubscribedStats.Add(StatObject);
-            }
         }
 
         /// <summary>
