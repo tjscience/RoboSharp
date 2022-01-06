@@ -13,10 +13,8 @@ namespace RoboSharp.Results
     /// <summary>
     /// Provide Read-Only access to a <see cref="Statistic"/> object
     /// </summary>
-    public interface IStatistic
+    public interface IStatistic : INotifyPropertyChanged
     {
-        /// <inheritdoc cref="Statistic.PropertyChanged"/>
-        event PropertyChangedEventHandler PropertyChanged;
 
         #region < Properties >
 
@@ -47,6 +45,31 @@ namespace RoboSharp.Results
 
         /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
         long Extras { get; }
+
+        #endregion
+
+        #region < Events >
+
+        /// <inheritdoc cref="Statistic.PropertyChanged"/>
+        new event PropertyChangedEventHandler PropertyChanged;
+
+        /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnTotalChanged;
+
+        /// <summary> Occurs when the <see cref="Copied"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnCopiedChanged;
+
+        /// <summary> Occurs when the <see cref="Skipped"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnSkippedChanged;
+
+        /// <summary> Occurs when the <see cref="Mismatch"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnMisMatchChanged;
+
+        /// <summary> Occurs when the <see cref="Failed"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnFailedChanged;
+
+        /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
+        event Statistic.StatChangedHandler OnExtrasChanged;
 
         #endregion
 
@@ -88,9 +111,10 @@ namespace RoboSharp.Results
     /// <remarks>
     /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
     /// </remarks>
-    public class Statistic : INotifyPropertyChanged, IStatistic
+    public class Statistic : IStatistic
     {
-        
+        #region < Constructors >
+
         /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>
         [Obsolete("Statistic Types require Initialization with a StatType")]
         private Statistic() { }
@@ -111,6 +135,8 @@ namespace RoboSharp.Results
             /// <summary> Statistics object represents a Size ( number of bytes )</summary>
             Bytes
         }
+
+        #endregion 
 
         #region < Fields >
 
@@ -139,8 +165,8 @@ namespace RoboSharp.Results
         /// </remarks>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary>Handles any statistic updates </summary>
-        public delegate void StatChangedHandler(Statistic sender, PropertyChangedEventArgs e);
+        /// <summary>Handles any value changes </summary>
+        public delegate void StatChangedHandler(Statistic sender, StatChangedEventArg e);
 
         /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
         public event StatChangedHandler OnTotalChanged;
