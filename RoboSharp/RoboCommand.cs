@@ -115,10 +115,10 @@ namespace RoboSharp
         public Results.ProgressEstimator ProgressEstimator { get; private set; }
 
         /// <summary>
-        /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called. <br/>
-        /// For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE.
+        /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called.<br/>
+        /// For example, if the RoboCopy process should exit when the program exits, this should be set to TRUE (default).
         /// </summary>
-        public bool StopIfDisposing { get; set; }
+        public bool StopIfDisposing { get; set; } = true;
 
         #endregion Public Vars
 
@@ -391,7 +391,7 @@ namespace RoboSharp
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(ProgressEstimator));
+                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
 
                 process = new Process();
 
@@ -532,6 +532,15 @@ namespace RoboSharp
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizer -> Cleans up resources when garbage collected
+        /// </summary>
+        ~RoboCommand()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
         /// <summary>IDisposable Implementation</summary>
         protected virtual void Dispose(bool disposing)
         {
@@ -547,6 +556,9 @@ namespace RoboSharp
             {
                 Stop();
             }
+                
+            //Release any hooks to the process, but allow it to continue running
+            process?.Dispose();
 
             disposed = true;
         }

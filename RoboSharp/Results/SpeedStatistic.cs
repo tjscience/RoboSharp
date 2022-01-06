@@ -11,12 +11,27 @@ using System.Runtime.CompilerServices;
 namespace RoboSharp.Results
 {
     /// <summary>
+    /// Provide Read-Only access to a SpeedStatistic
+    /// </summary>
+    public interface ISpeedStatistic : INotifyPropertyChanged
+    {
+        /// <summary> Average Transfer Rate in Bytes/Second </summary>
+        decimal BytesPerSec { get; }
+
+        /// <summary> Average Transfer Rate in MB/Minute</summary>
+        decimal MegaBytesPerMin { get; }
+
+        /// <inheritdoc cref="SpeedStatistic.ToString"/>
+        string ToString();
+    }
+    
+    /// <summary>
     /// Contains information regarding average Transfer Speed. <br/>
     /// Note: Runs that do not perform any copy operations or that exited prematurely ( <see cref="RoboCopyExitCodes.Cancelled"/> ) will result in a null <see cref="SpeedStatistic"/> object.
     /// </summary>
-    public class SpeedStatistic : INotifyPropertyChanged
+    public class SpeedStatistic : INotifyPropertyChanged, ISpeedStatistic
     {
-        #region < Fields, Events, Properties >
+        #region < Private & Protected Members >
 
         private decimal BytesPerSecField = 0;
         private decimal MegaBytesPerMinField = 0;
@@ -24,10 +39,14 @@ namespace RoboSharp.Results
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
         protected bool EnablePropertyChangeEvent { get; set; } = true;
 
+        #endregion
+
+        #region < Public Properties & Events >
+
         /// <summary>This event will fire when the value of the SpeedStatistic is updated </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        /// <summary> Average Transfer Rate in Bytes/Second </summary>
+        /// <inheritdoc cref="ISpeedStatistic.BytesPerSec"/>
         public virtual decimal BytesPerSec
         {
             get => BytesPerSecField;
@@ -41,7 +60,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary> Average Transfer Rate in MB/Minute</summary>
+        /// <inheritdoc cref="ISpeedStatistic.BytesPerSec"/>
         public virtual decimal MegaBytesPerMin
         {
             get => MegaBytesPerMinField;
@@ -114,7 +133,7 @@ namespace RoboSharp.Results
         /// Either a <see cref="SpeedStatistic"/> or a <see cref="AverageSpeedStatistic"/> object. <br/>
         /// If a <see cref="AverageSpeedStatistic"/> is passed into this constructor, it wil be treated as the base <see cref="SpeedStatistic"/> instead.
         /// </param>
-        public AverageSpeedStatistic(SpeedStatistic speedStat) : base()
+        public AverageSpeedStatistic(ISpeedStatistic speedStat) : base()
         {
             Divisor = 1;
             Combined_BytesPerSec = speedStat.BytesPerSec;
@@ -123,11 +142,11 @@ namespace RoboSharp.Results
         }
 
         /// <summary>
-        /// Initialize a new <see cref="AverageSpeedStatistic"/> object using <see cref="AverageSpeedStatistic.Average(IEnumerable{SpeedStatistic})"/>. <br/>
+        /// Initialize a new <see cref="AverageSpeedStatistic"/> object using <see cref="AverageSpeedStatistic.Average(IEnumerable{ISpeedStatistic})"/>. <br/>
         /// </summary>
-        /// <param name="speedStats"><inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/></param>
-        /// <inheritdoc cref="Average(IEnumerable{SpeedStatistic})"/>
-        public AverageSpeedStatistic(IEnumerable<SpeedStatistic> speedStats) : base()
+        /// <param name="speedStats"><inheritdoc cref="Average(IEnumerable{ISpeedStatistic})"/></param>
+        /// <inheritdoc cref="Average(IEnumerable{ISpeedStatistic})"/>
+        public AverageSpeedStatistic(IEnumerable<ISpeedStatistic> speedStats) : base()
         {
             Average(speedStats);
         }
@@ -184,7 +203,7 @@ namespace RoboSharp.Results
         // Subtraction is only used when an item is removed from a RoboCopyResultsList 
         // As such, public consumers should typically not require the use of subtract methods 
 
-        #region < ADD >
+        #region < ADD ( internal ) >
 
         /// <summary>
         /// Add the results of the supplied SpeedStatistic objects to this object. <br/>
@@ -204,7 +223,7 @@ namespace RoboSharp.Results
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        internal void Add(SpeedStatistic stat, bool ForceTreatAsSpeedStat = false)
+        internal void Add(ISpeedStatistic stat, bool ForceTreatAsSpeedStat = false)
         {
             if (stat == null) return;
             bool IsAverageStat = !ForceTreatAsSpeedStat && stat.GetType() == typeof(AverageSpeedStatistic);
@@ -219,12 +238,12 @@ namespace RoboSharp.Results
         /// Add the supplied SpeedStatistic collection to this object.
         /// </summary>
         /// <param name="stats">SpeedStatistic collection to add</param>
-        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
-        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(ISpeedStatistic, bool)"/></param>
+        /// <inheritdoc cref="Add(ISpeedStatistic, bool)" path="/remarks"/>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
-        internal void Add(IEnumerable<SpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
+        internal void Add(IEnumerable<ISpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
         {
             foreach (SpeedStatistic stat in stats)
                 Add(stat, ForceTreatAsSpeedStat);
@@ -232,13 +251,13 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Subtract >
+        #region < Subtract ( internal ) >
 
         /// <summary>
         /// Subtract the results of the supplied SpeedStatistic objects from this object.<br/>
         /// </summary>
         /// <param name="stat">Statistics Item to add</param>
-        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(ISpeedStatistic, bool)"/></param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
@@ -267,7 +286,7 @@ namespace RoboSharp.Results
         /// Subtract the supplied SpeedStatistic collection from this object.
         /// </summary>
         /// <param name="stats">SpeedStatistic collection to subtract</param>
-        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(SpeedStatistic, bool)"/></param>
+        /// <param name="ForceTreatAsSpeedStat"><inheritdoc cref="Add(ISpeedStatistic, bool)"/></param>
 #if !NET40
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
 #endif
@@ -279,7 +298,7 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < AVERAGE >
+        #region < AVERAGE ( public ) >
 
         /// <summary>
         /// Immediately recalculate the BytesPerSec and MegaBytesPerMin values
@@ -297,8 +316,8 @@ namespace RoboSharp.Results
         /// Combine the supplied <see cref="SpeedStatistic"/> objects, then get the average.
         /// </summary>
         /// <param name="stat">Stats object</param>
-        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
-        public void Average(SpeedStatistic stat)
+        /// <inheritdoc cref="Add(ISpeedStatistic, bool)" path="/remarks"/>
+        public void Average(ISpeedStatistic stat)
         {
             Add(stat);
             CalculateAverage();
@@ -307,17 +326,17 @@ namespace RoboSharp.Results
         /// <summary>
         /// Combine the supplied <see cref="SpeedStatistic"/> objects, then get the average.
         /// </summary>
-        /// <param name="stats">Collection of <see cref="SpeedStatistic"/> objects</param>
-        /// <inheritdoc cref="Add(SpeedStatistic, bool)" path="/remarks"/>
-        public void Average(IEnumerable<SpeedStatistic> stats)
+        /// <param name="stats">Collection of <see cref="ISpeedStatistic"/> objects</param>
+        /// <inheritdoc cref="Add(ISpeedStatistic, bool)" path="/remarks"/>
+        public void Average(IEnumerable<ISpeedStatistic> stats)
         {
             Add(stats);
             CalculateAverage();
         }
 
         /// <returns>New Statistics Object</returns>
-        /// <inheritdoc cref=" Average(IEnumerable{SpeedStatistic})"/>
-        public static AverageSpeedStatistic GetAverage(IEnumerable<SpeedStatistic> stats)
+        /// <inheritdoc cref=" Average(IEnumerable{ISpeedStatistic})"/>
+        public static AverageSpeedStatistic GetAverage(IEnumerable<ISpeedStatistic> stats)
         {
             AverageSpeedStatistic stat = new AverageSpeedStatistic();
             stat.Average(stats);
