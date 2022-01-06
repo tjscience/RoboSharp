@@ -92,6 +92,7 @@ namespace RoboSharp.Results
     {
         
         /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>
+        [Obsolete("Statistic Types require Initialization with a StatType")]
         private Statistic() { }
 
         /// <summary> Create a new Statistic object </summary>
