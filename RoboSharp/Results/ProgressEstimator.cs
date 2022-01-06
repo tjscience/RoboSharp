@@ -67,8 +67,72 @@ namespace RoboSharp.Results
         /// </summary>
         public IStatistic ByteStats => ByteStatsField;
 
+        #endregion
+
+        #region < Public Methods >
+
         /// <summary>
+        /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
         /// </summary>
+        /// <returns></returns>
+        public RoboCopyExitCodes GetExitCode()
+        {
+            Results.RoboCopyExitCodes code = 0;
+
+            //Files Copied
+            if (FileStatsField.Copied > 0)
+                code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
+
+            //Extra
+            if (DirStatField.Extras > 0 | FileStatsField.Extras > 0)
+                code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
+
+            //MisMatch
+            if (DirStatField.Mismatch > 0 | FileStatsField.Mismatch > 0)
+                code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
+
+            //Failed
+            if (DirStatField.Failed > 0 | FileStatsField.Failed > 0)
+                code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
+
+            return code;
+
+        }
+
+        #endregion
+
+        #region < Get RoboCopyResults Object ( Internal ) >
+
+        /// <summary>
+        /// Repackage the statistics into a new <see cref="RoboCopyResults"/> object
+        /// </summary>
+        /// <remarks>Used by ResultsBuilder as starting point for the results.</remarks>
+        /// <returns></returns>
+        internal RoboCopyResults GetResults()
+        {
+            //ResultsBuilder calls this at end of run:
+            // - if copy operation wasn't completed, register it as failed instead.
+            // - if file was to be marked as 'skipped', then register it as skipped.
+            if (CopyOpStarted && CurrentFile != null)
+            {
+                FileStatsField.Failed++;
+                ByteStatsField.Failed += CurrentFile.Size;
+            }
+            else if (SkippingFile && CurrentFile != null)
+            {
+                FileStatsField.Skipped++;
+                ByteStatsField.Skipped += CurrentFile.Size;
+            }
+
+            // Package up
+            return new RoboCopyResults()
+            {
+                BytesStatistic = this.ByteStatsField,
+                DirectoriesStatistic = DirStatField,
+                FilesStatistic = FileStatsField,
+                SpeedStatistic = new SpeedStatistic(),
+            };
+        }
 
         #endregion
 
@@ -161,65 +225,6 @@ namespace RoboSharp.Results
 
         #endregion
 
-        /// <summary>
-        /// Repackage the statistics into a new <see cref="RoboCopyResults"/> object
-        /// </summary>
-        /// <remarks>Used by ResultsBuilder as starting point for the results.</remarks>
-        /// <returns></returns>
-        internal RoboCopyResults GetResults()
-        {
-            //ResultsBuilder calls this at end of run:
-            // - if copy operation wasn't completed, register it as failed instead.
-            // - if file was to be marked as 'skipped', then register it as skipped.
-            if (CopyOpStarted && CurrentFile != null)
-            {
-                FileStatsField.Failed++;
-                ByteStatsField.Failed += CurrentFile.Size;
-            }
-            else if (SkippingFile && CurrentFile != null)
-            {
-                FileStatsField.Skipped++;
-                ByteStatsField.Skipped += CurrentFile.Size;
-            }
-
-            // Package up
-            return new RoboCopyResults()
-            {
-                BytesStatistic = this.ByteStatsField,
-                DirectoriesStatistic = DirStatField,
-                FilesStatistic = FileStatsField,
-                SpeedStatistic = new SpeedStatistic(),
-            };
-        }
-
-        /// <summary>
-        /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
-        /// </summary>
-        /// <returns></returns>
-        public RoboCopyExitCodes GetExitCode()
-        {
-            Results.RoboCopyExitCodes code = 0;
-
-            //Files Copied
-            if (FileStatsField.Copied > 0)
-                code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
-
-            //Extra
-            if (DirStatField.Extras > 0 | FileStatsField.Extras > 0)
-                code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
-
-            //MisMatch
-            if (DirStatField.Mismatch > 0 | FileStatsField.Mismatch > 0)
-                code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
-
-            //Failed
-            if (DirStatField.Failed > 0 | FileStatsField.Failed > 0)
-                code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
-
-            return code;
-
-        }
-
         #region < Event Binding for Auto-Updates ( Internal ) >
 
         private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStatField.AddStatistic((StatChangedEventArg)e);
@@ -241,6 +246,8 @@ namespace RoboSharp.Results
         /// </summary>
         internal void BindToStatistic(IStatistic StatObject)
         {
+            if (SubscribedStats == null) SubscribedStats = new List<IStatistic>();
+            SubscribedStats.Add(StatObject);
             if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
             else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
             else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
