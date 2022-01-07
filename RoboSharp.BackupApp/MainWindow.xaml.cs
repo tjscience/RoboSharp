@@ -63,6 +63,9 @@ namespace RoboSharp.BackupApp
             cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
+            
+            RoboQueue.RunOperationResultsUpdated += RoboQueue_RunOperationResultsUpdated; 
+            RoboQueue.ListOnlyResultsUpdated += RoboQueue_ListOnlyResultsUpdated;
 
             RoboQueue.OnCommandError += RoboQueue_OnCommandError;
             RoboQueue.OnError += RoboQueue_OnError; ;
@@ -329,6 +332,8 @@ namespace RoboSharp.BackupApp
 
                 RoboQueueProgressStackPanel.Children.Clear();
 
+                MultiJobProgressTab.IsSelected = true;
+
                 if (chkListOnly.IsChecked == true)
                     await RoboQueue.StartAll_ListOnly();
                 else
@@ -344,6 +349,7 @@ namespace RoboSharp.BackupApp
                 btnRemoveSelectedJob_Copy.IsEnabled = true;
                 btnReplaceSelected.IsEnabled = true;
                 btnUPdateSelectedJob_Copy.IsEnabled = true;
+
             }
             else
                 RoboQueue.StopAll();
@@ -412,7 +418,7 @@ namespace RoboSharp.BackupApp
 
         #region < RoboQueue & Command Events >
 
-        private void UpdateCommandsRunningBox()
+        private void UpdateCommandsRunningBox() 
         {
             Dispatcher.Invoke(() => MultiJob_JobRunningCount.Text = $"{RoboQueue.JobsCurrentlyRunning}");
         }
@@ -439,6 +445,8 @@ namespace RoboSharp.BackupApp
             {
                 MultiJob_JobsCompleteXofY.Text = $"{RoboQueue.JobsComplete} of {RoboQueue.ListCount}";
                 MultiJobProgressBar_JobsComplete.Value = RoboQueue.JobsComplete;
+                //MultiJob_ListOnlyResults.ListBox_JobResults.ItemsSource = RoboQueue.ListOnlyResults;
+                //MultiJob_RunResults.ListBox_JobResults.ItemsSource = RoboQueue.RunOperationResults;
             });
         }
 
@@ -457,14 +465,12 @@ namespace RoboSharp.BackupApp
                 else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
                 {
                     //Remove associated MultiJob_CommandProgressIndicator
-                    foreach (UIElement element in RoboQueueProgressStackPanel.Children)
+                    var PBars = RoboQueueProgressStackPanel.Children.OfType<MultiJob_CommandProgressIndicator>();
+                    foreach (var element in PBars)
                     {
-                        if (element.GetType() == typeof(MultiJob_CommandProgressIndicator))
-                        {
-                            var el = (MultiJob_CommandProgressIndicator)element;
-                            if (e.OldItems.Contains(el.Command))
-                                RoboQueueProgressStackPanel.Children.Remove(element);
-                        }
+                        if (e.OldItems.Contains(element.Command))
+                            RoboQueueProgressStackPanel.Children.Remove(element);
+                            break;
                     }
                 }
             });
@@ -493,6 +499,24 @@ namespace RoboSharp.BackupApp
         {
             btn_StartQueue(null, null); // Stop Everything
 
+        }
+
+        /// <summary>
+        /// This listener is used to rebind the ListOnly results to the display listbox. 
+        /// It had to be done like this due to INotifyCollectionChanged not updating the listbox due to threading issues
+        /// </summary>
+        private void RoboQueue_ListOnlyResultsUpdated(object sender, Results.ResultListUpdatedEventArgs e)
+        {
+            MultiJob_ListOnlyResults.BindToList(e.ResultsList);
+        }
+
+        /// <summary>
+        /// This listener is used to rebind the RunOperation results to the display listbox. 
+        /// It had to be done like this due to INotifyCollectionChanged not updating the listbox due to threading issues
+        /// </summary>
+        private void RoboQueue_RunOperationResultsUpdated(object sender, Results.ResultListUpdatedEventArgs e)
+        {
+            MultiJob_RunResults.BindToList(e.ResultsList);
         }
 
         #endregion

@@ -29,6 +29,9 @@ namespace RoboSharp.Results
 
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
         IRoboCopyCombinedExitStatus Status { get; }
+
+        /// <inheritdoc cref="List{T}.Count"/>
+        int Count { get; }
         
         #endregion
 
@@ -117,6 +120,15 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
+
+        #endregion
+
+        #region < Events >
+
+        /// <summary>
+        /// Delegate for objects to send notification that the list behind an <see cref="IRoboCopyResultsList"/> interface has been updated
+        /// </summary>
+        public delegate void ResultsListUpdated(object sender, ResultListUpdatedEventArgs e);
 
         #endregion
 
@@ -322,5 +334,24 @@ namespace RoboSharp.Results
         #endregion
 
     }
+
+    /// <summary> EventArgs for the <see cref="RoboCopyResultsList.ResultsListUpdated"/> delegate </summary>
+    public class ResultListUpdatedEventArgs : EventArgs
+    {
+        private ResultListUpdatedEventArgs() { }
+
+        /// <summary> Create the EventArgs for the <see cref="RoboCopyResultsList.ResultsListUpdated"/> delegate </summary>
+        /// <param name="list">Results list to present as an interface</param>
+        public ResultListUpdatedEventArgs(IRoboCopyResultsList list)
+        {
+            ResultsList = list;
+        }
+
+        /// <summary>
+        /// Read-Only interface to the List that has been updated.
+        /// </summary>
+        public IRoboCopyResultsList ResultsList { get; }
+    }
+
 }
 

@@ -25,16 +25,16 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
         }
 
-        public JobHistoryExpander(RoboSharp.Results.RoboCopyResultsList resultsList)
+        public JobHistoryExpander(RoboSharp.Results.IRoboCopyResultsList resultsList)
         {
             InitializeComponent();
             BindToList(resultsList);
         }
 
 
-        public RoboSharp.Results.RoboCopyResultsList ResultsList { get; private set; }
+        public RoboSharp.Results.IRoboCopyResultsList ResultsList { get; private set; }
 
-        public void BindToList(RoboSharp.Results.RoboCopyResultsList resultsList)
+        public void BindToList(RoboSharp.Results.IRoboCopyResultsList resultsList)
         {
             ResultsList = resultsList;
             OverallStats.BindToResultsList(resultsList);
@@ -55,7 +55,8 @@ namespace RoboSharp.BackupApp
         {
             Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
 
-            ResultsList.Remove(result);
+            var list = (Results.RoboCopyResultsList)ResultsList;
+            list.Remove(result);
 
         }
 

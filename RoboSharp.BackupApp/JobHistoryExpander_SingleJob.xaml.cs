@@ -31,12 +31,12 @@ namespace RoboSharp.BackupApp
             BindToResults(ResultsObj);
         }
 
-        public RoboSharp.Results.Statistic ByteStat { get; private set; }
-        public RoboSharp.Results.Statistic DirStat { get; private set; }
-        public RoboSharp.Results.Statistic FileStat { get; private set; }
+        public RoboSharp.Results.IStatistic ByteStat { get; private set; }
+        public RoboSharp.Results.IStatistic DirStat { get; private set; }
+        public RoboSharp.Results.IStatistic FileStat { get; private set; }
         public bool IsResultsListBound { get; private set; } = false;
 
-        private RoboSharp.Results.RoboCopyResultsList ResultsList { get; set; }
+        private RoboSharp.Results.IRoboCopyResultsList ResultsList { get; set; }
         private RoboSharp.Results.RoboCopyResults ResultsObj { get; set; }
 
 
@@ -66,7 +66,7 @@ namespace RoboSharp.BackupApp
         /// Bind to a ResultsList
         /// </summary>
         /// <param name="list"></param>
-        public void BindToResultsList(RoboSharp.Results.RoboCopyResultsList list)
+        public void BindToResultsList(RoboSharp.Results.IRoboCopyResultsList list)
         {
             Unbind();
 
@@ -80,8 +80,13 @@ namespace RoboSharp.BackupApp
             FilesStatistic_PropertyChanged(null, null);
             BytesStatistic_PropertyChanged(null, null);
             
-            list.CollectionChanged += ResultsList_CollectionChanged;
+            
             IsResultsListBound = true;
+
+            ////Trigger List Update
+            DirStat.PropertyChanged += ResultsList_CollectionChanged;
+            FileStat.PropertyChanged += ResultsList_CollectionChanged;
+            ByteStat.PropertyChanged += ResultsList_CollectionChanged;
 
             ////Bind in case updates
             DirStat.PropertyChanged += DirectoriesStatistic_PropertyChanged;
@@ -91,15 +96,15 @@ namespace RoboSharp.BackupApp
 
         private void Unbind()
         {
-            if (ResultsList != null)
-            {
-                ResultsList.CollectionChanged -= ResultsList_CollectionChanged;
-            }
             if (ResultsList != null | ResultsObj != null)
             {
                 DirStat.PropertyChanged -= DirectoriesStatistic_PropertyChanged;
                 FileStat.PropertyChanged -= FilesStatistic_PropertyChanged;
                 ByteStat.PropertyChanged -= BytesStatistic_PropertyChanged;
+
+                DirStat.PropertyChanged -= ResultsList_CollectionChanged;
+                FileStat.PropertyChanged -= ResultsList_CollectionChanged;
+                ByteStat.PropertyChanged -= ResultsList_CollectionChanged;
             }
             ResultsList = null;
             ResultsObj = null;
@@ -109,7 +114,7 @@ namespace RoboSharp.BackupApp
         private void FilesStatistic_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(lbl_SelectedItem_Files, FileStat);
         private void BytesStatistic_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(lbl_SelectedItem_Bytes, ByteStat);
 
-        private void UpdateLabel(Label lbl, RoboSharp.Results.Statistic stat)
+        private void UpdateLabel(Label lbl, RoboSharp.Results.IStatistic stat)
         {
             Dispatcher.Invoke(
                 () =>
@@ -144,8 +149,9 @@ namespace RoboSharp.BackupApp
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ResultsList_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void ResultsList_CollectionChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            if (e == null || e.PropertyName != "Total") return;
             string NL = Environment.NewLine;
             if (ResultsList == null || ResultsList.Count == 0)
             {

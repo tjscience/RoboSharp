@@ -82,7 +82,6 @@ namespace RoboSharp
         private bool disposedValue;
         private bool isDisposing;
         private CancellationTokenSource TaskCancelSource;
-        private int MaxConcurrentJobsField;
         private string NameField;
 
         private bool WasCancelledField = false;
@@ -91,6 +90,42 @@ namespace RoboSharp
         private bool IsListOperationRunningField = false;
         private bool ListOnlyCompletedField = false;
         private bool CopyOpCompletedField = false;
+
+        private int MaxConcurrentJobsField;
+        private int JobsStartedField;
+        private int JobsCompleteField;
+        private int JobsCompletedSuccessfullyField;
+
+        #endregion
+
+        #region < Properties Dependent on CommandList >
+
+        /// <summary> 
+        /// Checks <see cref="RoboCommand.IsRunning"/> property of all items in the list. 
+        /// <br/> INotifyPropertyChanged is not raised when this property changes.
+        /// </summary>
+        public bool AnyRunning => CommandList.Any(c => c.IsRunning);
+
+        /// <summary> 
+        /// Checks <see cref="RoboCommand.IsPaused"/> property of all items in the list. 
+        /// <br/> INotifyPropertyChanged is not raised when this property changes.
+        /// </summary>
+        public bool AnyPaused => CommandList.Any(c => c.IsPaused);
+
+        /// <summary> 
+        /// Checks <see cref="RoboCommand.IsCancelled"/> property of all items in the list. 
+        /// <br/> INotifyPropertyChanged is not raised when this property changes.
+        /// </summary>
+        public bool AnyCancelled => CommandList.Any(c => c.IsCancelled);
+
+        /// <summary> 
+        /// Check the list and get the count of RoboCommands that are either in the 'Run' or 'Paused' state. <br/>
+        /// (Paused state is included since these can be resumed at any time) 
+        /// </summary>
+        public int JobsCurrentlyRunning => CommandList.Where((C) => C.IsRunning | C.IsPaused).Count();
+
+        /// <summary> Number of RoboCommands in the list </summary>
+        public int ListCount => CommandList.Count;
 
         #endregion
 
@@ -220,30 +255,6 @@ namespace RoboSharp
             }
         }
 
-        /// <summary> 
-        /// Checks <see cref="RoboCommand.IsRunning"/> property of all items in the list. 
-        /// <br/> INotifyPropertyChanged is not raised when this property changes.
-        /// </summary>
-        public bool AnyRunning => CommandList.Any(c => c.IsRunning);
-
-        /// <summary> 
-        /// Checks <see cref="RoboCommand.IsPaused"/> property of all items in the list. 
-        /// <br/> INotifyPropertyChanged is not raised when this property changes.
-        /// </summary>
-        public bool AnyPaused => CommandList.Any(c => c.IsPaused);
-
-        /// <summary> 
-        /// Checks <see cref="RoboCommand.IsCancelled"/> property of all items in the list. 
-        /// <br/> INotifyPropertyChanged is not raised when this property changes.
-        /// </summary>
-        public bool AnyCancelled => CommandList.Any(c => c.IsCancelled);
-
-        /// <summary> 
-        /// Check the list and get the count of RoboCommands that are either in the 'Run' or 'Paused' state. <br/>
-        /// (Paused state is included since these can be resumed at any time) 
-        /// </summary>
-        public int JobsCurrentlyRunning => CommandList.Where((C) => C.IsRunning | C.IsPaused).Count();
-
         /// <summary>
         /// Specify the max number of RoboCommands to execute at the same time. <br/>
         /// Set Value to 0 to allow infinite number of jobs (Will issue all start commands at same time) <br/>
@@ -263,26 +274,56 @@ namespace RoboSharp
             }
         }
 
-        /// <summary> Number of RoboCommands in the list </summary>
-        public int ListCount => CommandList.Count;
-
         /// <summary>
         /// Report how many <see cref="RoboCommand.Start"/> tasks has completed during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job exits.
         /// </summary>
-        public int JobsComplete { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
+        public int JobsComplete
+        {
+            get => JobsCompleteField;
+            private set
+            {
+                if (value != JobsCompleteField)
+                {
+                    JobsCompleteField = value;
+                    OnPropertyChanged("JobsComplete");
+                }
+            }
+        }
 
         /// <summary>
         /// Report how many <see cref="RoboCommand.Start"/> tasks has completed successfully during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job exits.
         /// </summary>
-        public int JobsCompletedSuccessfully { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
+        public int JobsCompletedSuccessfully
+        {
+            get => JobsCompletedSuccessfullyField;
+            private set
+            {
+                if (value != JobsCompletedSuccessfullyField)
+                {
+                    JobsCompletedSuccessfullyField = value;
+                    OnPropertyChanged("JobsCompletedSuccessfully");
+                }
+            }
+        }
 
         /// <summary>
         /// Report how many <see cref="RoboCommand.Start"/> tasks have been started during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job starts.
         /// </summary>
-        public int JobsStarted { get; private set; } = 0; //INotifyPropertyChange raised in the StartJobs Method
+        public int JobsStarted
+        {
+            get => JobsStartedField;
+            private set
+            {
+                if (value != JobsStartedField)
+                {
+                    JobsStartedField = value;
+                    OnPropertyChanged("JobsStarted");
+                }
+            }
+        }
 
         /// <summary>
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
@@ -297,6 +338,7 @@ namespace RoboSharp
         /// </summary>
         public IRoboCopyResultsList RunOperationResults => RunOperationResultsObj;
         private RoboCopyResultsList RunOperationResultsObj { get; } = new RoboCopyResultsList();
+
         #endregion
 
         #region < Events >
@@ -316,11 +358,11 @@ namespace RoboSharp
         /// <inheritdoc cref="RoboCommand.OnCopyProgressChanged"/>
         public event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
 
-        /// <summary> OOccurs when the <see cref="ListOnlyResults"/> gets updated </summary>
-        public event EventHandler ListOnlyResultsUpdated;
+        /// <summary> Occurs when the <see cref="ListOnlyResults"/> gets updated </summary>
+        public event RoboCopyResultsList.ResultsListUpdated ListOnlyResultsUpdated;
 
-        /// <summary> OOccurs when the <see cref="RunOperationResults"/> gets updated </summary>
-        public event EventHandler RunOperationResultsUpdated;
+        /// <summary> Occurs when the <see cref="RunOperationResults"/> gets updated </summary>
+        public event RoboCopyResultsList.ResultsListUpdated RunOperationResultsUpdated;
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
         public delegate void ProgressUpdaterCreatedHandler(RoboQueue sender, ProgressEstimatorCreatedEventArgs e);
@@ -425,7 +467,10 @@ namespace RoboSharp
         {
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
+
             ListOnlyResultsObj.Clear();
+            ListOnlyResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListOnlyResults));
+
             //Store the setting for ListOnly prior to changing it
             List<Tuple<RoboCommand, bool>> OldListValues = new List<Tuple<RoboCommand, bool>>();
             CommandList.ForEach((c) =>
@@ -457,7 +502,10 @@ namespace RoboSharp
         {
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
-            RunOperationResults.Clear();
+            
+            RunOperationResultsObj.Clear();
+            RunOperationResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunOperationResults));
+
             Task Run = StartJobs(domain, username, password, false);
             Task ResultsTask = Run.ContinueWith((continuation) =>
             {
@@ -486,11 +534,12 @@ namespace RoboSharp
             CancellationToken cancellationToken = TaskCancelSource.Token;
 
             List<Task> TaskList = new List<Task>();
-            JobsStarted = 0; OnPropertyChanged("JobsStarted");
-            JobsComplete = 0; OnPropertyChanged("JobsComplete");
-            JobsCompletedSuccessfully = 0; OnPropertyChanged("JobsCompletedSuccessfully");
+            JobsStarted = 0;
+            JobsComplete = 0;
+            JobsCompletedSuccessfully = 0;
 
             WasCancelled = false;
+            IsPaused = false;
 
             //Create a Task to Start all the RoboCommands
             Task StartAll = Task.Factory.StartNew(() =>
@@ -508,7 +557,8 @@ namespace RoboSharp
                     if (cancellationToken.IsCancellationRequested) break;
 
                     //Assign the events
-                    cmd.OnCommandCompleted += (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
+                    RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
+                    cmd.OnCommandCompleted += handler;
                     cmd.OnCommandError += this.OnCommandError;
                     cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                     cmd.OnError += this.OnError;
@@ -520,7 +570,7 @@ namespace RoboSharp
                     Task C = cmd.Start(domain, username, password);
                     Task T = C.ContinueWith((t) =>
                     {
-                        cmd.OnCommandCompleted -= RaiseCommandCompleted;
+                        cmd.OnCommandCompleted -= handler;
                         cmd.OnCommandError -= this.OnCommandError;
                         cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
                         cmd.OnError -= this.OnError;
@@ -578,23 +628,21 @@ namespace RoboSharp
         {
             if (ListOnlyBinding)
             {
-                ListOnlyResults.Add(sender.GetResults());
-                ListOnlyResultsUpdated?.Invoke(this, new EventArgs());
+                ListOnlyResultsObj.Add(sender.GetResults());
+                ListOnlyResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListOnlyResults));
             }
             else
             {
-                RunOperationResults.Add(sender.GetResults());
-                RunOperationResultsUpdated?.Invoke(this, new EventArgs());
+                RunOperationResultsObj.Add(sender.GetResults());
+                RunOperationResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunOperationResults));
             }
 
             //Notify the Property Changes
             if (!sender.IsCancelled)
             {
-                JobsCompletedSuccessfully++; 
-                OnPropertyChanged("JobsCompletedSuccessfully");
+                JobsCompletedSuccessfully++;
             }
             JobsComplete++;
-            OnPropertyChanged("JobsComplete");
             OnPropertyChanged("JobsCurrentlyRunning");
             OnCommandCompleted?.Invoke(sender, e);
         }
