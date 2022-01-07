@@ -116,6 +116,7 @@ namespace RoboSharp.BackupApp
 
         private void UpdateLabel(Label lbl, RoboSharp.Results.IStatistic stat)
         {
+            // Dispatcher is required to ensure this code runs on the UI thread, since all processing up to this point was potentially done on a worker thread.
             Dispatcher.Invoke(
                 () =>
                 {

@@ -36,9 +36,16 @@ namespace RoboSharp.BackupApp
 
         public void BindToList(RoboSharp.Results.IRoboCopyResultsList resultsList)
         {
-            ResultsList = resultsList;
+
             OverallStats.BindToResultsList(resultsList);
-            ListBox_JobResults.ItemsSource = resultsList;
+            
+            // Dispatcher is required to ensure this code runs on the UI thread, since the event was generated/reacted to potentially on a seperate thread.
+            Dispatcher.Invoke(() =>
+            {
+                ResultsList = resultsList;
+                ListBox_JobResults.ItemsSource = resultsList;
+            });
+
             ListBox_JobResults.SelectionChanged += ListBox_JobResults_SelectionChanged;
         }
 
