@@ -11,7 +11,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
     /// </summary>
-    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, INotifyCollectionChanged
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>
     {
         #region < Properties >
 
@@ -74,7 +74,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </remarks>
-    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList
+    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList, INotifyCollectionChanged
     {
         #region < Constructors >
 
