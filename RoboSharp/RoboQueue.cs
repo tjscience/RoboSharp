@@ -13,7 +13,8 @@ using System.Collections.ObjectModel;
 namespace RoboSharp
 {
     /// <summary>
-    /// Contains a private List{RoboCommand} object with controlled methods for access to it.  
+    /// Contains a private List{RoboCommand} object with controlled methods for access to it.  <br/>
+    /// Attempting to modify the list while <see cref="IsRunning"/> = true results in <see cref="ListAccessDeniedException"/> being thrown.
     /// <para/>Implements the following: <br/>
     /// <see cref="IEnumerable"/> -- Allow enumerating through the collection that is stored in a private list -- Also see <see cref="Commands"/> <br/>
     /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes against the list <see cref="ObservableList{T}"/> <br/>
@@ -287,14 +288,15 @@ namespace RoboSharp
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetListOnlyResults"/>.
         /// </summary>
-        public RoboCopyResultsList ListOnlyResults { get; } = new RoboCopyResultsList();
+        public IRoboCopyResultsList ListOnlyResults => ListOnlyResultsObj;
+        private RoboCopyResultsList ListOnlyResultsObj { get; } = new RoboCopyResultsList();
 
         /// <summary>
         /// This list will be cleared and repopulated when one of the ListOnly methods are called. If this object is disposed, this list will be as well. <br/>
         /// To store these results for future use, call <see cref="GetRunOperationResults"/>.
         /// </summary>
-        public RoboCopyResultsList RunOperationResults { get; } = new RoboCopyResultsList();
-
+        public IRoboCopyResultsList RunOperationResults => RunOperationResultsObj;
+        private RoboCopyResultsList RunOperationResultsObj { get; } = new RoboCopyResultsList();
         #endregion
 
         #region < Events >
@@ -423,7 +425,7 @@ namespace RoboSharp
         {
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
-            ListOnlyResults.Clear();
+            ListOnlyResultsObj.Clear();
             //Store the setting for ListOnly prior to changing it
             List<Tuple<RoboCommand, bool>> OldListValues = new List<Tuple<RoboCommand, bool>>();
             CommandList.ForEach((c) =>
@@ -610,15 +612,13 @@ namespace RoboSharp
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
-                    ListOnlyResults.Dispose();
-                    RunOperationResults.Dispose();
                     ProgressEstimator?.UnBind();
-                }
 
-                //RoboCommand objects attach to a process, so must be in the 'unmanaged' section.
-                foreach (RoboCommand cmd in CommandList)
-                    cmd.Dispose();
-                CommandList.Clear();
+                    //RoboCommand objects attach to a process, so must be in the 'unmanaged' section.
+                    foreach (RoboCommand cmd in CommandList)
+                        cmd.Dispose();
+                    CommandList.Clear();
+                }                
 
                 // TODO: set large fields to null
                 disposedValue = true;
@@ -635,8 +635,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Dispose all RoboCommand objects contained in the list. <br/>
-        /// Also disposes <see cref="ListOnlyResults"/> and <see cref="RunOperationResults"/>
+        /// Dispose all RoboCommand objects contained in the list. - This will kill any Commands that have <see cref="RoboCommand.StopIfDisposing"/> = true (default) <br/>
         /// </summary>
         public void Dispose()
         {
