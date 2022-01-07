@@ -20,6 +20,9 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="RoboCommand.CommandOptions"/>
         public string CommandOptions { get; internal set; }
 
+        /// <inheritdoc cref="RoboCommand.Name"/>
+        public string JobName { get; internal set; }
+
         /// <inheritdoc cref="RoboCopyExitStatus"/>
         public RoboCopyExitStatus Status { get; internal set; }
 

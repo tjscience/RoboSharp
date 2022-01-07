@@ -58,8 +58,13 @@ namespace RoboSharp.BackupApp
             ListBox_RoboQueueJobs_MultiJobPage.ItemsSource = RoboQueue;
             ListBox_RoboQueueJobs_OptionsPage.ItemsSource = RoboQueue;
             MultiJobErrorGrid.ItemsSource = MultiJobErrors;
+            
             MultiJob_ListOnlyResults.BindToList(RoboQueue.ListOnlyResults);
+            MultiJob_ListOnlyResults.UpdateDescriptionLblText("List of results from this List-Only Operation.\nThis list is reset every time the queue is restarted.");
+
             MultiJob_RunResults.BindToList(RoboQueue.ListOnlyResults);
+            MultiJob_RunResults.UpdateDescriptionLblText("List of results from this Copy/Move Operation.\nThis list is reset every time the queue is restarted.");
+
             cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
@@ -357,7 +362,7 @@ namespace RoboSharp.BackupApp
 
         private void btn_PauseResumeQueue(object sender, RoutedEventArgs e)
         {
-            if (RoboQueue.IsRunning)
+            if (!RoboQueue.IsPaused)
                 RoboQueue.PauseAll();
             else
                 RoboQueue.ResumeAll();

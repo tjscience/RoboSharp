@@ -12,11 +12,15 @@ namespace RoboSharp.Results
     {
         private ResultsBuilder() { }
 
-        internal ResultsBuilder(RoboSharpConfiguration config) { 
-            Estimator = new ProgressEstimator(config);
+        internal ResultsBuilder(RoboCommand roboCommand) {
+            RoboCommand = roboCommand;
+            Estimator = new ProgressEstimator(RoboCommand.Configuration);
         }
 
         #region < Private Members >
+
+        ///<summary>Reference back to the RoboCommand that spawned this object</summary>
+        private readonly RoboCommand RoboCommand; 
 
         private readonly List<string> outputLines = new List<string>();
 
@@ -77,6 +81,8 @@ namespace RoboSharp.Results
         internal RoboCopyResults BuildResults(int exitCode, bool IsProgressUpdateEvent = false)
         {
             var res = Estimator.GetResults(); //Start off with the estimated results, and replace if able
+
+            res.JobName = RoboCommand.Name;
             res.Status = new RoboCopyExitStatus(exitCode);
 
             var statisticLines = IsProgressUpdateEvent ? new List<string>() : GetStatisticLines();

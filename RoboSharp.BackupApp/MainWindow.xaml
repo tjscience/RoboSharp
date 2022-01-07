@@ -242,7 +242,7 @@
             <!-- Multi-Job Tab -->
             <TabItem x:Name="MultiJobProgressTab" Header="Multi-Job">
                 <Grid Margin="5" Background="#FFE5E5E5">
-                    <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693">
+                    <ScrollViewer HorizontalAlignment="Stretch" Margin="5" VerticalAlignment="Stretch" >
                         <StackPanel>
                             <!-- RoboQueue Panel -->
                             <Expander x:Name="MultiJobExpander_Jobs" Background="LightBlue" Header="RoboQueue" RenderTransformOrigin="0.5,0.5">
@@ -313,10 +313,10 @@
                                     <TextBlock x:Name="MultiJob_JobsCompleteXofY" Grid.Row="2" Grid.Column="1" FontWeight="Bold" TextAlignment="Right" HorizontalAlignment="Left" TextWrapping="Wrap" />
                                     <ProgressBar x:Name="MultiJobProgressBar_JobsComplete" Grid.Row="3" Grid.ColumnSpan="2" Minimum="0" Maximum="100" HorizontalAlignment="Center" Height="20" Width="625"/>
                                     <!-- Command Progress -->
-                                    <ScrollViewer Grid.Row="5" Grid.ColumnSpan="2" >
+                                    <ScrollViewer Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Top">
                                         <StackPanel Name="RoboQueueProgressStackPanel" >
-                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
-                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Center" VerticalAlignment="Top" Width="600"/>
+                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Stretch" VerticalAlignment="Top" Width="600"/>
+                                            <local:MultiJob_CommandProgressIndicator HorizontalAlignment="Stretch" VerticalAlignment="Top" Width="600"/>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </Grid>

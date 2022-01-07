@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Results;
 using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 
 namespace RoboSharp
 {
@@ -338,6 +339,12 @@ namespace RoboSharp
         /// </summary>
         public IRoboCopyResultsList RunOperationResults => RunOperationResultsObj;
         private RoboCopyResultsList RunOperationResultsObj { get; } = new RoboCopyResultsList();
+
+        /* 
+         * Possible To-Do: Code in ConcurrentQueue objects if issues arise with items being added to the ResultsObj lists.
+         * private ConcurrentQueue<RoboCopyResults> ListResultsQueue = new ConcurrentQueue<RoboCopyResults>(); 
+         * private ConcurrentQueue<RoboCopyResults> RunResultsQueue = new ConcurrentQueue<RoboCopyResults>();
+         */
 
         #endregion
 

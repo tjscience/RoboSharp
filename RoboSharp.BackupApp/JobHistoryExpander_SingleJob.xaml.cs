@@ -84,9 +84,9 @@ namespace RoboSharp.BackupApp
             IsResultsListBound = true;
 
             ////Trigger List Update
-            DirStat.PropertyChanged += ResultsList_CollectionChanged;
-            FileStat.PropertyChanged += ResultsList_CollectionChanged;
-            ByteStat.PropertyChanged += ResultsList_CollectionChanged;
+            DirStat.PropertyChanged += ShowResultsListSummary;
+            FileStat.PropertyChanged += ShowResultsListSummary;
+            ByteStat.PropertyChanged += ShowResultsListSummary;
 
             ////Bind in case updates
             DirStat.PropertyChanged += DirectoriesStatistic_PropertyChanged;
@@ -102,9 +102,9 @@ namespace RoboSharp.BackupApp
                 FileStat.PropertyChanged -= FilesStatistic_PropertyChanged;
                 ByteStat.PropertyChanged -= BytesStatistic_PropertyChanged;
 
-                DirStat.PropertyChanged -= ResultsList_CollectionChanged;
-                FileStat.PropertyChanged -= ResultsList_CollectionChanged;
-                ByteStat.PropertyChanged -= ResultsList_CollectionChanged;
+                DirStat.PropertyChanged -= ShowResultsListSummary;
+                FileStat.PropertyChanged -= ShowResultsListSummary;
+                ByteStat.PropertyChanged -= ShowResultsListSummary;
             }
             ResultsList = null;
             ResultsObj = null;
@@ -120,37 +120,38 @@ namespace RoboSharp.BackupApp
             Dispatcher.Invoke(
                 () =>
                 {
-                    lbl.Content = stat?.ToString(true, true, "\n", true) ?? "";
-                    if (!IsResultsListBound) ShowTotals(); else ResultsList_CollectionChanged(null, null);
+                    lbl.Content = stat?.ToString(false, true, "\n", false) ?? "";
+                    if (!IsResultsListBound) ShowSelectedJobSummary(); else ShowResultsListSummary(null, null);
                 });
         }
 
-        private void ShowTotals()
+        /// <summary>
+        /// Show the Summary of the Selected job
+        /// </summary>
+        private void ShowSelectedJobSummary()
         {
             Results.RoboCopyResults result = ResultsObj;
             string NL = Environment.NewLine;
-            Dispatcher.Invoke(() => 
+            Dispatcher.Invoke(() =>
+            {
+                lbl_SelectedItem_Totals.Content = $"Selected Job:" +
+                    $"{NL}Source: {result?.Source ?? ""}" +
+                    $"{NL}Destination: {result?.Destination ?? ""}" +
+                    $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
+                    $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
+                    $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
+                    $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
+                    $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
+                    $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
+                    $"{NL}{result?.Status.ToString() ?? ""}";
 
-            lbl_SelectedItem_Totals.Content = $"Selected Job:" +
-                $"{NL}Source: {result?.Source ?? ""}" +
-                $"{NL}Destination: {result?.Destination ?? ""}" +
-                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
-                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
-                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
-                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
-                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
-                $"{NL}Log Lines Count: {result?.LogLines?.Length ?? 0}" +
-                $"{NL}{result?.Status.ToString() ?? ""}"
-                
-                );
+            });
         }
 
         /// <summary>
-        /// Runs every time the ResultsList is updated.
+        /// Show Summary from a ResultsList object
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ResultsList_CollectionChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void ShowResultsListSummary(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e == null || e.PropertyName != "Total") return;
             string NL = Environment.NewLine;

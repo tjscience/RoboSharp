@@ -31,6 +31,10 @@ namespace RoboSharp.BackupApp
             BindToList(resultsList);
         }
 
+        public void UpdateDescriptionLblText(string HeaderText = "This contains a list of the results from all previous runs during this session.")
+        {
+            Dispatcher.Invoke(() => DescriptionLbl.Content = HeaderText);
+        }
 
         public RoboSharp.Results.IRoboCopyResultsList ResultsList { get; private set; }
 
@@ -51,7 +55,16 @@ namespace RoboSharp.BackupApp
 
         private void ListBox_JobResults_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SelectedJobStats.BindToResults((RoboSharp.Results.RoboCopyResults)ListBox_JobResults.SelectedItem);
+            var res = (RoboSharp.Results.RoboCopyResults)ListBox_JobResults.SelectedItem;
+            SelectedJobStats.BindToResults(res);
+
+            Dispatcher.Invoke(() =>
+            {
+                if (res == null)
+                    GroupBox_SelectedJob.Header = $"Selected Job Results";
+                else
+                    GroupBox_SelectedJob.Header = $"Selected Job Results: {res.JobName}";
+            });
         }
 
 

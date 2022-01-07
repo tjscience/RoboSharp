@@ -316,7 +316,7 @@ namespace RoboSharp
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
-            resultsBuilder = new Results.ResultsBuilder(this.Configuration);
+            resultsBuilder = new Results.ResultsBuilder(this);
             results = null;
 
             #region Check Source and Destination
