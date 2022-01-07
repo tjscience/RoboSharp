@@ -153,7 +153,7 @@ namespace RoboSharp.Results
         #region < Events >
 
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
-        private bool EnablePropertyChangeEvent = true;
+        internal bool EnablePropertyChangeEvent = true;
 
         /// <summary>
         /// This event will fire when the value of the statistic is updated via Adding / Subtracting methods. <br/>

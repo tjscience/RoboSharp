@@ -30,6 +30,9 @@ namespace RoboSharp.Results
             DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
             FileStatsField = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
             ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
+
+            BytesToAdd = new System.Collections.Concurrent.ConcurrentQueue<Tuple<ProcessedFileInfo, WhereToAdd>>();
+            ByteCalcRequested = new Lazy<bool>(() => { DeQueueByteCalc(); return true; });
         }
 
         #region < Private Members >
@@ -37,13 +40,17 @@ namespace RoboSharp.Results
         private bool SkippingFile;
         private bool CopyOpStarted;
         private List<IStatistic> SubscribedStats;
-        internal ProcessedFileInfo CurrentDir;
-        internal ProcessedFileInfo CurrentFile;
-
         private readonly RoboSharpConfiguration Config;
         private readonly Statistic DirStatField;
         private readonly Statistic FileStatsField;
         private readonly Statistic ByteStatsField;
+
+        private readonly Lazy<bool> ByteCalcRequested; //Byte Calc can be very large, so calculation only occurs after first request. Dirs and FileCounts are incremented 1 at a time, so no optimization is needed.
+        private readonly System.Collections.Concurrent.ConcurrentQueue<Tuple<ProcessedFileInfo, WhereToAdd>> BytesToAdd;    //Store Files in queue for calculation since bytes can be large
+        private enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
+
+        internal ProcessedFileInfo CurrentDir;
+        internal ProcessedFileInfo CurrentFile;
 
         #endregion
 
@@ -65,7 +72,7 @@ namespace RoboSharp.Results
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic ByteStats => ByteStatsField;
+        public IStatistic ByteStats => ByteCalcRequested.Value ? ByteStatsField : ByteStatsField;
 
         #endregion
 
@@ -128,7 +135,7 @@ namespace RoboSharp.Results
             return new RoboCopyResults()
             {
                 BytesStatistic = this.ByteStatsField,
-                DirectoriesStatistic = DirStatField,
+                DirectoriesStatistic = (Statistic)DirStats,
                 FilesStatistic = FileStatsField,
                 SpeedStatistic = new SpeedStatistic(),
             };
@@ -141,8 +148,8 @@ namespace RoboSharp.Results
         /// <summary>Increment <see cref="DirStatField"/></summary>
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
-            DirStatField.Total++;
             CurrentDir = currentDir;
+            DirStatField.Total++;
             if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStatField.Skipped++; }
             else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) DirStatField.Copied++; }
             else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStatField.Extras++;
@@ -152,6 +159,8 @@ namespace RoboSharp.Results
             }
         }
 
+        #region < AddFile >
+
         /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
@@ -159,10 +168,10 @@ namespace RoboSharp.Results
             if (SkippingFile)
             {
                 FileStatsField.Skipped++;
-                ByteStatsField.Skipped += CurrentFile?.Size ?? 0;
+                QueueByteCalc(currentFile, WhereToAdd.Skipped);
             }
+
             CurrentFile = currentFile;
-            ByteStatsField.Total += currentFile.Size;
             SkippingFile = false;
             CopyOpStarted = false;
 
@@ -170,29 +179,25 @@ namespace RoboSharp.Results
             if (currentFile.FileClass == Config.LogParsing_ExtraFile)
             {
                 FileStatsField.Extras++;
-                ByteStatsField.Extras += currentFile.Size;
+                QueueByteCalc(currentFile, WhereToAdd.Extra);
             }
-
             //MisMatch
             else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
             {
                 FileStatsField.Mismatch++;
-                ByteStatsField.Mismatch += currentFile.Size;
+                QueueByteCalc(currentFile, WhereToAdd.MisMatch);
             }
-
             //Failed Files
             else if (currentFile.FileClass == Config.LogParsing_FailedFile)
             {
                 FileStatsField.Failed++;
-                ByteStatsField.Failed += currentFile.Size;
+                QueueByteCalc(currentFile, WhereToAdd.Failed);
             }
-
-
             //Identical Files
             else if (currentFile.FileClass == Config.LogParsing_SameFile)
             {
-                FileStatsField.Skipped++; //File is the same -> It will be skipped
-                ByteStatsField.Skipped += currentFile.Size;
+                FileStatsField.Skipped++;
+                QueueByteCalc(currentFile, WhereToAdd.Skipped);
                 CurrentFile = null;
             }
 
@@ -200,11 +205,80 @@ namespace RoboSharp.Results
             else
             {
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass == Config.LogParsing_NewFile) { }
+                if (currentFile.FileClass == Config.LogParsing_NewFile)
+                {
+                    //Special handling for 0kb files -> They won't get Progress update, but will be created
+                    if (currentFile.Size == 0)
+                    {
+                        FileStatsField.Copied++;
+                        SkippingFile = false;
+                    }
+                }
                 else if (currentFile.FileClass == Config.LogParsing_OlderFile) { }
                 else if (currentFile.FileClass == Config.LogParsing_NewerFile) { }
             }
         }
+
+        #region < Byte Stat Optimization >
+
+        /// <summary>
+        /// Stage / perform the calculation for the ByteStatistic
+        /// </summary>
+        private void QueueByteCalc(ProcessedFileInfo file, WhereToAdd whereTo)
+        {
+            if (ByteCalcRequested.IsValueCreated)
+            {
+                if (!BytesToAdd.IsEmpty) DeQueueByteCalc(); // Process the queue first
+                CalculateByteStat(file, whereTo);
+            }
+            else
+                BytesToAdd.Enqueue(new Tuple<ProcessedFileInfo, WhereToAdd>(file, whereTo));
+        }
+
+        /// <summary>
+        /// Allows Defering calculation of DirStat until the Lazy Object is requested
+        /// </summary>
+        private void DeQueueByteCalc()
+        {
+            while (!BytesToAdd.IsEmpty)
+            {
+                if (BytesToAdd.TryDequeue(out var TP))
+                {
+                    ByteStatsField.EnablePropertyChangeEvent = BytesToAdd.IsEmpty; //Disable PropertyChangeEvent until last item in list
+                    CalculateByteStat(TP.Item1, TP.Item2);
+                }
+            }
+        }
+
+        private void CalculateByteStat(ProcessedFileInfo currentFile, WhereToAdd whereTo)
+        {
+            ByteStatsField.Total += currentFile.Size;
+
+            switch (whereTo)
+            {
+                case WhereToAdd.Copied:
+                    ByteStatsField.Copied += currentFile.Size;
+                    break;
+
+                case WhereToAdd.Skipped:
+                    ByteStatsField.Skipped += currentFile.Size;
+                    break;
+
+                case WhereToAdd.Extra:
+                    ByteStatsField.Extras += currentFile.Size;
+                    break;
+
+                case WhereToAdd.MisMatch:
+                    ByteStatsField.Mismatch += currentFile.Size;
+                    break;
+
+                case WhereToAdd.Failed:
+                    ByteStatsField.Failed += currentFile.Size;
+                    break;
+            }
+        }
+
+        #endregion
 
         /// <summary>Catch start copy progress of large files</summary>
         internal void SetCopyOpStarted()
@@ -213,15 +287,17 @@ namespace RoboSharp.Results
             CopyOpStarted = true;
         }
 
-        /// <summary>Increment <see cref="FileStatsField"/>.Copied</summary>
+        /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
         internal void AddFileCopied()
         {
             SkippingFile = false;
             CopyOpStarted = false;
             FileStatsField.Copied++;
-            ByteStatsField.Copied += CurrentFile?.Size ?? 0;
+            QueueByteCalc(CurrentFile, WhereToAdd.Copied);
             CurrentFile = null;
         }
+
+        #endregion
 
         #endregion
 
