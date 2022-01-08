@@ -134,8 +134,8 @@ namespace RoboSharp.BackupApp
             string NL = Environment.NewLine;
             Dispatcher.Invoke(() =>
             {
-                lbl_SelectedItem_Totals.Content = $"Selected Job:" +
-                    $"{NL}Source: {result?.Source ?? ""}" +
+                lbl_SelectedItem_Totals.Content = 
+                    $"Source: {result?.Source ?? ""}" +
                     $"{NL}Destination: {result?.Destination ?? ""}" +
                     $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
                     $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
@@ -161,8 +161,8 @@ namespace RoboSharp.BackupApp
             }
             else
             {
-                Dispatcher.Invoke(() => lbl_SelectedItem_Totals.Content = $"Job History:" +
-                    $"{NL}Total Directories: {ResultsList.DirectoriesStatistic.Total}" +
+                Dispatcher.Invoke(() => lbl_SelectedItem_Totals.Content =
+                    $"Total Directories: {ResultsList.DirectoriesStatistic.Total}" +
                     $"{NL}Total Files: {ResultsList.FilesStatistic.Total}" +
                     $"{NL}Total Size (bytes): {ResultsList.BytesStatistic.Total}" +
                     $"{NL}Speed (Bytes/Second): {ResultsList.SpeedStatistic.BytesPerSec}" +
