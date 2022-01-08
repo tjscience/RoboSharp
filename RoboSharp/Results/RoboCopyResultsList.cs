@@ -5,13 +5,14 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using StatType = RoboSharp.Results.Statistic.StatType;
 
 namespace RoboSharp.Results
 {
     /// <summary>
     /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
     /// </summary>
-    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable
     {
         #region < Properties >
 
@@ -67,6 +68,12 @@ namespace RoboSharp.Results
         /// <returns>New array of the FilesStatistic objects</returns>
         ISpeedStatistic[] GetSpeedStatistics();
 
+        /// <summary>
+        /// Copy the values within the list to a new object
+        /// </summary>
+        /// <returns>new <see cref="RoboCopyResultsList"/> object</returns>
+        RoboCopyResultsList Clone();
+
         #endregion
     }
 
@@ -97,14 +104,48 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="List{T}.List(IEnumerable{T})"/>
         public RoboCopyResultsList(IEnumerable<RoboCopyResults> collection) :base(collection) { Init(); }
 
+        /// <summary>
+        /// Clone a RoboCopyResultsList into a new object
+        /// </summary>
+        public RoboCopyResultsList(RoboCopyResultsList resultsList) : base(resultsList)
+        {            
+            Total_DirStatsField = GetLazyStat(resultsList.Total_DirStatsField, GetLazyFunc(GetDirectoriesStatistics, StatType.Directories));
+            Total_FileStatsField = GetLazyStat(resultsList.Total_FileStatsField, GetLazyFunc(GetFilesStatistics, StatType.Files));
+            Total_ByteStatsField = GetLazyStat(resultsList.Total_ByteStatsField, GetLazyFunc(GetByteStatistics, StatType.Bytes));
+            Average_SpeedStatsField = GetLazyStat(resultsList.Average_SpeedStatsField, GetLazyAverageSpeedFunc());
+            ExitStatusSummaryField = GetLazyStat(resultsList.ExitStatusSummaryField, GetLazCombinedStatusFunc());
+        }
+
+        private Func<Statistic> GetLazyFunc(Func<IStatistic[]> Action, StatType StatType) => new Func<Statistic>(() => Statistic.AddStatistics(Action.Invoke(), StatType));
+        private Func<AverageSpeedStatistic> GetLazyAverageSpeedFunc() => new Func<AverageSpeedStatistic>(() => AverageSpeedStatistic.GetAverage(GetSpeedStatistics()));
+        private Func<RoboCopyCombinedExitStatus> GetLazCombinedStatusFunc() => new Func<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
+
+        private Lazy<T> GetLazyStat<T>(Lazy<T> lazyStat, Func<T> action) where T : ICloneable
+        {
+            if (lazyStat.IsValueCreated)
+            {
+                var clone = lazyStat.Value.Clone();
+                return new Lazy<T>(() => (T)clone);
+            }
+            else
+            {
+                return new Lazy<T>(action);
+            }
+        }
+
         private void Init()
         {
-            Total_DirStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetDirectoriesStatistics(), Statistic.StatType.Directories));
-            Total_ByteStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetByteStatistics(), Statistic.StatType.Bytes));
-            Total_FileStatsField = new Lazy<Statistic>(() => Statistic.AddStatistics(this.GetFilesStatistics(), Statistic.StatType.Files));
-            Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>( () => AverageSpeedStatistic.GetAverage(this.GetSpeedStatistics()));
-            ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
+            Total_DirStatsField = new Lazy<Statistic>(GetLazyFunc(GetDirectoriesStatistics, StatType.Directories));
+            Total_FileStatsField = new Lazy<Statistic>(GetLazyFunc(GetFilesStatistics, StatType.Files));
+            Total_ByteStatsField = new Lazy<Statistic>(GetLazyFunc(GetByteStatistics, StatType.Bytes));
+            Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>(GetLazyAverageSpeedFunc());
+            ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(GetLazCombinedStatusFunc());
         }
+
+        /// <inheritdoc cref="IRoboCopyResultsList.Clone"/>
+        public RoboCopyResultsList Clone() => new RoboCopyResultsList(this);
+
+        object ICloneable.Clone() => Clone();
 
         #endregion
 

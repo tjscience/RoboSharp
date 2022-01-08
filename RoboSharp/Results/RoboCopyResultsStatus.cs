@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -49,7 +50,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Read-Only interface for <see cref="RoboCopyCombinedExitStatus"/>
     /// </summary>
-    public interface IRoboCopyCombinedExitStatus : INotifyPropertyChanged
+    public interface IRoboCopyCombinedExitStatus : INotifyPropertyChanged, ICloneable
     {
         /// <inheritdoc cref="RoboCopyCombinedExitStatus.WasCancelled"/>
         bool WasCancelled { get; }
@@ -84,6 +85,16 @@ namespace RoboSharp.Results
         /// Initializes a new instance of the <see cref="RoboCopyCombinedExitStatus"/> class.
         /// </summary>
         public RoboCopyCombinedExitStatus(int exitCodeValue) : base(exitCodeValue) { }
+
+        /// <summary>
+        /// Clone this into a new instance
+        /// </summary>
+        /// <param name="obj"></param>
+        public RoboCopyCombinedExitStatus(RoboCopyCombinedExitStatus obj) :base((int)obj.ExitCode)
+        {
+            wascancelled = obj.wascancelled;
+            noCopyNoError = obj.noCopyNoError;
+        }
 
         #endregion
 
@@ -244,6 +255,9 @@ namespace RoboSharp.Results
             EnablePropertyChangeEvent = true;
         }
 
+        /// <inheritdoc cref="ICloneable.Clone"/>
+        public RoboCopyCombinedExitStatus Clone() => new RoboCopyCombinedExitStatus(this);
 
+        object ICloneable.Clone() => Clone();
     }
 }

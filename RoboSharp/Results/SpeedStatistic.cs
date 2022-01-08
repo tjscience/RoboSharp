@@ -13,7 +13,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Provide Read-Only access to a SpeedStatistic
     /// </summary>
-    public interface ISpeedStatistic : INotifyPropertyChanged
+    public interface ISpeedStatistic : INotifyPropertyChanged, ICloneable
     {
         /// <summary> Average Transfer Rate in Bytes/Second </summary>
         decimal BytesPerSec { get; }
@@ -23,6 +23,10 @@ namespace RoboSharp.Results
 
         /// <inheritdoc cref="SpeedStatistic.ToString"/>
         string ToString();
+
+        /// <returns>new <see cref="SpeedStatistic"/> object </returns>
+        /// <inheritdoc cref="SpeedStatistic.SpeedStatistic(SpeedStatistic)"/>
+        new SpeedStatistic Clone();
     }
     
     /// <summary>
@@ -31,6 +35,20 @@ namespace RoboSharp.Results
     /// </summary>
     public class SpeedStatistic : INotifyPropertyChanged, ISpeedStatistic
     {
+        /// <summary>
+        /// Create new SpeedStatistic
+        /// </summary>
+        public SpeedStatistic() { }
+
+        /// <summary>
+        /// Clone a SpeedStatistic
+        /// </summary>
+        public SpeedStatistic(SpeedStatistic stat)
+        {
+            BytesPerSec = stat.BytesPerSec;
+            MegaBytesPerMin = stat.MegaBytesPerMin;
+        }
+
         #region < Private & Protected Members >
 
         private decimal BytesPerSecField = 0;
@@ -85,6 +103,11 @@ namespace RoboSharp.Results
         {
             return $"Speed: {BytesPerSec} Bytes/sec{Environment.NewLine}Speed: {MegaBytesPerMin} MegaBytes/min";
         }
+
+        /// <inheritdoc cref="ISpeedStatistic.Clone"/>
+        public virtual SpeedStatistic Clone() => new SpeedStatistic(this);
+
+        object ICloneable.Clone() => Clone();
 
         internal static SpeedStatistic Parse(string line1, string line2)
         {
@@ -151,6 +174,16 @@ namespace RoboSharp.Results
             Average(speedStats);
         }
 
+        /// <summary>
+        /// Clone an AverageSpeedStatistic
+        /// </summary>
+        public AverageSpeedStatistic(AverageSpeedStatistic stat) : base(stat) 
+        {
+            Divisor = stat.Divisor;
+            Combined_BytesPerSec = stat.BytesPerSec;
+            Combined_MegaBytesPerMin = stat.MegaBytesPerMin;
+        }
+
         #endregion
 
         #region < Fields >
@@ -163,6 +196,13 @@ namespace RoboSharp.Results
 
         /// <summary> Total number of SpeedStats that were combined to produce the Combined_* values </summary>
         private long Divisor = 0;
+
+        #endregion
+
+        #region < Public Methods >
+
+        /// <inheritdoc cref="ICloneable.Clone"/>
+        public override SpeedStatistic Clone() => new AverageSpeedStatistic(this);
 
         #endregion
 

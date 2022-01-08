@@ -13,7 +13,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Provide Read-Only access to a <see cref="Statistic"/> object
     /// </summary>
-    public interface IStatistic : INotifyPropertyChanged
+    public interface IStatistic : INotifyPropertyChanged, ICloneable
     {
 
         #region < Properties >
@@ -101,8 +101,12 @@ namespace RoboSharp.Results
 
         /// <inheritdoc cref="Statistic.ToString_Skipped"/>
         string ToString_Skipped(bool IncludeType = false, bool IncludePrefix = true);
-        
+
         #endregion
+
+        /// <returns>new <see cref="Statistic"/> object </returns>
+        /// <inheritdoc cref="Statistic.Statistic(Statistic)"/>
+        new Statistic Clone();
     }
 
     /// <summary>
@@ -124,6 +128,19 @@ namespace RoboSharp.Results
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type, string name) { Type = type; Name = name; }
+
+        /// <summary> Clone an existing Statistic object</summary>
+        public Statistic(Statistic stat)
+        {
+            Type = stat.Type;
+            NameField = stat.Name;
+            TotalField = stat.Total;
+            CopiedField = stat.Copied;
+            SkippedField = stat.Skipped;
+            MismatchField = stat.Mismatch;
+            FailedField = stat.Failed;
+            ExtrasField = stat.Extras;
+        }
 
         /// <summary> Describe the Type of Statistics Object </summary>
         public enum StatType
@@ -690,6 +707,13 @@ namespace RoboSharp.Results
         }
 
         #endregion Subtract
+
+
+        /// <inheritdoc cref="IStatistic.Clone"/>
+        public Statistic Clone() => new Statistic(this);
+
+        object ICloneable.Clone() => new Statistic(this);
+
     }
 
     /// <summary>

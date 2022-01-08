@@ -6,13 +6,13 @@ namespace RoboSharp
     /// <summary>
     /// <inheritdoc cref="Results.RoboCopyResults"/>
     /// </summary>
-    public class RoboCommandCompletedEventArgs : EventArgs
+    public class RoboCommandCompletedEventArgs : TimeSpanEventArgs
     {
         /// <summary>
         /// Return the Results object
         /// </summary>
         /// <param name="results"></param>
-        public RoboCommandCompletedEventArgs(Results.RoboCopyResults results)
+        internal RoboCommandCompletedEventArgs(Results.RoboCopyResults results, DateTime startTime, DateTime endTime) : base(startTime, endTime)
         {
             this.Results = results;
         }

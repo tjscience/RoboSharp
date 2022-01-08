@@ -131,7 +131,7 @@ namespace RoboSharp
 
         /// <summary>Handles <see cref="OnCommandError"/></summary>
         public delegate void CommandErrorHandler(RoboCommand sender, CommandErrorEventArgs e);
-        /// <summary>Occurs when an error occurs while generating the command</summary>
+        /// <summary>Occurs when an error occurs while generating the command that prevents the RoboCopy process from starting.</summary>
         public event CommandErrorHandler OnCommandError;
 
         /// <summary>Handles <see cref="OnError"/></summary>
@@ -384,6 +384,7 @@ namespace RoboSharp
             #endregion
 
             isRunning = !cancellationToken.IsCancellationRequested;
+            DateTime StartTime = DateTime.Now;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -452,7 +453,7 @@ namespace RoboSharp
 
                 //Raise event announcing results are available
                 if (!hasError)
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
             });
 
             return continueWithTask;
