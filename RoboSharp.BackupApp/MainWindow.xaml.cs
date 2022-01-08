@@ -49,7 +49,7 @@ namespace RoboSharp.BackupApp
             btnAddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
             btnPauseQueue.IsEnabled = false;
-            
+
             //Setup SingleJob Tab
             SingleJobExpander_JobHistory.BindToList(SingleJobResults);
             SingleJobErrorGrid.ItemsSource = SingleJobErrors;
@@ -58,7 +58,7 @@ namespace RoboSharp.BackupApp
             ListBox_RoboQueueJobs_MultiJobPage.ItemsSource = RoboQueue;
             ListBox_RoboQueueJobs_OptionsPage.ItemsSource = RoboQueue;
             MultiJobErrorGrid.ItemsSource = MultiJobErrors;
-            
+
             MultiJob_ListOnlyResults.BindToList(RoboQueue.ListOnlyResults);
             MultiJob_ListOnlyResults.UpdateDescriptionLblText("List of results from this List-Only Operation.\nThis list is reset every time the queue is restarted.");
 
@@ -68,8 +68,8 @@ namespace RoboSharp.BackupApp
             cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
-            
-            RoboQueue.RunOperationResultsUpdated += RoboQueue_RunOperationResultsUpdated; 
+
+            RoboQueue.RunOperationResultsUpdated += RoboQueue_RunOperationResultsUpdated;
             RoboQueue.ListOnlyResultsUpdated += RoboQueue_ListOnlyResultsUpdated;
 
             RoboQueue.OnCommandError += RoboQueue_OnCommandError;
@@ -84,7 +84,7 @@ namespace RoboSharp.BackupApp
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            
+
         }
 
         void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -189,10 +189,10 @@ namespace RoboSharp.BackupApp
             FileFilter.Text = fileFilterItems;
 
             CopySubDirectories.IsChecked = copy.CopyOptions.CopySubdirectories;
-            CopySubdirectoriesIncludingEmpty.IsChecked  = copy.CopyOptions.CopySubdirectoriesIncludingEmpty;
+            CopySubdirectoriesIncludingEmpty.IsChecked = copy.CopyOptions.CopySubdirectoriesIncludingEmpty;
             Depth.Text = copy.CopyOptions.Depth.ToString();
             EnableRestartMode.IsChecked = copy.CopyOptions.EnableRestartMode;
-            EnableBackupMode.IsChecked  = copy.CopyOptions.EnableBackupMode;
+            EnableBackupMode.IsChecked = copy.CopyOptions.EnableBackupMode;
             EnableRestartModeWithBackupFallback.IsChecked = copy.CopyOptions.EnableRestartModeWithBackupFallback;
             UseUnbufferedIo.IsChecked = copy.CopyOptions.UseUnbufferedIo;
             EnableEfsRawMode.IsChecked = copy.CopyOptions.EnableEfsRawMode;
@@ -200,18 +200,18 @@ namespace RoboSharp.BackupApp
             CopyFilesWithSecurity.IsChecked = copy.CopyOptions.CopyFilesWithSecurity;
             CopyAll.IsChecked = copy.CopyOptions.CopyAll;
             RemoveFileInformation.IsChecked = copy.CopyOptions.RemoveFileInformation;
-            FixFileSecurityOnAllFiles.IsChecked  = copy.CopyOptions.FixFileSecurityOnAllFiles;
+            FixFileSecurityOnAllFiles.IsChecked = copy.CopyOptions.FixFileSecurityOnAllFiles;
             FixFileTimesOnAllFiles.IsChecked = copy.CopyOptions.FixFileTimesOnAllFiles;
             Purge.IsChecked = copy.CopyOptions.Purge;
             Mirror.IsChecked = copy.CopyOptions.Mirror;
             MoveFiles.IsChecked = copy.CopyOptions.MoveFiles;
-            MoveFilesAndDirectories.IsChecked  = copy.CopyOptions.MoveFilesAndDirectories;
+            MoveFilesAndDirectories.IsChecked = copy.CopyOptions.MoveFilesAndDirectories;
             AddAttributes.Text = copy.CopyOptions.AddAttributes;
             RemoveAttributes.Text = copy.CopyOptions.RemoveAttributes;
-            CreateDirectoryAndFileTree.IsChecked  = copy.CopyOptions.CreateDirectoryAndFileTree;
+            CreateDirectoryAndFileTree.IsChecked = copy.CopyOptions.CreateDirectoryAndFileTree;
             FatFiles.IsChecked = copy.CopyOptions.FatFiles;
-            TurnLongPathSupportOff.IsChecked  = copy.CopyOptions.TurnLongPathSupportOff;
-            
+            TurnLongPathSupportOff.IsChecked = copy.CopyOptions.TurnLongPathSupportOff;
+
             MonitorSourceChangesLimit.Text = copy.CopyOptions.MonitorSourceChangesLimit.ToString();
             MonitorSourceTimeLimit.Text = copy.CopyOptions.MonitorSourceTimeLimit.ToString();
 
@@ -231,8 +231,8 @@ namespace RoboSharp.BackupApp
 
             // logging options
             VerboseOutput.IsChecked = copy.LoggingOptions.VerboseOutput;
-            NoFileSizes.IsChecked  = copy.LoggingOptions.NoFileSizes;
-            NoProgress.IsChecked  = copy.LoggingOptions.NoProgress;
+            NoFileSizes.IsChecked = copy.LoggingOptions.NoFileSizes;
+            NoProgress.IsChecked = copy.LoggingOptions.NoProgress;
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
@@ -363,9 +363,15 @@ namespace RoboSharp.BackupApp
         private void btn_PauseResumeQueue(object sender, RoutedEventArgs e)
         {
             if (!RoboQueue.IsPaused)
+            {
                 RoboQueue.PauseAll();
+                btnPauseQueue.Content = "Resume Job Queue";
+            }
             else
+            {
                 RoboQueue.ResumeAll();
+                btnPauseQueue.Content = "Pause Job Queue";
+            }
         }
 
         /// <summary>
@@ -414,16 +420,17 @@ namespace RoboSharp.BackupApp
 
         private void UpdateLabel(TextBlock lbl, RoboSharp.Results.Statistic stat)
         {
-            Dispatcher.Invoke(() => {
-                    lbl.Text = stat?.ToString(true, true, "\n", true) ?? "";
-                });
+            Dispatcher.Invoke(() =>
+            {
+                lbl.Text = stat?.ToString(true, true, "\n", true) ?? "";
+            });
         }
 
         #endregion
 
         #region < RoboQueue & Command Events >
 
-        private void UpdateCommandsRunningBox() 
+        private void UpdateCommandsRunningBox()
         {
             Dispatcher.Invoke(() => MultiJob_JobRunningCount.Text = $"{RoboQueue.JobsCurrentlyRunning}");
         }
@@ -435,7 +442,7 @@ namespace RoboSharp.BackupApp
         {
             Dispatcher.Invoke(() =>
             {
-                RoboQueueProgressStackPanel.Children.Add( new MultiJob_CommandProgressIndicator(e.Command) );
+                RoboQueueProgressStackPanel.Children.Add(new MultiJob_CommandProgressIndicator(e.Command));
             });
             UpdateCommandsRunningBox();
         }
@@ -475,7 +482,7 @@ namespace RoboSharp.BackupApp
                     {
                         if (e.OldItems.Contains(element.Command))
                             RoboQueueProgressStackPanel.Children.Remove(element);
-                            break;
+                        break;
                     }
                 }
             });
@@ -595,7 +602,7 @@ namespace RoboSharp.BackupApp
         }
 
         #endregion
-        
+
     }
 
     public class FileError
