@@ -544,6 +544,7 @@ namespace RoboSharp.Results
             Failed += stat?.Failed ?? 0;
             Mismatch += stat?.Mismatch ?? 0;
             Skipped += stat?.Skipped ?? 0;
+            // TO DO: DISABLE EVENT GENERATION UNTIL AFTER ALL VALUES HAVE BEEN ADDED, THEN MANUALLY FIRE THEM
         }
 
         
