@@ -263,9 +263,9 @@
                                     <Label x:Name="lblConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1"  Margin="5,0,40,0" Content="Commands to run at once (0 = all):" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                                     <ComboBox x:Name="cmbConcurrentJobs_MultiJobPage" Grid.Row="0" Grid.Column="1" Margin="0,5,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged"/>
                                     <!-- ListOnly and Start Btn -->
-                                    <CheckBox x:Name="chkListOnly_Copy" Grid.Row="0" Grid.Column="1"  Margin="50,0,0,30" Content="ListOnly Mode" HorizontalAlignment="Right" VerticalAlignment="Bottom" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked"/>
-                                    <Button x:Name="btnStartJobQueue_Copy" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Content="Start Job Queue" Click="btn_StartQueue"/>
-                                    <Button x:Name="btnPauseQueue" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Content="Pause Job Queue" HorizontalAlignment="Right" VerticalAlignment="Top" Width="97" Click="btn_PauseResumeQueue"/>
+                                    <CheckBox x:Name="chkListOnly_Copy" Grid.Row="0" Grid.Column="1"  Margin="0,0,13,30" Content="ListOnly Mode" HorizontalAlignment="Right" VerticalAlignment="Bottom" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked"/>
+                                    <Button x:Name="btnStartJobQueue_Copy" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="110" Content="Start Job Queue" Click="btn_StartQueue"/>
+                                    <Button x:Name="btnPauseQueue" Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" Content="Pause Job Queue" HorizontalAlignment="Right" Width="110" Click="btn_PauseResumeQueue"/>
                                 </Grid>
                             </Expander>
                             <!-- Progress Expander -->
