@@ -14,7 +14,7 @@ namespace RoboSharp.Results
 
         internal ResultsBuilder(RoboCommand roboCommand) {
             RoboCommand = roboCommand;
-            Estimator = new ProgressEstimator(RoboCommand.Configuration);
+            Estimator = new ProgressEstimator(roboCommand);
         }
 
         #region < Private Members >

@@ -24,9 +24,9 @@ namespace RoboSharp.Results
     {
         private ProgressEstimator() { }
 
-        internal ProgressEstimator(RoboSharpConfiguration config)
+        internal ProgressEstimator(RoboCommand cmd)
         {
-            Config = config;
+            command = cmd;
             DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
             FileStatsField = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
             ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
@@ -37,10 +37,11 @@ namespace RoboSharp.Results
 
         #region < Private Members >
 
+        private RoboCommand command;
         private bool SkippingFile;
         private bool CopyOpStarted;
         private List<IStatistic> SubscribedStats;
-        private readonly RoboSharpConfiguration Config;
+        private RoboSharpConfiguration Config => command?.Configuration;
         private readonly Statistic DirStatField;
         private readonly Statistic FileStatsField;
         private readonly Statistic ByteStatsField;
@@ -213,9 +214,28 @@ namespace RoboSharp.Results
                         FileStatsField.Copied++;
                         SkippingFile = false;
                     }
+                    else if (!CopyOperation)
+                    {
+                        FileStatsField.Copied++;
+                        QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
                 }
-                else if (currentFile.FileClass == Config.LogParsing_OlderFile) { }
-                else if (currentFile.FileClass == Config.LogParsing_NewerFile) { }
+                else if (currentFile.FileClass == Config.LogParsing_OlderFile) 
+                {
+                    if (!CopyOperation && !command.SelectionOptions.ExcludeNewer)
+                    {
+                        FileStatsField.Copied++;
+                        QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                }
+                else if (currentFile.FileClass == Config.LogParsing_NewerFile) 
+                {
+                    if (!CopyOperation && !command.SelectionOptions.ExcludeOlder)
+                    {
+                        FileStatsField.Copied++;
+                        QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                }
             }
         }
 

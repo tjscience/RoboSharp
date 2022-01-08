@@ -34,6 +34,19 @@ namespace RoboSharp.BackupApp
 
         public RoboCommand Command { get; private set; }
 
+        public string JobName { 
+            get => jobName;
+            set 
+            { 
+                if (value != jobName)
+                {
+                    jobName = String.IsNullOrWhiteSpace(value) ? "" : value;
+                    Dispatcher.Invoke(() => this.Header = $"Progress{(jobName == "" ? "" : $" - {jobName}")}");
+                }
+            }
+             
+        }
+        private string jobName;
         public void BindToCommand(RoboCommand cmd)
         {
             Command = cmd;
@@ -48,6 +61,7 @@ namespace RoboSharp.BackupApp
             cmd.OnCopyProgressChanged += OnCopyProgressChanged;
             cmd.OnFileProcessed += OnFileProcessed;
             cmd.OnCommandCompleted += OnCommandCompleted;
+            JobName = cmd.Name;
         }
 
         #region < Buttons >

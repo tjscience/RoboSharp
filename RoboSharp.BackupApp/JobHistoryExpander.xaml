@@ -23,7 +23,23 @@
         </Grid.ColumnDefinitions>
         <!-- Header Label, ListBox, RemoveBtn -->
         <Label Name="DescriptionLbl" Content="This contains a list of the results from all previous runs during this session." Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282"/>
+        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Height="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ListBoxColumn1"/>
+                            <ColumnDefinition Width="15" SharedSizeGroup="ListBoxColumn2"/>
+                            <ColumnDefinition Width="*" SharedSizeGroup="ListBoxColumn3"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Bind to the NAME property -->
+                        <TextBlock Grid.Column="0" Text="{Binding Path=JobName}"/>
+                        <!-- Bind to the ToString method-->
+                        <TextBlock Grid.Column="2" Text="{Binding}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
         <Button Content="Remove Selected" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2"  HorizontalAlignment="Left" Margin="175,330,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
         <ScrollViewer Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="0,5,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <StackPanel>

@@ -72,7 +72,7 @@ namespace RoboSharp.Results
         /// Copy the values within the list to a new object
         /// </summary>
         /// <returns>new <see cref="RoboCopyResultsList"/> object</returns>
-        RoboCopyResultsList Clone();
+        new RoboCopyResultsList Clone();
 
         #endregion
     }
