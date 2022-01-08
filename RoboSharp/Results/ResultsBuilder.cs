@@ -51,7 +51,7 @@ namespace RoboSharp.Results
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation) => Estimator.AddFile(currentFile, CopyOperation);
 
         /// <inheritdoc cref="ProgressEstimator.AddFileCopied"/>
-        internal void AddFileCopied() => Estimator.AddFileCopied();
+        internal void AddFileCopied(ProcessedFileInfo currentFile) => Estimator.AddFileCopied(currentFile);
 
         /// <inheritdoc cref="ProgressEstimator.SetCopyOpStarted"/>
         internal void SetCopyOpStarted() => Estimator.SetCopyOpStarted();

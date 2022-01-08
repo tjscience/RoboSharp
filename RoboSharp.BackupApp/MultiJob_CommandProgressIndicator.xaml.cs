@@ -98,7 +98,7 @@ namespace RoboSharp.BackupApp
         /// <summary> Bind the ProgressEstimator to the text controls on the PROGRESS tab </summary>
         private void OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e) => BindToProgressEstimator(e.ResultsEstimate);
 
-        private void BindToProgressEstimator(RoboSharp.Results.ProgressEstimator e)
+        private void BindToProgressEstimator(RoboSharp.Results.IProgressEstimator e)
         {
             Dispatcher.Invoke(() =>
             {
@@ -106,9 +106,9 @@ namespace RoboSharp.BackupApp
                 ProgressEstimator_Directories.Text = "Directories";
                 ProgressEstimator_Bytes.Text = "Bytes";
             });
-            e.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
-            e.DirStats.PropertyChanged += DirStats_PropertyChanged;
-            e.FileStats.PropertyChanged += FileStats_PropertyChanged;
+            e.BytesStatistic.PropertyChanged += ByteStats_PropertyChanged;
+            e.DirectoriesStatistic.PropertyChanged += DirStats_PropertyChanged;
+            e.FilesStatistic.PropertyChanged += FileStats_PropertyChanged;
         }
 
         private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

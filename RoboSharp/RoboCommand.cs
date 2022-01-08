@@ -491,7 +491,7 @@ namespace RoboSharp
                         resultsBuilder?.Estimator?.CurrentFile,
                         resultsBuilder?.Estimator?.CurrentDir
                     ));
-                if (data == "100%") resultsBuilder?.AddFileCopied(); else resultsBuilder?.SetCopyOpStarted();
+                if (data == "100%") resultsBuilder?.AddFileCopied(resultsBuilder?.Estimator?.CurrentFile); else resultsBuilder?.SetCopyOpStarted();
             }
             else
             {

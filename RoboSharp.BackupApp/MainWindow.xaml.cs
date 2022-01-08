@@ -410,9 +410,9 @@ namespace RoboSharp.BackupApp
 
         private void RoboQueue_OnProgressEstimatorCreated(RoboQueue sender, Results.ProgressEstimatorCreatedEventArgs e)
         {
-            e.ResultsEstimate.DirStats.OnTotalChanged += DirectoriesStatistic_PropertyChanged;
-            e.ResultsEstimate.FileStats.OnTotalChanged += FilesStatistic_PropertyChanged;
-            e.ResultsEstimate.ByteStats.OnTotalChanged += BytesStatistic_PropertyChanged;
+            e.ResultsEstimate.DirectoriesStatistic.OnTotalChanged += DirectoriesStatistic_PropertyChanged;
+            e.ResultsEstimate.FilesStatistic.OnTotalChanged += FilesStatistic_PropertyChanged;
+            e.ResultsEstimate.BytesStatistic.OnTotalChanged += BytesStatistic_PropertyChanged;
         }
 
         private void DirectoriesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Directories, sender);
@@ -458,8 +458,6 @@ namespace RoboSharp.BackupApp
             {
                 MultiJob_JobsCompleteXofY.Text = $"{RoboQueue.JobsComplete} of {RoboQueue.ListCount}";
                 MultiJobProgressBar_JobsComplete.Value = RoboQueue.JobsComplete;
-                //MultiJob_ListOnlyResults.ListBox_JobResults.ItemsSource = RoboQueue.ListOnlyResults;
-                //MultiJob_RunResults.ListBox_JobResults.ItemsSource = RoboQueue.RunOperationResults;
             });
         }
 

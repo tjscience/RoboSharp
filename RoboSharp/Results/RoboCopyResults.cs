@@ -3,14 +3,32 @@
 namespace RoboSharp.Results
 {
     /// <summary>
+    /// Provides <see cref="IStatistic"/> objects for File, Directory, and Bytes
+    /// </summary>
+    public interface IResults
+    {
+        /// <summary> Information about number of Directories Copied, Skipped, Failed, etc.</summary>
+        IStatistic DirectoriesStatistic { get; }
+
+        /// <summary> Information about number of Files Copied, Skipped, Failed, etc.</summary>
+        IStatistic FilesStatistic { get; }
+
+        /// <summary> Information about number of Bytes processed.</summary>
+        IStatistic BytesStatistic { get; }
+
+        /// <inheritdoc cref="RoboCopyExitStatus"/>
+        RoboCopyExitStatus Status { get; }
+    }
+
+    /// <summary>
     /// Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
     /// </summary>
-    public class RoboCopyResults
+    public class RoboCopyResults : IResults
     {
         internal RoboCopyResults() { }
 
         #region < Properties >
-        
+
         /// <inheritdoc cref="CopyOptions.Source"/>
         public string Source { get; internal set; }
 
@@ -52,6 +70,14 @@ namespace RoboSharp.Results
 
         /// <summary> Output Text reported by RoboCopy </summary>
         public string[] LogLines { get; internal set; }
+
+        #endregion
+
+        #region < IResults >
+
+        IStatistic IResults.BytesStatistic => BytesStatistic;
+        IStatistic IResults.DirectoriesStatistic => DirectoriesStatistic;
+        IStatistic IResults.FilesStatistic => FilesStatistic;
 
         #endregion
 

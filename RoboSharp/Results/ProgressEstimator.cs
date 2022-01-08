@@ -7,7 +7,38 @@ using System.Text;
 namespace RoboSharp.Results
 {
     /// <summary>
-    /// Object that provides <see cref="Statistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
+    /// Object that provides <see cref="IStatistic"/> objects whose events can be bound to report estimated RoboCommand / RoboQueue progress periodically.
+    /// </summary>
+    public interface IProgressEstimator
+    {
+
+        /// <summary>
+        /// Estimate of current number of directories processed while the job is still running. <br/>
+        /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
+        /// </summary>
+        IStatistic DirectoriesStatistic { get; }
+
+        /// <summary>
+        /// Estimate of current number of files processed while the job is still running. <br/>
+        /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
+        /// </summary>
+        IStatistic FilesStatistic { get; }
+
+        /// <summary>
+        /// Estimate of current number of bytes processed while the job is still running. <br/>
+        /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
+        /// </summary>
+        IStatistic BytesStatistic { get; }
+
+        /// <summary>
+        /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
+        /// </summary>
+        RoboCopyExitCodes GetExitCode();
+
+    }
+
+    /// <summary>
+    /// Object that provides <see cref="IStatistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
     /// </summary>
     /// <remarks>
     /// Subscribe to <see cref="RoboCommand.OnProgressEstimatorCreated"/> or <see cref="RoboQueue.OnProgressEstimatorCreated"/> to be notified when the ProgressEstimator becomes available for binding <br/>
@@ -20,8 +51,10 @@ namespace RoboSharp.Results
     /// }<br/>
     /// </code>
     /// </remarks>
-    public class ProgressEstimator
+    public class ProgressEstimator : IProgressEstimator, IResults
     {
+        #region < Constructors >
+
         private ProgressEstimator() { }
 
         internal ProgressEstimator(RoboCommand cmd)
@@ -35,12 +68,14 @@ namespace RoboSharp.Results
             ByteCalcRequested = new Lazy<bool>(() => { DeQueueByteCalc(); return true; });
         }
 
+        #endregion
+
         #region < Private Members >
 
         private RoboCommand command;
         private bool SkippingFile;
         private bool CopyOpStarted;
-        private List<IStatistic> SubscribedStats;
+
         private RoboSharpConfiguration Config => command?.Configuration;
         private readonly Statistic DirStatField;
         private readonly Statistic FileStatsField;
@@ -48,7 +83,7 @@ namespace RoboSharp.Results
 
         private readonly Lazy<bool> ByteCalcRequested; //Byte Calc can be very large, so calculation only occurs after first request. Dirs and FileCounts are incremented 1 at a time, so no optimization is needed.
         private readonly System.Collections.Concurrent.ConcurrentQueue<Tuple<ProcessedFileInfo, WhereToAdd>> BytesToAdd;    //Store Files in queue for calculation since bytes can be large
-        private enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
+        internal enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
 
         internal ProcessedFileInfo CurrentDir;
         internal ProcessedFileInfo CurrentFile;
@@ -61,19 +96,21 @@ namespace RoboSharp.Results
         /// Estimate of current number of directories processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic DirStats => DirStatField;
+        public IStatistic DirectoriesStatistic => DirStatField;
 
         /// <summary>
         /// Estimate of current number of files processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic FileStats => FileStatsField;
+        public IStatistic FilesStatistic => FileStatsField;
 
         /// <summary>
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic ByteStats => ByteCalcRequested.Value ? ByteStatsField : ByteStatsField;
+        public IStatistic BytesStatistic => ByteCalcRequested.Value ? ByteStatsField : ByteStatsField;
+
+        RoboCopyExitStatus IResults.Status => new RoboCopyExitStatus((int)GetExitCode());
 
         #endregion
 
@@ -135,9 +172,9 @@ namespace RoboSharp.Results
             // Package up
             return new RoboCopyResults()
             {
-                BytesStatistic = this.ByteStatsField,
-                DirectoriesStatistic = (Statistic)DirStats,
-                FilesStatistic = FileStatsField,
+                BytesStatistic = (Statistic)BytesStatistic,
+                DirectoriesStatistic = (Statistic)DirectoriesStatistic,
+                FilesStatistic = (Statistic)FilesStatistic,
                 SpeedStatistic = new SpeedStatistic(),
             };
         }
@@ -152,7 +189,7 @@ namespace RoboSharp.Results
             CurrentDir = currentDir;
             DirStatField.Total++;
             if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStatField.Skipped++; }
-            else if (currentDir.FileClass == Config.LogParsing_NewDir) { if (CopyOperation) DirStatField.Copied++; }
+            else if (currentDir.FileClass == Config.LogParsing_NewDir) { DirStatField.Copied++; }
             else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStatField.Extras++;
             else
             {
@@ -220,7 +257,7 @@ namespace RoboSharp.Results
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (currentFile.FileClass == Config.LogParsing_OlderFile) 
+                else if (currentFile.FileClass == Config.LogParsing_OlderFile)
                 {
                     if (!CopyOperation && !command.SelectionOptions.ExcludeNewer)
                     {
@@ -228,7 +265,7 @@ namespace RoboSharp.Results
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (currentFile.FileClass == Config.LogParsing_NewerFile) 
+                else if (currentFile.FileClass == Config.LogParsing_NewerFile)
                 {
                     if (!CopyOperation && !command.SelectionOptions.ExcludeOlder)
                     {
@@ -308,66 +345,16 @@ namespace RoboSharp.Results
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
-        internal void AddFileCopied()
+        internal void AddFileCopied(ProcessedFileInfo currentFile)
         {
             SkippingFile = false;
             CopyOpStarted = false;
             FileStatsField.Copied++;
-            QueueByteCalc(CurrentFile, WhereToAdd.Copied);
+            QueueByteCalc(currentFile, WhereToAdd.Copied);
             CurrentFile = null;
         }
 
         #endregion
-
-        #endregion
-
-        #region < Event Binding for Auto-Updates ( Internal ) >
-
-        private void BindDirStat(object o, PropertyChangedEventArgs e) => this.DirStatField.AddStatistic((StatChangedEventArg)e);
-        private void BindFileStat(object o, PropertyChangedEventArgs e) => this.FileStatsField.AddStatistic((StatChangedEventArg)e);
-        private void BindByteStat(object o, PropertyChangedEventArgs e) => this.ByteStatsField.AddStatistic((StatChangedEventArg)e);
-
-        /// <summary>
-        /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
-        /// </summary>
-        internal void BindToProgressEstimator(ProgressEstimator estimator)
-        {
-            BindToStatistic(estimator.ByteStats);
-            BindToStatistic(estimator.DirStats);
-            BindToStatistic(estimator.FileStats);
-        }
-
-        /// <summary>
-        /// Subscribe to the update events of a <see cref="Statistic"/> object
-        /// </summary>
-        internal void BindToStatistic(IStatistic StatObject)
-        {
-            if (SubscribedStats == null) SubscribedStats = new List<IStatistic>();
-            SubscribedStats.Add(StatObject);
-            if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
-            else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
-            else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
-        }
-
-        /// <summary>
-        /// Unsubscribe from all bound Statistic objects
-        /// </summary>
-        internal void UnBind()
-        {
-            if (SubscribedStats != null)
-            {
-                foreach (IStatistic c in SubscribedStats)
-                {
-                    if (c != null)
-                    {
-                        c.PropertyChanged -= BindDirStat;
-                        c.PropertyChanged -= BindFileStat;
-                        c.PropertyChanged -= BindByteStat;
-                    }
-                }
-                SubscribedStats.Clear();
-            }
-        }
 
         #endregion
 

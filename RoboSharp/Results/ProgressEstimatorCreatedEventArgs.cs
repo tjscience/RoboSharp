@@ -12,7 +12,7 @@ namespace RoboSharp.Results
     {
         private ProgressEstimatorCreatedEventArgs() : base() { }
 
-        internal ProgressEstimatorCreatedEventArgs(ProgressEstimator estimator) : base()
+        internal ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
         {
             ResultsEstimate = estimator;
         }
@@ -20,7 +20,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// <inheritdoc cref="ProgressEstimator"/>
         /// </summary>
-        public ProgressEstimator ResultsEstimate { get; }
+        public IProgressEstimator ResultsEstimate { get; }
         
     }
 }
