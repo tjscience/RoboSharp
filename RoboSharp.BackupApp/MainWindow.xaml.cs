@@ -59,18 +59,18 @@ namespace RoboSharp.BackupApp
             ListBox_RoboQueueJobs_OptionsPage.ItemsSource = RoboQueue;
             MultiJobErrorGrid.ItemsSource = MultiJobErrors;
 
-            MultiJob_ListOnlyResults.BindToList(RoboQueue.ListOnlyResults);
+            MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
             MultiJob_ListOnlyResults.UpdateDescriptionLblText("List of results from this List-Only Operation.\nThis list is reset every time the queue is restarted.");
 
-            MultiJob_RunResults.BindToList(RoboQueue.ListOnlyResults);
+            MultiJob_RunResults.BindToList(RoboQueue.RunResults);
             MultiJob_RunResults.UpdateDescriptionLblText("List of results from this Copy/Move Operation.\nThis list is reset every time the queue is restarted.");
 
             cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.ItemsSource = AllowedJobCounts;
             cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
 
-            RoboQueue.RunOperationResultsUpdated += RoboQueue_RunOperationResultsUpdated;
-            RoboQueue.ListOnlyResultsUpdated += RoboQueue_ListOnlyResultsUpdated;
+            RoboQueue.RunResultsUpdated += RoboQueue_RunOperationResultsUpdated;
+            RoboQueue.ListResultsUpdated += RoboQueue_ListOnlyResultsUpdated;
 
             RoboQueue.OnCommandError += RoboQueue_OnCommandError;
             RoboQueue.OnError += RoboQueue_OnError; ;
