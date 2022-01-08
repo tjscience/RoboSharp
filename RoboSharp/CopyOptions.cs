@@ -8,8 +8,68 @@ namespace RoboSharp
     /// <summary>
     /// Source, Destination, and options for how to move or copy files.
     /// </summary>
-    public class CopyOptions
+    public class CopyOptions : ICloneable
     {
+        #region Constructors
+
+        /// <summary>
+        /// Create new CopyOptions with Default Settings
+        /// </summary>
+        public CopyOptions() { }
+
+        /// <summary>
+        /// Clone a CopyOptions Object
+        /// </summary>
+        /// <param name="copyOptions">CopyOptions object to clone</param>
+        /// <param name="NewSource">Specify a new source if desired. If left as null, will use Source from <paramref name="copyOptions"/></param>
+        /// <param name="NewDestination">Specify a new source if desired. If left as null, will use Destination from <paramref name="copyOptions"/></param>
+        public CopyOptions(CopyOptions copyOptions, string NewSource = null, string NewDestination = null) 
+        {
+            Source = NewSource ?? copyOptions.Source;
+            Destination = NewDestination ?? copyOptions.Destination;
+
+            AddAttributes = copyOptions.AddAttributes;
+            CheckPerFile = copyOptions.CheckPerFile;
+            CopyAll = copyOptions.CopyAll;
+            CopyFilesWithSecurity = copyOptions.CopyFilesWithSecurity;
+            CopyFlags = copyOptions.CopyFlags;
+            CopySubdirectories = copyOptions.CopySubdirectories;
+            CopySubdirectoriesIncludingEmpty = copyOptions.CopySubdirectoriesIncludingEmpty;
+            CopySymbolicLink = copyOptions.CopySymbolicLink;
+            CreateDirectoryAndFileTree= copyOptions.CreateDirectoryAndFileTree;
+            Depth= copyOptions.Depth;
+            DirectoryCopyFlags= copyOptions.DirectoryCopyFlags;
+            DoNotCopyDirectoryInfo= copyOptions.DoNotCopyDirectoryInfo;
+            DoNotUseWindowsCopyOffload= copyOptions.DoNotUseWindowsCopyOffload;
+            EnableBackupMode= copyOptions.EnableBackupMode;
+            EnableEfsRawMode = copyOptions.EnableEfsRawMode;
+            EnableRestartMode = copyOptions.EnableRestartMode;
+            EnableRestartModeWithBackupFallback = copyOptions.EnableRestartModeWithBackupFallback;
+            FatFiles = copyOptions.FatFiles;
+            FileFilter= copyOptions.FileFilter;
+            FixFileSecurityOnAllFiles= copyOptions.FixFileSecurityOnAllFiles;
+            FixFileTimesOnAllFiles= copyOptions.FixFileTimesOnAllFiles;
+            InterPacketGap= copyOptions.InterPacketGap;
+            Mirror= copyOptions.Mirror;
+            MonitorSourceChangesLimit= copyOptions.MonitorSourceChangesLimit;
+            MonitorSourceTimeLimit= copyOptions.MonitorSourceTimeLimit;
+            MoveFiles= copyOptions.MoveFiles;
+            MoveFilesAndDirectories= copyOptions.MoveFilesAndDirectories;
+            MultiThreadedCopiesCount= copyOptions.MultiThreadedCopiesCount;
+            Purge= copyOptions.Purge;
+            RemoveAttributes= copyOptions.RemoveAttributes;
+            RemoveFileInformation= copyOptions.RemoveFileInformation;
+            RunHours= copyOptions.RunHours;
+            TurnLongPathSupportOff= copyOptions.TurnLongPathSupportOff;
+            UseUnbufferedIo= copyOptions.UseUnbufferedIo;
+        }
+
+        /// <inheritdoc cref="CopyOptions.CopyOptions(CopyOptions, string, string)"/>
+        public CopyOptions Clone(string NewSource = null, string NewDestination = null) => new CopyOptions(this, NewSource, NewDestination);
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
         #region Option Constants
 
         internal const string COPY_SUBDIRECTORIES = "/S ";
