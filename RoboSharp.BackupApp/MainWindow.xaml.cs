@@ -338,6 +338,7 @@ namespace RoboSharp.BackupApp
                 RoboQueueProgressStackPanel.Children.Clear();
 
                 MultiJobProgressTab.IsSelected = true;
+                MultiJobExpander_Progress.IsExpanded = true;
 
                 if (chkListOnly.IsChecked == true)
                     await RoboQueue.StartAll_ListOnly();
