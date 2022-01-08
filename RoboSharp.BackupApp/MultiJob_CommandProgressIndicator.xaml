@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="550"
           Name="Expander" 
-          Background="LightSlateGray" 
+          Background="BlanchedAlmond" 
           Header="Progress" 
           RenderTransformOrigin="0.5,0.5"
           >
@@ -16,7 +16,7 @@
             <!-- 0 -->
             <RowDefinition MinHeight="30"/>
             <!-- 1 -->
-            <RowDefinition MinHeight="30"/>
+            <RowDefinition MinHeight="70"/>
             <!-- 2 -->
             <RowDefinition MinHeight="30"/>
             <!-- 3 - ProgressBar Label -->

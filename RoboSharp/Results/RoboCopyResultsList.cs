@@ -118,7 +118,7 @@ namespace RoboSharp.Results
 
         private Func<Statistic> GetLazyFunc(Func<IStatistic[]> Action, StatType StatType) => new Func<Statistic>(() => Statistic.AddStatistics(Action.Invoke(), StatType));
         private Func<AverageSpeedStatistic> GetLazyAverageSpeedFunc() => new Func<AverageSpeedStatistic>(() => AverageSpeedStatistic.GetAverage(GetSpeedStatistics()));
-        private Func<RoboCopyCombinedExitStatus> GetLazCombinedStatusFunc() => new Func<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(this.GetStatuses()));
+        private Func<RoboCopyCombinedExitStatus> GetLazCombinedStatusFunc() => new Func<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(GetStatuses()));
 
         private Lazy<T> GetLazyStat<T>(Lazy<T> lazyStat, Func<T> action) where T : ICloneable
         {
