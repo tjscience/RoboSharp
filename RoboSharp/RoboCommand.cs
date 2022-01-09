@@ -474,6 +474,8 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            var currentFile = resultsBuilder?.Estimator?.CurrentFile;
+            var currentDir = resultsBuilder?.Estimator?.CurrentDir; 
             resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null)
@@ -484,17 +486,20 @@ namespace RoboSharp
 
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
+               //Increment ProgressEstimator
+                if (data == "100%") 
+                    resultsBuilder?.AddFileCopied(currentFile); 
+                else 
+                    resultsBuilder?.SetCopyOpStarted(); 
+                    resultsBuilder?.SetCopyOpStarted();
+                
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
                     new CopyProgressEventArgs(
                         Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture),
-                        resultsBuilder?.Estimator?.CurrentFile,
-                        resultsBuilder?.Estimator?.CurrentDir
+                        currentFile, currentDir
                     ));
-                if (data == "100%") 
-                    resultsBuilder?.AddFileCopied(resultsBuilder?.Estimator?.CurrentFile); 
-                else 
-                    resultsBuilder?.SetCopyOpStarted();
+
             }
             else
             {
