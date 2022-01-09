@@ -66,7 +66,7 @@ namespace RoboSharp.Results
             if (output == null)
                 return;
 
-            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$"))
+            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled))
                 return;
 
             outputLines.Add(output);
