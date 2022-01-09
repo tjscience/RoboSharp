@@ -204,7 +204,8 @@ namespace RoboSharp.Results
         public event StatChangedHandler OnExtrasChanged;
 
         private Lazy<StatChangedEventArg> PrepEventArgs(long OldValue, long NewValue, string PropertyName) => new Lazy<StatChangedEventArg>(() => new StatChangedEventArg(this, OldValue, NewValue, PropertyName));
-
+        private StatChangedEventArg ConditionalPrepEventArgs(long OldValue, long NewValue, string PropertyName) => !EnablePropertyChangeEvent || OldValue == NewValue ? null : new StatChangedEventArg(this, OldValue, NewValue, PropertyName);
+        
         #endregion
 
         #region < Properties >
@@ -529,7 +530,8 @@ namespace RoboSharp.Results
         #region < ADD Methods >
 
         /// <summary>
-        /// Add the results of the supplied Statistics object to this Statistics object.
+        /// Add the results of the supplied Statistics object to this Statistics object. <br/>
+        /// Events are defered until all the fields have been added together.
         /// </summary>
         /// <param name="stat">Statistics Item to add</param>
 #if !NET40
@@ -538,13 +540,63 @@ namespace RoboSharp.Results
         public void AddStatistic(IStatistic stat)
         {
             if (stat.Type != this.Type) return;
-            Total += stat?.Total ?? 0;
-            Copied += stat?.Copied ?? 0;
-            Extras += stat?.Extras ?? 0;
-            Failed += stat?.Failed ?? 0;
-            Mismatch += stat?.Mismatch ?? 0;
-            Skipped += stat?.Skipped ?? 0;
-            // TO DO: DISABLE EVENT GENERATION UNTIL AFTER ALL VALUES HAVE BEEN ADDED, THEN MANUALLY FIRE THEM
+
+            //Total
+            long i = stat?.Total ?? 0;
+            var eTotal = ConditionalPrepEventArgs(Total, i, "Total");
+            TotalField += i;
+            //Copied
+            i = stat?.Copied ?? 0;
+            var eCopied = ConditionalPrepEventArgs(Copied, i, "Copied");
+            CopiedField += i;
+            //Extras
+            i = stat?.Extras?? 0;
+            var eExtras = ConditionalPrepEventArgs(Extras, i, "Extras");
+            ExtrasField += i;
+            //Failed
+            i = stat?.Failed?? 0;
+            var eFailed = ConditionalPrepEventArgs(Failed, i, "Failed");
+            FailedField += i;
+            //Mismatch
+            i = stat?.Mismatch ?? 0;
+            var eMismatch = ConditionalPrepEventArgs(Mismatch, i, "Mismatch");
+            MismatchField += i;
+            //Skipped
+            i = stat?.Skipped ?? 0;
+            var eSkipped = ConditionalPrepEventArgs(Skipped, i, "Skipped");
+            SkippedField += i;
+            
+            //Perform Events
+            if (eTotal != null)
+            {
+                PropertyChanged?.Invoke(this, eTotal);
+                OnTotalChanged?.Invoke(this, eTotal);
+            }
+            if (eCopied != null)
+            {
+                PropertyChanged?.Invoke(this, eCopied);
+                OnCopiedChanged?.Invoke(this, eCopied);
+            }
+            if (eExtras != null)
+            {
+                PropertyChanged?.Invoke(this, eExtras);
+                OnExtrasChanged?.Invoke(this, eExtras);
+            }
+            if (eFailed != null)
+            {
+                PropertyChanged?.Invoke(this, eFailed);
+                OnFailedChanged?.Invoke(this, eFailed);
+            }
+            if (eMismatch != null)
+            {
+                PropertyChanged?.Invoke(this, eMismatch);
+                OnMisMatchChanged?.Invoke(this, eMismatch);
+            }
+            if (eSkipped != null)
+            {
+                PropertyChanged?.Invoke(this, eSkipped);
+                OnSkippedChanged?.Invoke(this, eSkipped);
+            }
         }
 
         

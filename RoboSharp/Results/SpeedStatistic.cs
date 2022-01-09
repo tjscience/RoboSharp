@@ -64,6 +64,9 @@ namespace RoboSharp.Results
         /// <summary>This event will fire when the value of the SpeedStatistic is updated </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>Raise Property Change Event</summary>
+        protected void OnPropertyChange(string PropertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(PropertyName));
+
         /// <inheritdoc cref="ISpeedStatistic.BytesPerSec"/>
         public virtual decimal BytesPerSec
         {
@@ -73,7 +76,7 @@ namespace RoboSharp.Results
                 if (BytesPerSecField != value)
                 {
                     BytesPerSecField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MegaBytesPerMin"));
+                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
                 }
             }
         }
@@ -87,7 +90,7 @@ namespace RoboSharp.Results
                 if (MegaBytesPerMinField != value)
                 {
                     MegaBytesPerMinField = value;
-                    if (EnablePropertyChangeEvent) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MegaBytesPerMin"));
+                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
                 }
             }
         }
@@ -348,8 +351,19 @@ namespace RoboSharp.Results
 #endif
         internal void CalculateAverage()
         {
-            BytesPerSec = Divisor < 1 ? 0 : Math.Round(Combined_BytesPerSec / Divisor, 3);
-            MegaBytesPerMin = Divisor < 1 ? 0 : Math.Round(Combined_MegaBytesPerMin / Divisor, 3);
+            EnablePropertyChangeEvent = false;
+            //BytesPerSec
+            long i = Divisor < 1 ? 0 : (long)Math.Round(Combined_BytesPerSec / Divisor, 3);
+            bool TriggerBPS = BytesPerSec != i;
+            BytesPerSec = i;
+            //MegaBytes
+            i = Divisor < 1 ? 0 : (long)Math.Round(Combined_MegaBytesPerMin / Divisor, 3);
+            bool TriggerMBPM = MegaBytesPerMin != i;
+            MegaBytesPerMin = i;
+            //Trigger Events
+            EnablePropertyChangeEvent = true;
+            if (TriggerBPS) OnPropertyChange("BytesPerSec");
+            if (TriggerMBPM) OnPropertyChange("MegaBytesPerMin");
         }
 
         /// <summary>

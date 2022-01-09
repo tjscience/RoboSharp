@@ -172,6 +172,7 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
+            copy.StopIfDisposing = true;
             return copy;
         }
 
