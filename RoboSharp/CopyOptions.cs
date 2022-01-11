@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RoboSharp
 {
@@ -291,11 +292,31 @@ namespace RoboSharp
         public int MonitorSourceTimeLimit { get; set; }
         /// <summary>
         /// Specifies run times when new copies may be started.
-        /// [/rh:hhmm-hhmm]
+        /// [/rh:hhmm-hhmm] <br/>
+        /// If copy operation is unfinished, robocopy will remain active in idle state until the specified time, at which it will resume copying.<br/>
+        /// Must be in correct format. Incorrectly formatted strings will be ignored.  <para/>
+        /// Examples:<br/>
+        /// 1500-1800 -> Robocopy will only copy between 3 PM and 5 PM <br/>
+        /// 0015-0530 -> Robocopy will only copy between 12:15 AM and 5:30 AM <br/>
         /// </summary>
-        public string RunHours { get; set; }
+        /// <remarks>
+        /// If this is set up, then the robocopy process will remain active after the program exits if the calling asemmbly does not call <see cref="RoboCommand.Stop"/> prior to exiting the application.
+        /// </remarks>
+        public string RunHours
+        {
+            get => runHours;
+            set 
+            {
+                if (String.IsNullOrWhiteSpace(value))
+                    runHours = value?.Trim() ?? string.Empty;
+                else if (CheckRunHoursString(value))
+                    runHours = value.Trim();
+            }
+        }
+        private string runHours;
+
         /// <summary>
-        /// Checks run times on a per-file (not per-pass) basis.
+        /// Checks the scheduled /RH (run hours) per file instead of per pass.
         /// [/PF]
         /// </summary>
         public bool CheckPerFile { get; set; }
@@ -463,6 +484,46 @@ namespace RoboSharp
             var parsedOptions = options.ToString();
             Debugger.Instance.DebugMessage(string.Format("CopyOptions parsed ({0}).", parsedOptions));
             return parsedOptions;
+        }
+
+        private static Regex RunHours_OverallRegex = new Regex("^(?<StartTime>[0-2][0-9][0-5][0-9])-(?<EndTime>[0-2][0-9][0-5][0-9])$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private static Regex RunHours_Check1 = new Regex("^[0-1][0-9][0-5][0-9]$", RegexOptions.Compiled);  // Checks 0000 - 1959
+        private static Regex RunHours_Check2 = new Regex("^[2][0-3][0-5][0-9]$", RegexOptions.Compiled);    // Checks 2000 - 2359
+        private GroupCollection RunHoursGroups => RunHours_OverallRegex.Match(RunHours).Groups;
+
+        /// <summary>
+        /// Get the StartTime portion of <see cref="RunHours"/>
+        /// </summary>
+        /// <returns>hhmm or String.Empty</returns>
+        public string GetRunHours_StartTime()
+        {
+            if (RunHours.IsNullOrWhiteSpace()) return string.Empty;
+            return RunHoursGroups["StartTime"]?.Value ?? String.Empty;
+        }
+
+        /// <summary>
+        /// Get the EndTime portion of <see cref="RunHours"/>
+        /// </summary>
+        /// <returns>hhmm or String.Empty</returns>
+        public string GetRunHours_EndTime()
+        {
+            if (RunHours.IsNullOrWhiteSpace()) return string.Empty;
+            return RunHoursGroups["EndTime"]?.Value ?? String.Empty;
+        }
+
+        /// <summary>
+        /// Method to check if some string is valid for use as with the <see cref="RunHours"/> property.
+        /// </summary>
+        /// <param name="runHours"></param>
+        /// <returns>True if correct format, otherwise false</returns>
+        public bool CheckRunHoursString(string runHours)
+        {
+            if (string.IsNullOrWhiteSpace(runHours)) return true;
+            if (!RunHours_OverallRegex.IsMatch(runHours.Trim())) return false;
+            var times = RunHours_OverallRegex.Match(runHours.Trim());
+            bool StartMatch = RunHours_Check1.IsMatch(times.Groups["StartTime"].Value) || RunHours_Check2.IsMatch(times.Groups["StartTime"].Value);
+            bool EndMatch = RunHours_Check1.IsMatch(times.Groups["EndTime"].Value) || RunHours_Check2.IsMatch(times.Groups["EndTime"].Value);
+            return StartMatch && EndMatch;
         }
     }
 }

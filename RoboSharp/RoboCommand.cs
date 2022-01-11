@@ -150,6 +150,8 @@ namespace RoboSharp
         public bool IsRunning { get { return isRunning; } }
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
+        /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled for some future time). Otherwise False. </summary>
+        public bool IsSchedsuled { get => !String.IsNullOrWhiteSpace(CopyOptions.RunHours); }
         /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
@@ -272,7 +274,6 @@ namespace RoboSharp
                 process.Dispose();
                 process = null;
             }
-            isRunning = false;
             isPaused = false;
         }
 
@@ -438,11 +439,11 @@ namespace RoboSharp
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
-            Task continueWithTask = backupTask.ContinueWith((continuation) =>
+            Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
-
+                isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
                 //Raise event announcing results are available
                 if (!hasError)
                     OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
@@ -455,7 +456,7 @@ namespace RoboSharp
 
         #region < Process Event Handlers >
 
-        /// <summary> Occurs when the Process reports an error, not an 'error' from Robocopy </summary>
+        /// <summary> Occurs when the Process reports an error prior to starting the robocopy process, not an 'error' from Robocopy </summary>
         void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
@@ -636,7 +637,8 @@ namespace RoboSharp
 
         bool disposed = false;
 
-        /// <inheritdoc cref="IDisposable.Dispose"/>>
+        /// <summary>Dispose of this object. Kills RoboCopy process if <see cref="StopIfDisposing"/> == true &amp;&amp; <see cref="IsSchedsuled"/> == false. </summary>
+        /// <remarks><inheritdoc cref="IDisposable.Dispose" path="/summary"/></remarks>
         public void Dispose()
         {
             Dispose(true);
@@ -663,13 +665,14 @@ namespace RoboSharp
 
             }
 
-            if (StopIfDisposing)
+            if (StopIfDisposing && !IsSchedsuled)
             {
                 Stop();
             }
                 
             //Release any hooks to the process, but allow it to continue running
             process?.Dispose();
+            process = null; 
 
             disposed = true;
         }

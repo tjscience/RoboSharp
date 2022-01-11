@@ -151,6 +151,17 @@ namespace RoboSharp.BackupApp
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
                 copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
+            if (!string.IsNullOrWhiteSpace(RunHoursStartTime.Text)  && !string.IsNullOrWhiteSpace(RunHoursEndTime.Text))
+            {
+                var s = $"{RunHoursStartTime.Text}-{RunHoursEndTime.Text}";
+                if (copy.CopyOptions.CheckRunHoursString(s))
+                    copy.CopyOptions.RunHours = s;
+                else
+                {
+                    MessageBox.Show("Invalid RunHours Format");
+                    return null;
+                }
+            }
 
             // select options
             copy.SelectionOptions.OnlyCopyArchiveFiles = OnlyCopyArchiveFiles.IsChecked ?? false;
@@ -254,6 +265,7 @@ namespace RoboSharp.BackupApp
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
             copy = GetCommand(true);
+            if (copy == null) return;
             copy.Start();
             OptionsGrid.IsEnabled = false;
             SingleJobExpander_Progress.IsExpanded = true;
@@ -308,7 +320,9 @@ namespace RoboSharp.BackupApp
         {
             if (!RoboQueue.IsRunning)
             {
-                RoboQueue.AddCommand(GetCommand(false));
+                var copy = GetCommand(false);
+                if (copy == null) return;
+                RoboQueue.AddCommand(copy);
                 btnStartJobQueue.IsEnabled = true;
                 btnStartJobQueue_Copy.IsEnabled = true;
             }

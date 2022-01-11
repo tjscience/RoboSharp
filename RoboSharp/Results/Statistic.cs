@@ -603,7 +603,7 @@ namespace RoboSharp.Results
                 case 8: PropertyChanged?.Invoke(this, eFailed); return;
                 case 16: PropertyChanged?.Invoke(this, eMismatch); return;
                 case 32: PropertyChanged?.Invoke(this, eSkipped); return;
-                default: PropertyChanged?.Invoke(this, new StatChangedEventArg(this, eTotal.OldValue, eTotal.NewValue, String.Empty)); return;
+                default: PropertyChanged?.Invoke(this, new StatChangedEventArg(this, eTotal?.OldValue ?? 0, eTotal?.NewValue ?? 0, String.Empty)); return;
             }
         }
 
