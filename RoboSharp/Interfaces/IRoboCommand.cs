@@ -8,10 +8,25 @@ namespace RoboSharp.Interfaces
     public interface IRoboCommand
     {
         #region Properties
-        
+
+        /// <inheritdoc cref="RoboCommand.Name"/>
+        string Name { get; }
+
         /// <inheritdoc cref="RoboCommand.IsPaused"/>
         bool IsPaused { get; }
-        
+
+        /// <inheritdoc cref="RoboCommand.IsRunning"/>
+        bool IsRunning { get; }
+
+        /// <inheritdoc cref="RoboCommand.IsScheduled"/>
+        bool IsScheduled{ get; }
+
+        /// <inheritdoc cref="RoboCommand.StopIfDisposing"/>
+        bool StopIfDisposing { get; }
+
+        /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
+        IProgressEstimator IProgressEstimator { get; }
+
         /// <inheritdoc cref="RoboCommand.IsPaused"/>
         string CommandOptions { get; }
         
@@ -48,6 +63,9 @@ namespace RoboSharp.Interfaces
         
         /// <inheritdoc cref="RoboCommand.OnCopyProgressChanged"/>
         event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
+
+        /// <inheritdoc cref="RoboCommand.OnProgressEstimatorCreated"/>
+        event RoboCommand.ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
         #endregion Events
 

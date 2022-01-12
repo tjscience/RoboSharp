@@ -78,6 +78,8 @@ namespace RoboSharp
         public bool IsRunning { get { return isRunning; } }
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
+        /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled to only operate within specified timeframe). Otherwise False. </summary>
+        public bool IsScheduled { get => !String.IsNullOrWhiteSpace(CopyOptions.RunHours); }
         /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
