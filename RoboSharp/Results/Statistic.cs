@@ -690,36 +690,9 @@ namespace RoboSharp.Results
         }
 
         #endregion Subtract
+
+
+
+
     }
-
-    /// <summary>
-    /// EventArgs provided by <see cref="Statistic.PropertyChanged"/> and other Events generated from a <see cref="Statistic"/> object.
-    /// </summary>
-    public class StatChangedEventArg : PropertyChangedEventArgs
-    {
-        private StatChangedEventArg():base("") { }
-        internal StatChangedEventArg(Statistic stat, long oldValue, long newValue, string PropertyName) : base(PropertyName)
-        {
-            StatType = stat.Type;
-            OldValue = oldValue;
-            NewValue = newValue;
-        }
-
-
-        /// <inheritdoc cref="Statistic.Type"/>
-        public Statistic.StatType StatType { get; }
-
-        /// <summary> Old Value of the object </summary>
-        public long OldValue { get; }
-        
-        /// <summary> Current Value of the object </summary>
-        public long NewValue { get; }
-
-        /// <summary>
-        /// Result of NewValue - OldValue
-        /// </summary>
-        public long Difference => NewValue - OldValue;
-    }
-
-
 }
