@@ -1,12 +1,60 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace RoboSharp
 {
     /// <summary>
     /// RoboCopy Switches that determine which folders and files are selected for copying/moving
     /// </summary>
-    public class SelectionOptions
+    public class SelectionOptions : ICloneable
     {
+        #region Constructors 
+
+        /// <summary>
+        /// Create new SelectionOptions with Default Settings
+        /// </summary>
+        public SelectionOptions() { }
+
+        /// <summary>
+        /// Clone a SelectionOptions Object
+        /// </summary>
+        public SelectionOptions(SelectionOptions options)
+        {
+            OnlyCopyArchiveFiles = options.OnlyCopyArchiveFiles;
+            OnlyCopyArchiveFilesAndResetArchiveFlag = options.OnlyCopyArchiveFilesAndResetArchiveFlag;
+            IncludeAttributes = options.IncludeAttributes;
+            ExcludeAttributes = options.ExcludeAttributes;
+            ExcludeFiles = options.ExcludeFiles;
+            ExcludeDirectories = options.ExcludeDirectories;
+            ExcludeChanged = options.ExcludeChanged;
+            ExcludeNewer = options.ExcludeNewer;
+            ExcludeOlder = options.ExcludeOlder;
+            ExcludeExtra = options.ExcludeExtra;
+            ExcludeLonely = options.ExcludeLonely;
+            IncludeSame = options.IncludeSame;
+            IncludeTweaked = options.IncludeTweaked;
+            MaxFileSize = options.MaxFileSize;
+            MinFileSize = options.MinFileSize;
+            MaxFileAge = options.MaxFileAge;
+            MinFileAge = options.MinFileAge;
+            MaxLastAccessDate = options.MaxLastAccessDate;
+            MinLastAccessDate = options.MinLastAccessDate;
+            ExcludeJunctionPoints = options.ExcludeJunctionPoints;
+            UseFatFileTimes = options.UseFatFileTimes;
+            CompensateForDstDifference = options.CompensateForDstDifference; ;
+            ExcludeJunctionPointsForFiles = options.ExcludeJunctionPointsForFiles;
+
+        }
+
+        /// <summary>
+        /// Clone this SelectionOptions Object
+        /// </summary>
+        public SelectionOptions Clone() => new SelectionOptions(this);
+
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
         #region Option Constants
 
         private const string ONLY_COPY_ARCHIVE_FILES = "/A ";

@@ -14,23 +14,80 @@ namespace RoboSharp
     /// <summary>
     /// Wrapper for the RoboCopy process
     /// </summary>
-    public class RoboCommand : IDisposable, IRoboCommand
+    public class RoboCommand : IDisposable, IRoboCommand, ICloneable
     {
         #region < Constructors >
 
         /// <summary>Create a new RoboCommand object</summary>
-        public RoboCommand() { Init(); }
+        public RoboCommand()
+        {
+            InitClassProperties();
+            Init();
+        }
 
         /// <inheritdoc cref="Init"/>
         public RoboCommand(string name, bool stopIfDisposing = true)
         {
-            Init(name);
+            InitClassProperties();
+            Init(name, stopIfDisposing);
         }
 
         /// <inheritdoc cref="Init"/>
-        public RoboCommand(string source, string destination, string name = "", bool stopIfDisposing = true)
+        public RoboCommand(string source, string destination, bool stopIfDisposing = true)
         {
+            InitClassProperties();
+            Init("", stopIfDisposing, source, destination);
+
+        }
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name, bool stopIfDisposing = true)
+        {
+            InitClassProperties();
             Init(name, stopIfDisposing, source, destination);
+        }
+
+        /// <remarks> Each of the Options objects can be specified within this constructor. If left = null, a new object will be generated using the default options for that object. </remarks>
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string name, string source = null, string destination = null, bool StopIfDisposing = true, RoboSharpConfiguration configuration = null, CopyOptions copyOptions = null, SelectionOptions selectionOptions = null, RetryOptions retryOptions = null, LoggingOptions loggingOptions = null)
+        {
+            this.configuration = configuration ?? new RoboSharpConfiguration();
+            this.copyOptions = copyOptions ?? new CopyOptions();
+            this.selectionOptions = selectionOptions ?? new SelectionOptions();
+            this.retryOptions = retryOptions ?? new RetryOptions();
+            this.loggingOptions = loggingOptions ?? new LoggingOptions();
+            Init(name, StopIfDisposing, source ?? CopyOptions.Source, destination ?? CopyOptions.Destination);
+        }
+
+        /// <summary>
+        /// Create a new RoboCommand with identical options at this RoboCommand
+        /// </summary>
+        /// <remarks>
+        /// If Desired, the new RoboCommand object will share some of the same Property objects as the input <paramref name="command"/>. 
+        /// For Example, that means that if a SelectionOption property changes, it will affect both RoboCommand objects since the  <see cref="SelectionOptions"/> property is shared between them. <br/>
+        /// If the Link* options are set to FALSE (default), then it will create new property objects whose settings match the current settings of <paramref name="command"/>.
+        /// <para/> Properties that can be linked: <br/>
+        /// <see cref="Configuration"/> ( Linked by default ) <br/>
+        /// <see cref="RetryOptions"/> ( Linked by default )<br/>
+        /// <see cref="SelectionOptions"/><br/>
+        /// <see cref="LoggingOptions"/><br/>
+        /// </remarks>
+        /// <param name="command">RoboCommand to Clone</param>
+        /// <param name="NewSource">Specify a new source if desired. If left as null, will use Source from <paramref name="command"/></param>
+        /// <param name="NewDestination">Specify a new source if desired. If left as null, will use Destination from <paramref name="command"/></param>
+        /// <param name="LinkConfiguration">Link the <see cref="Configuration"/> of the two commands ( True Default )</param>
+        /// <param name="LinkLoggingOptions">Link the <see cref="LoggingOptions"/> of the two commands</param>
+        /// <param name="LinkRetryOptions">Link the <see cref="RetryOptions"/> of the two commands ( True Default )</param>
+        /// <param name="LinkSelectionOptions">Link the <see cref="SelectionOptions"/> of the two commands</param>
+        public RoboCommand(RoboCommand command, string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false)
+        {
+            Name = command.Name;
+            StopIfDisposing = command.StopIfDisposing;
+
+            copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
+            selectionOptions = LinkSelectionOptions ? command.selectionOptions : command.SelectionOptions.Clone();
+            retryOptions = LinkRetryOptions ? command.retryOptions : command.retryOptions.Clone();
+            loggingOptions = LinkLoggingOptions ? command.loggingOptions: command.loggingOptions.Clone();
+            configuration = LinkConfiguration ? command.configuration : command.configuration.Clone();
         }
 
         /// <summary>Create a new RoboCommand object</summary>
@@ -38,7 +95,7 @@ namespace RoboSharp
         /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
         /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
         /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
-        private void Init(string name = "", bool stopIfDisposing = false, string source = "", string destination = "")
+        private void Init(string name = "", bool stopIfDisposing = true, string source = "", string destination = "")
         {
             Name = name;
             StopIfDisposing = stopIfDisposing;
@@ -46,10 +103,33 @@ namespace RoboSharp
             CopyOptions.Destination = destination;
         }
 
+        private void InitClassProperties()
+        {
+            copyOptions = new CopyOptions();
+            selectionOptions = new SelectionOptions();
+            retryOptions = new RetryOptions();
+            loggingOptions = new LoggingOptions();
+            configuration = new RoboSharpConfiguration();
+        }
+
+        /// <inheritdoc cref="RoboCommand.RoboCommand(RoboCommand, string, string, bool, bool, bool, bool)"/>
+        public RoboCommand Clone(string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false)
+            => new RoboCommand(this, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions);
+
+        object ICloneable.Clone() => new RoboCommand(this, null, null, false, false, false, false);
+
         #endregion
 
         #region < Private Vars >
 
+        // set up in Constructor
+        private CopyOptions copyOptions;
+        private SelectionOptions selectionOptions;
+        private RetryOptions retryOptions;
+        private LoggingOptions loggingOptions;
+        private RoboSharpConfiguration configuration;
+        
+        // Modified while running
         private Process process;
         private Task backupTask;
         private bool hasError;
@@ -57,12 +137,6 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
-        private CopyOptions copyOptions = new CopyOptions();
-        private SelectionOptions selectionOptions = new SelectionOptions();
-        private RetryOptions retryOptions = new RetryOptions();
-        private LoggingOptions loggingOptions = new LoggingOptions();
-        private RoboSharpConfiguration configuration = new RoboSharpConfiguration();
-
         private Results.ResultsBuilder resultsBuilder;
         private Results.RoboCopyResults results;
 
@@ -86,25 +160,25 @@ namespace RoboSharp
         public CopyOptions CopyOptions
         {
             get { return copyOptions; }
-            set { copyOptions = value; }
+            set { copyOptions = value ?? copyOptions; }
         }
         /// <inheritdoc cref="RoboSharp.SelectionOptions"/>
         public SelectionOptions SelectionOptions
         {
             get { return selectionOptions; }
-            set { selectionOptions = value; }
+            set { selectionOptions = value ?? selectionOptions; }
         }
         /// <inheritdoc cref="RoboSharp.RetryOptions"/>
         public RetryOptions RetryOptions
         {
             get { return retryOptions; }
-            set { retryOptions = value; }
+            set { retryOptions = value ?? retryOptions; }
         }
         /// <inheritdoc cref="RoboSharp.LoggingOptions"/>
         public LoggingOptions LoggingOptions
         {
             get { return loggingOptions; }
-            set { loggingOptions = value; }
+            set { loggingOptions = value ?? loggingOptions; }
         }
         /// <inheritdoc cref="RoboSharp.RoboSharpConfiguration"/>
         public RoboSharpConfiguration Configuration
@@ -501,6 +575,9 @@ namespace RoboSharp
             isPaused = false;
         }
 
+
+        #region < Other Public Methods >
+
         /// <inheritdoc cref="Results.RoboCopyResults"/>
         /// <returns>The RoboCopyResults object from the last run</returns>
         public Results.RoboCopyResults GetResults()
@@ -511,6 +588,7 @@ namespace RoboSharp
         /// <summary>
         /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
         /// </summary>
+        /// <returns></returns>
         private string GenerateParameters()
         {
             Debugger.Instance.DebugMessage("Generating parameters...");
@@ -527,6 +605,14 @@ namespace RoboSharp
             return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
                 parsedRetryOptions, parsedLoggingOptions);
         }
+
+        /// <inheritdoc cref="GenerateParameters"/>
+        public override string ToString()
+        {
+            return GenerateParameters();
+        }
+
+        #endregion
 
         #region < IDisposable Implementation >
 

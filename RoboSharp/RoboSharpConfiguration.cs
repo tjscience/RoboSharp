@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -7,10 +8,51 @@ namespace RoboSharp
     /// <summary>
     /// Setup the ErrorToken and the path to RoboCopy.exe.
     /// </summary>
-    public class RoboSharpConfiguration
+    public class RoboSharpConfiguration : ICloneable
     {
+        #region Constructors 
 
-        private static readonly IDictionary<string, RoboSharpConfiguration> 
+        /// <summary>
+        /// Create new LoggingOptions with Default Settings
+        /// </summary>
+        public RoboSharpConfiguration() { }
+
+        /// <summary>
+        /// Clone a RoboSharpConfiguration Object
+        /// </summary>
+        /// <param name="options">RoboSharpConfiguration object to clone</param>
+        public RoboSharpConfiguration(RoboSharpConfiguration options)
+        {
+            errorToken = options.errorToken;
+            errorTokenRegex = options.errorTokenRegex;
+            roboCopyExe = options.roboCopyExe;
+
+            #region < File Tokens >
+            newFileToken = options.newFileToken;
+            olderToken = options.olderToken;
+            newerToken = options.newerToken;
+            sameToken = options.sameToken;
+            extraToken = options.extraToken;
+            mismatchToken = options.mismatchToken;
+            failedToken = options.failedToken;
+            #endregion
+
+            #region < Directory Tokens >
+            newerDirToken = options.newerDirToken;
+            extraDirToken = options.extraDirToken;
+            existingDirToken = options.existingDirToken;
+            #endregion
+
+        }
+
+        /// <inheritdoc cref="RoboSharpConfiguration.RoboSharpConfiguration(RoboSharpConfiguration)"/>
+        public RoboSharpConfiguration Clone() => new RoboSharpConfiguration(this);
+
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
+        private static readonly IDictionary<string, RoboSharpConfiguration>
             defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
         {
             {"en", new RoboSharpConfiguration { ErrorToken = "ERROR"} }, //en uses Defaults for LogParsing properties
@@ -24,7 +66,8 @@ namespace RoboSharp
         public string ErrorToken
         {
             get { return errorToken ?? GetDefaultConfiguration().ErrorToken; }
-            set {
+            set
+            {
                 if (value != errorToken) ErrRegexInitRequired = true;
                 errorToken = value;
             }
@@ -177,7 +220,7 @@ namespace RoboSharp
                 return defaultConfigurations[currentLanguageTag];
 
             // check for default with language Tag xx (e.g. en)
-            var match = Regex.Match(currentLanguageTag, @"^\w+");
+            var match = Regex.Match(currentLanguageTag, @"^\w+", RegexOptions.Compiled);
             if (match.Success)
             {
                 var currentMainLanguageTag = match.Value;
