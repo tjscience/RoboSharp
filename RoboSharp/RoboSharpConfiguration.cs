@@ -224,6 +224,14 @@ namespace RoboSharp
         }
         private string roboCopyExe = null;
 
+        /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
+        /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardOutputEncoding" path="/summary"/>
+        public System.Text.Encoding StandardOutputEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
+        /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
+        /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardErrorEncoding" path="/summary"/>
+        public System.Text.Encoding StandardErrorEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
         private RoboSharpConfiguration GetDefaultConfiguration()
         {
             // check for default with language Tag xx-YY (e.g. en-US)

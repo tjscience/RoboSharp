@@ -394,6 +394,10 @@ namespace RoboSharp
 
                 process = new Process();
 
+                //Declare Encoding
+                process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
+                process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
+
                 if (!string.IsNullOrEmpty(domain))
                 {
                     Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
