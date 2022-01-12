@@ -218,9 +218,9 @@
                 </Grid>
             </TabItem>
             <!-- Single-Job Tab -->
-            <TabItem x:Name="SingleJobTab" Header="Single Job" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="83" Margin="0,0,0,0">
+            <TabItem x:Name="SingleJobTab" Header="Single Job ( RoboCommand )" HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="Auto" Margin="0,0,0,0">
                 <Grid x:Name="SingleJobTabGrid" Background="#FFE5E5E5">
-                    <ScrollViewer HorizontalAlignment="Left" Height="578" Margin="10,55,0,0" VerticalAlignment="Top" Width="693" Grid.ColumnSpan="4">
+                    <ScrollViewer HorizontalAlignment="Center" Height="Auto" Margin="0,10,5,0" VerticalAlignment="Top" Width="693" Grid.ColumnSpan="4">
                         <StackPanel>
                             <local:MultiJob_CommandProgressIndicator x:Name="SingleJobExpander_Progress" RenderTransformOrigin="0.5,0.5" Background="LightBlue"/>
                             <Expander x:Name="SingleJobExpander_Errors" Background="LightGreen" Header="Errors">
