@@ -113,7 +113,10 @@ namespace RoboSharp
         /// <remarks>
         /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
         /// </remarks>
-        public Results.ProgressEstimator ProgressEstimator { get; private set; }
+        internal Results.ProgressEstimator ProgressEstimator { get; private set; }
+
+        /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
+        public IProgressEstimator IProgressEstimator => this.ProgressEstimator;
 
         /// <summary>
         /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called.<br/>
