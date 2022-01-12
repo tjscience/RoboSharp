@@ -384,6 +384,7 @@ namespace RoboSharp
             #endregion
 
             isRunning = !cancellationToken.IsCancellationRequested;
+            DateTime StartTime = DateTime.Now;
 
             backupTask = Task.Factory.StartNew(() =>
             {
@@ -452,7 +453,7 @@ namespace RoboSharp
                 
                 //Raise event announcing results are available
                 if (!hasError)
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
             });
 
             return continueWithTask;
