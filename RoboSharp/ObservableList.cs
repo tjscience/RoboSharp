@@ -2,6 +2,10 @@
 using System.Runtime.CompilerServices;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
+using System.Threading;
+#if NET40_OR_GREATER
+using System.Windows.Threading;
+#endif
 
 namespace System.Collections.Generic
 {
@@ -28,21 +32,79 @@ namespace System.Collections.Generic
 
         #endregion
 
-        #region < Properties >
-
-        #endregion
-
         #region < Events >
-
-        /// <summary>
-        /// Raise the <see cref="CollectionChanged"/> event. <para/>
-        /// Override this method to provide post-processing of Added/Removed items within derived classes.
-        /// </summary>
-        /// <param name="e"></param>
-        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) => CollectionChanged?.Invoke(this, e);
 
         /// <summary> This event fires whenever the List's array is updated. </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        /// <summary>
+        /// Raise the <see cref="CollectionChanged"/> event. <br/>
+        /// <para/>
+        /// Override this method to provide post-processing of Added/Removed items within derived classes.
+        /// </summary>
+        /// <param name="e"></param>
+        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            // This Syncronization code was taken from here: https://stackoverflow.com/a/54733415/12135042
+            // This ensures that the CollectionChanged event is invoked from the proper thread, no matter where the change came from.
+
+            if (SynchronizationContext.Current == _synchronizationContext)
+            {
+                // Execute the CollectionChanged event on the current thread
+                CollectionChanged?.Invoke(this, e);
+            }
+            else
+            {
+                // Raises the CollectionChanged event on the creator thread
+                _synchronizationContext.Send((callback) => CollectionChanged?.Invoke(this, e), null);
+            }
+        }
+        private SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
+
+        #region < Alternate methods for OnCollectionChanged + reasoning why it wasn't used >
+
+        /*
+         * This standard method cannot be used because RoboQueue is adding results onto the ResultsLists as they complete, which means the events may not be on the original thread that RoboQueue was constructed in.
+         * protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e) => CollectionChanged?.Invoke(this, e);
+         */
+
+        // --------------------------------------------------------------------------------------------------------------
+
+        /*
+         * This code was taken from here: https://www.codeproject.com/Articles/64936/Threadsafe-ObservableImmutable-Collection
+         * It works, but its a bit more involved since it loops through all handlers.
+         * This was not used due to being unavailable in some targets. (Same reasoning for creating new class instead of class provided by above link)
+         */
+
+        //        /// <summary>
+        //        /// Raise the <see cref="CollectionChanged"/> event. <para/>
+        //        /// Override this method to provide post-processing of Added/Removed items within derived classes.
+        //        /// </summary>
+        //        /// <param name="e"></param>
+        //        protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        //        {
+        //            var notifyCollectionChangedEventHandler = CollectionChanged;
+
+        //            if (notifyCollectionChangedEventHandler == null)
+        //                return;
+
+        //            foreach (NotifyCollectionChangedEventHandler handler in notifyCollectionChangedEventHandler.GetInvocationList())
+        //            {
+        //#if NET40_OR_GREATER
+        //                var dispatcherObject = handler.Target as DispatcherObject;
+
+        //                if (dispatcherObject != null && !dispatcherObject.CheckAccess())
+        //                {
+        //                    dispatcherObject.Dispatcher.Invoke(handler, this, e);
+        //                }
+        //                else
+        //#endif
+        //                    handler(this, e); // note : this does not execute handler in target thread's context
+        //            }
+        //        }
+
+        // --------------------------------------------------------------------------------------------------------------
+        #endregion
 
         #endregion
 
