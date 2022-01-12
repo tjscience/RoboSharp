@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using RoboSharp.Interfaces;
 
-namespace RoboSharp.Results
+// Do Not change NameSpace here! -> Must be RoboSharp due to prior releases
+namespace RoboSharp.EventArgObjects
 {
     /// <summary>
     /// Reports that a ProgressEstimator object is now available for binding
@@ -12,15 +14,15 @@ namespace RoboSharp.Results
     {
         private ProgressEstimatorCreatedEventArgs() : base() { }
 
-        internal ProgressEstimatorCreatedEventArgs(ProgressEstimator estimator) : base()
+        internal ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
         {
             ResultsEstimate = estimator;
         }
 
         /// <summary>
-        /// <inheritdoc cref="ProgressEstimator"/>
+        /// <inheritdoc cref="Results.ProgressEstimator"/>
         /// </summary>
-        public ProgressEstimator ResultsEstimate { get; }
+        public IProgressEstimator ResultsEstimate { get; }
         
     }
 }
