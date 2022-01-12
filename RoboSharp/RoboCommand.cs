@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Interfaces;
+using RoboSharp.EventArgObjects;
 
 namespace RoboSharp
 {
@@ -131,7 +132,7 @@ namespace RoboSharp
 
         /// <summary>Handles <see cref="OnCommandError"/></summary>
         public delegate void CommandErrorHandler(RoboCommand sender, CommandErrorEventArgs e);
-        /// <summary>Occurs when an error occurs while generating the command</summary>
+        /// <summary>Occurs when an error occurs while generating the command that prevents the RoboCopy process from starting.</summary>
         public event CommandErrorHandler OnCommandError;
 
         /// <summary>Handles <see cref="OnError"/></summary>
@@ -150,7 +151,7 @@ namespace RoboSharp
         public event CopyProgressHandler OnCopyProgressChanged;
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
-        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e);
+        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, ProgressEstimatorCreatedEventArgs e);
         /// <summary>
         /// Occurs when a <see cref="Results.ProgressEstimator"/> is created during <see cref="Start"/>, allowing binding to occur within the event subscriber. <br/>
         /// This event will occur once per Start.
@@ -322,7 +323,7 @@ namespace RoboSharp
             #region Check Source and Destination
 
 #if NET40_OR_GREATER
-            // Authentificate on Target Server -- Create user if username is provided, else null
+            // Authenticate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
 #endif
 
@@ -392,7 +393,7 @@ namespace RoboSharp
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
+                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
 
                 process = new Process();
 

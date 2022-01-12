@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using RoboSharp.EventArgObjects;
 
 namespace RoboSharp.Results
 {
