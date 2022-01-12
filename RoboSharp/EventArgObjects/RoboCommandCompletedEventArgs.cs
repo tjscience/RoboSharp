@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
+using RoboSharp.EventArgObjects;
 
+// Do Not change NameSpace here! -> Must be RoboSharp due to prior releases
 namespace RoboSharp
 {
     /// <summary>
     /// <inheritdoc cref="Results.RoboCopyResults"/>
     /// </summary>
-    public class RoboCommandCompletedEventArgs : EventArgs
+    public class RoboCommandCompletedEventArgs : TimeSpanEventArgs
     {
         /// <summary>
         /// Return the Results object
         /// </summary>
         /// <param name="results"></param>
-        public RoboCommandCompletedEventArgs(Results.RoboCopyResults results)
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        internal RoboCommandCompletedEventArgs(Results.RoboCopyResults results, DateTime startTime, DateTime endTime) : base(startTime, endTime)
         {
             this.Results = results;
         }
