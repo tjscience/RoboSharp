@@ -120,6 +120,15 @@ namespace RoboSharp.Results
 
         #endregion
 
+        #region < Events >
+
+        /// <summary>
+        /// Delegate for objects to send notification that the list behind an <see cref="IRoboCopyResultsList"/> interface has been updated
+        /// </summary>
+        public delegate void ResultsListUpdated(object sender, ResultListUpdatedEventArgs e);
+
+        #endregion
+
         #region < Public Properties >
 
         /// <summary> Sum of all DirectoryStatistics objects </summary>
