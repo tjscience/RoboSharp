@@ -14,24 +14,38 @@ namespace RoboSharp.BackupApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        RoboCommand copy;
+        #region < SingleJob Fields >
 
-        public ObservableCollection<FileError> Errors = new ObservableCollection<FileError>();
+        RoboCommand copy;
+        public ObservableCollection<FileError> SingleJobErrors = new ObservableCollection<FileError>();
+        private Results.RoboCopyResultsList SingleJobResults = new Results.RoboCopyResultsList();
+
+        #endregion
+
 
         private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+        #region < Init >
 
         public MainWindow()
         {
             InitializeComponent();
+            this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
             JobResults.CollectionChanged += UpdateOverallLabel;
             ListBox_JobResults.ItemsSource = JobResults;
-            ErrorGrid.ItemsSource = Errors;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
 
             //UnitTests
             new ObservableListTester().RunTest(); // Test ObservableList works properly
+
+            //Setup SingleJob Tab
+            SingleJobExpander_JobHistory.BindToList(SingleJobResults);
+            SingleJobErrorGrid.ItemsSource = SingleJobErrors;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
 
         }
 
@@ -44,29 +58,26 @@ namespace RoboSharp.BackupApp
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            OptionsGrid.IsEnabled = false;
-            ProgressTab.IsSelected = true;
-            ProgressGrid.IsEnabled = true;
-            Backup();
-        }
+        #endregion
 
-        public void Backup()
+        #region < Shared Methods >
+
+        private RoboCommand GetCommand(bool BindEvents)
         {
             Debugger.Instance.DebugMessageEvent += DebugMessage;
-
-            copy = new RoboCommand();
-            copy.OnFileProcessed += copy_OnFileProcessed;
-            copy.OnCommandError += copy_OnCommandError;
-            copy.OnError += copy_OnError;
-            copy.OnCopyProgressChanged += copy_OnCopyProgressChanged;
-            copy.OnCommandCompleted += copy_OnCommandCompleted;
-            //Progress Estimator
-            copy.OnProgressEstimatorCreated += Copy_OnProgressEstimatorCreated;
+            RoboCommand copy = new RoboCommand();
+            if (BindEvents)
+            {
+                SingleJobExpander_Progress.BindToCommand(copy);
+                copy.OnCommandError += copy_OnCommandError;
+                copy.OnError += copy_OnError;
+                copy.OnCommandCompleted += copy_OnCommandCompleted;
+            }
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;
+
+            copy.Name = JobName.Text;
 
             // split user input by whitespace, mantaining those enclosed by quotes
             var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
@@ -102,6 +113,17 @@ namespace RoboSharp.BackupApp
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
                 copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
+            if (!string.IsNullOrWhiteSpace(RunHoursStartTime.Text)  && !string.IsNullOrWhiteSpace(RunHoursEndTime.Text))
+            {
+                var s = $"{RunHoursStartTime.Text}-{RunHoursEndTime.Text}";
+                if (copy.CopyOptions.CheckRunHoursString(s))
+                    copy.CopyOptions.RunHours = s;
+                else
+                {
+                    MessageBox.Show("Invalid RunHours Format");
+                    return null;
+                }
+            }
 
             // select options
             copy.SelectionOptions.OnlyCopyArchiveFiles = OnlyCopyArchiveFiles.IsChecked ?? false;
@@ -123,35 +145,40 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
-
-            copy.Start();
+            copy.StopIfDisposing = true;
+            return copy;
         }
 
-        private void Copy_OnProgressEstimatorCreated(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e)
         {
-            copy.ProgressEstimator.ByteStats.PropertyChanged += ByteStats_PropertyChanged;
-            copy.ProgressEstimator.DirStats.PropertyChanged += DirStats_PropertyChanged;
-            copy.ProgressEstimator.FileStats.PropertyChanged += FileStats_PropertyChanged;
-        }
 
-        private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            Dispatcher.Invoke(() => this.ProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        private void DirStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            Dispatcher.Invoke(() => ProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        private void ByteStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            Dispatcher.Invoke(() => this.ProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
         {
             Console.WriteLine(e.Message);
+        }
+
+        public static bool IsInt(string text)
+        {
+            Regex regex = new Regex("[^0-9]+$", RegexOptions.Compiled);
+            return !regex.IsMatch(text);
+        }
+
+        #endregion
+
+        #region < Single Job Methods >
+
+        private void StartButton_Click(object sender, RoutedEventArgs e)
+        {
+            copy = GetCommand(true);
+            if (copy == null) return;
+            copy.Start();
+            OptionsGrid.IsEnabled = false;
+            SingleJobExpander_Progress.IsExpanded = true;
+            SingleJobExpander_JobHistory.IsExpanded = false;
+            SingleJobExpander_Errors.IsExpanded = false;
+            SingleJobTab.IsSelected = true;
+            SingleJobExpander_Progress.ProgressGrid.IsEnabled = true;
         }
 
         void copy_OnCommandError(object sender, CommandErrorEventArgs e)
@@ -160,16 +187,7 @@ namespace RoboSharp.BackupApp
             {
                 MessageBox.Show(e.Error);
                 OptionsGrid.IsEnabled = true;
-                ProgressGrid.IsEnabled = false;
-            }));
-        }
-
-        void copy_OnCopyProgressChanged(object sender, CopyProgressEventArgs e)
-        {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                FileProgress.Value = e.CurrentFileProgress;
-                FileProgressPercent.Text = string.Format("{0}%", e.CurrentFileProgress);
+                SingleJobExpander_Progress.ProgressGrid.IsEnabled = false;
             }));
         }
 
@@ -177,18 +195,8 @@ namespace RoboSharp.BackupApp
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                Errors.Insert(0, new FileError { Error = e.Error });
-                ErrorsTab.Header = string.Format("Errors ({0})", Errors.Count);
-            }));
-        }
-
-        void copy_OnFileProcessed(object sender, FileProcessedEventArgs e)
-        {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                CurrentOperation.Text = e.ProcessedFile.FileClass;
-                CurrentFile.Text = e.ProcessedFile.Name;
-                CurrentSize.Text = e.ProcessedFile.Size.ToString();
+                SingleJobErrors.Insert(0, new FileError { Error = e.Error });
+                SingleJobExpander_Errors.Header = string.Format("Errors ({0})", SingleJobErrors.Count);
             }));
         }
 
@@ -197,28 +205,37 @@ namespace RoboSharp.BackupApp
             Dispatcher.BeginInvoke((Action)(() =>
             {
                 OptionsGrid.IsEnabled = true;
-                ProgressGrid.IsEnabled = false;
+                SingleJobExpander_Progress.ProgressGrid.IsEnabled = false;
 
                 var results = e.Results;
                 Console.WriteLine("Files copied: " + results.FilesStatistic.Copied);
                 Console.WriteLine("Directories copied: " + results.DirectoriesStatistic.Copied);
-                JobResults.Add(e.Results);
+                SingleJobResults.Add(e.Results);
             }));
         }
 
-        private void PauseResumeButton_Click(object sender, RoutedEventArgs e)
+
+
+        #endregion
+
         {
-            if (!copy.IsPaused)
             {
-                copy.Pause();
-                PauseResumeButton.Content = "Resume";
+        }
+
+        {
+            {
+
+        }
+
+        {
+            {
             }
             else
             {
-                copy.Resume();
-                PauseResumeButton.Content = "Pause";
             }
         }
+
+        #region < Options Page >
 
         private void SourceBrowseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -234,6 +251,21 @@ namespace RoboSharp.BackupApp
             Destination.Text = dialog.SelectedPath;
         }
 
+        #endregion
+
+        #region < Form Stuff >
+        {
+        }
+
+        {
+        }
+
+        {
+        }
+
+        {
+        }
+
         private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             e.Handled = !IsInt(e.Text);
@@ -241,7 +273,7 @@ namespace RoboSharp.BackupApp
 
         private void IsAttribute_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$"))
+            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
                 e.Handled = true;
             if ("bcefghijklmnpqrvwxyzBCEFGHIJKLMNPQRVWXYZ".Contains(e.Text))
                 e.Handled = true;
@@ -249,69 +281,12 @@ namespace RoboSharp.BackupApp
                 e.Handled = true;
         }
 
-        public static bool IsInt(string text)
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Regex regex = new Regex("[^0-9]+$");
-            return !regex.IsMatch(text);
+
         }
 
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (copy != null)
-            {
-                copy.Stop();
-                copy.Dispose();
-            }
-        }
-
-        private void UpdateSelectedItemsLabel(object sender, SelectionChangedEventArgs e)
-        {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
-            string NL = Environment.NewLine;
-            lbl_SelectedItemTotals.Content = $"Selected Job:" +
-                $"{NL}Source: {result?.Source ?? ""}" +
-                $"{NL}Destination: {result?.Destination ?? ""}" +
-                $"{NL}Total Directories: {result?.DirectoriesStatistic?.Total ?? 0}" +
-                $"{NL}Total Files: {result?.FilesStatistic?.Total ?? 0}" +
-                $"{NL}Total Size (bytes): {result?.BytesStatistic?.Total ?? 0}" +
-                $"{NL}Speed (Bytes/Second): {result?.SpeedStatistic?.BytesPerSec ?? 0}" +
-                $"{NL}Speed (MB/Min): {result?.SpeedStatistic?.MegaBytesPerMin ?? 0}" +
-                $"{NL}{result?.Status.ToString() ?? ""}";
-        }
-        
-        /// <summary>
-        /// Runs every time the JobResults list is updated.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void UpdateOverallLabel(object sender, EventArgs e)
-        {
-            string NL = Environment.NewLine;
-            lbl_OverallTotals.Content = $"Job History:" +
-                $"{NL}Total Directories: {JobResults.DirectoriesStatistic.Total}" +
-                $"{NL}Total Files: {JobResults.FilesStatistic.Total}" +
-                $"{NL}Total Size (bytes): {JobResults.BytesStatistic.Total}" +
-                $"{NL}Speed (Bytes/Second): {JobResults.SpeedStatistic.BytesPerSec}" +
-                $"{NL}Speed (MB/Min): {JobResults.SpeedStatistic.MegaBytesPerMin}" +
-                $"{NL}Any Jobs Cancelled: {(JobResults.Status.WasCancelled ? "YES" : "NO")}" +
-                $"{NL}{JobResults.Status.ToString()}";
-        }
-
-        private void Remove_Selected_Click(object sender, RoutedEventArgs e)
-        {
-            Results.RoboCopyResults result = (Results.RoboCopyResults)this.ListBox_JobResults.SelectedItem;
-
-            JobResults.Remove(result);
-
-            {
-                if (ListBox_JobResults.Items.Count == 0)
-                {
-                    lbl_OverallTotals.Content = "";
-                    lbl_SelectedItemTotals.Content = "";
-                }
-            }
-
-        }
+        #endregion
 
     }
 
