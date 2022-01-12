@@ -1,7 +1,10 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp
 {
@@ -74,4 +77,94 @@ namespace RoboSharp
         }
 
     }
+}
+
+
+namespace System.Threading
+
+{
+    internal static class ThreadEx
+    {
+
+        /// <param name="timeSpan"></param>
+        /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
+        /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        internal static bool CancellableSleep(TimeSpan timeSpan, CancellationToken token)
+        {
+            return CancellableSleep((int)timeSpan.TotalMilliseconds, token);
+        }
+
+        /// <summary>
+        /// Method that represents Task.Delay for all supported targets
+        /// </summary>
+        /// <remarks>
+        /// If Net40 uses Creates a timer and registers against the supplied token, then returns the underlying task from a <see cref="TaskCompletionSource{TResult}"/>.<br/>
+        /// Otherwise uses Task.Delay(int,CancellationToken)
+        /// </remarks>
+        /// <returns>True if timer has expired (full duration slep), otherwise false.</returns>
+        /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
+        /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        internal static bool CancellableSleep(int millisecondsTimeout, CancellationToken token)
+        {
+#if NET40
+            //https://stackoverflow.com/questions/15341962/how-to-put-a-task-to-sleep-or-delay-in-c-sharp-4-0
+            var tcs = new TaskCompletionSource<bool>();
+            bool ValidToken = token != null;
+
+            if (ValidToken && token.IsCancellationRequested)
+            {
+                tcs.TrySetCanceled();
+                return false;
+            }
+
+            Timer timer = null;
+            timer = new Timer(
+                (cb) =>
+                {
+                    timer.Dispose();        //stop the timer
+                    tcs.TrySetResult(true); //Set Completed
+                }
+            , null, millisecondsTimeout, Timeout.Infinite); //Run X ms starting now, only run once.
+
+            //Setup the Cancellation Token
+            if (ValidToken)
+                token.Register(() =>
+                {
+                    timer.Dispose();            //stop the timer
+                    tcs.TrySetResult(false);    //Set Cancelled
+                });
+
+            try
+            {
+                tcs.Task.Wait();   
+            }
+            catch
+            {
+                return false;
+            }
+            return tcs.Task.Result;
+#else
+            try 
+            {
+                Task.Delay(millisecondsTimeout, token).Wait();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+#endif
+        }
+
+
+
+
+    }
+
 }
