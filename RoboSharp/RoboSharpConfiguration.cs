@@ -81,14 +81,24 @@ namespace RoboSharp
         {
             get
             {
-                if (ErrRegexInitRequired | errorTokenRegex == null)
-                    errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+                if (ErrRegexInitRequired) goto RegenRegex;  //Regex Generation Required
+                else if (errorTokenRegex != null) return errorTokenRegex; //field already assigned -> return the field
+                else
+                {
+                    //Try get default, if default has regex defined, use that.
+                    errorTokenRegex = GetDefaultConfiguration().errorTokenRegex;
+                    if (errorTokenRegex != null) return errorTokenRegex;
+                }
+            // Generate a new Regex Statement
+            RegenRegex:
+                errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
                 ErrRegexInitRequired = false;
                 return errorTokenRegex;
             }
         }
-        private Regex errorTokenRegex;
         private bool ErrRegexInitRequired;
+        /// <summary> Field backing <see cref="ErrorTokenRegex"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
+        private bool ErrRegexInitRequired = false;
 
         #region < Tokens for Log Parsing >
 
@@ -99,7 +109,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewFile
         {
-            get { return newFileToken ?? "New File"; }
+            get { return newFileToken ?? GetDefaultConfiguration().newFileToken ?? "New File"; }
             set { newFileToken = value; }
         }
         private string newFileToken;
@@ -109,7 +119,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_OlderFile
         {
-            get { return olderToken ?? "Older"; }
+            get { return olderToken ?? GetDefaultConfiguration().olderToken ??  "Older"; }
             set { olderToken = value; }
         }
         private string olderToken;
@@ -119,7 +129,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewerFile
         {
-            get { return newerToken ?? "Newer"; }
+            get { return newerToken ?? GetDefaultConfiguration().newerToken ?? "Newer"; }
             set { newerToken = value; }
         }
         private string newerToken;
@@ -129,7 +139,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_SameFile
         {
-            get { return sameToken ?? "same"; }
+            get { return sameToken ?? GetDefaultConfiguration().sameToken ?? "same"; }
             set { sameToken = value; }
         }
         private string sameToken;
@@ -139,7 +149,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExtraFile
         {
-            get { return extraToken ?? "*EXTRA File"; }
+            get { return extraToken ?? GetDefaultConfiguration().extraToken ?? "*EXTRA File"; }
             set { extraToken = value; }
         }
         private string extraToken;
@@ -149,7 +159,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_MismatchFile
         {
-            get { return mismatchToken ?? "*Mismatch"; } // TO DO: Needs Verification
+            get { return mismatchToken ?? GetDefaultConfiguration().mismatchToken ?? "*Mismatch"; } // TO DO: Needs Verification
             set { mismatchToken = value; }
         }
         private string mismatchToken;
@@ -159,7 +169,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_FailedFile
         {
-            get { return failedToken ?? "*Failed"; } // TO DO: Needs Verification
+            get { return failedToken ?? GetDefaultConfiguration().failedToken ?? "*Failed"; } // TO DO: Needs Verification
             set { failedToken = value; }
         }
         private string failedToken;
@@ -173,7 +183,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewDir
         {
-            get { return newerDirToken ?? "New Dir"; } 
+            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken  ?? "New Dir"; }
             set { newerDirToken = value; }
         }
         private string newerDirToken;
@@ -183,7 +193,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExtraDir
         {
-            get { return extraDirToken ?? "*EXTRA Dir"; }
+            get { return extraDirToken ?? GetDefaultConfiguration().extraDirToken ?? "*EXTRA Dir"; }
             set { extraDirToken = value; }
         }
         private string extraDirToken;
@@ -193,7 +203,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExistingDir
         {
-            get { return existingDirToken ?? "Existing Dir"; }
+            get { return existingDirToken ?? GetDefaultConfiguration().existingDirToken ?? "Existing Dir"; }
             set { existingDirToken = value; }
         }
         private string existingDirToken;
