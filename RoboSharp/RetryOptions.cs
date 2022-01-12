@@ -1,12 +1,39 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace RoboSharp
 {
     /// <summary>
     /// RoboCopy switches for how to react if a copy/move operation errors
     /// </summary>
-    public class RetryOptions
+    public class RetryOptions : ICloneable
     {
+        #region Constructors 
+
+        /// <summary>
+        /// Create new RetryOptions with Default Settings
+        /// </summary>
+        public RetryOptions() { }
+
+        /// <summary>
+        /// Clone a RetryOptions Object
+        /// </summary>
+        /// <param name="options">RetryOptions object to clone</param>
+        public RetryOptions(RetryOptions options)
+        {
+            WaitForSharenames = options.WaitForSharenames;
+            SaveToRegistry = options.SaveToRegistry;
+            RetryWaitTime = options.RetryWaitTime;
+            RetryCount = options.RetryCount;
+        }
+
+        /// <inheritdoc cref="RetryOptions.RetryOptions(RetryOptions)"/>
+        public RetryOptions Clone() => new RetryOptions(this);
+
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
         internal const string RETRY_COUNT = "/R:{0} ";
         internal const string RETRY_WAIT_TIME = "/W:{0} ";
         internal const string SAVE_TO_REGISTRY = "/REG ";

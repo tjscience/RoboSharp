@@ -7,104 +7,11 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using RoboSharp.Interfaces;
+using RoboSharp.EventArgObjects;
 
 namespace RoboSharp.Results
 {
-    /// <summary>
-    /// Provide Read-Only access to a <see cref="Statistic"/> object
-    /// </summary>
-    public interface IStatistic : INotifyPropertyChanged
-    {
-
-        #region < Properties >
-
-        /// <summary>
-        /// Name of the Statistics Object
-        /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// <inheritdoc cref="Statistic.StatType"/>
-        /// </summary>
-        Statistic.StatType Type { get; }
-
-        /// <summary> Total Scanned during the run</summary>
-        long Total { get; }
-
-        /// <summary> Total Copied </summary>
-        long Copied { get; }
-
-        /// <summary> Total Skipped </summary>
-        long Skipped { get; }
-
-        /// <summary>  </summary>
-        long Mismatch { get; }
-
-        /// <summary> Total that failed to copy or move </summary>
-        long Failed { get; }
-
-        /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
-        long Extras { get; }
-
-        #endregion
-
-        #region < Events >
-
-        /// <inheritdoc cref="Statistic.PropertyChanged"/>
-        new event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary> Occurs when the <see cref="Total"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnTotalChanged;
-
-        /// <summary> Occurs when the <see cref="Copied"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnCopiedChanged;
-
-        /// <summary> Occurs when the <see cref="Skipped"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnSkippedChanged;
-
-        /// <summary> Occurs when the <see cref="Mismatch"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnMisMatchChanged;
-
-        /// <summary> Occurs when the <see cref="Failed"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnFailedChanged;
-
-        /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
-        event Statistic.StatChangedHandler OnExtrasChanged;
-
-        #endregion
-
-        #region < ToString Methods >
-
-        /// <inheritdoc cref="SpeedStatistic.ToString"/>
-        string ToString();
-
-        /// <inheritdoc cref="Statistic.ToString(bool, bool, string, bool)"/>
-        string ToString(bool IncludeType, bool IncludePrefix, string Delimiter, bool DelimiterAfterType=false);
-
-        /// <inheritdoc cref="Statistic.ToString_Type()"/>
-        string ToString_Type();
-
-        /// <inheritdoc cref="Statistic.ToString_Total(bool, bool)"/>
-        string ToString_Total(bool IncludeType = false, bool IncludePrefix = true);
-
-        /// <inheritdoc cref="Statistic.ToString_Copied"/>
-        string ToString_Copied(bool IncludeType = false, bool IncludePrefix = true);
-
-        /// <inheritdoc cref="Statistic.ToString_Extras"/>
-        string ToString_Extras(bool IncludeType = false, bool IncludePrefix = true);
-
-        /// <inheritdoc cref="Statistic.ToString_Failed"/>
-        string ToString_Failed(bool IncludeType = false, bool IncludePrefix = true);
-
-        /// <inheritdoc cref="Statistic.ToString_Mismatch"/>
-        string ToString_Mismatch(bool IncludeType = false, bool IncludePrefix = true);
-
-        /// <inheritdoc cref="Statistic.ToString_Skipped"/>
-        string ToString_Skipped(bool IncludeType = false, bool IncludePrefix = true);
-        
-        #endregion
-    }
-
     /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
     /// </summary>
@@ -124,6 +31,19 @@ namespace RoboSharp.Results
 
         /// <summary> Create a new Statistic object </summary>
         public Statistic(StatType type, string name) { Type = type; Name = name; }
+
+        /// <summary> Clone an existing Statistic object</summary>
+        public Statistic(Statistic stat)
+        {
+            Type = stat.Type;
+            NameField = stat.Name;
+            TotalField = stat.Total;
+            CopiedField = stat.Copied;
+            SkippedField = stat.Skipped;
+            MismatchField = stat.Mismatch;
+            FailedField = stat.Failed;
+            ExtrasField = stat.Extras;
+        }
 
         /// <summary> Describe the Type of Statistics Object </summary>
         public enum StatType
@@ -153,7 +73,7 @@ namespace RoboSharp.Results
         #region < Events >
 
         /// <summary> This toggle Enables/Disables firing the <see cref="PropertyChanged"/> Event to avoid firing it when doing multiple consecutive changes to the values </summary>
-        private bool EnablePropertyChangeEvent = true;
+        internal bool EnablePropertyChangeEvent = true;
 
         /// <summary>
         /// This event will fire when the value of the statistic is updated via Adding / Subtracting methods. <br/>
@@ -186,7 +106,17 @@ namespace RoboSharp.Results
         /// <summary> Occurs when the <see cref="Extras"/> Property is updated. </summary>
         public event StatChangedHandler OnExtrasChanged;
 
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         private Lazy<StatChangedEventArg> PrepEventArgs(long OldValue, long NewValue, string PropertyName) => new Lazy<StatChangedEventArg>(() => new StatChangedEventArg(this, OldValue, NewValue, PropertyName));
+        
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        private StatChangedEventArg ConditionalPrepEventArgs(long OldValue, long NewValue, string PropertyName) => !EnablePropertyChangeEvent || OldValue == NewValue ? null : new StatChangedEventArg(this, OldValue, NewValue, PropertyName);
+#else
+        private Lazy<StatChangedEventArg> PrepEventArgs(long OldValue, long NewValue, string PropertyName) => new Lazy<StatChangedEventArg>(() => new StatChangedEventArg(this, OldValue, NewValue, PropertyName));
+        private StatChangedEventArg ConditionalPrepEventArgs(long OldValue, long NewValue, string PropertyName) => !EnablePropertyChangeEvent || OldValue == NewValue ? null : new StatChangedEventArg(this, OldValue, NewValue, PropertyName);
+#endif
+
 
         #endregion
 
@@ -482,22 +412,6 @@ namespace RoboSharp.Results
         #region < Reset Method >
 
         /// <summary>
-        /// Reset all values to Zero ( 0 ) -- Used by <see cref="RoboCopyResultsList"/> for the properties
-        /// </summary>
-#if !NET40
-        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-#endif
-        public void Reset()
-        {
-            Copied = 0;
-            Extras = 0;
-            Failed = 0;
-            Mismatch = 0;
-            Skipped = 0;
-            Total = 0;
-        }
-
-        /// <summary>
         /// Set the values for this object to 0
         /// </summary>
         public void Reset(bool enablePropertyChangeEvent)
@@ -507,12 +421,151 @@ namespace RoboSharp.Results
             EnablePropertyChangeEvent = true;
         }
 
+
+        /// <summary>
+        /// Reset all values to Zero ( 0 ) -- Used by <see cref="RoboCopyResultsList"/> for the properties
+        /// </summary>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        public void Reset()
+        {
+            //Total
+            var eTotal = ConditionalPrepEventArgs(TotalField, 0, "Total");
+            TotalField = 0;
+            //Copied
+            var eCopied = ConditionalPrepEventArgs(CopiedField, 0, "Copied");
+            CopiedField = 0;
+            //Extras
+            var eExtras = ConditionalPrepEventArgs(ExtrasField, 0, "Extras");
+            ExtrasField = 0;
+            //Failed
+            var eFailed = ConditionalPrepEventArgs(FailedField, 0, "Failed");
+            FailedField = 0;
+            //Mismatch
+            var eMismatch = ConditionalPrepEventArgs( MismatchField, 0, "Mismatch");
+            MismatchField = 0;
+            //Skipped
+            var eSkipped = ConditionalPrepEventArgs(SkippedField, 0, "Skipped");
+            SkippedField = 0;
+
+            //Trigger Events 
+            TriggerDeferredEvents(eTotal, eCopied, eExtras, eFailed, eMismatch, eSkipped);
+        }
+
+
+        #endregion
+
+        #region < Trigger Deferred Events >
+
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        private void TriggerDeferredEvents(StatChangedEventArg eTotal, StatChangedEventArg eCopied, StatChangedEventArg eExtras, StatChangedEventArg eFailed, StatChangedEventArg eMismatch, StatChangedEventArg eSkipped)
+        {
+            //Perform Events
+            var i = 0;
+            if (eTotal != null)
+            {
+                i = 1;
+                OnTotalChanged?.Invoke(this, eTotal);
+            }
+            if (eCopied != null)
+            {
+                i += 2;
+                OnCopiedChanged?.Invoke(this, eCopied);
+            }
+            if (eExtras != null)
+            {
+                i += 4;
+                OnExtrasChanged?.Invoke(this, eExtras);
+            }
+            if (eFailed != null)
+            {
+                i += 8;
+                OnFailedChanged?.Invoke(this, eFailed);
+            }
+            if (eMismatch != null)
+            {
+                i += 16;
+                OnMisMatchChanged?.Invoke(this, eMismatch);
+            }
+            if (eSkipped != null)
+            {
+                i += 32;
+                OnSkippedChanged?.Invoke(this, eSkipped);
+            }
+
+            //Trigger PropertyChangeEvent
+            switch (i)
+            {
+                case 0: return;
+                case 1: PropertyChanged?.Invoke(this, eTotal); return;
+                case 2: PropertyChanged?.Invoke(this, eCopied); return;
+                case 4: PropertyChanged?.Invoke(this, eExtras); return;
+                case 8: PropertyChanged?.Invoke(this, eFailed); return;
+                case 16: PropertyChanged?.Invoke(this, eMismatch); return;
+                case 32: PropertyChanged?.Invoke(this, eSkipped); return;
+                default: PropertyChanged?.Invoke(this, new StatChangedEventArg(this, eTotal?.OldValue ?? 0, eTotal?.NewValue ?? 0, String.Empty)); return;
+            }
+        }
+
         #endregion
 
         #region < ADD Methods >
 
         /// <summary>
-        /// Add the results of the supplied Statistics object to this Statistics object.
+        /// Add the supplied values to this Statistic object. <br/>
+        /// Events are defered until all the fields have been added together.
+        /// </summary>
+        /// <param name="total"></param>
+        /// <param name="copied"></param>
+        /// <param name="extras"></param>
+        /// <param name="failed"></param>
+        /// <param name="mismatch"></param>
+        /// <param name="skipped"></param>
+#if !NET40
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+#endif
+        public void Add(long total = 0, long copied = 0, long extras = 0, long failed = 0, long mismatch = 0, long skipped = 0)
+        {
+            //Total
+            long i = TotalField;
+            TotalField += total;
+            var eTotal = ConditionalPrepEventArgs(i, TotalField, "Total");
+
+            //Copied
+            i = CopiedField;
+            CopiedField += copied;
+            var eCopied = ConditionalPrepEventArgs(i, CopiedField, "Copied");
+
+            //Extras
+            i = ExtrasField;
+            ExtrasField += extras;
+            var eExtras = ConditionalPrepEventArgs(i, ExtrasField, "Extras");
+
+            //Failed
+            i = FailedField;
+            FailedField += failed;
+            var eFailed = ConditionalPrepEventArgs(i, FailedField, "Failed");
+
+            //Mismatch
+            i = MismatchField;
+            MismatchField += mismatch;
+            var eMismatch = ConditionalPrepEventArgs(i, MismatchField, "Mismatch");
+
+            //Skipped
+            i = SkippedField;
+            SkippedField += skipped;
+            var eSkipped = ConditionalPrepEventArgs(i, SkippedField, "Skipped");
+
+            //Trigger Events 
+            TriggerDeferredEvents(eTotal, eCopied, eExtras, eFailed, eMismatch, eSkipped);
+        }
+
+        /// <summary>
+        /// Add the results of the supplied Statistics object to this Statistics object. <br/>
+        /// Events are defered until all the fields have been added together.
         /// </summary>
         /// <param name="stat">Statistics Item to add</param>
 #if !NET40
@@ -520,13 +573,8 @@ namespace RoboSharp.Results
 #endif
         public void AddStatistic(IStatistic stat)
         {
-            if (stat.Type != this.Type) return;
-            Total += stat?.Total ?? 0;
-            Copied += stat?.Copied ?? 0;
-            Extras += stat?.Extras ?? 0;
-            Failed += stat?.Failed ?? 0;
-            Mismatch += stat?.Mismatch ?? 0;
-            Skipped += stat?.Skipped ?? 0;
+            if (stat.Type == this.Type) 
+                Add(stat.Total, stat.Copied, stat.Extras, stat.Failed, stat.Mismatch, stat.Skipped);
         }
 
         
@@ -569,6 +617,9 @@ namespace RoboSharp.Results
             {
                 switch (e.PropertyName)
                 {
+                    case "": //String.Empty means all fields have changed
+                        AddStatistic(e.Sender);
+                        break;
                     case "Copied":
                         this.Copied += e.Difference;
                         break;
@@ -649,7 +700,8 @@ namespace RoboSharp.Results
         #region < Subtract Methods >
 
         /// <summary>
-        /// Subtract Method used by <see cref="RoboCopyResultsList"/>
+        /// Subtract Method used by <see cref="RoboCopyResultsList"/> <br/>
+        /// Events are deferred until all value changes have completed.
         /// </summary>
         /// <param name="stat">Statistics Item to subtract</param>
 #if !NET40
@@ -657,12 +709,8 @@ namespace RoboSharp.Results
 #endif
         public void Subtract(IStatistic stat)
         {
-            Copied -= stat?.Copied ?? 0;
-            Extras -= stat?.Extras ?? 0;
-            Failed -= stat?.Failed ?? 0;
-            Mismatch -= stat?.Mismatch ?? 0;
-            Skipped -= stat?.Skipped ?? 0;
-            Total -= stat?.Total ?? 0;
+            if (stat.Type == this.Type)
+                Add(-stat.Total, -stat.Copied, -stat.Extras, -stat.Failed, -stat.Mismatch, -stat.Skipped);
         }
 
         #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -690,36 +738,12 @@ namespace RoboSharp.Results
         }
 
         #endregion Subtract
+
+
+        /// <inheritdoc cref="IStatistic.Clone"/>
+        public Statistic Clone() => new Statistic(this);
+
+        object ICloneable.Clone() => new Statistic(this);
+
     }
-
-    /// <summary>
-    /// EventArgs provided by <see cref="Statistic.PropertyChanged"/> and other Events generated from a <see cref="Statistic"/> object.
-    /// </summary>
-    public class StatChangedEventArg : PropertyChangedEventArgs
-    {
-        private StatChangedEventArg():base("") { }
-        internal StatChangedEventArg(Statistic stat, long oldValue, long newValue, string PropertyName) : base(PropertyName)
-        {
-            StatType = stat.Type;
-            OldValue = oldValue;
-            NewValue = newValue;
-        }
-
-
-        /// <inheritdoc cref="Statistic.Type"/>
-        public Statistic.StatType StatType { get; }
-
-        /// <summary> Old Value of the object </summary>
-        public long OldValue { get; }
-        
-        /// <summary> Current Value of the object </summary>
-        public long NewValue { get; }
-
-        /// <summary>
-        /// Result of NewValue - OldValue
-        /// </summary>
-        public long Difference => NewValue - OldValue;
-    }
-
-
 }

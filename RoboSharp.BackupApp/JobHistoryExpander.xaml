@@ -1,0 +1,57 @@
+﻿<Expander x:Class="RoboSharp.BackupApp.JobHistoryExpander"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RoboSharp.BackupApp"
+             mc:Ignorable="d" 
+             d:DesignHeight="435" d:DesignWidth="550"
+          Name="Expander" 
+          Background="PaleGoldenrod" 
+          Header="Job History"
+          RenderTransformOrigin="0.5,0.5"
+          >
+    <Grid x:Name="ResultsGrid" Margin="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition MinHeight="125" Height="125" MaxHeight="350"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <!-- Header Label, ListBox, RemoveBtn -->
+        <Label Name="DescriptionLbl" Content="This contains a list of the results from all previous runs during this session." Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
+        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Height="20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="ListBoxColumn1"/>
+                            <ColumnDefinition Width="15" SharedSizeGroup="ListBoxColumn2"/>
+                            <ColumnDefinition Width="*" SharedSizeGroup="ListBoxColumn3"/>
+                        </Grid.ColumnDefinitions>
+                        <!-- Bind to the NAME property -->
+                        <TextBlock Grid.Column="0" Text="{Binding Path=JobName}"/>
+                        <!-- Bind to the ToString method-->
+                        <TextBlock Grid.Column="2" Text="{Binding}"/>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Content="Remove Selected" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2"  HorizontalAlignment="Left" Margin="175,330,0,0" VerticalAlignment="Top" Click="Remove_Selected_Click"/>
+        <ScrollViewer Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Margin="0,5,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <StackPanel>
+                <!-- Selected Results -->
+                <GroupBox Name="GroupBox_SelectedJob"  Header="Selected Job Results" MaxHeight="350">
+                    <local:SingleJobStats x:Name="SelectedJobStats" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                </GroupBox>
+                <!-- Overall Results -->
+                <GroupBox Header="Overall Results" MaxHeight="350" >
+                    <local:SingleJobStats x:Name="OverallStats"  Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Expander>

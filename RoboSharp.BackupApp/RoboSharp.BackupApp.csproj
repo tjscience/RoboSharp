@@ -64,6 +64,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="JobHistoryExpander.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -72,12 +76,29 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="JobHistoryExpander.xaml.cs">
+      <DependentUpon>JobHistoryExpander.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="JobHistoryExpander_SingleJob.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MultiJob_CommandProgressIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="JobHistoryExpander_SingleJob.xaml.cs">
+      <DependentUpon>JobHistoryExpander_SingleJob.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MultiJob_CommandProgressIndicator.xaml.cs">
+      <DependentUpon>MultiJob_CommandProgressIndicator.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ObservableListTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

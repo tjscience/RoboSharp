@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.Results
 {
@@ -45,29 +47,7 @@ namespace RoboSharp.Results
         }
 
     }
-
-    /// <summary>
-    /// Read-Only interface for <see cref="RoboCopyCombinedExitStatus"/>
-    /// </summary>
-    public interface IRoboCopyCombinedExitStatus : INotifyPropertyChanged
-    {
-        /// <inheritdoc cref="RoboCopyCombinedExitStatus.WasCancelled"/>
-        bool WasCancelled { get; }
-
-        /// <inheritdoc cref="RoboCopyCombinedExitStatus.AnyNoCopyNoError"/>
-        bool AnyNoCopyNoError { get; }
-
-        /// <inheritdoc cref="RoboCopyCombinedExitStatus.AnyWasCancelled"/>
-        bool AnyWasCancelled { get; }
-
-        /// <inheritdoc cref="RoboCopyCombinedExitStatus.AllSuccessful"/>
-        bool AllSuccessful { get; }
-
-        /// <inheritdoc cref="RoboCopyCombinedExitStatus.AllSuccessful_WithWarnings"/>
-        bool AllSuccessful_WithWarnings { get; }
-
-    }
-
+    
     /// <summary>
     /// Represents the combination of multiple Exit Statuses
     /// </summary>
@@ -84,6 +64,16 @@ namespace RoboSharp.Results
         /// Initializes a new instance of the <see cref="RoboCopyCombinedExitStatus"/> class.
         /// </summary>
         public RoboCopyCombinedExitStatus(int exitCodeValue) : base(exitCodeValue) { }
+
+        /// <summary>
+        /// Clone this into a new instance
+        /// </summary>
+        /// <param name="obj"></param>
+        public RoboCopyCombinedExitStatus(RoboCopyCombinedExitStatus obj) :base((int)obj.ExitCode)
+        {
+            wascancelled = obj.wascancelled;
+            noCopyNoError = obj.noCopyNoError;
+        }
 
         #endregion
 
@@ -244,6 +234,9 @@ namespace RoboSharp.Results
             EnablePropertyChangeEvent = true;
         }
 
+        /// <inheritdoc cref="ICloneable.Clone"/>
+        public RoboCopyCombinedExitStatus Clone() => new RoboCopyCombinedExitStatus(this);
 
+        object ICloneable.Clone() => Clone();
     }
 }

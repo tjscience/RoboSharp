@@ -1,20 +1,63 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using RoboSharp.DefaultConfigurations;
 
 namespace RoboSharp
 {
     /// <summary>
     /// Setup the ErrorToken and the path to RoboCopy.exe.
     /// </summary>
-    public class RoboSharpConfiguration
+    public class RoboSharpConfiguration : ICloneable
     {
+        #region Constructors 
 
-        private static readonly IDictionary<string, RoboSharpConfiguration> 
+        /// <summary>
+        /// Create new LoggingOptions with Default Settings
+        /// </summary>
+        public RoboSharpConfiguration() { }
+
+        /// <summary>
+        /// Clone a RoboSharpConfiguration Object
+        /// </summary>
+        /// <param name="options">RoboSharpConfiguration object to clone</param>
+        public RoboSharpConfiguration(RoboSharpConfiguration options)
+        {
+            errorToken = options.errorToken;
+            errorTokenRegex = options.errorTokenRegex;
+            roboCopyExe = options.roboCopyExe;
+
+            #region < File Tokens >
+            newFileToken = options.newFileToken;
+            olderToken = options.olderToken;
+            newerToken = options.newerToken;
+            sameToken = options.sameToken;
+            extraToken = options.extraToken;
+            mismatchToken = options.mismatchToken;
+            failedToken = options.failedToken;
+            #endregion
+
+            #region < Directory Tokens >
+            newerDirToken = options.newerDirToken;
+            extraDirToken = options.extraDirToken;
+            existingDirToken = options.existingDirToken;
+            #endregion
+
+        }
+
+        /// <inheritdoc cref="RoboSharpConfiguration.RoboSharpConfiguration(RoboSharpConfiguration)"/>
+        public RoboSharpConfiguration Clone() => new RoboSharpConfiguration(this);
+
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
+        private static readonly IDictionary<string, RoboSharpConfiguration>
             defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
         {
-            {"en", new RoboSharpConfiguration { ErrorToken = "ERROR"} }, //en uses Defaults for LogParsing properties
-            {"de", new RoboSharpConfiguration { ErrorToken = "FEHLER"} },
+            {"en", new RoboSharpConfig_EN() }, //en uses Defaults for LogParsing properties
+            {"de", new RoboSharpConfig_DE() },
         };
 
         /// <summary>
@@ -24,12 +67,14 @@ namespace RoboSharp
         public string ErrorToken
         {
             get { return errorToken ?? GetDefaultConfiguration().ErrorToken; }
-            set {
+            set
+            {
                 if (value != errorToken) ErrRegexInitRequired = true;
                 errorToken = value;
             }
         }
-        private string errorToken = null;
+        /// <summary> field backing <see cref="ErrorToken"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
+        protected string errorToken = null;
 
         /// <summary>
         /// Regex to identify Error Tokens with during LogLine parsing
@@ -38,14 +83,24 @@ namespace RoboSharp
         {
             get
             {
-                if (ErrRegexInitRequired | errorTokenRegex == null)
-                    errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+                if (ErrRegexInitRequired) goto RegenRegex;  //Regex Generation Required
+                else if (errorTokenRegex != null) return errorTokenRegex; //field already assigned -> return the field
+                else
+                {
+                    //Try get default, if default has regex defined, use that.
+                    errorTokenRegex = GetDefaultConfiguration().errorTokenRegex;
+                    if (errorTokenRegex != null) return errorTokenRegex;
+                }
+            // Generate a new Regex Statement
+            RegenRegex:
+                errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
                 ErrRegexInitRequired = false;
                 return errorTokenRegex;
             }
         }
-        private Regex errorTokenRegex;
-        private bool ErrRegexInitRequired;
+        /// <summary> Field backing <see cref="ErrorTokenRegex"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
+        protected Regex errorTokenRegex;
+        private bool ErrRegexInitRequired = false;
 
         #region < Tokens for Log Parsing >
 
@@ -56,7 +111,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewFile
         {
-            get { return newFileToken ?? "New File"; }
+            get { return newFileToken ?? GetDefaultConfiguration().newFileToken ?? "New File"; }
             set { newFileToken = value; }
         }
         private string newFileToken;
@@ -66,7 +121,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_OlderFile
         {
-            get { return olderToken ?? "Older"; }
+            get { return olderToken ?? GetDefaultConfiguration().olderToken ??  "Older"; }
             set { olderToken = value; }
         }
         private string olderToken;
@@ -76,7 +131,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewerFile
         {
-            get { return newerToken ?? "Newer"; }
+            get { return newerToken ?? GetDefaultConfiguration().newerToken ?? "Newer"; }
             set { newerToken = value; }
         }
         private string newerToken;
@@ -86,7 +141,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_SameFile
         {
-            get { return sameToken ?? "same"; }
+            get { return sameToken ?? GetDefaultConfiguration().sameToken ?? "same"; }
             set { sameToken = value; }
         }
         private string sameToken;
@@ -96,7 +151,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExtraFile
         {
-            get { return extraToken ?? "*EXTRA File"; }
+            get { return extraToken ?? GetDefaultConfiguration().extraToken ?? "*EXTRA File"; }
             set { extraToken = value; }
         }
         private string extraToken;
@@ -106,7 +161,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_MismatchFile
         {
-            get { return mismatchToken ?? "*Mismatch"; } // TO DO: Needs Verification
+            get { return mismatchToken ?? GetDefaultConfiguration().mismatchToken ?? "*Mismatch"; } // TO DO: Needs Verification
             set { mismatchToken = value; }
         }
         private string mismatchToken;
@@ -116,7 +171,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_FailedFile
         {
-            get { return failedToken ?? "*Failed"; } // TO DO: Needs Verification
+            get { return failedToken ?? GetDefaultConfiguration().failedToken ?? "*Failed"; } // TO DO: Needs Verification
             set { failedToken = value; }
         }
         private string failedToken;
@@ -130,7 +185,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewDir
         {
-            get { return newerDirToken ?? "New Dir"; } 
+            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken  ?? "New Dir"; }
             set { newerDirToken = value; }
         }
         private string newerDirToken;
@@ -140,7 +195,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExtraDir
         {
-            get { return extraDirToken ?? "*EXTRA Dir"; }
+            get { return extraDirToken ?? GetDefaultConfiguration().extraDirToken ?? "*EXTRA Dir"; }
             set { extraDirToken = value; }
         }
         private string extraDirToken;
@@ -150,7 +205,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_ExistingDir
         {
-            get { return existingDirToken ?? "Existing Dir"; }
+            get { return existingDirToken ?? GetDefaultConfiguration().existingDirToken ?? "Existing Dir"; }
             set { existingDirToken = value; }
         }
         private string existingDirToken;
@@ -169,6 +224,14 @@ namespace RoboSharp
         }
         private string roboCopyExe = null;
 
+        /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
+        /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardOutputEncoding" path="/summary"/>
+        public System.Text.Encoding StandardOutputEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
+        /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
+        /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardErrorEncoding" path="/summary"/>
+        public System.Text.Encoding StandardErrorEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+
         private RoboSharpConfiguration GetDefaultConfiguration()
         {
             // check for default with language Tag xx-YY (e.g. en-US)
@@ -177,7 +240,7 @@ namespace RoboSharp
                 return defaultConfigurations[currentLanguageTag];
 
             // check for default with language Tag xx (e.g. en)
-            var match = Regex.Match(currentLanguageTag, @"^\w+");
+            var match = Regex.Match(currentLanguageTag, @"^\w+", RegexOptions.Compiled);
             if (match.Success)
             {
                 var currentMainLanguageTag = match.Value;

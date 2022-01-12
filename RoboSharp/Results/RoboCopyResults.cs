@@ -1,16 +1,17 @@
 ﻿using System.Collections.Generic;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.Results
 {
     /// <summary>
     /// Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
     /// </summary>
-    public class RoboCopyResults
+    public class RoboCopyResults : IResults
     {
         internal RoboCopyResults() { }
 
         #region < Properties >
-        
+
         /// <inheritdoc cref="CopyOptions.Source"/>
         public string Source { get; internal set; }
 
@@ -19,6 +20,9 @@ namespace RoboSharp.Results
 
         /// <inheritdoc cref="RoboCommand.CommandOptions"/>
         public string CommandOptions { get; internal set; }
+
+        /// <inheritdoc cref="RoboCommand.Name"/>
+        public string JobName { get; internal set; }
 
         /// <inheritdoc cref="RoboCopyExitStatus"/>
         public RoboCopyExitStatus Status { get; internal set; }
@@ -49,6 +53,14 @@ namespace RoboSharp.Results
 
         /// <summary> Output Text reported by RoboCopy </summary>
         public string[] LogLines { get; internal set; }
+
+        #endregion
+
+        #region < IResults >
+
+        IStatistic IResults.BytesStatistic => BytesStatistic;
+        IStatistic IResults.DirectoriesStatistic => DirectoriesStatistic;
+        IStatistic IResults.FilesStatistic => FilesStatistic;
 
         #endregion
 
