@@ -2,6 +2,7 @@
 
 namespace RoboSharp
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public sealed class Debugger
     {
         private static readonly Lazy<Debugger> instance = new Lazy<Debugger>(() => new Debugger());
@@ -36,4 +37,5 @@ namespace RoboSharp
             RaiseDebugMessageEvent(data);
         }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

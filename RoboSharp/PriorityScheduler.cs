@@ -4,10 +4,16 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace RoboSharp
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+	/// <summary>
+	/// Schedules tasks to run on new threads
+	/// </summary>
 	public class PriorityScheduler : TaskScheduler
-	{
+
+    {
 		public static PriorityScheduler AboveNormal = new PriorityScheduler(ThreadPriority.AboveNormal);
 		public static PriorityScheduler BelowNormal = new PriorityScheduler(ThreadPriority.BelowNormal);
 		public static PriorityScheduler Lowest = new PriorityScheduler(ThreadPriority.Lowest);
@@ -60,4 +66,5 @@ namespace RoboSharp
 			return false; // we might not want to execute task that should schedule as high or low priority inline
 		}
 	}
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

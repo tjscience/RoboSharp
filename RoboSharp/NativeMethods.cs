@@ -4,6 +4,10 @@ using System.Runtime.InteropServices;
 
 namespace RoboSharp
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    /// <summary>
+    /// Native Methods for Pause/Suspend/Resume processes
+    /// </summary>
     public static class NativeMethods
     {
         [Flags]
@@ -52,4 +56,5 @@ namespace RoboSharp
             }
         }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
