@@ -214,7 +214,7 @@
                         </StackPanel>
                     </ScrollViewer>
 
-                    <Button Content="Backup" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+                    <Button Content="Backup" HorizontalAlignment="Right" Margin="0,0,20,10" VerticalAlignment="Bottom" Width="75" Click="StartButton_Click" Grid.Column="1"/>
                 </Grid>
             </TabItem>
             <!-- Single-Job Tab -->
@@ -229,10 +229,6 @@
                             <local:JobHistoryExpander x:Name="SingleJobExpander_JobHistory" RenderTransformOrigin="0.5,0.5"/>
                         </StackPanel>
                     </ScrollViewer>
-                </Grid>
-            </TabItem>
-            <TabItem Header="Errors" Name="ErrorsTab">
-                <DataGrid Name="ErrorGrid"></DataGrid>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -3,9 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Threading;
-#if NET40_OR_GREATER
-using System.Windows.Threading;
-#endif
 
 namespace System.Collections.Generic
 {

@@ -88,13 +88,16 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="MultiJob_CommandProgressIndicator.xaml">
-      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="JobHistoryExpander_SingleJob.xaml.cs">
       <DependentUpon>JobHistoryExpander_SingleJob.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MultiJob_CommandProgressIndicator.xaml.cs">
+      <DependentUpon>MultiJob_CommandProgressIndicator.xaml</DependentUpon>
     </Compile>
     <Compile Include="ObservableListTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">

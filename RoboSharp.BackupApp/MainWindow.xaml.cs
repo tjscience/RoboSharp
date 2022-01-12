@@ -31,8 +31,6 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
-            JobResults.CollectionChanged += UpdateOverallLabel;
-            ListBox_JobResults.ItemsSource = JobResults;
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
 
@@ -149,10 +147,6 @@ namespace RoboSharp.BackupApp
             return copy;
         }
 
-        {
-
-        }
-
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
         {
             Console.WriteLine(e.Message);
@@ -218,23 +212,6 @@ namespace RoboSharp.BackupApp
 
         #endregion
 
-        {
-            {
-        }
-
-        {
-            {
-
-        }
-
-        {
-            {
-            }
-            else
-            {
-            }
-        }
-
         #region < Options Page >
 
         private void SourceBrowseButton_Click(object sender, RoutedEventArgs e)
@@ -254,17 +231,6 @@ namespace RoboSharp.BackupApp
         #endregion
 
         #region < Form Stuff >
-        {
-        }
-
-        {
-        }
-
-        {
-        }
-
-        {
-        }
 
         private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {

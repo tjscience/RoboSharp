@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-/// <summary>
-/// This NameSpace is used to store DefaultConfigurations
-/// </summary>
 namespace RoboSharp.DefaultConfigurations
 {
     /// <summary>
