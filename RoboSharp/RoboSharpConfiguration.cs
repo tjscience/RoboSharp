@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using RoboSharp.DefaultConfigurations;
 
 namespace RoboSharp
 {
@@ -55,8 +56,8 @@ namespace RoboSharp
         private static readonly IDictionary<string, RoboSharpConfiguration>
             defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
         {
-            {"en", new RoboSharpConfiguration { ErrorToken = "ERROR"} }, //en uses Defaults for LogParsing properties
-            {"de", new RoboSharpConfiguration { ErrorToken = "FEHLER"} },
+            {"en", new RoboSharpConfig_EN() }, //en uses Defaults for LogParsing properties
+            {"de", new RoboSharpConfig_DE() },
         };
 
         /// <summary>
@@ -72,7 +73,8 @@ namespace RoboSharp
                 errorToken = value;
             }
         }
-        private string errorToken = null;
+        /// <summary> field backing <see cref="ErrorToken"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
+        protected string errorToken = null;
 
         /// <summary>
         /// Regex to identify Error Tokens with during LogLine parsing
@@ -96,8 +98,8 @@ namespace RoboSharp
                 return errorTokenRegex;
             }
         }
-        private bool ErrRegexInitRequired;
         /// <summary> Field backing <see cref="ErrorTokenRegex"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
+        protected Regex errorTokenRegex;
         private bool ErrRegexInitRequired = false;
 
         #region < Tokens for Log Parsing >
