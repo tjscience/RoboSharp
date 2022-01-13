@@ -133,7 +133,7 @@ namespace RoboSharp
         private Process process;
         private Task backupTask;
         private bool hasError;
-        private bool hasExited;
+        //private bool hasExited; //No longer evaluated
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
@@ -275,7 +275,7 @@ namespace RoboSharp
                     process.Kill();
                     isCancelled = true;
                 }
-                hasExited = true;
+                //hasExited = true;
                 process.Dispose();
                 process = null;
             }
@@ -437,7 +437,7 @@ namespace RoboSharp
                 process.OutputDataReceived += process_OutputDataReceived;
                 process.ErrorDataReceived += process_ErrorDataReceived;
                 process.EnableRaisingEvents = true;
-                hasExited = false;
+                //hasExited = false;
                 process.Exited += Process_Exited;
                 Debugger.Instance.DebugMessage("RoboCopy process started.");
                 process.Start();
@@ -478,7 +478,7 @@ namespace RoboSharp
         /// <summary> Process has either run to completion or has been killed prematurely </summary>
         void Process_Exited(object sender, System.EventArgs e)
         {
-            hasExited = true;
+            //hasExited = true;
         }
 
         /// <summary> React to Process.StandardOutput </summary>

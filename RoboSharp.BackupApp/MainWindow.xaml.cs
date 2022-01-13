@@ -453,7 +453,7 @@ namespace RoboSharp.BackupApp
         /// <summary>
         /// Add MultiJob_CommandProgressIndicator to window
         /// </summary>
-        private void RoboQueue_OnCommandStarted(RoboQueue sender, RoboQueue.CommandStartedEventArgs e)
+        private void RoboQueue_OnCommandStarted(RoboQueue sender, EventArgObjects.RoboQueueCommandStartedEventArgs e)
         {
             Dispatcher.Invoke(() =>
             {
