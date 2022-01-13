@@ -132,7 +132,8 @@ namespace RoboSharp
         /// <inheritdoc cref="_destination"/>
         public string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         /// <summary>
-        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?).
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
+        /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
         public IEnumerable<string> FileFilter
         {

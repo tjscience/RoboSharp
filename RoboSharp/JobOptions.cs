@@ -21,7 +21,7 @@ namespace RoboSharp
         public JobOptions() { }
 
         /// <summary>
-        /// 
+        /// Constructor for ICloneable Interface
         /// </summary>
         /// <param name="options">JobOptions object to clone</param>
         public JobOptions(JobOptions options) 
@@ -93,119 +93,21 @@ namespace RoboSharp
 
         #endregion
 
-        /// <summary>
-        /// Parse some Job File
-        /// </summary>
-        /// <param name="filePath">File Extension should end in *.RCJ</param>
-        /// <returns>New <see cref="RoboSharp.RoboCommand"/></returns>
-        public static RoboCommand ParseJobFile(string filePath)
-        {
-            RoboSharp.RoboCommand cmd = new RoboSharp.RoboCommand();
-            cmd.JobOptions.ParseJobFile(filePath);
-            return cmd;
-        }
+        #region < Properties >
 
+        #endregion
+
+        #region < Methods >
 
         /// <summary>
-        /// Parse some Job File
+        /// Parse the properties and return the string
         /// </summary>
-        /// <param name="filePath">File Extension should end in *.RCJ</param>
-        /// <returns>New <see cref="RoboSharp.RoboCommand"/></returns>
-        public void ParseJobFile(string filePath)
+        /// <returns></returns>
+        internal string Parse(string SavePath)
         {
-            RoboSharp.RoboCommand cmd = this;
-            if (File.Exists(filePath)
-            {
-                string[] lines = File.ReadAllLines(filePath));
-                string l;
-                string[] s;
-                bool parsingIF = false;
-                bool parsingXD = false;
-                bool parsingXF = false;
-                foreach (string line in lines)
-                {
-                    if (line.Trim().StartsWith("::"))
-                    { /*comment line - ignore */
-                        parsingIF = false;
-                        parsingXD = false;
-                        parsingXF = false;
-                    }
-                    //Source
-                    else if (line.Trim().StartsWith("/SD"))
-                    {
-                        s = line.Split(':');
-                        cmd.CopyOptions.Source = s[1];
-                    }
-                    //Destination
-                    else if (line.Trim().StartsWith("/DD"))
-                    {
-                        s = line.Split(':');
-                        cmd.CopyOptions.Destination = s[1];
-                    }
-                    //Include Files
-                    else if (parsingIF || line.Trim().StartsWith("/IF"))
-                    {
-                        if (parsingIF)
-                            cmd.CopyOptions.FileFilter += $"{line.RemoveJobComment()}";
-                        else
-                            parsingIF = true;
-                    }
-                    //Exclude Directories
-                    else if (parsingXD || line.Trim().StartsWith("/XD"))
-                    {
-                        if (parsingXF)
-                            cmd.SelectionOptions.ExcludeDirectories += $"{line.RemoveJobComment()}";
-                        else
-                            parsingXF = true;
-                    }
-                    //Exclude Files
-                    else if (parsingXF || line.Trim().StartsWith("/XF"))
-                    {
-                        if (parsingXF)
-                            cmd.SelectionOptions.ExcludeFiles += $"{line.RemoveJobComment()}";
-                        else
-                            parsingXF = true;
-                    }
-
-                    #region < Copy Options > 
-                    else if (line.Trim().StartsWith("/PURGE"))
-                        cmd.CopyOptions.Purge = true;
-                    else if (line.Trim().StartsWith("/COPY:"))
-                    {
-                        //Must parse
-                    }
-                    else if (line.Trim().StartsWith("/DCOPY:"))
-                    {
-                        //Must parse
-                    }
-                    #endregion
-
-                    #region < Retry Options > 
-                    else if (line.Trim().StartsWith("/R:"))
-                    {
-                        l = line.RemoveJobComment().Split(':')[1];
-                        cmd.RetryOptions.RetryCount = Convert.ToInt32(l);
-                    }
-                    else if (line.Trim().StartsWith("/W:"))
-                    {
-                        l = line.RemoveJobComment().Split(':')[1];
-                        cmd.RetryOptions.RetryWaitTime = Convert.ToInt32(l);
-                    }
-                    #endregion
-
-                    #region < Logging Options > 
-                    else if (line.Trim().StartsWith("/R:"))
-                    {
-                        //To Do
-                    }
-                    else if (line.Trim().StartsWith("/W:"))
-                    {
-
-                    }
-                    #endregion
-                }
-            }
-
+            return JOB_SAVE + SavePath.WrapPath() + JOB_QUIT;
         }
+
+        #endregion
     }
 }

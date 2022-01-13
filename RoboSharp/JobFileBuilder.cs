@@ -1,0 +1,570 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
+
+namespace RoboSharp
+{
+    internal static class JobFileBuilder
+    {
+        #region < Constants & Regex >
+
+        /// <summary>
+        /// Any comments within the job file lines will start with this string
+        /// </summary>
+        public const string JOBFILE_CommentPrefix = ":: ";
+
+        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
+        public const string JOBFILE_Extension = JobOptions.JOB_FileExtension;
+
+        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
+        internal const string JOBFILE_JobName = ":: JOB_NAME: ";
+
+        /// <summary>
+        /// Regex to check if a string is a comment
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  LINE_IsComment = new Regex("^\\s*(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Regex to check if the string is a flag for RoboCopy
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// SWITCH <br/>
+        /// DELIMITER <br/>
+        /// VALUE <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  LINE_IsSwitch = new Regex("^\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>:)(?<VALUE>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// JobName for ROboCommand is not valid parameter for RoboCopy, so we save it into a comment within the file
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// FLAG <br/>
+        /// NAME <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  JobNameRegex = new Regex("^\\s*(?<FLAG>.*::JOB_NAME:\\s*)(?<NAME>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Regex used for parsing File and Directory filters for /IF /XD and /XF flags
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// PATH <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  DirFileFilterRegex = new Regex("^\\s*(?<PATH>.*)\\s*(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        #region < Retry Options Regex >
+
+        /// <summary>
+        /// Retry Count flag
+        /// </summary>
+        private readonly static Regex  RetryRegex_RETRY = new Regex("^\\s*(?<SWITCH>/R:)(?<VALUE>[0-9]*)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Retry Wait Time flag
+        /// </summary>
+        private readonly static Regex  RetryRegex_WAIT_RETRY = new Regex("^\\s*(?<SWITCH>/W:)(?<VALUE>[0-9]*)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// WAIT_FOR_SHARENAMES flag
+        /// </summary>
+        private readonly static Regex  RetryRegex_SAVE_TO_REGISTRY = new Regex("^\\s*(?<SWITCH>/REG)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+
+        /// <summary>
+        /// SAVE_TO_REGISTRY flag
+        /// </summary>
+        private readonly static Regex  RetryRegex_WAIT_FOR_SHARENAMES = new Regex("^\\s*(?<SWITCH>/TBD)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        #endregion
+
+        #region < Copy Options Regex >
+
+        /// <summary>
+        /// Regex to find the SourceDirectory within the JobFile
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// SWITCH <br/>
+        /// PATH <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  CopyOptionsRegex_SourceDir = new Regex("^\\s*(?<SWITCH>/SD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Regex to find the DestinationDirectory within the JobFile
+        /// </summary>
+        /// <remarks>
+        /// Captured Group Names: <br/>
+        /// SWITCH <br/>
+        /// PATH <br/>
+        /// COMMENT
+        /// </remarks>
+        private readonly static Regex  CopyOptionsRegex_DestinationDir = new Regex("^\\s*(?<SWITCH>/DD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Regex to determine if on the INCLUDE FILES section of the JobFile
+        /// </summary>
+        /// <remarks>
+        /// Each new path / filename should be on its own line
+        /// </remarks>
+        private readonly static Regex  CopyOptionsRegex_IncludeFiles = new Regex("^\\s*(?<SWITCH>/IF:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        #endregion
+
+        #region < Selection Options Regex >
+
+        /// <summary>
+        /// Regex to determine if on the EXCLUDE FILES section of the JobFile
+        /// </summary>
+        /// <remarks>
+        /// Each new path / filename should be on its own line
+        /// </remarks>
+        private readonly static Regex  SelectionRegex_ExcludeFiles = new Regex("^\\s*(?<SWITCH>/XF:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Regex to determine if on the EXCLUDE DIRECTORIES section of the JobFile
+        /// </summary>
+        /// <remarks>
+        /// Each new path / filename should be on its own line
+        /// </remarks>
+        private readonly static Regex  SelectionRegex_ExcludeDirs = new Regex("^\\s*(?<SWITCH>/XD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        #endregion
+
+        #endregion
+
+        #region < Methods that feed Main Parse Routine >
+
+        /// <summary>
+        /// Read each line using <see cref="FileInfo.OpenText"/> and attempt to produce a Job File. <para/>
+        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
+        /// </summary>
+        /// <param name="file">FileInfo object for some Job File. File Path should end in .RCJ</param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static RoboCommand Parse(FileInfo file)
+        {
+            if (file.Extension != JOBFILE_Extension) return null;
+            return Parse(file.OpenText());
+        }
+
+        /// <summary>
+        /// Use <see cref="File.OpenText(string)"/> to read all lines from the supplied file path. <para/>
+        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
+        /// </summary>
+        /// <param name="path">File Path to some Job File. File Path should end in .RCJ</param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static RoboCommand Parse(string path)
+        {
+            if (Path.GetExtension(path) != JOBFILE_Extension) return null;
+            return Parse(File.OpenText(path));
+        }
+
+        /// <summary>
+        /// Read each line from a StreamReader and attempt to produce a Job File.
+        /// </summary>
+        /// <param name="streamReader">StreamReader for a file stream that represents a Job File</param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static RoboCommand Parse(StreamReader streamReader)
+        {
+            List<string> Lines = new List<string>();
+            using (streamReader)
+            {
+                while (!streamReader.EndOfStream)
+                    Lines.Add(streamReader.ReadLine());
+            }
+            return Parse(Lines);
+        }
+
+        #endregion
+
+        #region <> Main Parse Routine >
+
+        internal static RoboCommand Parse(IEnumerable<string> Lines)
+        {
+            //Extract information from the Lines to quicken processing in *OptionsRegex classes
+            List<Group> Flags = new List<Group>();
+            List<GroupCollection> ValueFlags = new List<GroupCollection>();
+            RetryOptions retryOpt = new RetryOptions();
+
+            string JobName = null;
+
+            foreach (string ln in Lines)
+            {
+                if (LINE_IsSwitch.IsMatch(ln))
+                {
+                    //Check RetryOptions inline since it only has 4 properties to check against
+                    if (retryOpt.RetryCount == 0 && RetryRegex_RETRY.IsMatch(ln))
+                    {
+                        string val = RetryRegex_RETRY.Match(ln).Groups["VALUE"].Value;
+                        retryOpt.RetryCount = val.IsNullOrWhiteSpace() ? 0 : Convert.ToInt32(val);
+                    }
+                    else if (retryOpt.RetryWaitTime == 0 && RetryRegex_WAIT_RETRY.IsMatch(ln))
+                    {
+                        string val = RetryRegex_WAIT_RETRY.Match(ln).Groups["VALUE"].Value;
+                        retryOpt.RetryWaitTime = val.IsNullOrWhiteSpace() ? 0 : Convert.ToInt32(val);
+                    }
+                    else if (retryOpt.SaveToRegistry == false && RetryRegex_SAVE_TO_REGISTRY.IsMatch(ln))
+                    {
+                        retryOpt.SaveToRegistry = true;
+                    }
+                    else if (retryOpt.WaitForSharenames == false && RetryRegex_WAIT_FOR_SHARENAMES.IsMatch(ln))
+                    {
+                        retryOpt.WaitForSharenames = true;
+                    }
+                    //All Other flags
+                    else
+                    {
+                        var match = LINE_IsSwitch.Match(ln);
+                        if (match.Groups["SWITCH"].Success)
+                        {
+                            Flags.Add(match.Groups["SWITCH"]);
+                            if (match.Groups["DELIMITER"].Success)
+                                ValueFlags.Add(match.Groups);
+                        }
+                    }
+                }
+                else if (JobName == null && JobNameRegex.IsMatch(ln))
+                {
+                    JobName = JobNameRegex.Match(ln).Groups["NAME"].Value;
+                }
+            }
+
+            CopyOptions copyOpt = Build_CopyOptions(Flags, ValueFlags, Lines);
+            SelectionOptions selectionOpt = Build_SelectionOptions(Flags, ValueFlags, Lines);
+            LoggingOptions loggingOpt = Build_LoggingOptions(Flags, ValueFlags, Lines);
+            JobOptions jobOpt = Build_JobOptions(Flags, ValueFlags, Lines);
+
+            return new RoboCommand(JobName ?? "", source: null, destination: null, StopIfDisposing: true, configuration: null,
+                copyOptions: copyOpt,
+                selectionOptions: selectionOpt,
+                retryOptions: retryOpt,
+                loggingOptions: loggingOpt,
+                jobOptions: jobOpt);
+        }
+
+        #endregion
+
+        #region < Copy Options >
+
+        /// <summary>
+        /// Parser to create CopyOptions object for JobFiles
+        /// </summary>
+        private static CopyOptions Build_CopyOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
+        {
+            var options = new CopyOptions();
+
+            //Bool Checks 
+            options.CheckPerFile = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CHECK_PER_FILE.Trim());
+            options.CopyAll = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_ALL.Trim());
+            options.CopyFilesWithSecurity = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_FILES_WITH_SECURITY.Trim());
+            options.CopySubdirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES.Trim());
+            options.CopySubdirectoriesIncludingEmpty = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY.Trim());
+            options.CopySymbolicLink = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SYMBOLIC_LINK.Trim());
+            options.CreateDirectoryAndFileTree = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE.Trim());
+            options.DoNotCopyDirectoryInfo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_COPY_DIRECTORY_INFO.Trim());
+            options.DoNotUseWindowsCopyOffload = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_USE_WINDOWS_COPY_OFFLOAD.Trim());
+            options.EnableBackupMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_BACKUP_MODE.Trim());
+            options.EnableEfsRawMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_EFSRAW_MODE.Trim());
+            options.EnableRestartMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE.Trim());
+            options.EnableRestartModeWithBackupFallback = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK.Trim());
+            options.FatFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FAT_FILES.Trim());
+            options.FixFileSecurityOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_SECURITY_ON_ALL_FILES.Trim());
+            options.FixFileTimesOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_TIMES_ON_ALL_FILES.Trim());
+            options.Mirror = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MIRROR.Trim());
+            options.MoveFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES.Trim());
+            options.MoveFilesAndDirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES_AND_DIRECTORIES.Trim());
+            options.Purge = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.PURGE.Trim());
+            options.RemoveFileInformation = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.REMOVE_FILE_INFORMATION.Trim());
+            options.TurnLongPathSupportOff = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.TURN_LONG_PATH_SUPPORT_OFF.Trim());
+            options.UseUnbufferedIo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.USE_UNBUFFERED_IO.Trim());
+
+            //int / string values on same line as flag
+            foreach (var match in ValueFlags)
+            {
+                string flag = match["SWITCH"].Value;
+                string value = match["VALUE"].Value;
+
+                switch (flag)
+                {
+                    case "/A+":
+                        options.AddAttributes = value;
+                        break;
+                    case "/COPY":
+                        options.CopyFlags = value;
+                        break;
+                    case "/LEV":
+                        options.Depth = value.TryConvertInt();
+                        break;
+                    case "/DD":
+                        options.Destination = value;
+                        break;
+                    case "/DCOPY":
+                        options.DirectoryCopyFlags = value;
+                        break;
+                    case "/IPG":
+                        options.InterPacketGap = value.TryConvertInt();
+                        break;
+                    case "/MON":
+                        options.MonitorSourceChangesLimit = value.TryConvertInt();
+                        break;
+                    case "/MOT":
+                        options.MonitorSourceTimeLimit = value.TryConvertInt();
+                        break;
+                    case "/MT":
+                        options.MultiThreadedCopiesCount = value.TryConvertInt();
+                        break;
+                    case "/A-":
+                        options.RemoveAttributes = value;
+                        break;
+                    case "/RH":
+                        options.RunHours = value;
+                        break;
+                    case "/SD":
+                        options.Source = value;
+                        break;
+                }
+            }
+
+            //Multiple Lines
+            if (Flags.Any(f => f.Value == "/IF"))
+            {
+                bool parsingIF = false;
+                List<string> filters = new List<string>();
+                //Find the line that starts with the flag
+                foreach (string ln in Lines)
+                {
+                    if (!parsingIF && ln.Trim().StartsWith("/IF"))
+                        parsingIF = true;
+
+                    if (parsingIF)
+                    {
+                        if (DirFileFilterRegex.IsMatch(ln))
+                        {
+                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
+                            if (!path.IsNullOrWhiteSpace())
+                            {
+                                filters.Add(path.WrapPath());
+                            }
+                        }
+                        else if (LINE_IsSwitch.IsMatch(ln))
+                        {
+                            parsingIF = false;
+                            break;
+                        }
+                    }
+                }
+                if (filters.Count > 0) options.FileFilter = filters;
+            } //End of FileFilter section
+
+            return options;
+        }
+
+        #endregion
+        #region < Selection Options >
+
+        /// <summary>
+        /// Parser to create SelectionOptions object for JobFiles
+        /// </summary>
+        private static SelectionOptions Build_SelectionOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
+        {
+            var options = new SelectionOptions();
+
+            //Bool Checks 
+            options.CompensateForDstDifference = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE.Trim());
+            options.ExcludeChanged = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_CHANGED.Trim());
+            options.ExcludeExtra = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_EXTRA.Trim());
+            options.ExcludeJunctionPoints = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS.Trim());
+            options.ExcludeJunctionPointsForDirectories = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES.Trim());
+            options.ExcludeJunctionPointsForFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_FILES.Trim());
+            options.ExcludeLonely = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_LONELY.Trim());
+            options.ExcludeNewer = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_NEWER.Trim());
+            options.ExcludeOlder = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_OLDER.Trim());
+            options.IncludeSame = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_SAME.Trim());
+            options.IncludeTweaked = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_TWEAKED.Trim());
+            options.OnlyCopyArchiveFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES.Trim());
+            options.OnlyCopyArchiveFilesAndResetArchiveFlag = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG.Trim());
+            options.UseFatFileTimes = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.USE_FAT_FILE_TIMES.Trim());
+
+            //int / string values on same line as flag
+            foreach (var match in ValueFlags)
+            {
+                string flag = match["SWITCH"].Value;
+                string value = match["VALUE"].Value;
+
+                switch (flag)
+                {
+                    case "/XA":
+                        options.ExcludeAttributes = value;
+                        break;
+                    case "/IA":
+                        options.IncludeAttributes = value;
+                        break;
+                    case "/MAXAGE":
+                        options.MaxFileAge = value;
+                        break;
+                    case "/MAX":
+                        options.MaxFileSize = value.TryConvertLong();
+                        break;
+                    case "/MAXLAD":
+                        options.MaxLastAccessDate = value;
+                        break;
+                    case "/MINAGE":
+                        options.MinFileAge = value;
+                        break;
+                    case "/MIN":
+                        options.MinFileSize = value.TryConvertLong();
+                        break;
+                    case "/MINLAD":
+                        options.MinLastAccessDate = value;
+                        break;
+                }
+            }
+
+            //Multiple Lines
+            bool parsingXD = false;
+            bool parsingXF = false;
+            bool xDParsed = false;
+            bool xFParsed = false;
+
+            foreach (string ln in Lines)
+            {
+                // Determine if parsing some section
+                if (!xFParsed && !parsingXF && SelectionRegex_ExcludeFiles.IsMatch(ln))
+                {
+                    parsingXF = true;
+                    parsingXD = false;
+                }
+                else if (!xDParsed && !parsingXD && SelectionRegex_ExcludeDirs.IsMatch(ln))
+                {
+                    parsingXF = true;
+                    parsingXD = false;
+                }
+                else if (LINE_IsSwitch.IsMatch(ln))
+                {
+                    if (parsingXD)
+                    {
+                        parsingXD = false;
+                        xDParsed = true;
+                    }
+                    if (parsingXF)
+                    {
+                        parsingXF = false;
+                        xFParsed = true;
+                    }
+                    if (xDParsed && xFParsed) break;
+                }
+                else
+                {
+                    //React to parsing the section
+                    if (parsingXF)
+                    {
+                        if (DirFileFilterRegex.IsMatch(ln))
+                        {
+                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
+                            if (!path.IsNullOrWhiteSpace())
+                            {
+                                options.ExcludedFiles.Add(path.WrapPath());
+                            }
+                        }
+                    }
+                    else if (parsingXD)
+                    {
+                        if (DirFileFilterRegex.IsMatch(ln))
+                        {
+                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
+                            if (!path.IsNullOrWhiteSpace())
+                            {
+                                options.ExcludedDirectories.Add(path.WrapPath());
+                            }
+                        }
+                    }
+                }
+            }
+            return options;
+        }
+
+        #endregion
+        #region < Logging Options >
+
+        /// <summary>
+        /// Parser to create LoggingOptions object for JobFiles
+        /// </summary>
+        private static LoggingOptions Build_LoggingOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
+        {
+            var options = new LoggingOptions();
+
+            //Bool Checks 
+            options.IncludeFullPathNames = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_FULL_PATH_NAMES.Trim());
+            options.IncludeSourceTimeStamps = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS.Trim());
+            options.ListOnly = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.LIST_ONLY.Trim());
+            options.NoDirectoryList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_DIRECTORY_LIST.Trim());
+            options.NoFileClasses = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_CLASSES.Trim());
+            options.NoFileList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_LIST.Trim());
+            options.NoFileSizes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_SIZES.Trim());
+            options.NoJobHeader = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_HEADER.Trim());
+            options.NoJobSummary = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_SUMMARY.Trim());
+            options.NoProgress = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_PROGRESS.Trim());
+            options.OutputAsUnicode = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_AS_UNICODE.Trim());
+            options.OutputToRoboSharpAndLog = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_TO_ROBOSHARP_AND_LOG.Trim());
+            options.PrintSizesAsBytes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.PRINT_SIZES_AS_BYTES.Trim());
+            options.ReportExtraFiles = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.REPORT_EXTRA_FILES.Trim());
+            options.ShowEstimatedTimeOfArrival = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL.Trim());
+            options.VerboseOutput = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.VERBOSE_OUTPUT.Trim());
+
+            //int / string values on same line as flag
+            foreach (var match in ValueFlags)
+            {
+                string flag = match["SWITCH"].Value;
+                string value = match["VALUE"].Value;
+
+                switch (flag)
+                {
+                    case "/LOG+":
+                        options.AppendLogPath = value;
+                        break;
+                    case "/UNILOG+":
+                        options.AppendUnicodeLogPath = value;
+                        break;
+                    case "/LOG":
+                        options.LogPath = value;
+                        break;
+                    case "/UNILOG":
+                        options.UnicodeLogPath = value;
+                        break;
+                }
+            }
+
+            return options;
+        }
+
+        #endregion
+        #region < Job Options >
+
+        /// <summary>
+        /// Parser to create JobOptions object for JobFiles
+        /// </summary>
+        private static JobOptions Build_JobOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
+        {
+            return new JobOptions();
+        }
+
+        #endregion
+    }
+}

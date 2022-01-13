@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using RoboSharp.JobFileRegex;
-using JobRegex = RoboSharp.JobFileRegex;
+using RoboSharp.Interfaces;
+using System.Threading.Tasks;
 
 namespace RoboSharp
 {
@@ -15,26 +15,35 @@ namespace RoboSharp
     /// <remarks>
     /// For more information, a good resource is here: <see href="https://adamtheautomator.com/robocopy/#Robocopy_Jobs"/>
     /// </remarks>
-    public class JobFile : ICloneable
+    public class JobFile : ICloneable, IRoboCommand
     {
-        // 
 
         #region < Constructor >
         
-        private JobFile() { }
+        /// <summary>
+        /// Create a JobFile with Default Options
+        /// </summary>
+        public JobFile() { }
 
-        public JobFile(RoboCommand cmd, string filePath)
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public JobFile(string path)
         {
-            RoboCmd = cmd;
-            FilePath = filePath;
+            FilePath = path;
+            roboCommand = JobFileBuilder.Parse(path);
         }
 
-
-        public JobFile(RoboCommand cmd, string filePath, bool ParseImmediately)
+        /// <inheritdoc cref="JobFileBuilder.Parse(StreamReader)"/>
+        public JobFile(StreamReader streamReader)
         {
-            RoboCmd = cmd;
-            FilePath = filePath;
-            if (ParseImmediately) this.Parse();
+            FilePath = "";
+            roboCommand = JobFileBuilder.Parse(streamReader);
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(FileInfo)"/>
+        public JobFile(FileInfo file)
+        {
+            FilePath = "";
+            roboCommand = JobFileBuilder.Parse(file);
         }
 
         /// <summary>
@@ -43,8 +52,8 @@ namespace RoboSharp
         /// <param name="jobFile"></param>
         public JobFile(JobFile jobFile)
         {
+            this.roboCommand = jobFile.roboCommand.Clone();
         }
-
 
         #endregion
 
@@ -59,37 +68,6 @@ namespace RoboSharp
 
         #endregion
 
-        #region < Constants >
-
-        /// <summary>
-        /// Any comments within the job file lines will start with this string
-        /// </summary>
-        public const string JOBFILE_CommentPrefix = ":: ";
-
-        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
-        public const string JOBFILE_Extension = JobOptions.JOB_FileExtension;
-
-        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
-        internal const string JOBFILE_JobName = ":: JOB_NAME: ";
-
-        /// <summary>
-        /// Regex to check if a string is a comment
-        /// </summary>
-        internal static Regex REGEX_IsComment = new Regex("^\\s*(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-        /// <summary>
-        /// Regex to check if the string is a flag for RoboCopy
-        /// </summary>
-        internal static Regex REGEX_IsSwitch = new Regex("^\\s*(?<SWITCH>\\/[A-Za-z])(?<DELIMITER>:)(?<VALUE>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-        /// <summary>
-        /// JobName for ROboCommand is not valid parameter for RoboCopy, so we save it into a comment within the file
-        /// </summary>
-        internal static Regex REGEX_JOB_NAME = new Regex("^\\s*(?<COMMENT>.*::JOB_NAME:\\s*)(?<Name>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-
-        #endregion
-
         #region < Fields >
 
         /// <summary>
@@ -101,26 +79,184 @@ namespace RoboSharp
 
         #region < Properties >
 
-        /// <summary>The RoboCommand object this JobFile is assigned to </summary>
-        public RoboCommand RoboCmd { get; private set; }
-
-        /// <summary>Log if this JobFile has been parsed yet </summary>
-        public bool HasBeenParsed { get; private set; }
-
         /// <summary>FilePath of the Job File </summary>
         public string FilePath { get; set; }
+
+        /// <inheritdoc cref="RoboCommand.Name"/>
+        public string Job_Name
+        {
+            get => roboCommand.Name;
+            set => roboCommand.Name = value;
+        }
+
+        /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
+        public CopyOptions CopyOptions => roboCommand.CopyOptions;
+
+        /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
+        public LoggingOptions LoggingOptions => roboCommand.LoggingOptions;
+        
+        /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
+        public RetryOptions RetryOptions => roboCommand.RetryOptions;
+        
+        /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
+        public SelectionOptions SelectionOptions => roboCommand.SelectionOptions;
 
         #endregion
 
         #region < Methods >
 
-        /// <summary> Reset the HasBeenParsed flag </summary>
-        public void ResetHasBeenParsed() => HasBeenParsed = false;
 
-        //Put the Parser method I wrote above here - Make sure to update HasBeenParsed=true once complete !
+        /// <summary>
+        /// Save the JobFile to <paramref name="path"/>
+        /// </summary>
+        /// <param name="path"></param>
+        /// <inheritdoc cref="Save()"/>
+        public void Save(string path)
+        {
+            FilePath = path;
+            Save();
+        }
+
+        /// <summary>
+        /// Save the JobFile to <see cref="FilePath"/>
+        /// </summary>
+        /// <exception cref="ArgumentException"/>
+        public void Save()
+        {
+            if (FilePath.IsNullOrWhiteSpace()) throw new ArgumentException("FilePath Property is Empty");
+        }
 
         #endregion
 
+        #region < IRoboCommand Interface >
 
+        #region < Events >
+
+        event RoboCommand.FileProcessedHandler IRoboCommand.OnFileProcessed
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnFileProcessed += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnFileProcessed -= value;
+            }
+        }
+
+        event RoboCommand.CommandErrorHandler IRoboCommand.OnCommandError
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnCommandError += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnCommandError -= value;
+            }
+        }
+
+        event RoboCommand.ErrorHandler IRoboCommand.OnError
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnError += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnError -= value;
+            }
+        }
+
+        event RoboCommand.CommandCompletedHandler IRoboCommand.OnCommandCompleted
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnCommandCompleted += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnCommandCompleted -= value;
+            }
+        }
+
+        event RoboCommand.CopyProgressHandler IRoboCommand.OnCopyProgressChanged
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnCopyProgressChanged += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnCopyProgressChanged -= value;
+            }
+        }
+
+        event RoboCommand.ProgressUpdaterCreatedHandler IRoboCommand.OnProgressEstimatorCreated
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).OnProgressEstimatorCreated += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).OnProgressEstimatorCreated -= value;
+            }
+        }
+
+        #endregion
+
+        #region < Properties >
+
+        string IRoboCommand.Name => roboCommand.Name;
+        bool IRoboCommand.IsPaused => roboCommand.IsPaused;
+        bool IRoboCommand.IsRunning => roboCommand.IsRunning;
+        bool IRoboCommand.IsScheduled => roboCommand.IsScheduled;
+        bool IRoboCommand.StopIfDisposing => roboCommand.StopIfDisposing;
+        IProgressEstimator IRoboCommand.IProgressEstimator => roboCommand.IProgressEstimator;
+        SelectionOptions IRoboCommand.SelectionOptions { get => ((IRoboCommand)roboCommand).SelectionOptions; set => ((IRoboCommand)roboCommand).SelectionOptions = value; }
+        RetryOptions IRoboCommand.RetryOptions { get => ((IRoboCommand)roboCommand).RetryOptions; set => ((IRoboCommand)roboCommand).RetryOptions = value; }
+        LoggingOptions IRoboCommand.LoggingOptions { get => roboCommand.LoggingOptions; set => roboCommand.LoggingOptions = value; }
+        CopyOptions IRoboCommand.CopyOptions { get => ((IRoboCommand)roboCommand).CopyOptions; set => ((IRoboCommand)roboCommand).CopyOptions = value; }
+        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration;
+        string IRoboCommand.CommandOptions => roboCommand.CommandOptions;
+
+        #endregion
+
+        #region < Methods >
+
+        void IRoboCommand.Pause()
+        {
+            ((IRoboCommand)roboCommand).Pause();
+        }
+
+        void IRoboCommand.Resume()
+        {
+            ((IRoboCommand)roboCommand).Resume();
+        }
+
+        Task IRoboCommand.Start(string domain, string username, string password)
+        {
+            return ((IRoboCommand)roboCommand).Start(domain, username, password);
+        }
+
+        void IRoboCommand.Stop()
+        {
+            ((IRoboCommand)roboCommand).Stop();
+        }
+
+        void IRoboCommand.Dispose()
+        {
+            return;
+        }
+        #endregion
+
+        #endregion
     }
 }

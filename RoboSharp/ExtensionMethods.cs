@@ -12,18 +12,41 @@ namespace RoboSharp
 {
     internal static class ExtensionMethods
     {
+        /// <summary> Encase the LogPath in quotes if needed </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static string WrapPath(this string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
+
         /// <remarks> Extension method provided by RoboSharp package </remarks>
         /// <inheritdoc cref="System.String.IsNullOrWhiteSpace(string)"/>
-        internal static bool IsNullOrWhiteSpace(this string value)
-        {
-            if (value == null)
-            {
-                return true;
-            }
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
-            return string.IsNullOrEmpty(value.Trim());
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static long TryConvertLong(this string val)
+        {
+            try
+            {
+                return Convert.ToInt64(val);
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static int TryConvertInt(this string val)
+        {
+            try
+            {
+                return Convert.ToInt32(val);
+            }
+            catch
+            {
+                return 0;
+            }
+
+        }
         public static string CleanOptionInput(this string option)
         {
             // Get rid of forward slashes

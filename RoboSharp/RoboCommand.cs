@@ -48,13 +48,14 @@ namespace RoboSharp
 
         /// <remarks> Each of the Options objects can be specified within this constructor. If left = null, a new object will be generated using the default options for that object. </remarks>
         /// <inheritdoc cref="Init"/>
-        public RoboCommand(string name, string source = null, string destination = null, bool StopIfDisposing = true, RoboSharpConfiguration configuration = null, CopyOptions copyOptions = null, SelectionOptions selectionOptions = null, RetryOptions retryOptions = null, LoggingOptions loggingOptions = null)
+        public RoboCommand(string name, string source = null, string destination = null, bool StopIfDisposing = true, RoboSharpConfiguration configuration = null, CopyOptions copyOptions = null, SelectionOptions selectionOptions = null, RetryOptions retryOptions = null, LoggingOptions loggingOptions = null, JobOptions jobOptions = null)
         {
             this.configuration = configuration ?? new RoboSharpConfiguration();
             this.copyOptions = copyOptions ?? new CopyOptions();
             this.selectionOptions = selectionOptions ?? new SelectionOptions();
             this.retryOptions = retryOptions ?? new RetryOptions();
             this.loggingOptions = loggingOptions ?? new LoggingOptions();
+            this.jobOptions = jobOptions ?? new JobOptions();
             Init(name, StopIfDisposing, source ?? CopyOptions.Source, destination ?? CopyOptions.Destination);
         }
 
