@@ -22,8 +22,15 @@ namespace RoboSharp.BackupApp
 
         #endregion
 
+        #region < RoboQueue Fields >
 
-        private Results.RoboCopyResultsList JobResults = new Results.RoboCopyResultsList();
+        /// <summary> List of RoboCommand objects to start at same time </summary>
+        private RoboSharp.RoboQueue RoboQueue = new RoboSharp.RoboQueue();
+        public ObservableCollection<FileError> MultiJobErrors = new ObservableCollection<FileError>();
+        private int[] AllowedJobCounts = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+
+        #endregion
+
         #region < Init >
 
         public MainWindow()
@@ -37,9 +44,41 @@ namespace RoboSharp.BackupApp
             //UnitTests
             new ObservableListTester().RunTest(); // Test ObservableList works properly
 
+            //Button Setup
+            btnAddToQueue.IsEnabled = true;
+            btnStartJobQueue.IsEnabled = false;
+            btnPauseQueue.IsEnabled = false;
+
             //Setup SingleJob Tab
             SingleJobExpander_JobHistory.BindToList(SingleJobResults);
             SingleJobErrorGrid.ItemsSource = SingleJobErrors;
+
+            //RoboQueue Setup
+            ListBox_RoboQueueJobs_MultiJobPage.ItemsSource = RoboQueue;
+            ListBox_RoboQueueJobs_OptionsPage.ItemsSource = RoboQueue;
+            MultiJobErrorGrid.ItemsSource = MultiJobErrors;
+
+            MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
+            MultiJob_ListOnlyResults.UpdateDescriptionLblText("List of results from this List-Only Operation.\nThis list is reset every time the queue is restarted.");
+
+            MultiJob_RunResults.BindToList(RoboQueue.RunResults);
+            MultiJob_RunResults.UpdateDescriptionLblText("List of results from this Copy/Move Operation.\nThis list is reset every time the queue is restarted.");
+
+            cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
+            cmbConcurrentJobs_MultiJobPage.ItemsSource = AllowedJobCounts;
+            cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
+
+            RoboQueue.RunResultsUpdated += RoboQueue_RunOperationResultsUpdated;
+            RoboQueue.ListResultsUpdated += RoboQueue_ListOnlyResultsUpdated;
+
+            RoboQueue.OnCommandError += RoboQueue_OnCommandError;
+            RoboQueue.OnError += RoboQueue_OnError; ;
+            RoboQueue.OnCommandCompleted += RoboQueue_OnCommandCompleted; ;
+            RoboQueue.OnProgressEstimatorCreated += RoboQueue_OnProgressEstimatorCreated;
+            RoboQueue.OnCommandStarted += RoboQueue_OnCommandStarted;
+            RoboQueue.CollectionChanged += RoboQueue_CollectionChanged;
+            //RoboQueue.OnCopyProgressChanged += copy_OnCopyProgressChanged; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
+            //RoboQueue.OnFileProcessed += RoboQueue_OnFileProcessed; // Not In Use for this project -> See MultiJob_CommandProgressIndicator
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -147,6 +186,66 @@ namespace RoboSharp.BackupApp
             return copy;
         }
 
+        private void LoadCommand(RoboCommand copy)
+        {
+            if (copy == null) return;
+            // copy options
+            Source.Text = copy.CopyOptions.Source;
+            Destination.Text = copy.CopyOptions.Destination;
+
+            // 
+            string fileFilterItems = "";
+            foreach (string s in copy.CopyOptions.FileFilter)
+                fileFilterItems += s;
+            FileFilter.Text = fileFilterItems;
+
+            CopySubDirectories.IsChecked = copy.CopyOptions.CopySubdirectories;
+            CopySubdirectoriesIncludingEmpty.IsChecked = copy.CopyOptions.CopySubdirectoriesIncludingEmpty;
+            Depth.Text = copy.CopyOptions.Depth.ToString();
+            EnableRestartMode.IsChecked = copy.CopyOptions.EnableRestartMode;
+            EnableBackupMode.IsChecked = copy.CopyOptions.EnableBackupMode;
+            EnableRestartModeWithBackupFallback.IsChecked = copy.CopyOptions.EnableRestartModeWithBackupFallback;
+            UseUnbufferedIo.IsChecked = copy.CopyOptions.UseUnbufferedIo;
+            EnableEfsRawMode.IsChecked = copy.CopyOptions.EnableEfsRawMode;
+            CopyFlags.Text = copy.CopyOptions.CopyFlags;
+            CopyFilesWithSecurity.IsChecked = copy.CopyOptions.CopyFilesWithSecurity;
+            CopyAll.IsChecked = copy.CopyOptions.CopyAll;
+            RemoveFileInformation.IsChecked = copy.CopyOptions.RemoveFileInformation;
+            FixFileSecurityOnAllFiles.IsChecked = copy.CopyOptions.FixFileSecurityOnAllFiles;
+            FixFileTimesOnAllFiles.IsChecked = copy.CopyOptions.FixFileTimesOnAllFiles;
+            Purge.IsChecked = copy.CopyOptions.Purge;
+            Mirror.IsChecked = copy.CopyOptions.Mirror;
+            MoveFiles.IsChecked = copy.CopyOptions.MoveFiles;
+            MoveFilesAndDirectories.IsChecked = copy.CopyOptions.MoveFilesAndDirectories;
+            AddAttributes.Text = copy.CopyOptions.AddAttributes;
+            RemoveAttributes.Text = copy.CopyOptions.RemoveAttributes;
+            CreateDirectoryAndFileTree.IsChecked = copy.CopyOptions.CreateDirectoryAndFileTree;
+            FatFiles.IsChecked = copy.CopyOptions.FatFiles;
+            TurnLongPathSupportOff.IsChecked = copy.CopyOptions.TurnLongPathSupportOff;
+
+            MonitorSourceChangesLimit.Text = copy.CopyOptions.MonitorSourceChangesLimit.ToString();
+            MonitorSourceTimeLimit.Text = copy.CopyOptions.MonitorSourceTimeLimit.ToString();
+
+            // select options
+            OnlyCopyArchiveFiles.IsChecked = copy.SelectionOptions.OnlyCopyArchiveFiles;
+            OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked = copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag;
+            IncludeAttributes.Text = copy.SelectionOptions.IncludeAttributes;
+            ExcludeAttributes.Text = copy.SelectionOptions.ExcludeAttributes;
+            ExcludeFiles.Text = copy.SelectionOptions.ExcludeFiles;
+            ExcludeDirectories.Text = copy.SelectionOptions.ExcludeDirectories;
+            ExcludeOlder.IsChecked = copy.SelectionOptions.ExcludeOlder;
+            ExcludeJunctionPoints.IsChecked = copy.SelectionOptions.ExcludeJunctionPoints;
+
+            // retry options
+            RetryCount.Text = copy.RetryOptions.RetryCount.ToString();
+            RetryWaitTime.Text = copy.RetryOptions.RetryWaitTime.ToString();
+
+            // logging options
+            VerboseOutput.IsChecked = copy.LoggingOptions.VerboseOutput;
+            NoFileSizes.IsChecked = copy.LoggingOptions.NoFileSizes;
+            NoProgress.IsChecked = copy.LoggingOptions.NoProgress;
+        }
+
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
         {
             Console.WriteLine(e.Message);
@@ -212,6 +311,243 @@ namespace RoboSharp.BackupApp
 
         #endregion
 
+        #region < Multi-Job >
+
+        #region < Button Events >
+
+        private void btn_AddToQueue(object sender, RoutedEventArgs e)
+        {
+            if (!RoboQueue.IsRunning)
+            {
+                var copy = GetCommand(false);
+                if (copy == null) return;
+                RoboQueue.AddCommand(copy);
+                btnStartJobQueue.IsEnabled = true;
+                btnStartJobQueue_Copy.IsEnabled = true;
+            }
+        }
+
+        private async void btn_StartQueue(object sender, RoutedEventArgs e)
+        {
+            if (!RoboQueue.IsRunning)
+            {
+                MultiJobProgressBar_JobsComplete.Value = 0;
+                MultiJobProgressBar_JobsComplete.Minimum = 0;
+                MultiJobProgressBar_JobsComplete.Maximum = RoboQueue.ListCount;
+
+                btnAddToQueue.IsEnabled = false;
+                btnRemoveSelectedJob.IsEnabled = false;
+                btnRemoveSelectedJob_Copy.IsEnabled = false;
+                btnReplaceSelected.IsEnabled = false;
+                btnUPdateSelectedJob_Copy.IsEnabled = false;
+
+                btnStartJobQueue.IsEnabled = true;
+                btnStartJobQueue.Content = "Stop Queued Jobs";
+
+                btnStartJobQueue_Copy.IsEnabled = true;
+                btnStartJobQueue_Copy.Content = "Stop Queued Jobs";
+
+                btnPauseQueue.IsEnabled = true;
+
+                RoboQueueProgressStackPanel.Children.Clear();
+
+                MultiJobProgressTab.IsSelected = true;
+                MultiJobExpander_Progress.IsExpanded = true;
+
+                if (chkListOnly.IsChecked == true)
+                    await RoboQueue.StartAll_ListOnly();
+                else
+                    await RoboQueue.StartAll();
+
+                btnPauseQueue.IsEnabled = false;
+                btnAddToQueue.Content = "Add to Queue";
+                btnStartJobQueue.Content = "Start Queued Jobs";
+                btnStartJobQueue_Copy.Content = "Start Queued Jobs";
+
+                btnAddToQueue.IsEnabled = true;
+                btnRemoveSelectedJob.IsEnabled = true;
+                btnRemoveSelectedJob_Copy.IsEnabled = true;
+                btnReplaceSelected.IsEnabled = true;
+                btnUPdateSelectedJob_Copy.IsEnabled = true;
+
+            }
+            else
+                RoboQueue.StopAll();
+        }
+
+        private void btn_PauseResumeQueue(object sender, RoutedEventArgs e)
+        {
+            if (!RoboQueue.IsPaused)
+            {
+                RoboQueue.PauseAll();
+                btnPauseQueue.Content = "Resume Job Queue";
+            }
+            else
+            {
+                RoboQueue.ResumeAll();
+                btnPauseQueue.Content = "Pause Job Queue";
+            }
+        }
+
+        /// <summary>
+        /// Remove RoboCommand from the list
+        /// </summary>
+        private void btn_RemoveSelected(object sender, RoutedEventArgs e)
+        {
+            var cmd = (RoboCommand)ListBox_RoboQueueJobs_MultiJobPage.SelectedItem;
+            RoboQueue.RemoveCommand(cmd);
+        }
+
+        /// <summary>
+        /// Load into Options Page
+        /// </summary>
+        private void btn_LoadSelected(object sender, RoutedEventArgs e)
+        {
+            LoadCommand((RoboCommand)ListBox_RoboQueueJobs_MultiJobPage.SelectedItem);
+        }
+
+        /// <summary>
+        /// Replace item in list with new RoboCommand
+        /// </summary>
+        private void btn_ReplaceSelected(object sender, RoutedEventArgs e)
+        {
+            int i = ListBox_RoboQueueJobs_MultiJobPage.SelectedIndex;
+            if (i >= 0)
+                RoboQueue.ReplaceCommand(GetCommand(false), i);
+            else
+                RoboQueue.AddCommand(GetCommand(false));
+        }
+
+        #endregion
+
+        #region < Progress Estimator >
+
+        private void RoboQueue_OnProgressEstimatorCreated(RoboQueue sender, EventArgObjects.ProgressEstimatorCreatedEventArgs e)
+        {
+            e.ResultsEstimate.DirectoriesStatistic.OnTotalChanged += DirectoriesStatistic_PropertyChanged;
+            e.ResultsEstimate.FilesStatistic.OnTotalChanged += FilesStatistic_PropertyChanged;
+            e.ResultsEstimate.BytesStatistic.OnTotalChanged += BytesStatistic_PropertyChanged;
+        }
+
+        private void DirectoriesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Directories, sender);
+        private void FilesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Files, sender);
+        private void BytesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Bytes, sender);
+
+        private void UpdateLabel(TextBlock lbl, RoboSharp.Results.Statistic stat)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                lbl.Text = stat?.ToString(true, true, "\n", true) ?? "";
+            });
+        }
+
+        #endregion
+
+        #region < RoboQueue & Command Events >
+
+        private void UpdateCommandsRunningBox()
+        {
+            Dispatcher.Invoke(() => MultiJob_JobRunningCount.Text = $"{RoboQueue.JobsCurrentlyRunning}");
+        }
+
+        /// <summary>
+        /// Add MultiJob_CommandProgressIndicator to window
+        /// </summary>
+        private void RoboQueue_OnCommandStarted(RoboQueue sender, EventArgObjects.RoboQueueCommandStartedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                RoboQueueProgressStackPanel.Children.Add(new MultiJob_CommandProgressIndicator(e.Command));
+            });
+            UpdateCommandsRunningBox();
+        }
+
+        /// <summary>
+        /// Disable associated MultiJob_CommandProgressIndicator to window
+        /// </summary>
+        private void RoboQueue_OnCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        {
+            UpdateCommandsRunningBox();
+            Dispatcher.Invoke(() =>
+            {
+                MultiJob_JobsCompleteXofY.Text = $"{RoboQueue.JobsComplete} of {RoboQueue.ListCount}";
+                MultiJobProgressBar_JobsComplete.Value = RoboQueue.JobsComplete;
+            });
+        }
+
+        /// <summary>
+        /// Removes unneeded FirstMultiProgressExpander controls
+        /// </summary>
+        private void RoboQueue_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+                {
+                    // Remove all FirstMultiProgressExpander
+                    RoboQueueProgressStackPanel.Children.Clear();
+                }
+                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                {
+                    //Remove associated MultiJob_CommandProgressIndicator
+                    var PBars = RoboQueueProgressStackPanel.Children.OfType<MultiJob_CommandProgressIndicator>();
+                    foreach (var element in PBars)
+                    {
+                        if (e.OldItems.Contains(element.Command))
+                            RoboQueueProgressStackPanel.Children.Remove(element);
+                        break;
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Log the Error to the Errors expander
+        /// </summary>
+        private void RoboQueue_OnError(RoboCommand sender, ErrorEventArgs e)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                MultiJobErrors.Insert(0, new FileError { Error = e.Error });
+                MultiJobExpander_Errors.Header = string.Format("Errors ({0})", MultiJobErrors.Count);
+            }));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <remarks>
+        /// Occurs while a command is starting prior to Robocopy starting (for example, due to missing source location), but won't break the entire RoboQueue. 
+        /// That single job will just not start, all others will.
+        /// </remarks>
+        private void RoboQueue_OnCommandError(RoboCommand sender, CommandErrorEventArgs e)
+        {
+            btn_StartQueue(null, null); // Stop Everything
+
+        }
+
+        /// <summary>
+        /// This listener is used to rebind the ListOnly results to the display listbox. 
+        /// It had to be done like this due to INotifyCollectionChanged not updating the listbox due to threading issues
+        /// </summary>
+        private void RoboQueue_ListOnlyResultsUpdated(object sender, EventArgObjects.ResultListUpdatedEventArgs e)
+        {
+            MultiJob_ListOnlyResults.BindToList(e.ResultsList);
+        }
+
+        /// <summary>
+        /// This listener is used to rebind the RunOperation results to the display listbox. 
+        /// It had to be done like this due to INotifyCollectionChanged not updating the listbox due to threading issues
+        /// </summary>
+        private void RoboQueue_RunOperationResultsUpdated(object sender, EventArgObjects.ResultListUpdatedEventArgs e)
+        {
+            MultiJob_RunResults.BindToList(e.ResultsList);
+        }
+
+        #endregion
+
+        #endregion
+
         #region < Options Page >
 
         private void SourceBrowseButton_Click(object sender, RoutedEventArgs e)
@@ -231,6 +567,32 @@ namespace RoboSharp.BackupApp
         #endregion
 
         #region < Form Stuff >
+
+        private void chkListOnly_Checked(object sender, RoutedEventArgs e)
+        {
+            chkListOnly.IsChecked = true;
+            chkListOnly_Copy.IsChecked = true;
+        }
+
+        private void chkListOnly_UnChecked(object sender, RoutedEventArgs e)
+        {
+            chkListOnly.IsChecked = false;
+            chkListOnly_Copy.IsChecked = false;
+        }
+
+        private void MultiJob_ConcurrentAmountChanged(object sender, RoutedEventArgs e)
+        {
+            RoboQueue.MaxConcurrentJobs = (int)((ComboBox)sender).SelectedItem;
+            cmbConcurrentJobs_OptionsPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
+            cmbConcurrentJobs_MultiJobPage.SelectedItem = RoboQueue.MaxConcurrentJobs;
+        }
+
+        private void RoboQueueListBoxSelectionChanged(object sender, RoutedEventArgs e)
+        {
+            var LB = (ListBox)sender;
+            ListBox_RoboQueueJobs_OptionsPage.SelectedIndex = LB.SelectedIndex;
+            ListBox_RoboQueueJobs_MultiJobPage.SelectedIndex = LB.SelectedIndex;
+        }
 
         private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {

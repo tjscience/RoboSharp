@@ -86,7 +86,7 @@ namespace RoboSharp
             copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
             selectionOptions = LinkSelectionOptions ? command.selectionOptions : command.SelectionOptions.Clone();
             retryOptions = LinkRetryOptions ? command.retryOptions : command.retryOptions.Clone();
-            loggingOptions = LinkLoggingOptions ? command.loggingOptions: command.loggingOptions.Clone();
+            loggingOptions = LinkLoggingOptions ? command.loggingOptions : command.loggingOptions.Clone();
             configuration = LinkConfiguration ? command.configuration : command.configuration.Clone();
         }
 
@@ -128,12 +128,12 @@ namespace RoboSharp
         private RetryOptions retryOptions;
         private LoggingOptions loggingOptions;
         private RoboSharpConfiguration configuration;
-        
+
         // Modified while running
         private Process process;
         private Task backupTask;
         private bool hasError;
-        private bool hasExited;
+        //private bool hasExited; //No longer evaluated
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
@@ -275,7 +275,7 @@ namespace RoboSharp
                     process.Kill();
                     isCancelled = true;
                 }
-                hasExited = true;
+                //hasExited = true;
                 process.Dispose();
                 process = null;
             }
@@ -384,69 +384,69 @@ namespace RoboSharp
             isRunning = !cancellationToken.IsCancellationRequested;
             DateTime StartTime = DateTime.Now;
 
-            backupTask = Task.Factory.StartNew(() =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+            backupTask = Task.Factory.StartNew(async () =>
+           {
+               cancellationToken.ThrowIfCancellationRequested();
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
+               OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
 
-                process = new Process();
+               process = new Process();
 
                 //Declare Encoding
                 process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
-                process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
+               process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
-                if (!string.IsNullOrEmpty(domain))
-                {
-                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
-                    process.StartInfo.Domain = domain;
-                }
+               if (!string.IsNullOrEmpty(domain))
+               {
+                   Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
+                   process.StartInfo.Domain = domain;
+               }
 
-                if (!string.IsNullOrEmpty(username))
-                {
-                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
-                    process.StartInfo.UserName = username;
-                }
+               if (!string.IsNullOrEmpty(username))
+               {
+                   Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
+                   process.StartInfo.UserName = username;
+               }
 
-                if (!string.IsNullOrEmpty(password))
-                {
-                    Debugger.Instance.DebugMessage("RoboCommand password entered.");
-                    var ssPwd = new System.Security.SecureString();
+               if (!string.IsNullOrEmpty(password))
+               {
+                   Debugger.Instance.DebugMessage("RoboCommand password entered.");
+                   var ssPwd = new System.Security.SecureString();
 
-                    for (int x = 0; x < password.Length; x++)
-                    {
-                        ssPwd.AppendChar(password[x]);
-                    }
+                   for (int x = 0; x < password.Length; x++)
+                   {
+                       ssPwd.AppendChar(password[x]);
+                   }
 
-                    process.StartInfo.Password = ssPwd;
-                }
+                   process.StartInfo.Password = ssPwd;
+               }
 
-                Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                process.StartInfo.CreateNoWindow = true;
-                process.StartInfo.FileName = Configuration.RoboCopyExe;
-                resultsBuilder.Source = CopyOptions.Source;
-                resultsBuilder.Destination = CopyOptions.Destination;
-                resultsBuilder.CommandOptions = GenerateParameters();
-                process.StartInfo.Arguments = resultsBuilder.CommandOptions;
-                process.OutputDataReceived += process_OutputDataReceived;
-                process.ErrorDataReceived += process_ErrorDataReceived;
-                process.EnableRaisingEvents = true;
-                hasExited = false;
+               Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
+               process.StartInfo.UseShellExecute = false;
+               process.StartInfo.RedirectStandardOutput = true;
+               process.StartInfo.RedirectStandardError = true;
+               process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+               process.StartInfo.CreateNoWindow = true;
+               process.StartInfo.FileName = Configuration.RoboCopyExe;
+               resultsBuilder.Source = CopyOptions.Source;
+               resultsBuilder.Destination = CopyOptions.Destination;
+               resultsBuilder.CommandOptions = GenerateParameters();
+               process.StartInfo.Arguments = resultsBuilder.CommandOptions;
+               process.OutputDataReceived += process_OutputDataReceived;
+               process.ErrorDataReceived += process_ErrorDataReceived;
+               process.EnableRaisingEvents = true;
+                //hasExited = false;
                 process.Exited += Process_Exited;
-                Debugger.Instance.DebugMessage("RoboCopy process started.");
-                process.Start();
-                process.BeginOutputReadLine();
-                process.BeginErrorReadLine();
-                process.WaitForExit();
+               Debugger.Instance.DebugMessage("RoboCopy process started.");
+               process.Start();
+               process.BeginOutputReadLine();
+               process.BeginErrorReadLine();
+               await process.WaitForExitAsync(); //Wait asynchronously for process to exit
                 results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
-                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+               Debugger.Instance.DebugMessage("RoboCopy process exited.");
+           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
@@ -478,14 +478,14 @@ namespace RoboSharp
         /// <summary> Process has either run to completion or has been killed prematurely </summary>
         void Process_Exited(object sender, System.EventArgs e)
         {
-            hasExited = true;
+            //hasExited = true;
         }
 
         /// <summary> React to Process.StandardOutput </summary>
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             var currentFile = resultsBuilder?.Estimator?.CurrentFile;
-            var currentDir = resultsBuilder?.Estimator?.CurrentDir; 
+            var currentDir = resultsBuilder?.Estimator?.CurrentDir;
             resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null)
@@ -496,13 +496,13 @@ namespace RoboSharp
 
             if (data.EndsWith("%", StringComparison.Ordinal))
             {
-               //Increment ProgressEstimator
-                if (data == "100%") 
-                    resultsBuilder?.AddFileCopied(currentFile); 
-                else 
-                    resultsBuilder?.SetCopyOpStarted(); 
+                //Increment ProgressEstimator
+                if (data == "100%")
+                    resultsBuilder?.AddFileCopied(currentFile);
+                else
                     resultsBuilder?.SetCopyOpStarted();
-                
+                resultsBuilder?.SetCopyOpStarted();
+
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
                     new CopyProgressEventArgs(
@@ -606,6 +606,14 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Set the results to null - This is to prevent adding results from a previous run being added to the results list by RoboQueue
+        /// </summary>
+        internal void ResetResults()
+        {
+            results = null;
+        }
+
+        /// <summary>
         /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
         /// </summary>
         /// <returns></returns>
@@ -670,10 +678,10 @@ namespace RoboSharp
             {
                 Stop();
             }
-                
+
             //Release any hooks to the process, but allow it to continue running
             process?.Dispose();
-            process = null; 
+            process = null;
 
             disposed = true;
         }
