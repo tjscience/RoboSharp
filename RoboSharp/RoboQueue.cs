@@ -162,7 +162,7 @@ namespace RoboSharp
         /// <para/> After the first request, the values will be updated every 250ms while the Queue is still running.
         /// </summary>
         public IProgressEstimator ProgressEstimator => Estimator;
-        
+
         /// <summary> 
         /// Indicates if a task is currently running or paused. <br/>
         /// When true, prevents starting new tasks and prevents modication of the list.
@@ -526,7 +526,7 @@ namespace RoboSharp
         {
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
-            
+
             RunResultsObj.Clear();
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
             DateTime StartTime = DateTime.Now;
@@ -568,53 +568,53 @@ namespace RoboSharp
             IsPaused = false;
 
             //Create a Task to Start all the RoboCommands
-            Task StartAll = Task.Factory.StartNew( async () =>
-            {
-                //Reset results of all commands in the list
-                foreach (RoboCommand cmd in CommandList)
-                    cmd.ResetResults();
+            Task StartAll = Task.Factory.StartNew(async () =>
+           {
+               //Reset results of all commands in the list
+               foreach (RoboCommand cmd in CommandList)
+                   cmd.ResetResults();
 
-                Estimator = new RoboQueueProgressEstimator();
-                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(Estimator));
+               Estimator = new RoboQueueProgressEstimator();
+               OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(Estimator));
 
-                //Start all commands, running as many as allowed
-                foreach (RoboCommand cmd in CommandList)
-                {
-                    if (cancellationToken.IsCancellationRequested) break;
+               //Start all commands, running as many as allowed
+               foreach (RoboCommand cmd in CommandList)
+               {
+                   if (cancellationToken.IsCancellationRequested) break;
 
-                    //Assign the events
-                    RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
-                    cmd.OnCommandCompleted += handler;
-                    cmd.OnCommandError += this.OnCommandError;
-                    cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
-                    cmd.OnError += this.OnError;
-                    cmd.OnFileProcessed += this.OnFileProcessed;
-                    cmd.OnProgressEstimatorCreated += Cmd_OnProgressEstimatorCreated;
+                   //Assign the events
+                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
+                   cmd.OnCommandCompleted += handler;
+                   cmd.OnCommandError += this.OnCommandError;
+                   cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
+                   cmd.OnError += this.OnError;
+                   cmd.OnFileProcessed += this.OnFileProcessed;
+                   cmd.OnProgressEstimatorCreated += Cmd_OnProgressEstimatorCreated;
 
-                    //Start the job
-                    //Once the job ends, unsubscribe events
-                    Task C = cmd.Start(domain, username, password);
-                    Task T = C.ContinueWith((t) =>
-                    {
-                        cmd.OnCommandCompleted -= handler;
-                        cmd.OnCommandError -= this.OnCommandError;
-                        cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
-                        cmd.OnError -= this.OnError;
-                        cmd.OnFileProcessed -= this.OnFileProcessed;
-                    }, CancellationToken.None);
-                    
-                    TaskList.Add(T);                    //Add the continuation task to the list.
-                    
-                    //Raise Events
-                    JobsStarted++; OnPropertyChanged("JobsStarted");
-                    if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new RoboQueueCommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
-                    OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
+                   //Start the job
+                   //Once the job ends, unsubscribe events
+                   Task C = cmd.Start(domain, username, password);
+                   Task T = C.ContinueWith((t) =>
+                   {
+                       cmd.OnCommandCompleted -= handler;
+                       cmd.OnCommandError -= this.OnCommandError;
+                       cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
+                       cmd.OnError -= this.OnError;
+                       cmd.OnFileProcessed -= this.OnFileProcessed;
+                   }, CancellationToken.None);
 
-                    //Check if more jobs are allowed to run
-                    while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
-                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
-                }
-            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+                   TaskList.Add(T);                    //Add the continuation task to the list.
+
+                   //Raise Events
+                   JobsStarted++; OnPropertyChanged("JobsStarted");
+                   if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new RoboQueueCommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
+                   OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
+
+                   //Check if more jobs are allowed to run
+                   while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
+                       await ThreadEx.CancellableSleep(500, SleepCancelToken);
+               }
+           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
             //After all commands have started, continue with waiting for all commands to complete.
             Task WhenAll = StartAll.ContinueWith((continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
@@ -692,7 +692,7 @@ namespace RoboSharp
                     foreach (RoboCommand cmd in CommandList)
                         cmd.Dispose();
                     CommandList.Clear();
-                }                
+                }
 
                 // TODO: set large fields to null
                 disposedValue = true;
