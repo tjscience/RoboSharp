@@ -254,7 +254,6 @@
                     <CheckBox x:Name="chkListOnly" Content="ListOnly Mode" HorizontalAlignment="Left" Margin="324,460,0,0" VerticalAlignment="Top" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked" Grid.Column="1"/>
                     <ComboBox x:Name="cmbConcurrentJobs_OptionsPage" HorizontalAlignment="Left" Margin="471,494,0,0" VerticalAlignment="Top" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged" Grid.Column="1"/>
                     <Label x:Name="lbloncurrentJobs" Content="Commands to run at once (0 = all):" HorizontalAlignment="Left" Margin="271,490,0,0" VerticalAlignment="Top" Grid.Column="1"/>
-
                 </Grid>
             </TabItem>
             <!-- Single-Job Tab -->

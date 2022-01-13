@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Interfaces;
+using RoboSharp.EventArgObjects;
 
 namespace RoboSharp
 {
@@ -28,7 +29,7 @@ namespace RoboSharp
         public RoboCommand(string name, bool stopIfDisposing = true)
         {
             InitClassProperties();
-            Init(name);
+            Init(name, stopIfDisposing);
         }
 
         /// <inheritdoc cref="Init"/>
@@ -45,6 +46,7 @@ namespace RoboSharp
             Init(name, stopIfDisposing, source, destination);
         }
 
+        /// <remarks> Each of the Options objects can be specified within this constructor. If left = null, a new object will be generated using the default options for that object. </remarks>
         /// <inheritdoc cref="Init"/>
         public RoboCommand(string name, string source = null, string destination = null, bool StopIfDisposing = true, RoboSharpConfiguration configuration = null, CopyOptions copyOptions = null, SelectionOptions selectionOptions = null, RetryOptions retryOptions = null, LoggingOptions loggingOptions = null)
         {
@@ -93,7 +95,7 @@ namespace RoboSharp
         /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
         /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
         /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
-        private void Init(string name = "", bool stopIfDisposing = false, string source = "", string destination = "")
+        private void Init(string name = "", bool stopIfDisposing = true, string source = "", string destination = "")
         {
             Name = name;
             StopIfDisposing = stopIfDisposing;
@@ -150,8 +152,8 @@ namespace RoboSharp
         public bool IsRunning { get { return isRunning; } }
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
-        /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled for some future time). Otherwise False. </summary>
-        public bool IsSchedsuled { get => !String.IsNullOrWhiteSpace(CopyOptions.RunHours); }
+        /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled to only operate within specified timeframe). Otherwise False. </summary>
+        public bool IsScheduled { get => !String.IsNullOrWhiteSpace(CopyOptions.RunHours); }
         /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
@@ -187,7 +189,10 @@ namespace RoboSharp
         /// <remarks>
         /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
         /// </remarks>
-        public Results.ProgressEstimator ProgressEstimator { get; private set; }
+        internal Results.ProgressEstimator ProgressEstimator { get; private set; }
+
+        /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
+        public IProgressEstimator IProgressEstimator => this.ProgressEstimator;
 
         /// <summary>
         /// Value indicating if the process should be killed when the <see cref="Dispose()"/> method is called.<br/>
@@ -225,7 +230,7 @@ namespace RoboSharp
         public event CopyProgressHandler OnCopyProgressChanged;
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
-        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, Results.ProgressEstimatorCreatedEventArgs e);
+        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, ProgressEstimatorCreatedEventArgs e);
         /// <summary>
         /// Occurs when a <see cref="Results.ProgressEstimator"/> is created during <see cref="Start"/>, allowing binding to occur within the event subscriber. <br/>
         /// This event will occur once per Start.
@@ -385,9 +390,13 @@ namespace RoboSharp
 
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new Results.ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
+                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
 
                 process = new Process();
+
+                //Declare Encoding
+                process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
+                process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
                 if (!string.IsNullOrEmpty(domain))
                 {
@@ -637,7 +646,7 @@ namespace RoboSharp
 
         bool disposed = false;
 
-        /// <summary>Dispose of this object. Kills RoboCopy process if <see cref="StopIfDisposing"/> == true &amp;&amp; <see cref="IsSchedsuled"/> == false. </summary>
+        /// <summary>Dispose of this object. Kills RoboCopy process if <see cref="StopIfDisposing"/> == true &amp;&amp; <see cref="IsScheduled"/> == false. </summary>
         /// <remarks><inheritdoc cref="IDisposable.Dispose" path="/summary"/></remarks>
         public void Dispose()
         {
@@ -665,7 +674,7 @@ namespace RoboSharp
 
             }
 
-            if (StopIfDisposing && !IsSchedsuled)
+            if (StopIfDisposing && !IsScheduled)
             {
                 Stop();
             }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RoboSharp
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public static class VersionManager
     {
         public enum VersionCheckType
@@ -127,4 +128,5 @@ namespace RoboSharp
             internal byte Reserved;
         }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

@@ -291,7 +291,7 @@ namespace RoboSharp
         /// </summary>
         public int MonitorSourceTimeLimit { get; set; }
         /// <summary>
-        /// Specifies run times when new copies may be started.
+        /// Specifies run times when new copies may be started. ( Copy Operation is scheduled to only operate within specified timeframe )
         /// [/rh:hhmm-hhmm] <br/>
         /// If copy operation is unfinished, robocopy will remain active in idle state until the specified time, at which it will resume copying.<br/>
         /// Must be in correct format. Incorrectly formatted strings will be ignored.  <para/>

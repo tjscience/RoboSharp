@@ -38,7 +38,6 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
-
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
 

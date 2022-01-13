@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
+using RoboSharp.EventArgObjects;
 
+// Do Not change NameSpace here! -> Must be RoboSharp due to prior releases
 namespace RoboSharp
 {
     /// <summary>
@@ -12,6 +14,8 @@ namespace RoboSharp
         /// Return the Results object
         /// </summary>
         /// <param name="results"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
         internal RoboCommandCompletedEventArgs(Results.RoboCopyResults results, DateTime startTime, DateTime endTime) : base(startTime, endTime)
         {
             this.Results = results;

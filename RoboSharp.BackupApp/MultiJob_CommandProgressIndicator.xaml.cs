@@ -50,9 +50,9 @@ namespace RoboSharp.BackupApp
         public void BindToCommand(RoboCommand cmd)
         {
             Command = cmd;
-            if (cmd.ProgressEstimator != null)
+            if (cmd.IProgressEstimator != null)
             {
-                BindToProgressEstimator(cmd.ProgressEstimator);
+                BindToProgressEstimator(cmd.IProgressEstimator);
             }
             else
             {
@@ -96,9 +96,9 @@ namespace RoboSharp.BackupApp
         #region < Progress Estimator >
 
         /// <summary> Bind the ProgressEstimator to the text controls on the PROGRESS tab </summary>
-        private void OnProgressEstimatorCreated(object sender, Results.ProgressEstimatorCreatedEventArgs e) => BindToProgressEstimator(e.ResultsEstimate);
+        private void OnProgressEstimatorCreated(object sender, EventArgObjects.ProgressEstimatorCreatedEventArgs e) => BindToProgressEstimator(e.ResultsEstimate);
 
-        private void BindToProgressEstimator(RoboSharp.Results.IProgressEstimator e)
+        private void BindToProgressEstimator(RoboSharp.Interfaces.IProgressEstimator e)
         {
             Dispatcher.Invoke(() =>
             {

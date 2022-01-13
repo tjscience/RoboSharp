@@ -5,78 +5,12 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using RoboSharp.EventArgObjects;
+using RoboSharp.Interfaces;
 using StatType = RoboSharp.Results.Statistic.StatType;
 
 namespace RoboSharp.Results
 {
-    /// <summary>
-    /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
-    /// </summary>
-    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable
-    {
-        #region < Properties >
-
-        /// <summary> Sum of all DirectoryStatistics objects </summary>
-        IStatistic DirectoriesStatistic { get; }
-
-        /// <summary> Sum of all ByteStatistics objects </summary>
-        IStatistic BytesStatistic { get; }
-
-        /// <summary> Sum of all FileStatistics objects </summary>
-        IStatistic FilesStatistic { get; }
-
-        /// <summary> Average of all SpeedStatistics objects </summary>
-        ISpeedStatistic SpeedStatistic { get; }
-
-        /// <summary> Sum of all RoboCopyExitStatus objects </summary>
-        IRoboCopyCombinedExitStatus Status { get; }
-
-        /// <inheritdoc cref="List{T}.Count"/>
-        int Count { get; }
-        
-        #endregion
-
-        #region < Methods >
-
-        /// <summary>
-        /// Get a snapshot of the ByteStatistics objects from this list.
-        /// </summary>
-        /// <returns>New array of the ByteStatistic objects</returns>
-        IStatistic[] GetByteStatistics();
-
-        /// <summary>
-        /// Get a snapshot of the DirectoriesStatistic objects from this list.
-        /// </summary>
-        /// <returns>New array of the DirectoriesStatistic objects</returns>
-        IStatistic[] GetDirectoriesStatistics();
-
-        /// <summary>
-        /// Get a snapshot of the FilesStatistic objects from this list.
-        /// </summary>
-        /// <returns>New array of the FilesStatistic objects</returns>
-        IStatistic[] GetFilesStatistics();
-
-        /// <summary>
-        /// Get a snapshot of the FilesStatistic objects from this list.
-        /// </summary>
-        /// <returns>New array of the FilesStatistic objects</returns>
-        RoboCopyExitStatus[] GetStatuses();
-
-        /// <summary>
-        /// Get a snapshot of the FilesStatistic objects from this list.
-        /// </summary>
-        /// <returns>New array of the FilesStatistic objects</returns>
-        ISpeedStatistic[] GetSpeedStatistics();
-
-        /// <summary>
-        /// Copy the values within the list to a new object
-        /// </summary>
-        /// <returns>new <see cref="RoboCopyResultsList"/> object</returns>
-        new RoboCopyResultsList Clone();
-
-        #endregion
-    }
-
     /// <summary>
     /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
     /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.
@@ -374,24 +308,6 @@ namespace RoboSharp.Results
 
         #endregion
 
-    }
-
-    /// <summary> EventArgs for the <see cref="RoboCopyResultsList.ResultsListUpdated"/> delegate </summary>
-    public class ResultListUpdatedEventArgs : EventArgs
-    {
-        private ResultListUpdatedEventArgs() { }
-
-        /// <summary> Create the EventArgs for the <see cref="RoboCopyResultsList.ResultsListUpdated"/> delegate </summary>
-        /// <param name="list">Results list to present as an interface</param>
-        public ResultListUpdatedEventArgs(IRoboCopyResultsList list)
-        {
-            ResultsList = list;
-        }
-
-        /// <summary>
-        /// Read-Only interface to the List that has been updated.
-        /// </summary>
-        public IRoboCopyResultsList ResultsList { get; }
     }
 
 }

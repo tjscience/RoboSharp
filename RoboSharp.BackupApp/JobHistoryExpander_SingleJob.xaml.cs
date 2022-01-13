@@ -31,12 +31,12 @@ namespace RoboSharp.BackupApp
             BindToResults(ResultsObj);
         }
 
-        public RoboSharp.Results.IStatistic ByteStat { get; private set; }
-        public RoboSharp.Results.IStatistic DirStat { get; private set; }
-        public RoboSharp.Results.IStatistic FileStat { get; private set; }
+        public RoboSharp.Interfaces.IStatistic ByteStat { get; private set; }
+        public RoboSharp.Interfaces.IStatistic DirStat { get; private set; }
+        public RoboSharp.Interfaces.IStatistic FileStat { get; private set; }
         public bool IsResultsListBound { get; private set; } = false;
 
-        private RoboSharp.Results.IRoboCopyResultsList ResultsList { get; set; }
+        private RoboSharp.Interfaces.IRoboCopyResultsList ResultsList { get; set; }
         private RoboSharp.Results.RoboCopyResults ResultsObj { get; set; }
 
 
@@ -66,7 +66,7 @@ namespace RoboSharp.BackupApp
         /// Bind to a ResultsList
         /// </summary>
         /// <param name="list"></param>
-        public void BindToResultsList(RoboSharp.Results.IRoboCopyResultsList list)
+        public void BindToResultsList(RoboSharp.Interfaces.IRoboCopyResultsList list)
         {
             Unbind();
 
@@ -114,7 +114,7 @@ namespace RoboSharp.BackupApp
         private void FilesStatistic_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(lbl_SelectedItem_Files, FileStat);
         private void BytesStatistic_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(lbl_SelectedItem_Bytes, ByteStat);
 
-        private void UpdateLabel(Label lbl, RoboSharp.Results.IStatistic stat)
+        private void UpdateLabel(Label lbl, RoboSharp.Interfaces.IStatistic stat)
         {
             // Dispatcher is required to ensure this code runs on the UI thread, since all processing up to this point was potentially done on a worker thread.
             Dispatcher.Invoke(

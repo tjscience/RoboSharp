@@ -1,34 +1,15 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.Results
 {
-    /// <summary>
-    /// Provide Read-Only access to a SpeedStatistic
-    /// </summary>
-    public interface ISpeedStatistic : INotifyPropertyChanged, ICloneable
-    {
-        /// <summary> Average Transfer Rate in Bytes/Second </summary>
-        decimal BytesPerSec { get; }
-
-        /// <summary> Average Transfer Rate in MB/Minute</summary>
-        decimal MegaBytesPerMin { get; }
-
-        /// <inheritdoc cref="SpeedStatistic.ToString"/>
-        string ToString();
-
-        /// <returns>new <see cref="SpeedStatistic"/> object </returns>
-        /// <inheritdoc cref="SpeedStatistic.SpeedStatistic(SpeedStatistic)"/>
-        new SpeedStatistic Clone();
-    }
-    
     /// <summary>
     /// Contains information regarding average Transfer Speed. <br/>
     /// Note: Runs that do not perform any copy operations or that exited prematurely ( <see cref="RoboCopyExitCodes.Cancelled"/> ) will result in a null <see cref="SpeedStatistic"/> object.
