@@ -22,6 +22,6 @@ namespace RoboSharp.JobFileRegex
         /// <summary>
         /// Regex to find the DestinationDirectory within the JobFile
         /// </summary>
-        internal static Regex REGEX_DestinationDir = new Regex("^\\s*(?<SWITCH>/DD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        //internal static Regex REGEX_DestinationDir = new Regex("^\\s*(?<SWITCH>/DD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
     }
 }
