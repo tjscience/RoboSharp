@@ -9,8 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Collections.Concurrent;
-using RoboSharp.Interfaces;
 using RoboSharp.EventArgObjects;
+using RoboSharp.Interfaces;
 using RoboSharp.Results;
 
 namespace RoboSharp
@@ -406,64 +406,22 @@ namespace RoboSharp
         #region < CommandStarted Event >
 
         /// <summary>Handles <see cref="OnCommandStarted"/></summary>
-        public delegate void CommandStartedHandler(RoboQueue sender, CommandStartedEventArgs e);
+        public delegate void CommandStartedHandler(RoboQueue sender, RoboQueueCommandStartedEventArgs e);
         /// <summary>
         /// Occurs each time a Command has started succesfully
         /// </summary>
         public event CommandStartedHandler OnCommandStarted;
-
-        /// <summary>
-        /// EventArgs to declare when a RoboCommand process starts
-        /// </summary>
-        public class CommandStartedEventArgs : EventArgs
-        {
-            private CommandStartedEventArgs() : base() { }
-            internal CommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = System.DateTime.Now; }
-
-            /// <summary>
-            /// Command that started.
-            /// </summary>
-            public RoboCommand Command { get; }
-
-            /// <summary>
-            /// Returns TRUE if the command's <see cref="RoboSharp.Results.ProgressEstimator"/> is available for binding
-            /// </summary>
-            public bool ProgressEstimatorAvailable => Command.IsRunning;
-
-            /// <summary>
-            /// Local time the command started.
-            /// </summary>
-            public System.DateTime StartTime { get; }
-        }
 
         #endregion
 
         #region < RunComplete Event >
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
-        public delegate void RunCompletedHandler(RoboQueue sender, RunCompletedEventArgs e);
+        public delegate void RunCompletedHandler(RoboQueue sender, RoboQueueCompletedEventArgs e);
         /// <summary>
         /// Occurs after when the task started by the StartAll and StartAll_ListOnly methods has finished executing.
         /// </summary>
         public event RunCompletedHandler RunCompleted;
-
-        /// <summary>
-        /// EventArgs to declare when a RoboCommand process starts
-        /// </summary>
-        public class RunCompletedEventArgs : TimeSpanEventArgs
-        {
-            internal RunCompletedEventArgs(RoboCopyResultsList runResults, DateTime startTime, DateTime endTime) : base(startTime,endTime) 
-            {
-                RunResults = new RoboCopyResultsList(runResults);
-            }
-
-            /// <summary>
-            /// Command that started.
-            /// </summary>
-            public RoboCopyResultsList RunResults { get; }
-
-        }
-
 
         #endregion
 
@@ -553,7 +511,7 @@ namespace RoboSharp
                 IsListOnlyRunning = false;
                 IsPaused = false;
                 ListOnlyCompleted = !WasCancelled;
-                RunCompleted?.Invoke(this, new RunCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
+                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
             }
             );
             return ResultsTask;
@@ -578,7 +536,7 @@ namespace RoboSharp
                 IsCopyOperationRunning = false;
                 IsPaused = false;
                 CopyOperationCompleted = !WasCancelled;
-                RunCompleted?.Invoke(this, new RunCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
+                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
             }
             );
             return ResultsTask;
@@ -649,7 +607,7 @@ namespace RoboSharp
                     
                     //Raise Events
                     JobsStarted++; OnPropertyChanged("JobsStarted");
-                    if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new CommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
+                    if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new RoboQueueCommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
                     OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                     //Check if more jobs are allowed to run
