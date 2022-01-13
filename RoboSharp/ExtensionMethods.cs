@@ -81,6 +81,80 @@ namespace RoboSharp
     }
 }
 
+namespace System.Threading
+
+{
+    /// <summary>
+    /// Contains methods for CancelleableSleep
+    /// </summary>
+    internal static class ThreadEx
+    {
+
+        /// <param name="timeSpan">TimeSpan to sleep the thread</param>
+        /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
+        /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static Task<bool> CancellableSleep(TimeSpan timeSpan, CancellationToken token)
+        {
+            return CancellableSleep((int)timeSpan.TotalMilliseconds, token);
+        }
+
+        /// <inheritdoc cref="CancellableSleep(int, CancellationToken[])"/>
+        /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static Task<bool> CancellableSleep(TimeSpan timeSpan, CancellationToken[] tokens)
+        {
+            return CancellableSleep((int)timeSpan.TotalMilliseconds, tokens);
+        }
+
+        /// <summary>
+        /// Use await Task.Delay to sleep the thread. <br/>
+        /// Supplied token is used to create a LinkedToken that can cancel the sleep at any point.
+        /// </summary>
+        /// <returns>True if timer has expired (full duration slep), otherwise false.</returns>
+        /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
+        /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken token)
+        {
+            try 
+            {
+                await Task.Delay(millisecondsTimeout, token);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Use await Task.Delay to sleep the thread. <br/>
+        /// Supplied tokens are used to create a LinkedToken that can cancel the sleep at any point.
+        /// </summary>
+        /// <returns>True if slept full duration, otherwise false.</returns>
+        /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
+        /// <param name="tokens">Use <see cref="CancellationTokenSource.CreateLinkedTokenSource(CancellationToken[])"/> to create the token used to cancel the delay</param>
+        /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken[] tokens)
+        {
+            try
+            {
+                var token = CancellationTokenSource.CreateLinkedTokenSource(tokens).Token;
+                await Task.Delay(millisecondsTimeout, token);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
+    }
+}
+
 namespace System.Diagnostics
 {
     /// <summary>
