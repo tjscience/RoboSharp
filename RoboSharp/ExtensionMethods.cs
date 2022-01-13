@@ -12,6 +12,18 @@ namespace RoboSharp
 {
     internal static class ExtensionMethods
     {
+        /// <remarks> Extension method provided by RoboSharp package </remarks>
+        /// <inheritdoc cref="System.String.IsNullOrWhiteSpace(string)"/>
+        internal static bool IsNullOrWhiteSpace(this string value)
+        {
+            if (value == null)
+            {
+                return true;
+            }
+
+            return string.IsNullOrEmpty(value.Trim());
+        }
+
         public static string CleanOptionInput(this string option)
         {
             // Get rid of forward slashes
@@ -69,15 +81,6 @@ namespace RoboSharp
         /// </summary>
         public static bool EndsWithDirectorySeperator(this string path) => path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString());
 
-        /// <summary>
-        /// Wait synchronously until this task has reached the specified <see cref="TaskStatus"/>
-        /// </summary>
-        public static void WaitUntil(this Task t, TaskStatus status )
-        {
-            while (t.Status < status)
-                System.Threading.Thread.Sleep(150);
-        }
-
     }
 }
 
@@ -85,10 +88,42 @@ namespace System.Threading
 
 {
     /// <summary>
-    /// Contains methods for CancelleableSleep
+    /// Contains methods for CancelleableSleep and WaitUntil
     /// </summary>
     internal static class ThreadEx
     {
+
+        /// <summary>
+        /// Wait synchronously until this task has reached the specified <see cref="TaskStatus"/>
+        /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        public static void WaitUntil(this Task t, TaskStatus status)
+        {
+            while (t.Status < status)
+                Thread.Sleep(100);
+        }
+
+        /// <summary>
+        /// Wait asynchronously until this task has reached the specified <see cref="TaskStatus"/> <br/>
+        /// Checks every 100ms
+        /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        public static async Task WaitUntilAsync(this Task t, TaskStatus status)
+        {
+            while (t.Status < status)
+                await Task.Delay(100);
+        }
+
+        /// <summary>
+        /// Wait synchronously until this task has reached the specified <see cref="TaskStatus"/><br/>
+        /// Checks every <paramref name="interval"/> milliseconds
+        /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        public static async Task WaitUntilAsync(this Task t, TaskStatus status, int interval)
+        {
+            while (t.Status < status)
+                await Task.Delay(interval);
+        }
 
         /// <param name="timeSpan">TimeSpan to sleep the thread</param>
         /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
