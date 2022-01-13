@@ -128,6 +128,7 @@ namespace RoboSharp
         private RetryOptions retryOptions;
         private LoggingOptions loggingOptions;
         private RoboSharpConfiguration configuration;
+        private JobOptions jobOptions;
 
         // Modified while running
         private Process process;
@@ -179,6 +180,12 @@ namespace RoboSharp
         {
             get { return loggingOptions; }
             set { loggingOptions = value ?? loggingOptions; }
+        }
+        /// <inheritdoc cref="RoboSharp.JobOptions"/>
+        public JobOptions JobOptions
+        {
+            get { return jobOptions; }
+            set { jobOptions = value ?? jobOptions; }
         }
         /// <inheritdoc cref="RoboSharp.RoboSharpConfiguration"/>
         public RoboSharpConfiguration Configuration
