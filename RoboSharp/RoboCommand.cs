@@ -384,7 +384,7 @@ namespace RoboSharp
             isRunning = !cancellationToken.IsCancellationRequested;
             DateTime StartTime = DateTime.Now;
 
-            backupTask = Task.Factory.StartNew(() =>
+            backupTask = Task.Factory.StartNew( async () =>
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
@@ -443,7 +443,7 @@ namespace RoboSharp
                 process.Start();
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
-                process.WaitForExit();
+                await process.WaitForExitAsync(); //Wait asynchronously for process to exit
                 results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                 Debugger.Instance.DebugMessage("RoboCopy process exited.");
             }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
@@ -603,6 +603,14 @@ namespace RoboSharp
         public Results.RoboCopyResults GetResults()
         {
             return results;
+        }
+
+        /// <summary>
+        /// Set the results to null - This is to prevent adding results from a previous run being added to the results list by RoboQueue
+        /// </summary>
+        internal void ResetResults()
+        {
+            results = null;
         }
 
         /// <summary>
