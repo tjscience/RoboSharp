@@ -192,6 +192,7 @@ namespace RoboSharp.BackupApp
         {
             if (copy == null) return;
             // copy options
+            JobName.Text = copy.Name;
             Source.Text = copy.CopyOptions.Source;
             Destination.Text = copy.CopyOptions.Destination;
 
@@ -300,7 +301,7 @@ namespace RoboSharp.BackupApp
             }
         }
 
-        private void BtnSaveJob_Click(object sender, RoutedEventArgs e)
+        private async void BtnSaveJob_Click(object sender, RoutedEventArgs e)
         {
             var FP = new SaveFileDialog();
             FP.Filter = RoboSharp.JobFile.JOBFILE_DialogFilter;
@@ -310,7 +311,7 @@ namespace RoboSharp.BackupApp
                 bool? FilePicked = FP.ShowDialog(this);
                 if (FilePicked ?? false)
                 {
-                    GetCommand(false).SaveAsJobFile(FP.FileName).Wait();
+                    await GetCommand(false).SaveAsJobFile(FP.FileName);
                 }
                 else
                 {
