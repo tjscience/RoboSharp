@@ -25,27 +25,6 @@ namespace RoboSharp
         /// </summary>
         public JobFile() { }
 
-        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
-        public JobFile(string path)
-        {
-            FilePath = path;
-            roboCommand = JobFileBuilder.Parse(path);
-        }
-
-        /// <inheritdoc cref="JobFileBuilder.Parse(StreamReader)"/>
-        public JobFile(StreamReader streamReader)
-        {
-            FilePath = "";
-            roboCommand = JobFileBuilder.Parse(streamReader);
-        }
-
-        /// <inheritdoc cref="JobFileBuilder.Parse(FileInfo)"/>
-        public JobFile(FileInfo file)
-        {
-            FilePath = "";
-            roboCommand = JobFileBuilder.Parse(file);
-        }
-
         /// <summary>
         /// Constructor for ICloneable Interface
         /// </summary>
@@ -53,6 +32,51 @@ namespace RoboSharp
         public JobFile(JobFile jobFile)
         {
             this.roboCommand = jobFile.roboCommand.Clone();
+        }
+
+        /// <summary>
+        /// Constructor for Factory Methods
+        /// </summary>
+        private JobFile(string filePath, RoboCommand cmd)
+        {
+            FilePath = filePath;
+            roboCommand = cmd;
+        }
+
+        #endregion
+
+        #region < Factory Methods >
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public static JobFile ParseJobFile(string path)
+        {
+            RoboCommand cmd = JobFileBuilder.Parse(path);
+            if (cmd != null) return new JobFile(path, cmd);
+            return null;
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(StreamReader)"/>
+        public static JobFile ParseJobFile(StreamReader streamReader)
+        {
+            RoboCommand cmd = JobFileBuilder.Parse(streamReader);
+            if (cmd != null) return new JobFile("", cmd);
+            return null;
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(FileInfo)"/>
+        public static JobFile ParseJobFile(FileInfo file)
+        {
+            RoboCommand cmd = JobFileBuilder.Parse(file);
+            if (cmd != null) return new JobFile(file.FullName, cmd);
+            return null;
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(IEnumerable{String})"/>
+        public static JobFile ParseJobFile(IEnumerable<string> FileText)
+        {
+            RoboCommand cmd = JobFileBuilder.Parse(FileText);
+            if (cmd != null) return new JobFile("", cmd);
+            return null;
         }
 
         #endregion

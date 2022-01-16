@@ -285,14 +285,15 @@ namespace RoboSharp.BackupApp
             FP.Title = "Select RoboCopy Job File.";
             try
             {
+                JobFile JF = null;
                 bool? FilePicked = FP.ShowDialog(this);
                 if (FilePicked ?? false)
+                    JF = JobFile.ParseJobFile(FP.FileName);
+                if (JF != null)
                 {
                     var oldCmd = GetCommand(false);
-                    var JF = new JobFile(FP.FileName);
                     oldCmd.MergeJobFile(JF);//Perform Merge Test
-                    LoadCommand((IRoboCommand)oldCmd);
-                    
+                    LoadCommand((IRoboCommand)JF);
                 }
                 else
                 {

@@ -190,6 +190,11 @@ namespace RoboSharp
 
         #region <> Main Parse Routine >
 
+        /// <summary>
+        /// Parse each line in <paramref name="Lines"/>, and attempt to create a new JobFile object.
+        /// </summary>
+        /// <param name="Lines">String[] read from a JobFile</param>
+        /// <returns></returns>
         internal static RoboCommand Parse(IEnumerable<string> Lines)
         {
             //Extract information from the Lines to quicken processing in *OptionsRegex classes
