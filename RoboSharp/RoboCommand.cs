@@ -273,7 +273,9 @@ namespace RoboSharp
         }
 
         /// <summary> Immediately Kill the RoboCopy process</summary>
-        public void Stop()
+        public void Stop() => Stop(false);
+
+        private void Stop(bool DisposeProcess)
         {
             //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
             //If the removal of that check broke your application, please create a new issue thread on the repo.
@@ -285,8 +287,11 @@ namespace RoboSharp
                     isCancelled = true;
                 }
                 //hasExited = true;
-                process.Dispose();
-                process = null;
+                if (DisposeProcess)
+                {
+                    process.Dispose();
+                    process = null;
+                }
             }
             isPaused = false;
         }
@@ -464,13 +469,14 @@ namespace RoboSharp
                process.ErrorDataReceived += process_ErrorDataReceived;
                process.EnableRaisingEvents = true;
                //hasExited = false;
-               process.Exited += Process_Exited;
+               //Setup the Wait Cancellation Token
+               var WaitExitSource = new CancellationTokenSource();
+               process.Exited += (o,e) => Process_Exited(WaitExitSource);
                Debugger.Instance.DebugMessage("RoboCopy process started.");
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               await process.WaitForExitAsync();    //Wait asynchronously for process to exit
-               process.WaitForExit();
+               await process.WaitForExitAsync(WaitExitSource.Token);    //Wait asynchronously for process to exit
                if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied
                {
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
@@ -481,7 +487,7 @@ namespace RoboSharp
             Task continueWithTask = backupTask.ContinueWith( (continuation) => // this task always runs
             {
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
-                Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
+                Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
                 //Run Post-Processing of the Generated JobFile if one was created.
                 JobOptions.RunPostProcessing(this);
@@ -545,9 +551,10 @@ namespace RoboSharp
         }
 
         /// <summary> Process has either run to completion or has been killed prematurely </summary>
-        void Process_Exited(object sender, System.EventArgs e)
+        void Process_Exited(CancellationTokenSource WaitExitSource)
         {
             //hasExited = true;
+            WaitExitSource.Cancel();
         }
 
         /// <summary> React to Process.StandardOutput </summary>
@@ -762,7 +769,7 @@ namespace RoboSharp
 
             if (StopIfDisposing && !IsScheduled)
             {
-                Stop();
+                Stop(true);
             }
 
             //Release any hooks to the process, but allow it to continue running

@@ -40,7 +40,7 @@ namespace RoboSharp
         /// <summary>
         /// Initialize a new (empty) <see cref="RoboQueue"/> object with a specificed Name.
         /// </summary>
-        /// <inheritdoc cref="RoboQueue(IEnumerable{RoboCommand}, string, int)"/>
+        /// <inheritdoc cref="RoboQueue(IEnumerable{IRoboCommand}, string, int)"/>
         public RoboQueue(string name, int maxConcurrentJobs = 1)
         {
             Init(name, maxConcurrentJobs);
@@ -50,7 +50,7 @@ namespace RoboSharp
         /// <summary>
         /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>.
         /// </summary>
-        /// <inheritdoc cref="RoboQueue(IEnumerable{RoboCommand}, string, int)"/>
+        /// <inheritdoc cref="RoboQueue(IEnumerable{IRoboCommand}, string, int)"/>
         public RoboQueue(RoboCommand roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.Add(roboCommand);
@@ -442,7 +442,7 @@ namespace RoboSharp
         public RoboCopyResultsList GetRunResults() => new RoboCopyResultsList(RunResults);
 
         /// <summary>
-        /// Run <see cref="RoboCommand.Stop"/> against all items in the list.
+        /// Run <see cref="RoboCommand.Stop()"/> against all items in the list.
         /// </summary>
         public void StopAll()
         {

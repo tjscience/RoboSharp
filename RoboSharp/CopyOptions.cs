@@ -302,7 +302,7 @@ namespace RoboSharp
         /// 0015-0530 -> Robocopy will only copy between 12:15 AM and 5:30 AM <br/>
         /// </summary>
         /// <remarks>
-        /// If this is set up, then the robocopy process will remain active after the program exits if the calling asemmbly does not call <see cref="RoboCommand.Stop"/> prior to exiting the application.
+        /// If this is set up, then the robocopy process will remain active after the program exits if the calling asemmbly does not call <see cref="RoboCommand.Stop()"/> prior to exiting the application.
         /// </remarks>
         public string RunHours
         {

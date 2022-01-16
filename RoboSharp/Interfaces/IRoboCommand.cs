@@ -86,7 +86,7 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.Start(string, string, string)"/>
         Task Start(string domain = "", string username = "", string password = "");
         
-        /// <inheritdoc cref="RoboCommand.Stop"/>
+        /// <inheritdoc cref="RoboCommand.Stop()"/>
         void Stop();
         
         /// <inheritdoc cref="RoboCommand.Dispose()"/>

@@ -221,17 +221,9 @@ namespace System.Threading
         /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
         /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken token)
+        internal static Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken token)
         {
-            try 
-            {
-                await Task.Delay(millisecondsTimeout, token);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return Task.Delay(millisecondsTimeout, token).ContinueWith(t => t.Exception == default);
         }
 
         /// <summary>
@@ -243,21 +235,11 @@ namespace System.Threading
         /// <param name="tokens">Use <see cref="CancellationTokenSource.CreateLinkedTokenSource(CancellationToken[])"/> to create the token used to cancel the delay</param>
         /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken[] tokens)
+        internal static Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken[] tokens)
         {
-            try
-            {
-                var token = CancellationTokenSource.CreateLinkedTokenSource(tokens).Token;
-                await Task.Delay(millisecondsTimeout, token);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var token = CancellationTokenSource.CreateLinkedTokenSource(tokens).Token;
+            return Task.Delay(millisecondsTimeout, token).ContinueWith(t => t.Exception == default);
         }
-
-
     }
 }
 
@@ -271,12 +253,12 @@ namespace System.Diagnostics
         /// <summary>
         /// Create a task that asynchronously waits for a process to exit. <see cref="Process.HasExited"/> will be evaluated every 100ms.
         /// </summary>
-        /// <inheritdoc cref="WaitForExitAsync(Process, int)"/>
+        /// <inheritdoc cref="WaitForExitAsync(Process, int, CancellationToken)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task WaitForExitAsync(this Process process)
+        internal static async Task WaitForExitAsync(this Process process, CancellationToken token)
         {
-            while (!process.HasExited)
-                await Task.Delay(100);
+            while (!token.IsCancellationRequested && !process.HasExited)
+                await Task.Delay(100, token).ContinueWith(t => t.Exception == default);
         }
 
         /// <summary>
@@ -284,13 +266,13 @@ namespace System.Diagnostics
         /// </summary>
         /// <param name="process">Process to wait for</param>
         /// <param name="interval">interval (Milliseconds) to evaluate <see cref="Process.HasExited"/></param>
+        /// <param name="token"></param>
         /// <returns></returns>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task WaitForExitAsync(this Process process, int interval)
+        internal static async Task WaitForExitAsync(this Process process, int interval, CancellationToken token)
         {
-            while (!process.HasExited)
-                await Task.Delay(interval);
-
+            while (!token.IsCancellationRequested && !process.HasExited)
+                await Task.Delay(interval, token).ContinueWith( t => t.Exception == default);
         }
     }
 }
