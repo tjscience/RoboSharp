@@ -60,7 +60,7 @@ namespace RoboSharp
 
         private static string GetOsVersion()
         {
-#if NETSTANDARD2_1 || NETCOREAPP3_1
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
             {
@@ -72,7 +72,7 @@ namespace RoboSharp
                 }
             }
 #endif
-#if NET40 || NET45
+#if NET40_OR_GREATER
             using (System.Management.ManagementObjectSearcher objMOS = new System.Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
             {
                 foreach (System.Management.ManagementObject objManagement in objMOS.Get())
