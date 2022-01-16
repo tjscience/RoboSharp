@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace RoboSharp
 {
@@ -7,6 +8,7 @@ namespace RoboSharp
     {
         private static readonly Lazy<Debugger> instance = new Lazy<Debugger>(() => new Debugger());
 
+        [DebuggerHidden()]
         private Debugger()
         {
 
@@ -24,6 +26,7 @@ namespace RoboSharp
             public object Message { get; set; }
         }
 
+        [DebuggerHidden()]
         private void RaiseDebugMessageEvent(object message)
         {
             DebugMessageEvent?.Invoke(this, new DebugMessageArgs
@@ -32,6 +35,7 @@ namespace RoboSharp
             });
         }
 
+        [DebuggerHidden()]
         internal void DebugMessage(object data)
         {
             RaiseDebugMessageEvent(data);
