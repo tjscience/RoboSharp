@@ -21,6 +21,9 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.IsScheduled"/>
         bool IsScheduled{ get; }
 
+        /// <inheritdoc cref="RoboCommand.IsCancelled"/>
+        bool IsCancelled { get; }
+
         /// <inheritdoc cref="RoboCommand.StopIfDisposing"/>
         bool StopIfDisposing { get; }
 

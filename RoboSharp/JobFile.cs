@@ -238,6 +238,7 @@ namespace RoboSharp
         bool IRoboCommand.IsPaused => roboCommand.IsPaused;
         bool IRoboCommand.IsRunning => roboCommand.IsRunning;
         bool IRoboCommand.IsScheduled => roboCommand.IsScheduled;
+        bool IRoboCommand.IsCancelled => roboCommand.IsCancelled;
         bool IRoboCommand.StopIfDisposing => roboCommand.StopIfDisposing;
         IProgressEstimator IRoboCommand.IProgressEstimator => roboCommand.IProgressEstimator;
         SelectionOptions IRoboCommand.SelectionOptions { get => ((IRoboCommand)roboCommand).SelectionOptions; set => ((IRoboCommand)roboCommand).SelectionOptions = value; }
@@ -273,7 +274,7 @@ namespace RoboSharp
 
         void IRoboCommand.Dispose()
         {
-            return;
+            roboCommand.Stop();
         }
         #endregion
 
