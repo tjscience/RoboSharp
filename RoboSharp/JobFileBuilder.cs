@@ -18,11 +18,19 @@ namespace RoboSharp
         /// </summary>
         public const string JOBFILE_CommentPrefix = ":: ";
 
-        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
-        public const string JOBFILE_Extension = JobOptions.JOB_FileExtension;
+        /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
+        public const string JOBFILE_Extension = JobFile.JOBFILE_Extension;
 
-        /// <inheritdoc cref="JobOptions.JOB_FileExtension"/>
+        /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
         internal const string JOBFILE_JobName = ":: JOB_NAME: ";
+
+        /// <summary>Pattern to Identify the SWITCH, DELIMITER and VALUE section</summary>
+        private const string RegString_SWITCH = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>.+?)";
+        /// <summary>Pattern to Identify the SWITCH, DELIMIETER and VALUE section</summary>
+        private const string RegString_SWITCH_NumericValue = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>[0-9]+?)";
+        /// <summary>Pattern to Identify COMMENT sections - Throws out white space and comment delimiter '::' </summary>
+        private const string RegString_COMMENT = "((?:\\s*[:]{2,}\\s*[:]{0,})(?<COMMENT>.*))";
+
 
         /// <summary>
         /// Regex to check if a string is a comment
@@ -31,10 +39,10 @@ namespace RoboSharp
         /// Captured Group Names: <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex  LINE_IsComment = new Regex("^\\s*(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex LINE_IsComment = new Regex($"{RegString_COMMENT}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Regex to check if the string is a flag for RoboCopy
+        /// Regex to check if the string is a flag for RoboCopy - These typically will have comments
         /// </summary>
         /// <remarks>
         /// Captured Group Names: <br/>
@@ -43,7 +51,11 @@ namespace RoboSharp
         /// VALUE <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex  LINE_IsSwitch = new Regex("^\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>:)(?<VALUE>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex LINE_IsSwitch = new Regex($"^{RegString_SWITCH}{RegString_COMMENT}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex LINE_IsSwitch_NoComment = new Regex($"^{RegString_SWITCH}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        
+        private readonly static Regex LINE_IsSwitch_NumericValue = new Regex($"^{RegString_SWITCH_NumericValue}{RegString_COMMENT}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex LINE_IsSwitch_NumericValue_NoComment = new Regex($"^{RegString_SWITCH_NumericValue}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// JobName for ROboCommand is not valid parameter for RoboCopy, so we save it into a comment within the file
@@ -54,7 +66,7 @@ namespace RoboSharp
         /// NAME <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex  JobNameRegex = new Regex("^\\s*(?<FLAG>.*::JOB_NAME:\\s*)(?<NAME>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex  JobNameRegex = new Regex("^\\s*(?<FLAG>.*::JOB_NAME:\\s*)(?<NAME>.+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Regex used for parsing File and Directory filters for /IF /XD and /XF flags
@@ -64,32 +76,10 @@ namespace RoboSharp
         /// PATH <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex  DirFileFilterRegex = new Regex("^\\s*(?<PATH>.*)\\s*(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex  DirFileFilterRegex = new Regex($"^\\s*{RegString_FileFilter}{RegString_COMMENT}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex DirFileFilterRegex_NoComment = new Regex($"^\\s*{RegString_FileFilter}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private const string RegString_FileFilter = "(?<PATH>.+?)";
 
-        #region < Retry Options Regex >
-
-        /// <summary>
-        /// Retry Count flag
-        /// </summary>
-        private readonly static Regex  RetryRegex_RETRY = new Regex("^\\s*(?<SWITCH>/R:)(?<VALUE>[0-9]*)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-        /// <summary>
-        /// Retry Wait Time flag
-        /// </summary>
-        private readonly static Regex  RetryRegex_WAIT_RETRY = new Regex("^\\s*(?<SWITCH>/W:)(?<VALUE>[0-9]*)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-        /// <summary>
-        /// WAIT_FOR_SHARENAMES flag
-        /// </summary>
-        private readonly static Regex  RetryRegex_SAVE_TO_REGISTRY = new Regex("^\\s*(?<SWITCH>/REG)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-
-        /// <summary>
-        /// SAVE_TO_REGISTRY flag
-        /// </summary>
-        private readonly static Regex  RetryRegex_WAIT_FOR_SHARENAMES = new Regex("^\\s*(?<SWITCH>/TBD)(?<COMMENT>.*::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-
-        #endregion
 
         #region < Copy Options Regex >
 
@@ -121,7 +111,7 @@ namespace RoboSharp
         /// <remarks>
         /// Each new path / filename should be on its own line
         /// </remarks>
-        private readonly static Regex  CopyOptionsRegex_IncludeFiles = new Regex("^\\s*(?<SWITCH>/IF:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex  CopyOptionsRegex_IncludeFiles = new Regex("^\\s*(?<SWITCH>/IF)\\s*(.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         #endregion
 
@@ -133,7 +123,7 @@ namespace RoboSharp
         /// <remarks>
         /// Each new path / filename should be on its own line
         /// </remarks>
-        private readonly static Regex  SelectionRegex_ExcludeFiles = new Regex("^\\s*(?<SWITCH>/XF:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex SelectionRegex_ExcludeFiles = new Regex("^\\s*(?<SWITCH>/XF).*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Regex to determine if on the EXCLUDE DIRECTORIES section of the JobFile
@@ -141,7 +131,7 @@ namespace RoboSharp
         /// <remarks>
         /// Each new path / filename should be on its own line
         /// </remarks>
-        private readonly static Regex  SelectionRegex_ExcludeDirs = new Regex("^\\s*(?<SWITCH>/XD:)(?<PATH>.*)(?<COMMENT>::.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex SelectionRegex_ExcludeDirs = new Regex("^\\s*(?<SWITCH>/XD).*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         #endregion
 
@@ -207,37 +197,37 @@ namespace RoboSharp
 
             foreach (string ln in Lines)
             {
-                if (LINE_IsSwitch.IsMatch(ln))
+                if (ln.IsNullOrWhiteSpace() | ln.Trim() == "::")
+                { }
+                else if (LINE_IsSwitch.IsMatch(ln) || LINE_IsSwitch_NoComment.IsMatch(ln))
                 {
+                    var groups = LINE_IsSwitch.Match(ln).Groups;
+
                     //Check RetryOptions inline since it only has 4 properties to check against
-                    if (retryOpt.RetryCount == 0 && RetryRegex_RETRY.IsMatch(ln))
+                    if (groups["SWITCH"].Value == "/R" && LINE_IsSwitch_NumericValue.IsMatch(ln))
                     {
-                        string val = RetryRegex_RETRY.Match(ln).Groups["VALUE"].Value;
-                        retryOpt.RetryCount = val.IsNullOrWhiteSpace() ? 0 : Convert.ToInt32(val);
+                        string val = LINE_IsSwitch_NumericValue.Match(ln).Groups["VALUE"].Value;
+                        retryOpt.RetryCount = val.IsNullOrWhiteSpace() ? retryOpt.RetryCount : Convert.ToInt32(val);
                     }
-                    else if (retryOpt.RetryWaitTime == 0 && RetryRegex_WAIT_RETRY.IsMatch(ln))
+                    else if (groups["SWITCH"].Value == "/W")
                     {
-                        string val = RetryRegex_WAIT_RETRY.Match(ln).Groups["VALUE"].Value;
-                        retryOpt.RetryWaitTime = val.IsNullOrWhiteSpace() ? 0 : Convert.ToInt32(val);
+                        string val = LINE_IsSwitch_NumericValue.Match(ln).Groups["VALUE"].Value;
+                        retryOpt.RetryWaitTime = val.IsNullOrWhiteSpace() ? retryOpt.RetryWaitTime : Convert.ToInt32(val);
                     }
-                    else if (retryOpt.SaveToRegistry == false && RetryRegex_SAVE_TO_REGISTRY.IsMatch(ln))
+                    else if (groups["SWITCH"].Value == "/REG")
                     {
                         retryOpt.SaveToRegistry = true;
                     }
-                    else if (retryOpt.WaitForSharenames == false && RetryRegex_WAIT_FOR_SHARENAMES.IsMatch(ln))
+                    else if (groups["SWITCH"].Value == "/TBD")
                     {
                         retryOpt.WaitForSharenames = true;
                     }
                     //All Other flags
                     else
                     {
-                        var match = LINE_IsSwitch.Match(ln);
-                        if (match.Groups["SWITCH"].Success)
-                        {
-                            Flags.Add(match.Groups["SWITCH"]);
-                            if (match.Groups["DELIMITER"].Success)
-                                ValueFlags.Add(match.Groups);
-                        }
+                        Flags.Add(groups["SWITCH"]);
+                        if (groups["DELIMITER"].Success)
+                            ValueFlags.Add(groups);
                     }
                 }
                 else if (JobName == null && JobNameRegex.IsMatch(ln))
@@ -298,8 +288,8 @@ namespace RoboSharp
             //int / string values on same line as flag
             foreach (var match in ValueFlags)
             {
-                string flag = match["SWITCH"].Value;
-                string value = match["VALUE"].Value;
+                string flag = match["SWITCH"].Value.Trim();
+                string value = match["VALUE"].Value.Trim();
 
                 switch (flag)
                 {
@@ -347,26 +337,33 @@ namespace RoboSharp
             {
                 bool parsingIF = false;
                 List<string> filters = new List<string>();
+                string path = null;
                 //Find the line that starts with the flag
                 foreach (string ln in Lines)
                 {
-                    if (!parsingIF && ln.Trim().StartsWith("/IF"))
-                        parsingIF = true;
-
-                    if (parsingIF)
+                    if (ln.IsNullOrWhiteSpace() || LINE_IsComment.IsMatch(ln))
+                    { }
+                    else if (LINE_IsSwitch.IsMatch(ln))
                     {
+                        if (parsingIF) break; //Moving onto next section -> IF already parsed.
+                        parsingIF = ln.Trim().StartsWith("/IF");
+                    }
+                    else if (parsingIF)
+                    {
+                        //React to parsing the section - Comments are not expected on these lines
+                        path = null;
                         if (DirFileFilterRegex.IsMatch(ln))
                         {
-                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
-                            if (!path.IsNullOrWhiteSpace())
-                            {
-                                filters.Add(path.WrapPath());
-                            }
+                            path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
                         }
-                        else if (LINE_IsSwitch.IsMatch(ln))
+                        else if (DirFileFilterRegex_NoComment.IsMatch(ln))
                         {
-                            parsingIF = false;
-                            break;
+                            path = DirFileFilterRegex_NoComment.Match(ln).Groups["PATH"].Value;
+                        }
+                        //Store the value
+                        if (!path.IsNullOrWhiteSpace())
+                        {
+                            filters.Add(path.WrapPath());
                         }
                     }
                 }
@@ -377,6 +374,7 @@ namespace RoboSharp
         }
 
         #endregion
+
         #region < Selection Options >
 
         /// <summary>
@@ -442,21 +440,26 @@ namespace RoboSharp
             bool parsingXF = false;
             bool xDParsed = false;
             bool xFParsed = false;
+            string path = null;
 
             foreach (string ln in Lines)
             {
                 // Determine if parsing some section
-                if (!xFParsed && !parsingXF && SelectionRegex_ExcludeFiles.IsMatch(ln))
+                if (ln.IsNullOrWhiteSpace() || LINE_IsComment.IsMatch(ln) )
+                { }
+                else if (!xFParsed && !parsingXF && SelectionRegex_ExcludeFiles.IsMatch(ln))
                 {
+                    // Paths are not expected to be on this output line
                     parsingXF = true;
                     parsingXD = false;
                 }
                 else if (!xDParsed && !parsingXD && SelectionRegex_ExcludeDirs.IsMatch(ln))
                 {
+                    // Paths are not expected to be on this output line
                     parsingXF = true;
                     parsingXD = false;
                 }
-                else if (LINE_IsSwitch.IsMatch(ln))
+                else if (LINE_IsSwitch.IsMatch(ln) || LINE_IsSwitch_NoComment.IsMatch(ln))
                 {
                     if (parsingXD)
                     {
@@ -472,35 +475,32 @@ namespace RoboSharp
                 }
                 else
                 {
-                    //React to parsing the section
-                    if (parsingXF)
+                    //React to parsing the section - Comments are not expected on these lines
+                    path = null;
+                    if (DirFileFilterRegex.IsMatch(ln))
                     {
-                        if (DirFileFilterRegex.IsMatch(ln))
-                        {
-                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
-                            if (!path.IsNullOrWhiteSpace())
-                            {
-                                options.ExcludedFiles.Add(path.WrapPath());
-                            }
-                        }
+                        path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
                     }
-                    else if (parsingXD)
+                    else if (DirFileFilterRegex_NoComment.IsMatch(ln))
                     {
-                        if (DirFileFilterRegex.IsMatch(ln))
-                        {
-                            string path = DirFileFilterRegex.Match(ln).Groups["PATH"].Value;
-                            if (!path.IsNullOrWhiteSpace())
-                            {
-                                options.ExcludedDirectories.Add(path.WrapPath());
-                            }
-                        }
+                        path = DirFileFilterRegex_NoComment.Match(ln).Groups["PATH"].Value;
                     }
+                    //Store the value
+                    if (!path.IsNullOrWhiteSpace())
+                    {
+                        if (parsingXF)
+                            options.ExcludedFiles.Add(path.WrapPath());
+                        else if (parsingXD)
+                            options.ExcludedDirectories.Add(path.WrapPath());
+                    }
+
                 }
             }
             return options;
         }
 
         #endregion
+
         #region < Logging Options >
 
         /// <summary>
@@ -555,6 +555,7 @@ namespace RoboSharp
         }
 
         #endregion
+
         #region < Job Options >
 
         /// <summary>

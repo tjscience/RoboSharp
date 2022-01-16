@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Collections.Generic;
+using Microsoft.Win32;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.BackupApp
 {
@@ -186,7 +188,7 @@ namespace RoboSharp.BackupApp
             return copy;
         }
 
-        private void LoadCommand(RoboCommand copy)
+        private void LoadCommand(IRoboCommand copy)
         {
             if (copy == null) return;
             // copy options
@@ -272,6 +274,54 @@ namespace RoboSharp.BackupApp
             SingleJobExpander_Errors.IsExpanded = false;
             SingleJobTab.IsSelected = true;
             SingleJobExpander_Progress.ProgressGrid.IsEnabled = true;
+        }
+
+        private void BtnLoadJob_Click(object sender, RoutedEventArgs e)
+        {
+            var FP = new OpenFileDialog();
+            FP.Filter = RoboSharp.JobFile.JOBFILE_DialogFilter;
+            FP.Multiselect = false;
+            FP.Title = "Select RoboCopy Job File.";
+            try
+            {
+                bool? FilePicked = FP.ShowDialog(this);
+                if (FilePicked ?? false)
+                {
+                    LoadCommand((IRoboCommand)new JobFile(FP.FileName));
+                }
+                else
+                {
+                    MessageBox.Show("Job File Not Loaded / Not Selected.");
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void BtnSaveJob_Click(object sender, RoutedEventArgs e)
+        {
+            var FP = new SaveFileDialog();
+            FP.Filter = RoboSharp.JobFile.JOBFILE_DialogFilter;
+            FP.Title = "Save RoboCopy Job File.";
+            try
+            {
+                bool? FilePicked = FP.ShowDialog(this);
+                if (FilePicked ?? false)
+                {
+                    GetCommand(false).SaveAsJobFile(FP.FileName).Wait();
+                }
+                else
+                {
+                    MessageBox.Show("Job File Not Save");
+                }
+            }
+            catch
+            {
+
+            }
+
         }
 
         void copy_OnCommandError(object sender, CommandErrorEventArgs e)
@@ -616,6 +666,10 @@ namespace RoboSharp.BackupApp
 
         #endregion
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public class FileError

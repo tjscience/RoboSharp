@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="XML_Files\" />
     <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

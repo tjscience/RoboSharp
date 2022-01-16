@@ -111,6 +111,7 @@ namespace RoboSharp
             retryOptions = new RetryOptions();
             loggingOptions = new LoggingOptions();
             configuration = new RoboSharpConfiguration();
+            jobOptions = new JobOptions();
         }
 
         /// <inheritdoc cref="RoboCommand.RoboCommand(RoboCommand, string, string, bool, bool, bool, bool)"/>
@@ -247,7 +248,7 @@ namespace RoboSharp
 
         #endregion
 
-        #region < Pause / Stop / Resume / Start >
+        #region < Pause / Stop / Resume >
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public void Pause()
@@ -290,6 +291,9 @@ namespace RoboSharp
             isPaused = false;
         }
 
+        #endregion
+
+        #region < Start Methods >
 
 #if NET45 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
         /// <summary>
@@ -319,9 +323,6 @@ namespace RoboSharp
             isPaused = false;
             isRunning = true;
 
-            var tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
-
             resultsBuilder = new Results.ResultsBuilder(this);
             results = null;
 
@@ -331,7 +332,6 @@ namespace RoboSharp
             // Authenticate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
 #endif
-
             // make sure source path is valid
             if (!Directory.Exists(CopyOptions.Source))
             {
@@ -339,7 +339,6 @@ namespace RoboSharp
                 hasError = true;
                 OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                tokenSource.Cancel(true);
             }
 
             #region Create Destination Directory
@@ -355,7 +354,6 @@ namespace RoboSharp
                     hasError = true;
                     OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                    tokenSource.Cancel(true);
                 }
                 //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
                 if (!LoggingOptions.ListOnly & !hasError)
@@ -367,7 +365,6 @@ namespace RoboSharp
                         hasError = true;
                         OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
                         Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                        tokenSource.Cancel(true);
                     }
                 }
             }
@@ -377,7 +374,6 @@ namespace RoboSharp
                 hasError = true;
                 OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                tokenSource.Cancel(true);
             }
 
             #endregion
@@ -389,6 +385,29 @@ namespace RoboSharp
 
             #endregion
 
+            if (hasError)
+            {
+                isRunning = false;
+                return Task.Delay(5);
+            }
+            else
+            {
+                //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
+                ProgressEstimator = resultsBuilder.Estimator;
+                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
+                return GetBackupTask(resultsBuilder, domain, username, password);
+            }
+        }
+
+        /// <summary>
+        /// Start the RoboCopy process and the watcher task
+        /// </summary>
+        /// <returns>The continuation task that cleans up after the task that watches RoboCopy has finished executing.</returns>
+        private Task GetBackupTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
+        {
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = tokenSource.Token;
+
             isRunning = !cancellationToken.IsCancellationRequested;
             DateTime StartTime = DateTime.Now;
 
@@ -396,14 +415,10 @@ namespace RoboSharp
            {
                cancellationToken.ThrowIfCancellationRequested();
 
-                //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
-                ProgressEstimator = resultsBuilder.Estimator;
-               OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
-
                process = new Process();
 
-                //Declare Encoding
-                process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
+               //Declare Encoding
+               process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
                process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
                if (!string.IsNullOrEmpty(domain))
@@ -438,36 +453,79 @@ namespace RoboSharp
                process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                process.StartInfo.CreateNoWindow = true;
                process.StartInfo.FileName = Configuration.RoboCopyExe;
-               resultsBuilder.Source = CopyOptions.Source;
-               resultsBuilder.Destination = CopyOptions.Destination;
-               resultsBuilder.CommandOptions = GenerateParameters();
-               process.StartInfo.Arguments = resultsBuilder.CommandOptions;
+               if (resultsBuilder != null)
+               {
+                   resultsBuilder.Source = CopyOptions.Source;
+                   resultsBuilder.Destination = CopyOptions.Destination;
+                   resultsBuilder.CommandOptions = GenerateParameters();
+               }
+               process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
                process.OutputDataReceived += process_OutputDataReceived;
                process.ErrorDataReceived += process_ErrorDataReceived;
                process.EnableRaisingEvents = true;
-                //hasExited = false;
-                process.Exited += Process_Exited;
+               //hasExited = false;
+               process.Exited += Process_Exited;
                Debugger.Instance.DebugMessage("RoboCopy process started.");
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               await process.WaitForExitAsync(); //Wait asynchronously for process to exit
-                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+               await process.WaitForExitAsync();    //Wait asynchronously for process to exit -> THIS IS BROKEN!
+               process.WaitForExit();
+               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied
+               {
+                   results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+               }
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
 
-            Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
+            Task continueWithTask = backupTask.ContinueWith( async (continuation) => // this task always runs
             {
+                await backupTask;
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
                 //Raise event announcing results are available
-                if (!hasError)
+                if (!hasError && resultsBuilder != null)
                     OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
             });
 
             return continueWithTask;
         }
+
+        /// <summary>
+        /// Save this RoboCommand's options to a new RoboCopyJob ( *.RCJ ) file. <br/>
+        /// Note: This will not save the path submitted into <see cref="JobOptions.FilePath"/>.
+        /// </summary>
+        /// <remarks>
+        /// Job Files don't care if the Source/Destination are invalid, since they just save the command values to a file.
+        /// </remarks>
+        /// <param name="path"><inheritdoc cref="JobOptions.FilePath"/></param>
+        /// <param name="IncludeSource">Save <see cref="CopyOptions.Source"/> into the RCJ file.</param>
+        /// <param name="IncludeDestination">Save <see cref="CopyOptions.Destination"/> into the RCJ file.</param>
+        /// <inheritdoc cref = "Start(string, string, string)" />
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+        public async Task SaveAsJobFile(string path, bool IncludeSource = false, bool IncludeDestination = false, string domain = "", string username = "", string password = "")
+#pragma warning restore CS1573
+        {
+            bool _QUIT = JobOptions.PreventCopyOperation;
+            string _PATH = JobOptions.FilePath;
+            bool _NODD = JobOptions.NoDestinationDirectory;
+            bool _NOSD = JobOptions.NoSourceDirectory;
+
+            JobOptions.FilePath = path;
+            JobOptions.NoSourceDirectory = IncludeSource;
+            JobOptions.NoDestinationDirectory = IncludeDestination;
+            JobOptions.PreventCopyOperation = true;
+
+            await GetBackupTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
+
+            //Restore Original Settings
+            JobOptions.FilePath = _PATH;
+            JobOptions.NoSourceDirectory = _NOSD;
+            JobOptions.NoDestinationDirectory = _NODD;
+            JobOptions.PreventCopyOperation = _QUIT;
+        }
+
 
         #endregion
 
@@ -636,10 +694,12 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("RetryOptions parsed.");
             var parsedLoggingOptions = LoggingOptions.Parse();
             Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+            var parsedJobOptions = JobOptions.Parse();
+            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
-            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
-                parsedRetryOptions, parsedLoggingOptions);
+            return string.Format("{0}{1}{2}{3} /BYTES {4}", parsedCopyOptions, parsedSelectionOptions,
+                parsedRetryOptions, parsedLoggingOptions, parsedJobOptions);
         }
 
         /// <inheritdoc cref="GenerateParameters"/>

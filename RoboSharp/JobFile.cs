@@ -68,6 +68,26 @@ namespace RoboSharp
 
         #endregion
 
+        #region < Constants >
+
+        /// <summary>
+        /// Expected File Extension for Job Files exported from RoboCopy.
+        /// </summary>
+        public const string JOBFILE_Extension = ".RCJ";
+        
+        /// <summary>
+        /// FileFilter to use in an to search for this extension, such as with <see cref="DirectoryInfo.GetFiles(string)"/>
+        /// </summary>
+        public const string JOBFILE_SearchPattern = "*.RCJ";
+
+        /// <summary>
+        /// FileFilter to use in a dialog window, such as the OpenFileDialog window.
+        /// </summary>
+
+        public const string JOBFILE_DialogFilter = "RoboCopy Job|*.RCJ";
+        #endregion
+
+
         #region < Fields >
 
         /// <summary>
