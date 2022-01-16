@@ -35,13 +35,13 @@ namespace RoboSharp
 
 
         /// <summary>
-        /// Regex to check if a string is a comment
+        /// Regex to check if an entire line is a comment
         /// </summary>
         /// <remarks>
         /// Captured Group Names: <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex LINE_IsComment = new Regex($"{RegString_COMMENT}$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex LINE_IsComment = new Regex("^(?:\\s*[:]{2,}\\s*)(?<COMMENT>.*)$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Regex to check if the string is a flag for RoboCopy - These typically will have comments
