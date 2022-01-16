@@ -469,18 +469,17 @@ namespace RoboSharp
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               await process.WaitForExitAsync();    //Wait asynchronously for process to exit -> THIS IS BROKEN!
+               await process.WaitForExitAsync();    //Wait asynchronously for process to exit
                process.WaitForExit();
                if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied
                {
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                }
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
-            Task continueWithTask = backupTask.ContinueWith( async (continuation) => // this task always runs
+            Task continueWithTask = backupTask.ContinueWith( (continuation) => // this task always runs
             {
-                await backupTask;
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
