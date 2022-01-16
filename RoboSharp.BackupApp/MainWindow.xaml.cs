@@ -6,6 +6,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Collections.Generic;
+using Microsoft.Win32;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.BackupApp
 {
@@ -186,10 +188,11 @@ namespace RoboSharp.BackupApp
             return copy;
         }
 
-        private void LoadCommand(RoboCommand copy)
+        private void LoadCommand(IRoboCommand copy)
         {
             if (copy == null) return;
             // copy options
+            JobName.Text = copy.Name;
             Source.Text = copy.CopyOptions.Source;
             Destination.Text = copy.CopyOptions.Destination;
 
@@ -272,6 +275,59 @@ namespace RoboSharp.BackupApp
             SingleJobExpander_Errors.IsExpanded = false;
             SingleJobTab.IsSelected = true;
             SingleJobExpander_Progress.ProgressGrid.IsEnabled = true;
+        }
+
+        private void BtnLoadJob_Click(object sender, RoutedEventArgs e)
+        {
+            var FP = new OpenFileDialog();
+            FP.Filter = RoboSharp.JobFile.JOBFILE_DialogFilter;
+            FP.Multiselect = false;
+            FP.Title = "Select RoboCopy Job File.";
+            try
+            {
+                JobFile JF = null;
+                bool? FilePicked = FP.ShowDialog(this);
+                if (FilePicked ?? false)
+                    JF = JobFile.ParseJobFile(FP.FileName);
+                if (JF != null)
+                {
+                    var oldCmd = GetCommand(false);
+                    oldCmd.MergeJobFile(JF);//Perform Merge Test
+                    LoadCommand((IRoboCommand)JF);
+                }
+                else
+                {
+                    MessageBox.Show("Job File Not Loaded / Not Selected.");
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        private async void BtnSaveJob_Click(object sender, RoutedEventArgs e)
+        {
+            var FP = new SaveFileDialog();
+            FP.Filter = RoboSharp.JobFile.JOBFILE_DialogFilter;
+            FP.Title = "Save RoboCopy Job File.";
+            try
+            {
+                bool? FilePicked = FP.ShowDialog(this);
+                if (FilePicked ?? false)
+                {
+                    await GetCommand(false).SaveAsJobFile(FP.FileName);
+                }
+                else
+                {
+                    MessageBox.Show("Job File Not Save");
+                }
+            }
+            catch
+            {
+
+            }
+
         }
 
         void copy_OnCommandError(object sender, CommandErrorEventArgs e)
@@ -616,6 +672,10 @@ namespace RoboSharp.BackupApp
 
         #endregion
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 
     public class FileError

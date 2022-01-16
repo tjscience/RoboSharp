@@ -12,25 +12,54 @@ namespace RoboSharp
 {
     internal static class ExtensionMethods
     {
+        /// <summary> Encase the LogPath in quotes if needed </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static string WrapPath(this string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
+
         /// <remarks> Extension method provided by RoboSharp package </remarks>
         /// <inheritdoc cref="System.String.IsNullOrWhiteSpace(string)"/>
-        internal static bool IsNullOrWhiteSpace(this string value)
-        {
-            if (value == null)
-            {
-                return true;
-            }
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
-            return string.IsNullOrEmpty(value.Trim());
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static long TryConvertLong(this string val)
+        {
+            try
+            {
+                return Convert.ToInt64(val);
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static int TryConvertInt(this string val)
+        {
+            try
+            {
+                return Convert.ToInt32(val);
+            }
+            catch
+            {
+                return 0;
+            }
+
+        }
+        
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         public static string CleanOptionInput(this string option)
         {
             // Get rid of forward slashes
             option = option.Replace("/", "");
             // Get rid of padding
             option = option.Trim();
-
             return option;
         }
 
@@ -79,8 +108,51 @@ namespace RoboSharp
         /// <summary>
         /// Check if the string ends with a directory seperator character
         /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         public static bool EndsWithDirectorySeperator(this string path) => path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString());
 
+        /// <summary>
+        /// Convert <paramref name="StrTwo"/> into a char[]. Perform a ForEach( Char in strTwo) loop, and append any characters in Str2 to the end of this string if they don't already exist within this string.
+        /// </summary>
+        /// <param name="StrOne"></param>
+        /// <param name="StrTwo"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static string CombineCharArr(this string StrOne, string StrTwo)
+        {
+            if (String.IsNullOrWhiteSpace(StrTwo)) return StrOne;
+            if (String.IsNullOrWhiteSpace(StrOne)) return StrTwo ?? StrOne;
+            string ret = StrOne;
+            char[] S2 = StrTwo.ToArray();
+            foreach (char c in S2)
+            {
+                if (!ret.Contains(c))
+                    ret += c;
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Compare the current value to that of the supplied value, and take the greater of the two.
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="i2"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static int GetGreaterVal(this int i, int i2) => i >= i2 ? i : i2;
+
+        /// <summary>
+        /// Evaluate this string. If this string is null or empty, replace it with the supplied string.
+        /// </summary>
+        /// <param name="str1"></param>
+        /// <param name="str2"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static string ReplaceIfEmpty(this string str1, string str2) => String.IsNullOrWhiteSpace(str1) ? str2 ?? String.Empty : str1;
     }
 }
 
@@ -149,17 +221,9 @@ namespace System.Threading
         /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
         /// <param name="token"><inheritdoc cref="CancellationToken"/></param>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken token)
+        internal static Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken token)
         {
-            try 
-            {
-                await Task.Delay(millisecondsTimeout, token);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return Task.Delay(millisecondsTimeout, token).ContinueWith(t => t.Exception == default);
         }
 
         /// <summary>
@@ -171,21 +235,11 @@ namespace System.Threading
         /// <param name="tokens">Use <see cref="CancellationTokenSource.CreateLinkedTokenSource(CancellationToken[])"/> to create the token used to cancel the delay</param>
         /// <inheritdoc cref="CancellableSleep(int, CancellationToken)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken[] tokens)
+        internal static Task<bool> CancellableSleep(int millisecondsTimeout, CancellationToken[] tokens)
         {
-            try
-            {
-                var token = CancellationTokenSource.CreateLinkedTokenSource(tokens).Token;
-                await Task.Delay(millisecondsTimeout, token);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            var token = CancellationTokenSource.CreateLinkedTokenSource(tokens).Token;
+            return Task.Delay(millisecondsTimeout, token).ContinueWith(t => t.Exception == default);
         }
-
-
     }
 }
 
@@ -199,12 +253,12 @@ namespace System.Diagnostics
         /// <summary>
         /// Create a task that asynchronously waits for a process to exit. <see cref="Process.HasExited"/> will be evaluated every 100ms.
         /// </summary>
-        /// <inheritdoc cref="WaitForExitAsync(Process, int)"/>
+        /// <inheritdoc cref="WaitForExitAsync(Process, int, CancellationToken)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task WaitForExitAsync(this Process process)
+        internal static async Task WaitForExitAsync(this Process process, CancellationToken token)
         {
-            while (!process.HasExited)
-                await Task.Delay(100);
+            while (!token.IsCancellationRequested && !process.HasExited)
+                await Task.Delay(100, token).ContinueWith(t => t.Exception == default);
         }
 
         /// <summary>
@@ -212,13 +266,13 @@ namespace System.Diagnostics
         /// </summary>
         /// <param name="process">Process to wait for</param>
         /// <param name="interval">interval (Milliseconds) to evaluate <see cref="Process.HasExited"/></param>
+        /// <param name="token"></param>
         /// <returns></returns>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal static async Task WaitForExitAsync(this Process process, int interval)
+        internal static async Task WaitForExitAsync(this Process process, int interval, CancellationToken token)
         {
-            while (!process.HasExited)
-                await Task.Delay(interval);
-
+            while (!token.IsCancellationRequested && !process.HasExited)
+                await Task.Delay(interval, token).ContinueWith( t => t.Exception == default);
         }
     }
 }

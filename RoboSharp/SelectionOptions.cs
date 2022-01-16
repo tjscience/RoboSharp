@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace RoboSharp
 {
@@ -24,8 +27,8 @@ namespace RoboSharp
             OnlyCopyArchiveFilesAndResetArchiveFlag = options.OnlyCopyArchiveFilesAndResetArchiveFlag;
             IncludeAttributes = options.IncludeAttributes;
             ExcludeAttributes = options.ExcludeAttributes;
-            ExcludeFiles = options.ExcludeFiles;
-            ExcludeDirectories = options.ExcludeDirectories;
+            ExcludedFiles.AddRange(options.ExcludedFiles);
+            ExcludedDirectories.AddRange(options.ExcludedDirectories);
             ExcludeChanged = options.ExcludeChanged;
             ExcludeNewer = options.ExcludeNewer;
             ExcludeOlder = options.ExcludeOlder;
@@ -57,32 +60,59 @@ namespace RoboSharp
 
         #region Option Constants
 
-        private const string ONLY_COPY_ARCHIVE_FILES = "/A ";
-        private const string ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG = "/M ";
-        private const string INCLUDE_ATTRIBUTES = "/IA:{0} ";
-        private const string EXCLUDE_ATTRIBUTES = "/XA:{0} ";
-        private const string EXCLUDE_FILES = "/XF {0} ";
-        private const string EXCLUDE_DIRECTORIES = "/XD {0} ";
-        private const string EXCLUDE_CHANGED = "/XC ";
-        private const string EXCLUDE_NEWER = "/XN ";
-        private const string EXCLUDE_OLDER = "/XO ";
-        private const string EXCLUDE_EXTRA = "/XX ";
-        private const string EXCLUDE_LONELY = "/XL ";
-        private const string INCLUDE_SAME = "/IS ";
-        private const string INCLUDE_TWEAKED = "/IT ";
-        private const string MAX_FILE_SIZE = "/MAX:{0} ";
-        private const string MIN_FILE_SIZE = "/MIN:{0} ";
-        private const string MAX_FILE_AGE = "/MAXAGE:{0} ";
-        private const string MIN_FILE_AGE = "/MINAGE:{0} ";
-        private const string MAX_LAST_ACCESS_DATE = "/MAXLAD:{0} ";
-        private const string MIN_LAST_ACCESS_DATE = "/MINLAD:{0} ";
-        private const string EXCLUDE_JUNCTION_POINTS = "/XJ ";
-        private const string USE_FAT_FILE_TIMES = "/FFT ";
-        private const string COMPENSATE_FOR_DST_DIFFERENCE = "/DST ";
-        private const string EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES = "/XJD ";
-        private const string EXCLUDE_JUNCTION_POINTS_FOR_FILES = "/XJF ";
+        internal const string ONLY_COPY_ARCHIVE_FILES = "/A ";
+        internal const string ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG = "/M ";
+        internal const string INCLUDE_ATTRIBUTES = "/IA:{0} ";
+        internal const string EXCLUDE_ATTRIBUTES = "/XA:{0} ";
+        internal const string EXCLUDE_FILES = "/XF {0} ";
+        internal const string EXCLUDE_DIRECTORIES = "/XD {0} ";
+        internal const string EXCLUDE_CHANGED = "/XC ";
+        internal const string EXCLUDE_NEWER = "/XN ";
+        internal const string EXCLUDE_OLDER = "/XO ";
+        internal const string EXCLUDE_EXTRA = "/XX ";
+        internal const string EXCLUDE_LONELY = "/XL ";
+        internal const string INCLUDE_SAME = "/IS ";
+        internal const string INCLUDE_TWEAKED = "/IT ";
+        internal const string MAX_FILE_SIZE = "/MAX:{0} ";
+        internal const string MIN_FILE_SIZE = "/MIN:{0} ";
+        internal const string MAX_FILE_AGE = "/MAXAGE:{0} ";
+        internal const string MIN_FILE_AGE = "/MINAGE:{0} ";
+        internal const string MAX_LAST_ACCESS_DATE = "/MAXLAD:{0} ";
+        internal const string MIN_LAST_ACCESS_DATE = "/MINLAD:{0} ";
+        internal const string EXCLUDE_JUNCTION_POINTS = "/XJ ";
+        internal const string USE_FAT_FILE_TIMES = "/FFT ";
+        internal const string COMPENSATE_FOR_DST_DIFFERENCE = "/DST ";
+        internal const string EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES = "/XJD ";
+        internal const string EXCLUDE_JUNCTION_POINTS_FOR_FILES = "/XJF ";
 
         #endregion Option Constants
+
+        #region < ExcludedDirs and ExcludedFiles >
+
+        private readonly List<string> excludedDirs = new List<string>();
+        private readonly List<string> excludedFiles = new List<string>();
+        
+        /// <summary>
+        /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string <br/>
+        /// Searches for a pattern of "{Non-WhiteSpaceChar}"
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        internal static Regex FileFolderNameRegexSplitter = new Regex("\\s*(?<VALUE>[\"]{0,1}.+?[\"]{0,1})(?:\\s+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        private static void ParseAndAddToList(string value, List<string> list)
+        {
+            MatchCollection collection = FileFolderNameRegexSplitter.Matches(value);
+            if (collection.Count == 0) return;
+            foreach (Match c in collection)
+            {
+                string s = c.Groups["VALUE"].Value;
+                list.Add(s);
+            }
+        }
+
+        #endregion
 
         #region Public Properties
 
@@ -113,13 +143,65 @@ namespace RoboSharp
         /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
         /// [/XF File File ...]
         /// </summary>
-        public string ExcludeFiles { get; set; }
+        /// <remarks>
+        /// This property is now backed by the ExcludedFiles List{String} property. <br/>
+        /// Get -- String.Join(" ", ExcludExcludedFilesedDirs);<br/>
+        /// Set -- Clears ExcludedFiles and splits this list using a regex to populate the list.
+        /// </remarks>
+        [Obsolete("This obsolete property is now backed by the ExcludedFiles List<String> property.")]
+        public string ExcludeFiles
+        {
+            get => String.Join(" ", excludedFiles);
+            set 
+            {
+                excludedFiles.Clear();
+                if (value.IsNullOrWhiteSpace()) return;
+                ParseAndAddToList(value, excludedFiles);
+            }
+        }
+        /// <summary>
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
+        /// JobOptions file saves these into the /IF (Include Files) section
+        /// </summary>
+        public List<string> ExcludedFiles
+        {
+            get
+            {
+                return excludedFiles;
+            }
+        }
         /// <summary>
         /// Directories should be separated by spaces.
         /// Excludes directories that match the specified names or paths.
         /// [/XD Directory Directory ...]
         /// </summary>
-        public string ExcludeDirectories { get; set; }
+        /// <remarks>
+        /// This property is now backed by the ExcludedDirectories List{String} property. <br/>
+        /// Get -> String.Join(" ", ExcludedDirs);<br/>
+        /// Set -> Clears ExcludedDirs and splits this list using a regex to populate the list.
+        /// </remarks>
+        [Obsolete("This obsolete property is now backed by the ExcludedDirectories List<String> property.")]
+        public string ExcludeDirectories 
+        {
+            get => String.Join(" ", excludedDirs);
+            set
+            {
+                excludedFiles.Clear();
+                if (value.IsNullOrWhiteSpace()) return;
+                ParseAndAddToList(value, excludedDirs);
+            }
+        }
+        /// <summary>
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
+        /// JobOptions file saves these into the /IF (Include Files) section
+        /// </summary>
+        public List<string> ExcludedDirectories
+        {
+            get
+            {
+                return excludedDirs;
+            }
+        }
         /// <summary>
         /// Excludes changed files.
         /// [/XC]
@@ -186,7 +268,7 @@ namespace RoboSharp
         /// Specifies the minimum last access date (excludes files used since N) If N is less 
         /// than 1900, N specifies the number of days. Otherwise, N specifies a date 
         /// in the format YYYYMMDD.
-        /// [/MAXLAD:N or YYYYMMDD]
+        /// [/MINLAD:N or YYYYMMDD]
         /// </summary>
         public string MinLastAccessDate { get; set; }
         /// <summary>
@@ -231,10 +313,12 @@ namespace RoboSharp
                 options.Append(string.Format(INCLUDE_ATTRIBUTES, IncludeAttributes.CleanOptionInput()));
             if (!ExcludeAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_ATTRIBUTES, ExcludeAttributes.CleanOptionInput()));
+#pragma warning disable CS0618 // Marked as Obsolete for consumers, but it originally functionality is still intact, so this still works properly.
             if (!ExcludeFiles.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
             if (!ExcludeDirectories.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
+#pragma warning restore CS0618 
             if (ExcludeChanged)
                 options.Append(EXCLUDE_CHANGED);
             if (ExcludeNewer)
@@ -275,6 +359,44 @@ namespace RoboSharp
             #endregion Set Options
 
             return options.ToString();
+        }
+
+        /// <summary>
+        /// Combine this object with another RetryOptions object. <br/>
+        /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
+        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// </summary>
+        /// <param name="options"></param>
+        public void Merge(SelectionOptions options)
+        {
+            //File Attributes
+            IncludeAttributes = IncludeAttributes.CombineCharArr(options.IncludeAttributes);
+            ExcludeAttributes = ExcludeAttributes.CombineCharArr(options.ExcludeAttributes);
+
+            //File Age
+            MaxFileAge = MaxFileAge.ReplaceIfEmpty(options.MaxFileAge);
+            MinFileAge = MaxFileAge.ReplaceIfEmpty(options.MinFileAge);
+            MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
+            MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
+            
+            //Bools
+            OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
+            OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;
+            ExcludedFiles.AddRange(options.ExcludedFiles);
+            ExcludedDirectories.AddRange(options.ExcludedDirectories);
+            ExcludeChanged |= options.ExcludeChanged;
+            ExcludeNewer |= options.ExcludeNewer;
+            ExcludeOlder |= options.ExcludeOlder;
+            ExcludeExtra |= options.ExcludeExtra;
+            ExcludeLonely |= options.ExcludeLonely;
+            IncludeSame |= options.IncludeSame;
+            IncludeTweaked |= options.IncludeTweaked;
+            MaxFileSize |= options.MaxFileSize;
+            MinFileSize |= options.MinFileSize;
+            ExcludeJunctionPoints |= options.ExcludeJunctionPoints;
+            UseFatFileTimes |= options.UseFatFileTimes;
+            CompensateForDstDifference |= options.CompensateForDstDifference; ;
+            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
         }
     }
 }

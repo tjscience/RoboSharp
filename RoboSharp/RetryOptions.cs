@@ -85,5 +85,19 @@ namespace RoboSharp
 
             return options.ToString();
         }
+
+        /// <summary>
+        /// Combine this object with another RetryOptions object. <br/>
+        /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
+        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// </summary>
+        /// <param name="options"></param>
+        public void Merge(RetryOptions options)
+        {
+            RetryCount = RetryCount.GetGreaterVal(options.RetryCount);
+            RetryWaitTime = RetryWaitTime.GetGreaterVal(options.RetryWaitTime);
+            WaitForSharenames |= options.WaitForSharenames;
+            SaveToRegistry |= options.SaveToRegistry;
+        }
     }
 }

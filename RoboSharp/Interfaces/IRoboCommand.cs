@@ -21,6 +21,9 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.IsScheduled"/>
         bool IsScheduled{ get; }
 
+        /// <inheritdoc cref="RoboCommand.IsCancelled"/>
+        bool IsCancelled { get; }
+
         /// <inheritdoc cref="RoboCommand.StopIfDisposing"/>
         bool StopIfDisposing { get; }
 
@@ -41,7 +44,10 @@ namespace RoboSharp.Interfaces
         
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         LoggingOptions LoggingOptions { get; set; }
-        
+
+        /// <inheritdoc cref="RoboCommand.JobOptions"/>
+        JobOptions JobOptions{ get; }
+
         /// <inheritdoc cref="RoboCommand.Configuration"/>
         RoboSharpConfiguration Configuration { get; }
 
@@ -80,7 +86,7 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.Start(string, string, string)"/>
         Task Start(string domain = "", string username = "", string password = "");
         
-        /// <inheritdoc cref="RoboCommand.Stop"/>
+        /// <inheritdoc cref="RoboCommand.Stop()"/>
         void Stop();
         
         /// <inheritdoc cref="RoboCommand.Dispose()"/>

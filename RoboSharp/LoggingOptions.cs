@@ -176,8 +176,8 @@ namespace RoboSharp
         public bool OutputAsUnicode { get; set; }
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
-        internal string WrapPath(string logPath) => ( !logPath.StartsWith("\"") && logPath.Contains(" ") ) ? $"\"{logPath}\"" : logPath;
-        
+        internal string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
+
         internal string Parse()
         {
             var options = new StringBuilder();
@@ -224,6 +224,38 @@ namespace RoboSharp
                 options.Append(OUTPUT_AS_UNICODE);
 
             return options.ToString();
+        }
+
+        /// <summary>
+        /// Combine this object with another LoggingOptions object. <br/>
+        /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
+        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// </summary>
+        /// <param name="options"></param>
+        public void Merge(LoggingOptions options)
+        {
+            ListOnly |= options.ListOnly;
+            ReportExtraFiles |= options.ReportExtraFiles;
+            VerboseOutput |= options.VerboseOutput;
+            IncludeSourceTimeStamps |= options.IncludeSourceTimeStamps;
+            IncludeFullPathNames |= options.IncludeFullPathNames;
+            PrintSizesAsBytes |= options.PrintSizesAsBytes;
+            NoFileSizes |= options.NoFileSizes;
+            NoFileClasses |= options.NoFileClasses;
+            NoFileList |= options.NoFileList;
+            NoDirectoryList |= options.NoDirectoryList;
+            NoProgress |= options.NoProgress;
+            ShowEstimatedTimeOfArrival |= options.ShowEstimatedTimeOfArrival;
+            OutputToRoboSharpAndLog |= options.OutputToRoboSharpAndLog;
+            NoJobHeader |= options.NoJobHeader;
+            NoJobSummary |= options.NoJobSummary;
+            OutputAsUnicode |= options.OutputAsUnicode;
+
+            LogPath = LogPath.ReplaceIfEmpty(options.LogPath);
+            AppendLogPath = AppendLogPath.ReplaceIfEmpty(options.AppendLogPath);
+            UnicodeLogPath = UnicodeLogPath.ReplaceIfEmpty(options.UnicodeLogPath);
+            AppendUnicodeLogPath = AppendUnicodeLogPath.ReplaceIfEmpty(options.AppendUnicodeLogPath);
+
         }
     }
 }
