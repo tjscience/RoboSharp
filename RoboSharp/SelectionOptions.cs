@@ -99,7 +99,7 @@ namespace RoboSharp
         /// <remarks>
         /// 
         /// </remarks>
-        internal static Regex FileFolderNameRegexSplitter = new Regex("\\s*(?<VALUE>[\"]{0,1}\\S*[\"]{0,1}\\s*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        internal static Regex FileFolderNameRegexSplitter = new Regex("\\s*(?<VALUE>[\"]{0,1}.+?[\"]{0,1})(?:\\s+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         private static void ParseAndAddToList(string value, List<string> list)
         {
@@ -149,7 +149,7 @@ namespace RoboSharp
         /// Set -- Clears ExcludedFiles and splits this list using a regex to populate the list.
         /// </remarks>
         [Obsolete("This obsolete property is now backed by the ExcludedFiles List<String> property.")]
-        public string ExcludeFiles 
+        public string ExcludeFiles
         {
             get => String.Join(" ", excludedFiles);
             set 
@@ -313,10 +313,12 @@ namespace RoboSharp
                 options.Append(string.Format(INCLUDE_ATTRIBUTES, IncludeAttributes.CleanOptionInput()));
             if (!ExcludeAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_ATTRIBUTES, ExcludeAttributes.CleanOptionInput()));
+#pragma warning disable CS0618 // Marked as Obsolete for consumers, but it originally functionality is still intact, so this still works properly.
             if (!ExcludeFiles.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
             if (!ExcludeDirectories.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
+#pragma warning restore CS0618 
             if (ExcludeChanged)
                 options.Append(EXCLUDE_CHANGED);
             if (ExcludeNewer)
