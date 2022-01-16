@@ -614,7 +614,7 @@ namespace RoboSharp
                    while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
                }
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
             //After all commands have started, continue with waiting for all commands to complete.
             Task WhenAll = StartAll.ContinueWith((continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);

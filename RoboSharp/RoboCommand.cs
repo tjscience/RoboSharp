@@ -283,7 +283,7 @@ namespace RoboSharp
         }
 
 
-#if NET45 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
+#if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
         /// <summary>
         /// Start the RoboCopy Process, then return the results.
         /// </summary>
@@ -444,9 +444,9 @@ namespace RoboSharp
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
                await process.WaitForExitAsync(); //Wait asynchronously for process to exit
-                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+               results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
