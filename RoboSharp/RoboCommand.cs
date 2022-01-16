@@ -444,7 +444,7 @@ namespace RoboSharp
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
                await process.WaitForExitAsync(); //Wait asynchronously for process to exit
-                results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+               results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 

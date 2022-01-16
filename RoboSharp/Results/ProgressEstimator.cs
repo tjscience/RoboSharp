@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using RoboSharp.Interfaces;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RoboSharp.Results
 {
@@ -35,7 +37,8 @@ namespace RoboSharp.Results
             ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
 
             BytesToAdd = new System.Collections.Concurrent.ConcurrentQueue<Tuple<ProcessedFileInfo, WhereToAdd>>();
-            ByteCalcRequested = new Lazy<bool>(() => { DeQueueByteCalc(); return true; });
+            DirsToAdd = new System.Collections.Concurrent.ConcurrentQueue<WhereToAdd>();
+            CalculationTask = StartCalculationTask(out CalculationTaskCancelSource);
         }
 
         #endregion
@@ -51,8 +54,11 @@ namespace RoboSharp.Results
         private readonly Statistic FileStatsField;
         private readonly Statistic ByteStatsField;
 
-        private readonly Lazy<bool> ByteCalcRequested; //Byte Calc can be very large, so calculation only occurs after first request. Dirs and FileCounts are incremented 1 at a time, so no optimization is needed.
+        private readonly Task CalculationTask;
+        private readonly CancellationTokenSource CalculationTaskCancelSource;
         private readonly System.Collections.Concurrent.ConcurrentQueue<Tuple<ProcessedFileInfo, WhereToAdd>> BytesToAdd;    //Store Files in queue for calculation since bytes can be large
+        private readonly System.Collections.Concurrent.ConcurrentQueue<WhereToAdd> DirsToAdd;
+
         internal enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
 
         internal ProcessedFileInfo CurrentDir;
@@ -78,7 +84,7 @@ namespace RoboSharp.Results
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic BytesStatistic => ByteCalcRequested.Value ? ByteStatsField : ByteStatsField;
+        public IStatistic BytesStatistic => ByteStatsField;
 
         RoboCopyExitStatus IResults.Status => new RoboCopyExitStatus((int)GetExitCode());
 
@@ -121,13 +127,18 @@ namespace RoboSharp.Results
         /// <summary>
         /// Repackage the statistics into a new <see cref="RoboCopyResults"/> object
         /// </summary>
-        /// <remarks>Used by ResultsBuilder as starting point for the results.</remarks>
+        /// <remarks>
+        /// Used by ResultsBuilder as starting point for the results. 
+        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
+        /// </remarks>
         /// <returns></returns>
         internal RoboCopyResults GetResults()
         {
             //ResultsBuilder calls this at end of run:
             // - if copy operation wasn't completed, register it as failed instead.
             // - if file was to be marked as 'skipped', then register it as skipped.
+            CalculationTaskCancelSource.Cancel();
+            CalculationTask.Wait();
             if (CopyOpStarted && CurrentFile != null)
             {
                 FileStatsField.Failed++;
@@ -151,31 +162,26 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Counting Methods ( Internal ) >
+        #region < Queue Files and Dirs (Internal) >
 
         /// <summary>Increment <see cref="DirStatField"/></summary>
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
             CurrentDir = currentDir;
-            DirStatField.Total++;
-            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirStatField.Skipped++; }
-            else if (currentDir.FileClass == Config.LogParsing_NewDir) { DirStatField.Copied++; }
-            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) DirStatField.Extras++;
+            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirsToAdd.Enqueue(WhereToAdd.Skipped); }
+            else if (currentDir.FileClass == Config.LogParsing_NewDir) { DirsToAdd.Enqueue(WhereToAdd.Copied); }
+            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) { DirsToAdd.Enqueue(WhereToAdd.Extra); }
             else
             {
 
             }
         }
 
-        #region < AddFile >
-
         /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
-            FileStatsField.Total++;
             if (SkippingFile)
             {
-                FileStatsField.Skipped++;
                 QueueByteCalc(currentFile, WhereToAdd.Skipped);
             }
 
@@ -186,25 +192,21 @@ namespace RoboSharp.Results
             // EXTRA FILES
             if (currentFile.FileClass == Config.LogParsing_ExtraFile)
             {
-                FileStatsField.Extras++;
                 QueueByteCalc(currentFile, WhereToAdd.Extra);
             }
             //MisMatch
             else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
             {
-                FileStatsField.Mismatch++;
                 QueueByteCalc(currentFile, WhereToAdd.MisMatch);
             }
             //Failed Files
             else if (currentFile.FileClass == Config.LogParsing_FailedFile)
             {
-                FileStatsField.Failed++;
                 QueueByteCalc(currentFile, WhereToAdd.Failed);
             }
             //Identical Files
             else if (currentFile.FileClass == Config.LogParsing_SameFile)
             {
-                FileStatsField.Skipped++;
                 QueueByteCalc(currentFile, WhereToAdd.Skipped);
                 CurrentFile = null;
             }
@@ -218,94 +220,34 @@ namespace RoboSharp.Results
                     //Special handling for 0kb files -> They won't get Progress update, but will be created
                     if (currentFile.Size == 0)
                     {
-                        FileStatsField.Copied++;
+                        QueueByteCalc(currentFile, WhereToAdd.Copied);
                         SkippingFile = false;
                     }
                     else if (!CopyOperation)
                     {
-                        FileStatsField.Copied++;
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
                 else if (currentFile.FileClass == Config.LogParsing_OlderFile)
                 {
                     if (!CopyOperation && !command.SelectionOptions.ExcludeNewer)
-                    {
-                        FileStatsField.Copied++;
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
-                    }
                 }
                 else if (currentFile.FileClass == Config.LogParsing_NewerFile)
                 {
                     if (!CopyOperation && !command.SelectionOptions.ExcludeOlder)
-                    {
-                        FileStatsField.Copied++;
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
-                    }
                 }
             }
         }
-
-        #region < Byte Stat Optimization >
 
         /// <summary>
         /// Stage / perform the calculation for the ByteStatistic
         /// </summary>
         private void QueueByteCalc(ProcessedFileInfo file, WhereToAdd whereTo)
         {
-            if (ByteCalcRequested.IsValueCreated)
-            {
-                if (!BytesToAdd.IsEmpty) DeQueueByteCalc(); // Process the queue first
-                CalculateByteStat(file, whereTo);
-            }
-            else
-                BytesToAdd.Enqueue(new Tuple<ProcessedFileInfo, WhereToAdd>(file, whereTo));
+            BytesToAdd.Enqueue(new Tuple<ProcessedFileInfo, WhereToAdd>(file, whereTo));
         }
-
-        /// <summary>
-        /// Allows Defering calculation of DirStat until the Lazy Object is requested
-        /// </summary>
-        private void DeQueueByteCalc()
-        {
-            while (!BytesToAdd.IsEmpty)
-            {
-                if (BytesToAdd.TryDequeue(out var TP))
-                {
-                    ByteStatsField.EnablePropertyChangeEvent = BytesToAdd.IsEmpty; //Disable PropertyChangeEvent until last item in list
-                    CalculateByteStat(TP.Item1, TP.Item2);
-                }
-            }
-        }
-
-        private void CalculateByteStat(ProcessedFileInfo currentFile, WhereToAdd whereTo)
-        {
-            ByteStatsField.Total += currentFile.Size;
-
-            switch (whereTo)
-            {
-                case WhereToAdd.Copied:
-                    ByteStatsField.Copied += currentFile.Size;
-                    break;
-
-                case WhereToAdd.Skipped:
-                    ByteStatsField.Skipped += currentFile.Size;
-                    break;
-
-                case WhereToAdd.Extra:
-                    ByteStatsField.Extras += currentFile.Size;
-                    break;
-
-                case WhereToAdd.MisMatch:
-                    ByteStatsField.Mismatch += currentFile.Size;
-                    break;
-
-                case WhereToAdd.Failed:
-                    ByteStatsField.Failed += currentFile.Size;
-                    break;
-            }
-        }
-
-        #endregion
 
         /// <summary>Catch start copy progress of large files</summary>
         internal void SetCopyOpStarted()
@@ -319,12 +261,136 @@ namespace RoboSharp.Results
         {
             SkippingFile = false;
             CopyOpStarted = false;
-            FileStatsField.Copied++;
             QueueByteCalc(currentFile, WhereToAdd.Copied);
             CurrentFile = null;
         }
 
         #endregion
+
+        #region < Calculation Task >
+
+        private Task StartCalculationTask(out CancellationTokenSource CancelSource)
+        {
+            
+            CancelSource = new CancellationTokenSource();
+            var CS = CancelSource;
+            return Task.Factory.StartNew(async () => 
+                {
+                    DateTime LastUpdate = DateTime.Now;
+                    TimeSpan UpdatePeriod = new TimeSpan(0, 0, 0, 0, 125);
+                    bool DirAdded = false;
+                    bool FileAdded = false;
+
+                    var tmpDir = new Statistic(type: Statistic.StatType.Directories);
+                    var tmpFile = new Statistic(type: Statistic.StatType.Files);
+                    var tmpByte = new Statistic(type: Statistic.StatType.Bytes);
+
+                    while (!CS.IsCancellationRequested)
+                    {
+                        DirAdded = ClearOutDirs(LastUpdate, UpdatePeriod, tmpDir);
+                        FileAdded = ClearOutBytes(LastUpdate, UpdatePeriod, tmpByte, tmpFile);
+
+                        if (DateTime.Now.Subtract(LastUpdate) >= UpdatePeriod && FileAdded | DirAdded)
+                        {
+                            PushUpdate(ref DirAdded, ref FileAdded, tmpDir, tmpByte, tmpFile);
+                            LastUpdate = DateTime.Now;
+                        }
+                        else
+                            await ThreadEx.CancellableSleep(15, CS.Token);
+                    }
+                    await Task.Delay(250); // Provide 250ms for bags to fill up
+                    UpdatePeriod = new TimeSpan(days: 5, 0, 0, 0); //Set excessively long timespan to stay in loop
+                    while (!BytesToAdd.IsEmpty || !DirsToAdd.IsEmpty)   //Clean out the bags
+                    {
+                        DirAdded = ClearOutDirs(LastUpdate, UpdatePeriod, tmpDir);
+                        FileAdded = ClearOutBytes(LastUpdate, UpdatePeriod, tmpByte, tmpFile);
+                        await Task.Delay(15);
+                    }
+                    PushUpdate(ref DirAdded, ref FileAdded, tmpDir, tmpByte, tmpFile);
+
+                }, CancelSource.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+            
+        }
+
+        private bool ClearOutDirs(DateTime LastUpdate, TimeSpan UpdatePeriod, Statistic tmpDir)
+        {
+            //Calculate Dirs
+            bool DirAdded = false;
+            while (DateTime.Now.Subtract(LastUpdate) < UpdatePeriod && !DirsToAdd.IsEmpty)
+            {
+                if (DirsToAdd.TryDequeue(out var whereToAdd))
+                {
+                    tmpDir.Total++;
+                    switch (whereToAdd)
+                    {
+                        case WhereToAdd.Copied: tmpDir.Copied++; break;
+                        case WhereToAdd.Extra: tmpDir.Extras++; break;
+                        case WhereToAdd.Failed: tmpDir.Failed++; break;
+                        case WhereToAdd.MisMatch: tmpDir.Mismatch++; break;
+                        case WhereToAdd.Skipped: tmpDir.Skipped++; break;
+                    }
+                    DirAdded = true;
+                }
+            }
+            return DirAdded;
+        }
+
+        private bool ClearOutBytes(DateTime LastUpdate, TimeSpan UpdatePeriod, Statistic tmpByte, Statistic tmpFile)
+        {
+            //Calculate Files and Bytes
+            bool FileAdded = false;
+            while (DateTime.Now.Subtract(LastUpdate) < UpdatePeriod && !BytesToAdd.IsEmpty)
+            {
+                if (BytesToAdd.TryDequeue(out var tuple))
+                {
+                    tmpFile.Total++;
+                    tmpByte.Total += tuple.Item1.Size;
+                    switch (tuple.Item2)
+                    {
+                        case WhereToAdd.Copied:
+                            tmpFile.Copied++;
+                            tmpByte.Copied += tuple.Item1.Size;
+                            break;
+                        case WhereToAdd.Extra:
+                            tmpFile.Extras++;
+                            tmpByte.Extras += tuple.Item1.Size;
+                            break;
+                        case WhereToAdd.Failed:
+                            tmpFile.Failed++;
+                            tmpByte.Failed += tuple.Item1.Size;
+                            break;
+                        case WhereToAdd.MisMatch:
+                            tmpFile.Mismatch++;
+                            tmpByte.Mismatch += tuple.Item1.Size;
+                            break;
+                        case WhereToAdd.Skipped:
+                            tmpFile.Skipped++;
+                            tmpByte.Skipped += tuple.Item1.Size;
+                            break;
+                    }
+                    FileAdded = true;
+                }
+            }
+            return FileAdded;
+        }
+
+        private void PushUpdate(ref bool DirAdded,ref bool FileAdded, Statistic tmpDir, Statistic tmpByte, Statistic tmpFile)
+        {
+            if (DirAdded)
+            {
+                DirStatField.AddStatistic(tmpDir);
+                tmpDir.Reset();
+                DirAdded = false;
+            }
+            if (FileAdded)
+            {
+                FileStatsField.AddStatistic(tmpFile);
+                ByteStatsField.AddStatistic(tmpByte);
+                tmpByte.Reset();
+                tmpFile.Reset();
+                FileAdded = false;
+            }
+        }
 
         #endregion
 

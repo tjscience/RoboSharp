@@ -76,13 +76,14 @@ namespace RoboSharp.BackupApp
             ByteStat = list.BytesStatistic;
             DirStat = list.DirectoriesStatistic;
             FileStat = list.FilesStatistic;
+            
+            IsResultsListBound = true;
+
+            ShowResultsListSummary(null, new System.ComponentModel.PropertyChangedEventArgs(""));
             DirectoriesStatistic_PropertyChanged(null, null);
             FilesStatistic_PropertyChanged(null, null);
             BytesStatistic_PropertyChanged(null, null);
             
-            
-            IsResultsListBound = true;
-
             ////Trigger List Update
             DirStat.PropertyChanged += ShowResultsListSummary;
             FileStat.PropertyChanged += ShowResultsListSummary;
@@ -121,7 +122,7 @@ namespace RoboSharp.BackupApp
                 () =>
                 {
                     lbl.Content = stat?.ToString(false, true, "\n", false) ?? "";
-                    if (!IsResultsListBound) ShowSelectedJobSummary(); else ShowResultsListSummary(null, null);
+                    if (!IsResultsListBound) ShowSelectedJobSummary();
                 });
         }
 
@@ -153,7 +154,7 @@ namespace RoboSharp.BackupApp
         /// </summary>
         private void ShowResultsListSummary(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e == null || e.PropertyName != "Total") return;
+            if (e == null || (e.PropertyName != "" && e.PropertyName != "Total")) return;
             string NL = Environment.NewLine;
             if (ResultsList == null || ResultsList.Count == 0)
             {

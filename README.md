@@ -146,6 +146,13 @@ lbl_OverallTotals.Content = $"Job History:" +
     $"{NL}{JobResults.Status.ToString()}";
 ```
 
+#### RoboQueue:
+
+Documentation coming soon......
+
+
+---
+
 **N.B. The below has been superseded by changes in PR [#127](https://github.com/tjscience/RoboSharp/pull/127) but is still available to be used if required**
 
 .AddStatistic
@@ -196,7 +203,7 @@ void copy_OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
 
 .AverageStatistics
 
-=======
+---
 
 # Contributing to RoboSharp
 
