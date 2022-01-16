@@ -295,7 +295,7 @@ namespace RoboSharp
 
         #region < Start Methods >
 
-#if NET45 || NETSTANDARD2_0 || NETSTANDARD2_1 || NETCOREAPP3_1
+#if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
         /// <summary>
         /// Start the RoboCopy Process, then return the results.
         /// </summary>

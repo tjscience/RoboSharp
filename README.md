@@ -102,7 +102,7 @@ cmd.OnCommandCompleted += (args) =>
 cmd.Start();
 ```
 
-RoboCopyResultsList:
+#### RoboCopyResultsList:
 
 PR [#127](https://github.com/tjscience/RoboSharp/pull/127) adds some great new methods for handling results which can be used when running multiple jobs. This then allows you to view combined totals for files, directories and bytes as well as averages for speed, along with log, status and exit code information for each job
 
