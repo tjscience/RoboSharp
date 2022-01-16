@@ -129,19 +129,19 @@ namespace RoboSharp.Results
             CancelSource = new CancellationTokenSource();
             var CS = CancelSource; //Compiler required abstracting since this is a CancelSource is marked as ref
 
-            TaskRef = Task.Factory.StartNew(() =>
+            TaskRef = Task.Factory.StartNew( async () =>
             {
                 Statistic tmp = new Statistic(type: StatToAddTo.Type);
                 while (!CS.IsCancellationRequested)
                 {
                     BagClearOut(tmp, StatToAddTo, EventBag);
-                    Thread.Sleep(UpdatePeriodInMilliSecond);
+                    await Task.Delay(UpdatePeriodInMilliSecond);
                 }
-                Thread.Sleep(250); //Sleep for a bit to let the bag fill up
+                await Task.Delay(250); //Sleep for a bit to let the bag fill up
                 //After cancellation is requested, ensure the bag is emptied
                 BagClearOut(tmp, StatToAddTo, EventBag);
 
-            }, CS.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal);
+            }, CS.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
             
             return TaskRef;
         }
