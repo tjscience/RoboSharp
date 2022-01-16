@@ -76,13 +76,14 @@ namespace RoboSharp.BackupApp
             ByteStat = list.BytesStatistic;
             DirStat = list.DirectoriesStatistic;
             FileStat = list.FilesStatistic;
+            
+            IsResultsListBound = true;
+
+            ShowResultsListSummary(null, new System.ComponentModel.PropertyChangedEventArgs(""));
             DirectoriesStatistic_PropertyChanged(null, null);
             FilesStatistic_PropertyChanged(null, null);
             BytesStatistic_PropertyChanged(null, null);
             
-            
-            IsResultsListBound = true;
-
             ////Trigger List Update
             DirStat.PropertyChanged += ShowResultsListSummary;
             FileStat.PropertyChanged += ShowResultsListSummary;
