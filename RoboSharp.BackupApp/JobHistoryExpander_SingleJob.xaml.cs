@@ -121,7 +121,7 @@ namespace RoboSharp.BackupApp
                 () =>
                 {
                     lbl.Content = stat?.ToString(false, true, "\n", false) ?? "";
-                    if (!IsResultsListBound) ShowSelectedJobSummary(); else ShowResultsListSummary(null, null);
+                    if (!IsResultsListBound) ShowSelectedJobSummary();
                 });
         }
 
@@ -153,7 +153,7 @@ namespace RoboSharp.BackupApp
         /// </summary>
         private void ShowResultsListSummary(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e == null || e.PropertyName != "Total") return;
+            if (e == null || (e.PropertyName != "" && e.PropertyName != "Total")) return;
             string NL = Environment.NewLine;
             if (ResultsList == null || ResultsList.Count == 0)
             {
