@@ -19,7 +19,7 @@ namespace RoboSharp
     {
 
         #region < Constructor >
-        
+
         /// <summary>
         /// Create a JobFile with Default Options
         /// </summary>
@@ -74,7 +74,7 @@ namespace RoboSharp
         /// Expected File Extension for Job Files exported from RoboCopy.
         /// </summary>
         public const string JOBFILE_Extension = ".RCJ";
-        
+
         /// <summary>
         /// FileFilter to use in an to search for this extension, such as with <see cref="DirectoryInfo.GetFiles(string)"/>
         /// </summary>
@@ -114,10 +114,10 @@ namespace RoboSharp
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public LoggingOptions LoggingOptions => roboCommand.LoggingOptions;
-        
+
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public RetryOptions RetryOptions => roboCommand.RetryOptions;
-        
+
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public SelectionOptions SelectionOptions => roboCommand.SelectionOptions;
 

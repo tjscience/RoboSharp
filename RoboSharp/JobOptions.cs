@@ -24,9 +24,9 @@ namespace RoboSharp
         /// Constructor for ICloneable Interface
         /// </summary>
         /// <param name="options">JobOptions object to clone</param>
-        public JobOptions(JobOptions options) 
+        public JobOptions(JobOptions options)
         {
-            
+
         }
 
         #endregion
