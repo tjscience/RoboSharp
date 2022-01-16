@@ -127,7 +127,10 @@ namespace RoboSharp.Results
         /// <summary>
         /// Repackage the statistics into a new <see cref="RoboCopyResults"/> object
         /// </summary>
-        /// <remarks>Used by ResultsBuilder as starting point for the results.</remarks>
+        /// <remarks>
+        /// Used by ResultsBuilder as starting point for the results. 
+        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
+        /// </remarks>
         /// <returns></returns>
         internal RoboCopyResults GetResults()
         {
