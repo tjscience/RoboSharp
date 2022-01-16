@@ -14,14 +14,17 @@ namespace RoboSharp
     {
         /// <summary> Encase the LogPath in quotes if needed </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         internal static string WrapPath(this string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
 
         /// <remarks> Extension method provided by RoboSharp package </remarks>
         /// <inheritdoc cref="System.String.IsNullOrWhiteSpace(string)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         internal static bool IsNullOrWhiteSpace(this string value) => string.IsNullOrWhiteSpace(value);
 
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         internal static long TryConvertLong(this string val)
         {
             try
@@ -35,6 +38,7 @@ namespace RoboSharp
         }
 
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         internal static int TryConvertInt(this string val)
         {
             try
@@ -47,13 +51,15 @@ namespace RoboSharp
             }
 
         }
+        
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         public static string CleanOptionInput(this string option)
         {
             // Get rid of forward slashes
             option = option.Replace("/", "");
             // Get rid of padding
             option = option.Trim();
-
             return option;
         }
 
@@ -102,8 +108,51 @@ namespace RoboSharp
         /// <summary>
         /// Check if the string ends with a directory seperator character
         /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
         public static bool EndsWithDirectorySeperator(this string path) => path.EndsWith(Path.DirectorySeparatorChar.ToString()) || path.EndsWith(Path.AltDirectorySeparatorChar.ToString());
 
+        /// <summary>
+        /// Convert <paramref name="StrTwo"/> into a char[]. Perform a ForEach( Char in strTwo) loop, and append any characters in Str2 to the end of this string if they don't already exist within this string.
+        /// </summary>
+        /// <param name="StrOne"></param>
+        /// <param name="StrTwo"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static string CombineCharArr(this string StrOne, string StrTwo)
+        {
+            if (String.IsNullOrWhiteSpace(StrTwo)) return StrOne;
+            if (String.IsNullOrWhiteSpace(StrOne)) return StrTwo ?? StrOne;
+            string ret = StrOne;
+            char[] S2 = StrTwo.ToArray();
+            foreach (char c in S2)
+            {
+                if (!ret.Contains(c))
+                    ret += c;
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// Compare the current value to that of the supplied value, and take the greater of the two.
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="i2"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static int GetGreaterVal(this int i, int i2) => i >= i2 ? i : i2;
+
+        /// <summary>
+        /// Evaluate this string. If this string is null or empty, replace it with the supplied string.
+        /// </summary>
+        /// <param name="str1"></param>
+        /// <param name="str2"></param>
+        /// <returns></returns>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
+        [DebuggerHidden()]
+        internal static string ReplaceIfEmpty(this string str1, string str2) => String.IsNullOrWhiteSpace(str1) ? str2 ?? String.Empty : str1;
     }
 }
 

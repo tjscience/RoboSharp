@@ -711,6 +711,21 @@ namespace RoboSharp
             return GenerateParameters();
         }
 
+        /// <summary>
+        /// Combine this object's options with that of some JobFile
+        /// </summary>
+        /// <param name="jobFile"></param>
+        public void MergeJobFile(JobFile jobFile)
+        {
+            Name = Name.ReplaceIfEmpty(jobFile.Job_Name);
+            copyOptions.Merge(jobFile.CopyOptions);
+            LoggingOptions.Merge(jobFile.LoggingOptions);
+            RetryOptions.Merge(jobFile.RetryOptions);
+            SelectionOptions.Merge(jobFile.SelectionOptions);
+            JobOptions.Merge(((IRoboCommand)jobFile).JobOptions);
+            //this.StopIfDisposing |= ((IRoboCommand)jobFile).StopIfDisposing;
+        }
+
         #endregion
 
         #region < IDisposable Implementation >

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp
 {
@@ -364,6 +365,8 @@ namespace RoboSharp
 
         #endregion Public Properties
 
+        #region < Parse (INTERNAL) >
+
         /// <summary>
         /// Used by the Parse method to sanitize path for the command options.<br/>
         /// Evaluate the path. If needed, wrap it in quotes.  <br/>
@@ -487,6 +490,10 @@ namespace RoboSharp
             return parsedOptions;
         }
 
+        #endregion
+
+        #region < RunHours (Public) >
+
         private static Regex RunHours_OverallRegex = new Regex("^(?<StartTime>[0-2][0-9][0-5][0-9])-(?<EndTime>[0-2][0-9][0-5][0-9])$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         private static Regex RunHours_Check1 = new Regex("^[0-1][0-9][0-5][0-9]$", RegexOptions.Compiled);  // Checks 0000 - 1959
         private static Regex RunHours_Check2 = new Regex("^[2][0-3][0-5][0-9]$", RegexOptions.Compiled);    // Checks 2000 - 2359
@@ -526,5 +533,72 @@ namespace RoboSharp
             bool EndMatch = RunHours_Check1.IsMatch(times.Groups["EndTime"].Value) || RunHours_Check2.IsMatch(times.Groups["EndTime"].Value);
             return StartMatch && EndMatch;
         }
+
+        #endregion
+
+        #region < Other Public Methods >
+
+        /// <summary>
+        /// Combine this object with another CopyOptions object. <br/>
+        /// Any properties marked as true take priority. IEnumerable items are combined. 
+        /// </summary>
+        /// <remarks>
+        /// Source and Destination are only taken from the merged item if this object's Source/Destination values are null/empty. <br/>
+        /// RunHours follows the same rules.
+        /// 
+        /// </remarks>
+        /// <param name="copyOptions"></param>
+        public void Merge(CopyOptions copyOptions)
+        {
+            Source = Source.ReplaceIfEmpty(copyOptions.Source);
+            Destination = Destination.ReplaceIfEmpty(copyOptions.Destination);
+            RunHours = RunHours.ReplaceIfEmpty(copyOptions.RunHours);
+
+            //int -> Take Greater Value
+            Depth = Depth.GetGreaterVal(copyOptions.Depth);
+            InterPacketGap = InterPacketGap.GetGreaterVal(copyOptions.InterPacketGap);
+            MonitorSourceChangesLimit = MonitorSourceChangesLimit.GetGreaterVal(copyOptions.MonitorSourceChangesLimit);
+            MonitorSourceTimeLimit = MonitorSourceTimeLimit.GetGreaterVal(copyOptions.MonitorSourceTimeLimit);
+            MultiThreadedCopiesCount = MultiThreadedCopiesCount.GetGreaterVal(copyOptions.MultiThreadedCopiesCount);
+
+            //Flags
+            AddAttributes = AddAttributes.CombineCharArr(copyOptions.AddAttributes);
+            CopyFlags = CopyFlags.CombineCharArr(copyOptions.CopyFlags);
+            DirectoryCopyFlags = DirectoryCopyFlags.CombineCharArr(copyOptions.DirectoryCopyFlags);
+            RemoveAttributes = RemoveAttributes.CombineCharArr(copyOptions.RemoveAttributes);
+
+            //IEnumerable
+            var list = new List<String>(FileFilter);
+            list.AddRange(copyOptions.FileFilter);
+            FileFilter = list;
+
+            //Bool
+            CheckPerFile |= copyOptions.CheckPerFile;
+            CopyAll |= copyOptions.CopyAll;
+            CopyFilesWithSecurity |= copyOptions.CopyFilesWithSecurity;
+            CopySubdirectories |= copyOptions.CopySubdirectories;
+            CopySubdirectoriesIncludingEmpty |= copyOptions.CopySubdirectoriesIncludingEmpty;
+            CopySymbolicLink |= copyOptions.CopySymbolicLink;
+            CreateDirectoryAndFileTree |= copyOptions.CreateDirectoryAndFileTree;
+            DoNotCopyDirectoryInfo |= copyOptions.DoNotCopyDirectoryInfo;
+            DoNotUseWindowsCopyOffload |= copyOptions.DoNotUseWindowsCopyOffload;
+            EnableBackupMode |= copyOptions.EnableBackupMode;
+            EnableEfsRawMode |= copyOptions.EnableEfsRawMode;
+            EnableRestartMode |= copyOptions.EnableRestartMode;
+            EnableRestartModeWithBackupFallback |= copyOptions.EnableRestartModeWithBackupFallback;
+            FatFiles |= copyOptions.FatFiles;
+            FixFileSecurityOnAllFiles |= copyOptions.FixFileSecurityOnAllFiles;
+            FixFileTimesOnAllFiles |= copyOptions.FixFileTimesOnAllFiles;
+            Mirror |= copyOptions.Mirror;
+            MoveFiles |= copyOptions.MoveFiles;
+            MoveFilesAndDirectories |= copyOptions.MoveFilesAndDirectories;
+            Purge |= copyOptions.Purge;
+            RemoveFileInformation |= copyOptions.RemoveFileInformation;
+            TurnLongPathSupportOff |= copyOptions.TurnLongPathSupportOff;
+            UseUnbufferedIo |= copyOptions.UseUnbufferedIo;
+        }
+
+        #endregion
+
     }
 }

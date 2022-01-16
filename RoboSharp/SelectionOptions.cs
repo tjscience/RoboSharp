@@ -358,5 +358,43 @@ namespace RoboSharp
 
             return options.ToString();
         }
+
+        /// <summary>
+        /// Combine this object with another RetryOptions object. <br/>
+        /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
+        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// </summary>
+        /// <param name="options"></param>
+        public void Merge(SelectionOptions options)
+        {
+            //File Attributes
+            IncludeAttributes = IncludeAttributes.CombineCharArr(options.IncludeAttributes);
+            ExcludeAttributes = ExcludeAttributes.CombineCharArr(options.ExcludeAttributes);
+
+            //File Age
+            MaxFileAge = MaxFileAge.ReplaceIfEmpty(options.MaxFileAge);
+            MinFileAge = MaxFileAge.ReplaceIfEmpty(options.MinFileAge);
+            MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
+            MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
+            
+            //Bools
+            OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
+            OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;
+            ExcludedFiles.AddRange(options.ExcludedFiles);
+            ExcludedDirectories.AddRange(options.ExcludedDirectories);
+            ExcludeChanged |= options.ExcludeChanged;
+            ExcludeNewer |= options.ExcludeNewer;
+            ExcludeOlder |= options.ExcludeOlder;
+            ExcludeExtra |= options.ExcludeExtra;
+            ExcludeLonely |= options.ExcludeLonely;
+            IncludeSame |= options.IncludeSame;
+            IncludeTweaked |= options.IncludeTweaked;
+            MaxFileSize |= options.MaxFileSize;
+            MinFileSize |= options.MinFileSize;
+            ExcludeJunctionPoints |= options.ExcludeJunctionPoints;
+            UseFatFileTimes |= options.UseFatFileTimes;
+            CompensateForDstDifference |= options.CompensateForDstDifference; ;
+            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
+        }
     }
 }

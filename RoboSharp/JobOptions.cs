@@ -163,6 +163,18 @@ namespace RoboSharp
             File.WriteAllLines(FilePath, txt);
         }
 
+        /// <summary>
+        /// Combine this object with another RetryOptions object. <br/>
+        /// <see cref="FilePath"/> not not be modified.
+        /// </summary>
+        /// <param name="options"></param>
+        public void Merge(JobOptions options)
+        {
+            NoSourceDirectory |= options.NoSourceDirectory;
+            NoDestinationDirectory |= options.NoDestinationDirectory;
+            PreventCopyOperation |= options.PreventCopyOperation;
+        }
+
         #endregion
     }
 }

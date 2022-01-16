@@ -245,7 +245,8 @@ namespace RoboSharp
         RetryOptions IRoboCommand.RetryOptions { get => ((IRoboCommand)roboCommand).RetryOptions; set => ((IRoboCommand)roboCommand).RetryOptions = value; }
         LoggingOptions IRoboCommand.LoggingOptions { get => roboCommand.LoggingOptions; set => roboCommand.LoggingOptions = value; }
         CopyOptions IRoboCommand.CopyOptions { get => ((IRoboCommand)roboCommand).CopyOptions; set => ((IRoboCommand)roboCommand).CopyOptions = value; }
-        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration;
+        JobOptions IRoboCommand.JobOptions { get => ((IRoboCommand)roboCommand).JobOptions; }
+        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration; 
         string IRoboCommand.CommandOptions => roboCommand.CommandOptions;
 
         #endregion

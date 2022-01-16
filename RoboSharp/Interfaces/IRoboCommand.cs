@@ -44,7 +44,10 @@ namespace RoboSharp.Interfaces
         
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         LoggingOptions LoggingOptions { get; set; }
-        
+
+        /// <inheritdoc cref="RoboCommand.JobOptions"/>
+        JobOptions JobOptions{ get; }
+
         /// <inheritdoc cref="RoboCommand.Configuration"/>
         RoboSharpConfiguration Configuration { get; }
 

@@ -288,7 +288,11 @@ namespace RoboSharp.BackupApp
                 bool? FilePicked = FP.ShowDialog(this);
                 if (FilePicked ?? false)
                 {
-                    LoadCommand((IRoboCommand)new JobFile(FP.FileName));
+                    var oldCmd = GetCommand(false);
+                    var JF = new JobFile(FP.FileName);
+                    oldCmd.MergeJobFile(JF);//Perform Merge Test
+                    LoadCommand((IRoboCommand)oldCmd);
+                    
                 }
                 else
                 {
