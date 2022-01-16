@@ -482,6 +482,10 @@ namespace RoboSharp
             {
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(); //Ensure process is disposed of - Sets IsRunning flags to false
+
+                //Run Post-Processing of the Generated JobFile if one was created.
+                JobOptions.RunPostProcessing(this);
+
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
                 //Raise event announcing results are available
                 if (!hasError && resultsBuilder != null)

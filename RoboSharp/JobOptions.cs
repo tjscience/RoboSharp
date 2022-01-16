@@ -142,6 +142,27 @@ namespace RoboSharp
             return options;
         }
 
+        /// <summary>
+        /// Adds the 'NAME' and other properties into the JobFile
+        /// </summary>
+        internal void RunPostProcessing(RoboCommand cmd)
+        {
+            if (FilePath.IsNullOrWhiteSpace()) return;
+            if (!File.Exists(FilePath)) return;
+            var txt = File.ReadAllLines(FilePath).ToList();
+            //Write Options to JobFile
+            txt.InsertRange(6, new string[]
+            {
+                "",
+                "::",
+                ":: Options for RoboSharp.JobFile",
+                "::",
+                JobFileBuilder.JOBFILE_JobName + " " + cmd.Name,
+                JobFileBuilder.JOBFILE_StopIfDisposing + " " + cmd.StopIfDisposing.ToString().ToUpper()
+            });
+            File.WriteAllLines(FilePath, txt);
+        }
+
         #endregion
     }
 }

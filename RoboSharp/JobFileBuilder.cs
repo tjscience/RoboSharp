@@ -24,6 +24,8 @@ namespace RoboSharp
         /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
         internal const string JOBFILE_JobName = ":: JOB_NAME: ";
 
+        internal const string JOBFILE_StopIfDisposing = ":: StopIfDisposing: ";
+
         /// <summary>Pattern to Identify the SWITCH, DELIMITER and VALUE section</summary>
         private const string RegString_SWITCH = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>.+?)";
         /// <summary>Pattern to Identify the SWITCH, DELIMIETER and VALUE section</summary>
@@ -66,7 +68,9 @@ namespace RoboSharp
         /// NAME <br/>
         /// COMMENT
         /// </remarks>
-        private readonly static Regex  JobNameRegex = new Regex("^\\s*(?<FLAG>.*::JOB_NAME:\\s*)(?<NAME>.+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private readonly static Regex  JobNameRegex = new Regex("^\\s*(?<FLAG>:: JOB_NAME:)\\s*(?<NAME>.*)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+
+        private readonly static Regex StopIfDisposingRegex = new Regex("^\\s*(?<FLAG>:: StopIfDisposing:)\\s*(?<VALUE>TRUE|FALSE)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Regex used for parsing File and Directory filters for /IF /XD and /XF flags
@@ -194,6 +198,7 @@ namespace RoboSharp
             RetryOptions retryOpt = new RetryOptions();
 
             string JobName = null;
+            bool stopIfDisposing = true;
 
             foreach (string ln in Lines)
             {
@@ -232,8 +237,13 @@ namespace RoboSharp
                 }
                 else if (JobName == null && JobNameRegex.IsMatch(ln))
                 {
-                    JobName = JobNameRegex.Match(ln).Groups["NAME"].Value;
+                    JobName = JobNameRegex.Match(ln).Groups["NAME"].Value.Trim();
                 }
+                else if (StopIfDisposingRegex.IsMatch(ln))
+                {
+                    stopIfDisposing = Convert.ToBoolean(StopIfDisposingRegex.Match(ln).Groups["VALUE"].Value);
+                }
+                
             }
 
             CopyOptions copyOpt = Build_CopyOptions(Flags, ValueFlags, Lines);
@@ -241,7 +251,7 @@ namespace RoboSharp
             LoggingOptions loggingOpt = Build_LoggingOptions(Flags, ValueFlags, Lines);
             JobOptions jobOpt = Build_JobOptions(Flags, ValueFlags, Lines);
 
-            return new RoboCommand(JobName ?? "", source: null, destination: null, StopIfDisposing: true, configuration: null,
+            return new RoboCommand(JobName ?? "", StopIfDisposing: stopIfDisposing, source: null, destination: null, configuration: null,
                 copyOptions: copyOpt,
                 selectionOptions: selectionOpt,
                 retryOptions: retryOpt,
