@@ -34,7 +34,7 @@ namespace RoboSharp
         public RoboQueue()
         {
             Init();
-            Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace RoboSharp
         public RoboQueue(string name, int maxConcurrentJobs = 1)
         {
             Init(name, maxConcurrentJobs);
-            Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace RoboSharp
         {
             CommandList.Add(roboCommand);
             Init(name, maxConcurrentJobs);
-            Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
         /// <summary>
@@ -64,11 +64,11 @@ namespace RoboSharp
         /// <param name="roboCommand">RoboCommand(s) to populate the list with.</param>
         /// <param name="name"><inheritdoc cref="Name"/></param>
         /// <param name="maxConcurrentJobs"><inheritdoc cref="MaxConcurrentJobs"/></param>
-        public RoboQueue(IEnumerable<RoboCommand> roboCommand, string name = "", int maxConcurrentJobs = 1)
+        public RoboQueue(IEnumerable<IRoboCommand> roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.AddRange(roboCommand);
             Init(name, maxConcurrentJobs);
-            Commands = new ReadOnlyCollection<RoboCommand>(CommandList);
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
         private void Init(string name = "", int maxConcurrentJobs = 1)
@@ -81,7 +81,7 @@ namespace RoboSharp
 
         #region < Fields >
 
-        private readonly ObservableList<RoboCommand> CommandList = new ObservableList<RoboCommand>();
+        private readonly ObservableList<IRoboCommand> CommandList = new ObservableList<IRoboCommand>();
         private RoboQueueProgressEstimator Estimator;
         private bool disposedValue;
         private bool isDisposing;
@@ -154,7 +154,7 @@ namespace RoboSharp
         /// <summary>
         /// Wraps the private <see cref="ObservableList{T}"/> into a ReadOnlyCollection for public consumption and data binding.
         /// </summary>
-        public ReadOnlyCollection<RoboCommand> Commands { get; }
+        public ReadOnlyCollection<IRoboCommand> Commands { get; }
 
         /// <summary>
         /// <inheritdoc cref="RoboCommand.ProgressEstimator"/> <para/>
@@ -494,10 +494,10 @@ namespace RoboSharp
             ListResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListResults));
 
             //Store the setting for ListOnly prior to changing it
-            List<Tuple<RoboCommand, bool>> OldListValues = new List<Tuple<RoboCommand, bool>>();
+            List<Tuple<IRoboCommand, bool>> OldListValues = new List<Tuple<IRoboCommand, bool>>();
             CommandList.ForEach((c) =>
             {
-                OldListValues.Add(new Tuple<RoboCommand, bool>(c, c.LoggingOptions.ListOnly));
+                OldListValues.Add(new Tuple<IRoboCommand, bool>(c, c.LoggingOptions.ListOnly));
                 c.LoggingOptions.ListOnly = true;
             });
             //Run the commands
@@ -783,7 +783,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void AddCommand(IEnumerable<RoboCommand> collection)
+        public void AddCommand(IEnumerable<IRoboCommand> collection)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.AddRange(collection);
@@ -827,7 +827,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void RemovCommand(Predicate<RoboCommand> match)
+        public void RemovCommand(Predicate<IRoboCommand> match)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveAll(match);
@@ -857,24 +857,24 @@ namespace RoboSharp
         #region < Find / Contains / Etc >
 
         /// <inheritdoc cref="List{T}.Contains(T)"/>
-        public bool Contains(RoboCommand item) => CommandList.Contains(item);
+        public bool Contains(IRoboCommand item) => CommandList.Contains(item);
 
         /// <inheritdoc cref="List{T}.ForEach(Action{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void ForEach(Action<RoboCommand> action)
+        public void ForEach(Action<IRoboCommand> action)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.ForEach(action);
         }
 
         /// <inheritdoc cref="List{T}.FindAll(Predicate{T})"/>
-        public List<RoboCommand> FindAll(Predicate<RoboCommand> predicate) => CommandList.FindAll(predicate);
+        public List<IRoboCommand> FindAll(Predicate<IRoboCommand> predicate) => CommandList.FindAll(predicate);
 
         /// <inheritdoc cref="List{T}.Find(Predicate{T})"/>
-        public RoboCommand Find(Predicate<RoboCommand> predicate) => CommandList.Find(predicate);
+        public IRoboCommand Find(Predicate<IRoboCommand> predicate) => CommandList.Find(predicate);
 
         /// <inheritdoc cref="List{T}.IndexOf(T)"/>
-        public int IndexOf(RoboCommand item) => CommandList.IndexOf(item);
+        public int IndexOf(IRoboCommand item) => CommandList.IndexOf(item);
 
         #endregion
 
