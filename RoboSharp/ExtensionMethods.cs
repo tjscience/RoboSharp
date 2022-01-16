@@ -167,7 +167,6 @@ namespace System.Threading
 
         /// <summary>
         /// Use await Task.Delay to sleep the thread. <br/>
-        /// Supplied token is used to create a LinkedToken that can cancel the sleep at any point.
         /// </summary>
         /// <returns>True if timer has expired (full duration slep), otherwise false.</returns>
         /// <param name="millisecondsTimeout">Number of milliseconds to wait"/></param>
