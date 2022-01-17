@@ -35,6 +35,17 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Clone the RoboCommand's options objects into a new JobFile
+        /// </summary>
+        /// <param name="cmd">RoboCommand whose options shall be cloned</param>
+        /// <param name="filePath">Optional FilePath to specify for future call to <see cref="Save()"/></param>
+        public JobFile(RoboCommand cmd, string filePath = "")
+        {
+            FilePath = filePath ?? "";
+            roboCommand = cmd.Clone();
+        }
+
+        /// <summary>
         /// Constructor for Factory Methods
         /// </summary>
         private JobFile(string filePath, RoboCommand cmd)
