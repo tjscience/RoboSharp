@@ -26,7 +26,10 @@ namespace RoboSharp
         /// <param name="options">JobOptions object to clone</param>
         public JobOptions(JobOptions options)
         {
-
+            FilePath = options.FilePath;
+            NoDestinationDirectory = options.NoDestinationDirectory;
+            NoSourceDirectory = options.NoSourceDirectory;
+            PreventCopyOperation = options.PreventCopyOperation;
         }
 
         #endregion
