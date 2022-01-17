@@ -522,8 +522,8 @@ namespace RoboSharp
             bool _NOSD = JobOptions.NoSourceDirectory;
 
             JobOptions.FilePath = path;
-            JobOptions.NoSourceDirectory = IncludeSource;
-            JobOptions.NoDestinationDirectory = IncludeDestination;
+            JobOptions.NoSourceDirectory = !IncludeSource;
+            JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
 
             await GetBackupTask(null, domain, username, password); //This should take approximately 1-2 seconds at most

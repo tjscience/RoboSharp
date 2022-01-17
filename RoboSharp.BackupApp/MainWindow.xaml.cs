@@ -316,7 +316,7 @@ namespace RoboSharp.BackupApp
                 bool? FilePicked = FP.ShowDialog(this);
                 if (FilePicked ?? false)
                 {
-                    await GetCommand(false).SaveAsJobFile(FP.FileName);
+                    await GetCommand(false).SaveAsJobFile(FP.FileName, true, true);
                 }
                 else
                 {

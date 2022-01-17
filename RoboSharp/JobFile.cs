@@ -35,6 +35,17 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Clone the RoboCommand's options objects into a new JobFile
+        /// </summary>
+        /// <param name="cmd">RoboCommand whose options shall be cloned</param>
+        /// <param name="filePath">Optional FilePath to specify for future call to <see cref="Save()"/></param>
+        public JobFile(RoboCommand cmd, string filePath = "")
+        {
+            FilePath = filePath ?? "";
+            roboCommand = cmd.Clone();
+        }
+
+        /// <summary>
         /// Constructor for Factory Methods
         /// </summary>
         private JobFile(string filePath, RoboCommand cmd)
@@ -111,7 +122,6 @@ namespace RoboSharp
         public const string JOBFILE_DialogFilter = "RoboCopy Job|*.RCJ";
         #endregion
 
-
         #region < Fields >
 
         /// <summary>
@@ -148,28 +158,36 @@ namespace RoboSharp
         #endregion
 
         #region < Methods >
-
+#pragma warning disable CS1573
 
         /// <summary>
-        /// Save the JobFile to <paramref name="path"/>
+        /// Update the <see cref="FilePath"/> property and save the JobFile to the <paramref name="path"/>
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Update the <see cref="FilePath"/> property, then save the JobFile to this path.</param>
         /// <inheritdoc cref="Save()"/>
-        public void Save(string path)
+        /// <inheritdoc cref="RoboCommand.SaveAsJobFile(string, bool, bool, string, string, string)"/>
+        public async Task Save(string path, bool IncludeSource = false, bool IncludeDestination = false)
+
         {
+            if (path.IsNullOrWhiteSpace()) throw new ArgumentException("path Property is Empty");
             FilePath = path;
-            Save();
+            await roboCommand.SaveAsJobFile(FilePath, IncludeSource, IncludeDestination);
         }
 
         /// <summary>
-        /// Save the JobFile to <see cref="FilePath"/>
+        /// Save the JobFile to <see cref="FilePath"/>. <br/>
+        /// Source and Destination will be included by default.
         /// </summary>
+        /// <remarks>If path is null/empty, will throw <see cref="ArgumentException"/></remarks>
+        /// <returns>Task that completes when the JobFile has been saved.</returns>
         /// <exception cref="ArgumentException"/>
-        public void Save()
+        public async Task Save()
         {
             if (FilePath.IsNullOrWhiteSpace()) throw new ArgumentException("FilePath Property is Empty");
+            await roboCommand.SaveAsJobFile(FilePath, true, true);
         }
 
+#pragma warning restore CS1573
         #endregion
 
         #region < IRoboCommand Interface >
