@@ -124,7 +124,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_OlderFile
         {
-            get { return olderToken ?? GetDefaultConfiguration().olderToken ??  "Older"; }
+            get { return olderToken ?? GetDefaultConfiguration().olderToken ?? "Older"; }
             set { olderToken = value; }
         }
         private string olderToken;
@@ -188,7 +188,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewDir
         {
-            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken  ?? "New Dir"; }
+            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken ?? "New Dir"; }
             set { newerDirToken = value; }
         }
         private string newerDirToken;

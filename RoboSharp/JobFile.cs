@@ -288,7 +288,7 @@ namespace RoboSharp
         LoggingOptions IRoboCommand.LoggingOptions { get => roboCommand.LoggingOptions; set => roboCommand.LoggingOptions = value; }
         CopyOptions IRoboCommand.CopyOptions { get => ((IRoboCommand)roboCommand).CopyOptions; set => ((IRoboCommand)roboCommand).CopyOptions = value; }
         JobOptions IRoboCommand.JobOptions { get => ((IRoboCommand)roboCommand).JobOptions; }
-        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration; 
+        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration;
         string IRoboCommand.CommandOptions => roboCommand.CommandOptions;
 
         #endregion

@@ -172,7 +172,7 @@ namespace RoboSharp
                 }
                 return RetString.Trim();
             }
-            set 
+            set
             {
                 excludedFiles.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
@@ -410,7 +410,7 @@ namespace RoboSharp
             MinFileAge = MaxFileAge.ReplaceIfEmpty(options.MinFileAge);
             MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
             MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
-            
+
             //Bools
             OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
             OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;

@@ -446,7 +446,7 @@ namespace RoboSharp
         /// <exception cref="InvalidOperationException"/>
         private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
-            if (process != null ) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
+            if (process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
@@ -508,7 +508,7 @@ namespace RoboSharp
                //hasExited = false;
                //Setup the Wait Cancellation Token
                var WaitExitSource = new CancellationTokenSource();
-               process.Exited += (o,e) => Process_Exited(WaitExitSource);
+               process.Exited += (o, e) => Process_Exited(WaitExitSource);
                Debugger.Instance.DebugMessage("RoboCopy process started.");
                process.Start();
                process.BeginOutputReadLine();
@@ -521,7 +521,7 @@ namespace RoboSharp
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
-            Task continueWithTask = backupTask.ContinueWith( (continuation) => // this task always runs
+            Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
@@ -554,7 +554,7 @@ namespace RoboSharp
 #pragma warning restore CS1573
         {
             //If currently running and this is called, clone the command, then run the save method against the clone.
-            if (process != null )
+            if (process != null)
             {
                 var cmd = this.Clone();
                 cmd.StopIfDisposing = true;
@@ -562,7 +562,7 @@ namespace RoboSharp
                 cmd.Dispose();
                 return;
             }
-            
+
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
             bool _NODD = JobOptions.NoDestinationDirectory;
