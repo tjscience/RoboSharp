@@ -488,7 +488,7 @@ namespace RoboSharp
         /// Set all RoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
         /// </summary>
         /// <inheritdoc cref="StartJobs"/>
-        public Task StartAll_ListOnly(string domain = "", string username = "", string password = "")
+        public Task<IRoboCopyResultsList> StartAll_ListOnly(string domain = "", string username = "", string password = "")
         {
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
@@ -496,25 +496,17 @@ namespace RoboSharp
             ListResultsObj.Clear();
             ListResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListResults));
 
-            //Store the setting for ListOnly prior to changing it
-            List<Tuple<IRoboCommand, bool>> OldListValues = new List<Tuple<IRoboCommand, bool>>();
-            CommandList.ForEach((c) =>
-            {
-                OldListValues.Add(new Tuple<IRoboCommand, bool>(c, c.LoggingOptions.ListOnly));
-                c.LoggingOptions.ListOnly = true;
-            });
             //Run the commands
             DateTime StartTime = DateTime.Now;
             Task Run = StartJobs(domain, username, password, true);
-            Task ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
             {
-                foreach (var obj in OldListValues)
-                    obj.Item1.LoggingOptions.ListOnly = obj.Item2;
                 //Set Flags
                 IsListOnlyRunning = false;
                 IsPaused = false;
                 ListOnlyCompleted = !WasCancelled;
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
+                return (IRoboCopyResultsList)ListResultsObj.Clone();
             }
             );
             return ResultsTask;
@@ -525,7 +517,7 @@ namespace RoboSharp
         #region < Run User-Set Parameters >
 
         /// <inheritdoc cref="StartJobs"/>
-        public Task StartAll(string domain = "", string username = "", string password = "")
+        public Task<IRoboCopyResultsList> StartAll(string domain = "", string username = "", string password = "")
         {
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
@@ -534,12 +526,13 @@ namespace RoboSharp
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
             DateTime StartTime = DateTime.Now;
             Task Run = StartJobs(domain, username, password, false);
-            Task ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
             {
                 IsCopyOperationRunning = false;
                 IsPaused = false;
                 CopyOperationCompleted = !WasCancelled;
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
+                return (IRoboCopyResultsList)RunResultsObj.Clone();
             }
             );
             return ResultsTask;
@@ -554,7 +547,7 @@ namespace RoboSharp
         /// </summary>
         /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
         /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
-        private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyBinding = false)
+        private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyMode = false)
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
@@ -586,7 +579,7 @@ namespace RoboSharp
                    if (cancellationToken.IsCancellationRequested) break;
 
                    //Assign the events
-                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
+                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyMode);
                    cmd.OnCommandCompleted += handler;
                    cmd.OnCommandError += this.OnCommandError;
                    cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
@@ -596,7 +589,7 @@ namespace RoboSharp
 
                    //Start the job
                    //Once the job ends, unsubscribe events
-                   Task C = cmd.Start(domain, username, password);
+                   Task C = !ListOnlyMode ? cmd.Start(domain, username, password) : cmd.Start_ListOnly(domain, username, password);
                    Task T = C.ContinueWith((t) =>
                    {
                        cmd.OnCommandCompleted -= handler;

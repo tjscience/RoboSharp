@@ -257,7 +257,7 @@ namespace RoboSharp
         #region < Pause / Stop / Resume >
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
-        public void Pause()
+        public virtual void Pause()
         {
             if (process != null && isPaused == false)
             {
@@ -268,7 +268,7 @@ namespace RoboSharp
         }
 
         /// <summary>Resume execution of the RoboCopy process when <see cref="IsPaused"/> == true</summary>
-        public void Resume()
+        public virtual void Resume()
         {
             if (process != null && isPaused == true)
             {
@@ -279,7 +279,7 @@ namespace RoboSharp
         }
 
         /// <summary> Immediately Kill the RoboCopy process</summary>
-        public void Stop() => Stop(false);
+        public virtual void Stop() => Stop(false);
 
         private void Stop(bool DisposeProcess)
         {
@@ -308,26 +308,53 @@ namespace RoboSharp
 
 #if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
         /// <summary>
-        /// Start the RoboCopy Process, then return the results.
+        /// awaits <see cref="Start(string, string, string)"/> then returns the results.
         /// </summary>
         /// <returns>Returns the RoboCopy results once RoboCopy has finished executing.</returns>        
         /// <inheritdoc cref="Start(string, string, string)"/>
-        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        public virtual async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
         {
             await Start(domain, username, password);
             return GetResults();
         }
+
+        /// <summary>awaits <see cref="Start_ListOnly(string, string, string)"/> then returns the results.</summary>
+        /// <returns>Returns the List-Only results once RoboCopy has finished executing.</returns>
+        /// <inheritdoc cref="Start_ListOnly(string, string, string)"/>
+        public virtual async Task<Results.RoboCopyResults> StartAsync_ListOnly(string domain = "", string username = "", string password = "")
+        {
+            await Start_ListOnly(domain, username, password);
+            return GetResults();
+        }
+
 #endif
 
         /// <summary>
-        /// Start the RoboCopy Process.
+        /// Run the currently selected options in ListOnly mode by setting <see cref="LoggingOptions.ListOnly"/> = TRUE
         /// </summary>
+        /// <returns>Task that awaits <see cref="Start(string, string, string)"/>, then resets the ListOnly option to original value.</returns>
+        /// <inheritdoc cref="Start(string, string, string)"/>
+        public virtual async Task Start_ListOnly(string domain = "", string username = "", string password = "")
+        {
+            bool _listOnly = LoggingOptions.ListOnly;
+            LoggingOptions.ListOnly = true;
+            await Start(domain, username, password);
+            LoggingOptions.ListOnly = _listOnly;
+            return;
+        }
+
+        /// <summary>
+        /// Start the RoboCopy Process. 
+        /// </summary>
+        /// <remarks>
+        /// If overridden by a derived class, the override affects all Start* methods within RoboCommand. Base.Start() must be called to start the robocopy process.
+        /// </remarks>
         /// <param name="domain"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns>Returns a task that reports when the RoboCopy process has finished executing.</returns>
         /// <exception cref="InvalidOperationException"/>
-        public Task Start(string domain = "", string username = "", string password = "")
+        public virtual Task Start(string domain = "", string username = "", string password = "")
         {
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
@@ -408,7 +435,7 @@ namespace RoboSharp
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
                 OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
-                return GetBackupTask(resultsBuilder, domain, username, password);
+                return GetRoboCopyTask(resultsBuilder, domain, username, password);
             }
         }
 
@@ -417,7 +444,7 @@ namespace RoboSharp
         /// </summary>
         /// <returns>The continuation task that cleans up after the task that watches RoboCopy has finished executing.</returns>
         /// <exception cref="InvalidOperationException"/>
-        private Task GetBackupTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
+        private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
             if (process != null ) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
             var tokenSource = new CancellationTokenSource();
@@ -546,7 +573,7 @@ namespace RoboSharp
             JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
 
-            await GetBackupTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
+            await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
 
             //Restore Original Settings
             JobOptions.FilePath = _PATH;

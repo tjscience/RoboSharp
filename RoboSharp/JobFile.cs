@@ -127,14 +127,14 @@ namespace RoboSharp
         /// <summary>
         /// Options are stored in a RoboCommand object for simplicity.
         /// </summary>
-        private RoboCommand roboCommand;
+        protected RoboCommand roboCommand;
 
         #endregion
 
         #region < Properties >
 
         /// <summary>FilePath of the Job File </summary>
-        public string FilePath { get; set; }
+        public virtual string FilePath { get; set; }
 
         /// <inheritdoc cref="RoboCommand.Name"/>
         public string Job_Name

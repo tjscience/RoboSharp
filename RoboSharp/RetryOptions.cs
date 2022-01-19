@@ -49,7 +49,7 @@ namespace RoboSharp
         /// Specifies the number of retries N on failed copies (default is 0).
         /// [/R:N]
         /// </summary>
-        public int RetryCount
+        public virtual int RetryCount
         {
             get { return retryCount; }
             set { retryCount = value; }
@@ -58,7 +58,7 @@ namespace RoboSharp
         /// Specifies the wait time N in seconds between retries (default is 30).
         /// [/W:N]
         /// </summary>
-        public int RetryWaitTime
+        public virtual int RetryWaitTime
         {
             get { return retryWaitTime; }
             set { retryWaitTime = value; }
@@ -67,12 +67,12 @@ namespace RoboSharp
         /// Saves RetryCount and RetryWaitTime in the Registry as default settings.
         /// [/REG]
         /// </summary>
-        public bool SaveToRegistry { get; set; }
+        public virtual bool SaveToRegistry { get; set; }
         /// <summary>
         /// Wait for sharenames to be defined.
         /// [/TBD]
         /// </summary>
-        public bool WaitForSharenames { get; set; }
+        public virtual bool WaitForSharenames { get; set; }
 
         internal string Parse()
         {

@@ -129,24 +129,24 @@ namespace RoboSharp
         /// Copies only files for which the Archive attribute is set.
         /// [/A]
         /// </summary>
-        public bool OnlyCopyArchiveFiles { get; set; }
+        public virtual bool OnlyCopyArchiveFiles { get; set; }
         /// <summary>
         /// Copies only files for which the Archive attribute is set, and resets the Archive attribute.
         /// [/M]
         /// </summary>
-        public bool OnlyCopyArchiveFilesAndResetArchiveFlag { get; set; }
+        public virtual bool OnlyCopyArchiveFilesAndResetArchiveFlag { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to include (eg. AH; RASHCNETO).
         /// Includes only files for which any of the specified attributes are set.
         /// [/IA:attributes]
         /// </summary>
-        public string IncludeAttributes { get; set; }
+        public virtual string IncludeAttributes { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to exclude (eg. AH; RASHCNETO).
         /// Excludes files for which any of the specified attributes are set.
         /// [/XA:attributes]
         /// </summary>
-        public string ExcludeAttributes { get; set; }
+        public virtual string ExcludeAttributes { get; set; }
         /// <summary>
         /// Files should be separated by spaces.
         /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
@@ -238,96 +238,96 @@ namespace RoboSharp
         /// Excludes changed files.
         /// [/XC]
         /// </summary>
-        public bool ExcludeChanged { get; set; }
+        public virtual bool ExcludeChanged { get; set; }
         /// <summary>
         /// Excludes newer files.
         /// [/XN]
         /// </summary>
-        public bool ExcludeNewer { get; set; }
+        public virtual bool ExcludeNewer { get; set; }
         /// <summary>
         /// Excludes older files.
         /// [/XO]
         /// </summary>
-        public bool ExcludeOlder { get; set; }
+        public virtual bool ExcludeOlder { get; set; }
         /// <summary>
         /// Excludes extra files and directories.
         /// [/XX]
         /// </summary>
-        public bool ExcludeExtra { get; set; }
+        public virtual bool ExcludeExtra { get; set; }
         /// <summary>
         /// Excludes lonely files and directories.
         /// [/XL]
         /// </summary>
-        public bool ExcludeLonely { get; set; }
+        public virtual bool ExcludeLonely { get; set; }
         /// <summary>
         /// Includes the same files.
         /// [/IS]
         /// </summary>
-        public bool IncludeSame { get; set; }
+        public virtual bool IncludeSame { get; set; }
         /// <summary>
         /// Includes tweaked files.
         /// [/IT]
         /// </summary>
-        public bool IncludeTweaked { get; set; }
+        public virtual bool IncludeTweaked { get; set; }
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the maximum file size (to exclude files bigger than N bytes).
         /// [/MAX:N]
         /// </summary>
-        public long MaxFileSize { get; set; }
+        public virtual long MaxFileSize { get; set; }
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the minimum file size (to exclude files smaller than N bytes).
         /// [/MIN:N]
         /// </summary>
-        public long MinFileSize { get; set; }
+        public virtual long MinFileSize { get; set; }
         /// <summary>
         /// Specifies the maximum file age (to exclude files older than N days or date).
         /// [/MAXAGE:N OR YYYYMMDD]
         /// </summary>
-        public string MaxFileAge { get; set; }
+        public virtual string MaxFileAge { get; set; }
         /// <summary>
         /// Specifies the minimum file age (exclude files newer than N days or date).
         /// [/MINAGE:N OR YYYYMMDD]
         /// </summary>
-        public string MinFileAge { get; set; }
+        public virtual string MinFileAge { get; set; }
         /// <summary>
         /// Specifies the maximum last access date (excludes files unused since Date).
         /// [/MAXLAD:YYYYMMDD]
         /// </summary>
-        public string MaxLastAccessDate { get; set; }
+        public virtual string MaxLastAccessDate { get; set; }
         /// <summary>
         /// Specifies the minimum last access date (excludes files used since N) If N is less 
         /// than 1900, N specifies the number of days. Otherwise, N specifies a date 
         /// in the format YYYYMMDD.
         /// [/MINLAD:N or YYYYMMDD]
         /// </summary>
-        public string MinLastAccessDate { get; set; }
+        public virtual string MinLastAccessDate { get; set; }
         /// <summary>
         /// Excludes junction points, which are normally included by default.
         /// [/XJ]
         /// </summary>
-        public bool ExcludeJunctionPoints { get; set; }
+        public virtual bool ExcludeJunctionPoints { get; set; }
         /// <summary>
         /// Assumes FAT file times (two-second precision).
         /// [/FFT]
         /// </summary>
-        public bool UseFatFileTimes { get; set; }
+        public virtual bool UseFatFileTimes { get; set; }
         /// <summary>
         /// Compensates for one-hour DST time differences.
         /// [/DST]
         /// </summary>
-        public bool CompensateForDstDifference { get; set; }
+        public virtual bool CompensateForDstDifference { get; set; }
         /// <summary>
         /// Excludes junction points for directories.
         /// [/XJD]
         /// </summary>
-        public bool ExcludeJunctionPointsForDirectories { get; set; }
+        public virtual bool ExcludeJunctionPointsForDirectories { get; set; }
         /// <summary>
         /// Excludes junction points for files.
         /// [/XJF]
         /// </summary>
-        public bool ExcludeJunctionPointsForFiles { get; set; }
+        public virtual bool ExcludeJunctionPointsForFiles { get; set; }
 
         #endregion Public Properties
 
