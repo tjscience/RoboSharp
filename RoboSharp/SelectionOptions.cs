@@ -9,6 +9,9 @@ namespace RoboSharp
     /// <summary>
     /// RoboCopy Switches that determine which folders and files are selected for copying/moving
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/SelectionOptions"/>
+    /// </remarks>
     public class SelectionOptions : ICloneable
     {
         #region Constructors 

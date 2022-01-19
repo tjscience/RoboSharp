@@ -8,6 +8,9 @@ namespace RoboSharp.Results
     /// <summary>
     /// Helper class to build a <see cref="RoboCopyResults"/> object.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/ResultsBuilder"/>
+    /// </remarks>
     internal class ResultsBuilder
     {
         private ResultsBuilder() { }

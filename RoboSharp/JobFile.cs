@@ -13,7 +13,7 @@ namespace RoboSharp
     /// Represents a single RoboCopy Job File
     /// </summary>
     /// <remarks>
-    /// For more information, a good resource is here: <see href="https://adamtheautomator.com/robocopy/#Robocopy_Jobs"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobFile"/>
     /// </remarks>
     public class JobFile : ICloneable, IRoboCommand
     {

@@ -9,6 +9,9 @@ namespace RoboSharp
     /// <summary>
     /// 
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobOptions"/>
+    /// </remarks>
     public class JobOptions : ICloneable
     {
         // For more information, a good resource is here: https://adamtheautomator.com/robocopy/#Robocopy_Jobs

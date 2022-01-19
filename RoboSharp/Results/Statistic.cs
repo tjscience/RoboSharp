@@ -14,9 +14,11 @@ namespace RoboSharp.Results
 {
     /// <summary>
     /// Information about number of items Copied, Skipped, Failed, etc.
+    /// <para/>
+    /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
     /// </summary>
     /// <remarks>
-    /// <see cref="RoboCopyResults"/> will not typically raise any events, but this object is used for other items, such as <see cref="ProgressEstimator"/> and <see cref="RoboCopyResultsList"/> to present results whose values may update periodically.
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/Statistic"/>
     /// </remarks>
     public class Statistic : IStatistic
     {

@@ -10,6 +10,9 @@ namespace RoboSharp
     /// <summary>
     /// Source, Destination, and options for how to move or copy files.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/CopyOptions"/>
+    /// </remarks>
     public class CopyOptions : ICloneable
     {
         #region Constructors
