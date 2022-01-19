@@ -71,6 +71,7 @@ namespace RoboSharp
         /// <see cref="RetryOptions"/> ( Linked by default )<br/>
         /// <see cref="SelectionOptions"/><br/>
         /// <see cref="LoggingOptions"/><br/>
+        /// <see cref="JobOptions"/><br/>
         /// </remarks>
         /// <param name="command">RoboCommand to Clone</param>
         /// <param name="NewSource">Specify a new source if desired. If left as null, will use Source from <paramref name="command"/></param>
@@ -79,16 +80,18 @@ namespace RoboSharp
         /// <param name="LinkLoggingOptions">Link the <see cref="LoggingOptions"/> of the two commands</param>
         /// <param name="LinkRetryOptions">Link the <see cref="RetryOptions"/> of the two commands ( True Default )</param>
         /// <param name="LinkSelectionOptions">Link the <see cref="SelectionOptions"/> of the two commands</param>
-        public RoboCommand(RoboCommand command, string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false)
+        /// <param name="LinkJobOptions">Link the <see cref="SelectionOptions"/> of the two commands</param>
+        public RoboCommand(RoboCommand command, string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false, bool LinkJobOptions = false)
         {
             Name = command.Name;
             StopIfDisposing = command.StopIfDisposing;
 
-            copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
-            selectionOptions = LinkSelectionOptions ? command.selectionOptions : command.SelectionOptions.Clone();
-            retryOptions = LinkRetryOptions ? command.retryOptions : command.retryOptions.Clone();
-            loggingOptions = LinkLoggingOptions ? command.loggingOptions : command.loggingOptions.Clone();
             configuration = LinkConfiguration ? command.configuration : command.configuration.Clone();
+            copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
+            JobOptions = LinkJobOptions ? command.jobOptions : command.jobOptions.Clone();
+            loggingOptions = LinkLoggingOptions ? command.loggingOptions : command.loggingOptions.Clone();
+            retryOptions = LinkRetryOptions ? command.retryOptions : command.retryOptions.Clone();
+            selectionOptions = LinkSelectionOptions ? command.selectionOptions : command.SelectionOptions.Clone();
         }
 
         /// <summary>Create a new RoboCommand object</summary>
@@ -114,11 +117,11 @@ namespace RoboSharp
             jobOptions = new JobOptions();
         }
 
-        /// <inheritdoc cref="RoboCommand.RoboCommand(RoboCommand, string, string, bool, bool, bool, bool)"/>
-        public RoboCommand Clone(string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false)
-            => new RoboCommand(this, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions);
+        /// <inheritdoc cref="RoboCommand.RoboCommand(RoboCommand, string, string, bool, bool, bool, bool, bool)"/>
+        public RoboCommand Clone(string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false, bool LinkJobOptions = false)
+            => new RoboCommand(this, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions, LinkJobOptions);
 
-        object ICloneable.Clone() => new RoboCommand(this, null, null, false, false, false, false);
+        object ICloneable.Clone() => new RoboCommand(this, null, null, false, false, false, false, false);
 
         #endregion
 
@@ -320,8 +323,10 @@ namespace RoboSharp
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns>Returns a task that reports when the RoboCopy process has finished executing.</returns>
+        /// <exception cref="InvalidOperationException"/>
         public Task Start(string domain = "", string username = "", string password = "")
         {
+            if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
             isCancelled = false;
@@ -408,8 +413,10 @@ namespace RoboSharp
         /// Start the RoboCopy process and the watcher task
         /// </summary>
         /// <returns>The continuation task that cleans up after the task that watches RoboCopy has finished executing.</returns>
+        /// <exception cref="InvalidOperationException"/>
         private Task GetBackupTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
+            if (process != null ) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
@@ -516,6 +523,16 @@ namespace RoboSharp
         public async Task SaveAsJobFile(string path, bool IncludeSource = false, bool IncludeDestination = false, string domain = "", string username = "", string password = "")
 #pragma warning restore CS1573
         {
+            //If currently running and this is called, clone the command, then run the save method against the clone.
+            if (process != null )
+            {
+                var cmd = this.Clone();
+                cmd.StopIfDisposing = true;
+                await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
+                cmd.Dispose();
+                return;
+            }
+            
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
             bool _NODD = JobOptions.NoDestinationDirectory;
