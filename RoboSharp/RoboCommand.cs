@@ -14,6 +14,9 @@ namespace RoboSharp
     /// <summary>
     /// Wrapper for the RoboCopy process
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCommand"/>
+    /// </remarks>
     public class RoboCommand : IDisposable, IRoboCommand, ICloneable
     {
         #region < Constructors >

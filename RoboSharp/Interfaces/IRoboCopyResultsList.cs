@@ -9,6 +9,9 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/IRoboCopyResultsList"/>
+    /// </remarks>
     public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable
     {
         #region < Properties >

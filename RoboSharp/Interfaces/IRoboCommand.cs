@@ -5,6 +5,9 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// 
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/IRoboCommand"/>
+    /// </remarks>
     public interface IRoboCommand
     {
         #region Properties

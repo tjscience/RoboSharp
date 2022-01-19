@@ -22,6 +22,8 @@ namespace RoboSharp.Results
     /// e.ResultsEstimate.FileStats.PropertyChanged += FileStats_PropertyChanged;<br/>
     /// }<br/>
     /// </code>
+    /// <para/>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/ProgressEstimator"/>
     /// </remarks>
     public class ProgressEstimator : IProgressEstimator, IResults
     {

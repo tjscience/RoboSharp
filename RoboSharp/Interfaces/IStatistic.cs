@@ -8,6 +8,9 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// Provide Read-Only access to a <see cref="Statistic"/> object
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/IStatistic"/>
+    /// </remarks>
     public interface IStatistic : INotifyPropertyChanged, ICloneable
     {
 

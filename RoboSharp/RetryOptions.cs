@@ -6,6 +6,9 @@ namespace RoboSharp
     /// <summary>
     /// RoboCopy switches for how to react if a copy/move operation errors
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RetryOptions"/>
+    /// </remarks>
     public class RetryOptions : ICloneable
     {
         #region Constructors 

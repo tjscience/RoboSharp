@@ -14,6 +14,9 @@ namespace RoboSharp.Results
     /// Contains information regarding average Transfer Speed. <br/>
     /// Note: Runs that do not perform any copy operations or that exited prematurely ( <see cref="RoboCopyExitCodes.Cancelled"/> ) will result in a null <see cref="SpeedStatistic"/> object.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/SpeedStatistic"/>
+    /// </remarks>
     public class SpeedStatistic : INotifyPropertyChanged, ISpeedStatistic
     {
         /// <summary>

@@ -13,10 +13,11 @@ namespace RoboSharp.Results
 {
     /// <summary>
     /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
-    /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.
+    /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.<para/>
+    /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
     /// </summary>
     /// <remarks>
-    /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCopyResultsList"/>
     /// </remarks>
     public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList, INotifyCollectionChanged
     {

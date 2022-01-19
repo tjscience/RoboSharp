@@ -24,6 +24,9 @@ namespace RoboSharp
     /// <see cref="INotifyPropertyChanged"/> -- Most properties will trigger <see cref="PropertyChanged"/> events when updated.<br/>
     /// <see cref="IDisposable"/> -- Allow disposal of all <see cref="RoboCommand"/> objects in the list.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueue"/>
+    /// </remarks>
     public sealed class RoboQueue : IDisposable, INotifyPropertyChanged, IEnumerable, INotifyCollectionChanged
     {
         #region < Constructors >

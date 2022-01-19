@@ -16,6 +16,9 @@ namespace RoboSharp.Results
     /// <summary>
     /// Updates the Statistics every 250ms
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueueProgressEstimator"/>
+    /// </remarks>
     internal class RoboQueueProgressEstimator : IProgressEstimator, IResults, IDisposable
     {
         #region < Constructors >

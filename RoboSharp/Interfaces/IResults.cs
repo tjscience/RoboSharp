@@ -9,6 +9,9 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// Provides <see cref="IStatistic"/> objects for File, Directory, and Bytes
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/IResults"/>
+    /// </remarks>
     public interface IResults
     {
         /// <summary> Information about number of Directories Copied, Skipped, Failed, etc.</summary>
