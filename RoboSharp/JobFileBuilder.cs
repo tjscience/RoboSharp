@@ -471,8 +471,8 @@ namespace RoboSharp
                 else if (!xDParsed && !parsingXD && SelectionRegex_ExcludeDirs.IsMatch(ln))
                 {
                     // Paths are not expected to be on this output line
-                    parsingXF = true;
-                    parsingXD = false;
+                    parsingXF = false;
+                    parsingXD = true;
                 }
                 else if (LINE_IsSwitch.IsMatch(ln) || LINE_IsSwitch_NoComment.IsMatch(ln))
                 {
