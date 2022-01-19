@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp
 {
@@ -91,19 +92,24 @@ namespace RoboSharp
 
         private readonly List<string> excludedDirs = new List<string>();
         private readonly List<string> excludedFiles = new List<string>();
-        
+
         /// <summary>
-        /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string <br/>
-        /// Searches for a pattern of "{Non-WhiteSpaceChar}"
+        /// This regex is used when the { <see cref="ExcludeFiles"/> } and { <see cref="ExcludeDirectories"/> } properties are set in order to split the input string to a List{string}
         /// </summary>
         /// <remarks>
-        /// 
+        /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string.
         /// </remarks>
-        internal static Regex FileFolderNameRegexSplitter = new Regex("\\s*(?<VALUE>[\"]{0,1}.+?[\"]{0,1})(?:\\s+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public static Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-        private static void ParseAndAddToList(string value, List<string> list)
+        /// <summary>
+        /// Use { <see cref="FileFolderNameRegexSplitter"/> } to split the <paramref name="inputString"/>, then add the matches to the suppplied <paramref name="list"/>.
+        /// </summary>
+        /// <param name="inputString">String to perform <see cref="Regex.Matches(string)"/> against</param>
+        /// <param name="list">List to add regex matches to</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ParseAndAddToList(string inputString, List<string> list)
         {
-            MatchCollection collection = FileFolderNameRegexSplitter.Matches(value);
+            MatchCollection collection = FileFolderNameRegexSplitter.Matches(inputString);
             if (collection.Count == 0) return;
             foreach (Match c in collection)
             {
@@ -145,13 +151,24 @@ namespace RoboSharp
         /// </summary>
         /// <remarks>
         /// This property is now backed by the ExcludedFiles List{String} property. <br/>
-        /// Get -- String.Join(" ", ExcludExcludedFilesedDirs);<br/>
+        /// Get -> Ensures all strings in { <see cref="ExcludedFiles"/> } are wrapped in quotes if needed, and concats the items into a single string. <br/>
         /// Set -- Clears ExcludedFiles and splits this list using a regex to populate the list.
         /// </remarks>
-        [Obsolete("This obsolete property is now backed by the ExcludedFiles List<String> property.")]
+        [Obsolete("This property is now backed by the ExcludedFiles List<String> property. \n Both Get/Set accessors still work similar to previous:\n" +
+            "- 'Get' sanitizies then Joins all strings in the list into a single output string that is passed into RoboCopy.\n" +
+            "- 'Set' clears the ExcludedFiles list, then splits the input string using regex to repopulate the list."
+            )]
         public string ExcludeFiles
         {
-            get => String.Join(" ", excludedFiles);
+            get
+            {
+                string RetString = "";
+                foreach (string s in excludedFiles)
+                {
+                    RetString += s.WrapPath() + " ";
+                }
+                return RetString.Trim();
+            }
             set 
             {
                 excludedFiles.Clear();
@@ -159,6 +176,7 @@ namespace RoboSharp
                 ParseAndAddToList(value, excludedFiles);
             }
         }
+
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
@@ -177,16 +195,27 @@ namespace RoboSharp
         /// </summary>
         /// <remarks>
         /// This property is now backed by the ExcludedDirectories List{String} property. <br/>
-        /// Get -> String.Join(" ", ExcludedDirs);<br/>
+        /// Get -> Ensures all strings in { <see cref="ExcludedDirectories"/> } are wrapped in quotes if needed, and concats the items into a single string. <br/>
         /// Set -> Clears ExcludedDirs and splits this list using a regex to populate the list.
         /// </remarks>
-        [Obsolete("This obsolete property is now backed by the ExcludedDirectories List<String> property.")]
-        public string ExcludeDirectories 
+        [Obsolete("This property is now backed by the ExcludedDirectories List<String> property. \n Both Get/Set accessors still work similar to previous:\n" +
+            "- 'Get' sanitizies then Joins all strings in the list into a single output string that is passed into RoboCopy.\n" +
+            "- 'Set' clears the ExcludedDirectories list, then splits the input string using regex to repopulate the list."
+            )]
+        public string ExcludeDirectories
         {
-            get => String.Join(" ", excludedDirs);
+            get
+            {
+                string RetString = "";
+                foreach (string s in excludedDirs)
+                {
+                    RetString += s.WrapPath() + " ";
+                }
+                return RetString.Trim();
+            }
             set
             {
-                excludedFiles.Clear();
+                excludedDirs.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
                 ParseAndAddToList(value, excludedDirs);
             }
