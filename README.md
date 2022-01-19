@@ -2,7 +2,7 @@
 # RoboSharp
 
 ### Available on NuGet - https://www.nuget.org/packages/RoboSharp/
-### Wiki coming soon
+### Wiki - in progress - https://github.com/tjscience/RoboSharp/wiki
 
 ## About
 
