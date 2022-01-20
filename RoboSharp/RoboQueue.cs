@@ -499,6 +499,7 @@ namespace RoboSharp
         /// <inheritdoc cref="StartJobs"/>
         public Task<IRoboCopyResultsList> StartAll_ListOnly(string domain = "", string username = "", string password = "")
         {
+            if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
 
@@ -536,6 +537,8 @@ namespace RoboSharp
         /// <inheritdoc cref="StartJobs"/>
         public Task<IRoboCopyResultsList> StartAll(string domain = "", string username = "", string password = "")
         {
+            if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
+
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
 
@@ -575,7 +578,7 @@ namespace RoboSharp
         private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyMode = false)
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
-
+            
             TaskCancelSource = new CancellationTokenSource();
             CancellationToken cancellationToken = TaskCancelSource.Token;
             var SleepCancelToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken).Token;
