@@ -524,7 +524,7 @@ namespace RoboSharp
 
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
                 return (IRoboCopyResultsList)ListResultsObj.Clone();
-            }
+            }, CancellationToken.None
             );
             return ResultsTask;
         }
@@ -558,7 +558,7 @@ namespace RoboSharp
 
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
                 return (IRoboCopyResultsList)RunResultsObj.Clone();
-            }
+            }, CancellationToken.None
             );
             return ResultsTask;
         }
@@ -665,7 +665,7 @@ namespace RoboSharp
                     Debugger.Instance.DebugMessage("RoboQueue Task Completed");
                     TaskCancelSource?.Dispose();
                 }
-            });
+            }, CancellationToken.None);
 
             return ContinueWithTask;
         }

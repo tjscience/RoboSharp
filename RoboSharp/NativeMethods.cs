@@ -31,8 +31,9 @@ namespace RoboSharp
         [DllImport("kernel32.dll")]
         static extern int ResumeThread(IntPtr hThread);
 
-        public static void Suspend(this Process process)
+        public static bool Suspend(this Process process)
         {
+            if (process.HasExited) return false;
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
@@ -42,9 +43,11 @@ namespace RoboSharp
                 }
                 SuspendThread(pOpenThread);
             }
+            return true;
         }
-        public static void Resume(this Process process)
+        public static bool Resume(this Process process)
         {
+            if (process.HasExited) return false;
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
@@ -54,6 +57,7 @@ namespace RoboSharp
                 }
                 ResumeThread(pOpenThread);
             }
+            return true;
         }
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member

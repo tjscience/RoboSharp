@@ -264,18 +264,17 @@ namespace RoboSharp
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public virtual void Pause()
         {
-            if (process != null && isPaused == false)
+            if (process != null && !process.HasExited && isPaused == false)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution paused.");
-                process.Suspend();
-                isPaused = true;
+                isPaused = process.Suspend();
             }
         }
 
         /// <summary>Resume execution of the RoboCopy process when <see cref="IsPaused"/> == true</summary>
         public virtual void Resume()
         {
-            if (process != null && isPaused == true)
+            if (process != null && !process.HasExited && isPaused == true)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
                 process.Resume();
@@ -545,7 +544,7 @@ namespace RoboSharp
                 //Raise event announcing results are available
                 if (!hasError && resultsBuilder != null)
                     OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
-            });
+            }, CancellationToken.None);
 
             return continueWithTask;
         }
