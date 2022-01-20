@@ -252,6 +252,11 @@ namespace RoboSharp
         /// </summary>
         public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
+        /// <summary>
+        /// Occurs if the RoboCommand task is stopped due to an unhandled exception. Occurs instead of <see cref="OnCommandCompleted"/>
+        /// </summary>
+        public event UnhandledExceptionEventHandler TaskFaulted;
+
         #endregion
 
         #region < Pause / Stop / Resume >
@@ -523,6 +528,7 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
+                bool WasCancelled = tokenSource.IsCancellationRequested;
                 tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
@@ -530,6 +536,12 @@ namespace RoboSharp
                 JobOptions.RunPostProcessing(this);
 
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
+
+                if (continuation.IsFaulted && !WasCancelled) // If some fault occurred while processing, throw the exception to caller
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
                 //Raise event announcing results are available
                 if (!hasError && resultsBuilder != null)
                     OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
@@ -558,7 +570,15 @@ namespace RoboSharp
             {
                 var cmd = this.Clone();
                 cmd.StopIfDisposing = true;
-                await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
+                try
+                {
+                    await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
+                }
+                catch(Exception Fault)
+                {
+                    cmd.Dispose();
+                    throw Fault;
+                }
                 cmd.Dispose();
                 return;
             }
@@ -572,14 +592,25 @@ namespace RoboSharp
             JobOptions.NoSourceDirectory = !IncludeSource;
             JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
-
-            await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
-
-            //Restore Original Settings
-            JobOptions.FilePath = _PATH;
-            JobOptions.NoSourceDirectory = _NOSD;
-            JobOptions.NoDestinationDirectory = _NODD;
-            JobOptions.PreventCopyOperation = _QUIT;
+            Exception e = null;
+            try
+            {
+                await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
+            }
+            catch (Exception Fault)
+            {
+                e = Fault;
+            }
+            finally
+            {
+                //Restore Original Settings
+                JobOptions.FilePath = _PATH;
+                JobOptions.NoSourceDirectory = _NOSD;
+                JobOptions.NoDestinationDirectory = _NODD;
+                JobOptions.PreventCopyOperation = _QUIT;
+                //If an exception occured, rethrow it.
+                if (e != null) throw e;
+            }
         }
 
 

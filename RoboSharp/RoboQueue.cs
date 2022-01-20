@@ -428,6 +428,15 @@ namespace RoboSharp
 
         #endregion
 
+        #region < UnhandledException Fault >
+
+        /// <summary>
+        /// Occurs if the RoboQueue task is stopped due to an unhandled exception. Occurs instead of <see cref="RoboQueue.RunCompleted"/>
+        /// </summary>
+        public event UnhandledExceptionEventHandler TaskFaulted;
+
+        #endregion
+
         #endregion
 
         #region < Methods >
@@ -504,7 +513,15 @@ namespace RoboSharp
                 //Set Flags
                 IsListOnlyRunning = false;
                 IsPaused = false;
-                ListOnlyCompleted = !WasCancelled;
+                ListOnlyCompleted = !WasCancelled && !continuation.IsFaulted;
+
+                // If some fault occurred while processing, throw the exception to caller
+                if (continuation.IsFaulted)
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
+
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
                 return (IRoboCopyResultsList)ListResultsObj.Clone();
             }
@@ -530,7 +547,15 @@ namespace RoboSharp
             {
                 IsCopyOperationRunning = false;
                 IsPaused = false;
-                CopyOperationCompleted = !WasCancelled;
+                CopyOperationCompleted = !WasCancelled && !continuation.IsFaulted;
+
+                // If some fault occurred while processing, throw the exception to caller
+                if (continuation.IsFaulted)
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
+
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
                 return (IRoboCopyResultsList)RunResultsObj.Clone();
             }
@@ -597,6 +622,7 @@ namespace RoboSharp
                        cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
                        cmd.OnError -= this.OnError;
                        cmd.OnFileProcessed -= this.OnFileProcessed;
+                       if (t.IsFaulted) throw t.Exception; // If some fault occurred while processing, throw the exception to caller
                    }, CancellationToken.None);
 
                    TaskList.Add(T);                    //Add the continuation task to the list.
@@ -610,13 +636,12 @@ namespace RoboSharp
                    while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
                }
+               //Once all tasks are started, asynchronously wait for them all to complete.
+               await Task.Run( () => Task.WhenAll(TaskList.ToArray()), cancellationToken);
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
-            //After all commands have started, continue with waiting for all commands to complete.
-            Task WhenAll = StartAll.ContinueWith((continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
-
             //Continuation Task return results to caller
-            Task ContinueWithTask = WhenAll.ContinueWith((continuation) =>
+            Task ContinueWithTask = StartAll.ContinueWith((continuation) =>
             {
                 Estimator?.CancelTasks();
                 if (cancellationToken.IsCancellationRequested)
@@ -626,6 +651,14 @@ namespace RoboSharp
                     TaskCancelSource.Dispose();
                     TaskCancelSource = null;
                     StopAll();
+                }
+                else if(continuation.IsFaulted)
+                {
+                    Debugger.Instance.DebugMessage("RoboQueue Task Faulted");
+                    TaskCancelSource.Dispose();
+                    TaskCancelSource = null;
+                    StopAll();
+                    throw continuation.Exception;
                 }
                 else
                 {
