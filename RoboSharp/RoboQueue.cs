@@ -644,30 +644,30 @@ namespace RoboSharp
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
             //Continuation Task return results to caller
-            Task ContinueWithTask = StartAll.ContinueWith( async (continuation) =>
-            {
-                Estimator?.CancelTasks();
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    //If cancellation was requested -> Issue the STOP command to all commands in the list
-                    Debugger.Instance.DebugMessage("RoboQueue Task Was Cancelled");
-                    await StopAllTask(TaskList);
-                }
-                else if(continuation.IsFaulted)
-                {
-                    Debugger.Instance.DebugMessage("RoboQueue Task Faulted");
-                    await StopAllTask(TaskList);
-                    throw continuation.Exception;
-                }
-                else
-                {
-                    Debugger.Instance.DebugMessage("RoboQueue Task Completed");
-                }
+            Task ContinueWithTask = StartAll.ContinueWith(async (continuation) =>
+           {
+               Estimator?.CancelTasks();
+               if (cancellationToken.IsCancellationRequested)
+               {
+                   //If cancellation was requested -> Issue the STOP command to all commands in the list
+                   Debugger.Instance.DebugMessage("RoboQueue Task Was Cancelled");
+                   await StopAllTask(TaskList);
+               }
+               else if (continuation.IsFaulted)
+               {
+                   Debugger.Instance.DebugMessage("RoboQueue Task Faulted");
+                   await StopAllTask(TaskList);
+                   throw continuation.Exception;
+               }
+               else
+               {
+                   Debugger.Instance.DebugMessage("RoboQueue Task Completed");
+               }
 
-                TaskCancelSource?.Dispose();
-                TaskCancelSource = null;
+               TaskCancelSource?.Dispose();
+               TaskCancelSource = null;
 
-            }, CancellationToken.None).Unwrap();
+           }, CancellationToken.None).Unwrap();
 
             return ContinueWithTask;
         }
