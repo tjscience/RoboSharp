@@ -175,6 +175,7 @@ namespace RoboSharp.BackupApp
 #pragma warning restore CS0618 
             copy.SelectionOptions.ExcludeOlder = ExcludeOlder.IsChecked ?? false;
             copy.SelectionOptions.ExcludeJunctionPoints = ExcludeJunctionPoints.IsChecked ?? false;
+            copy.SelectionOptions.ExcludeNewer = ExcludeNewer.IsChecked ?? false;
 
             // retry options
             if (!string.IsNullOrWhiteSpace(RetryCount.Text))
@@ -242,6 +243,8 @@ namespace RoboSharp.BackupApp
 #pragma warning restore CS0618
             ExcludeOlder.IsChecked = copy.SelectionOptions.ExcludeOlder;
             ExcludeJunctionPoints.IsChecked = copy.SelectionOptions.ExcludeJunctionPoints;
+            ExcludeNewer.IsChecked = copy.SelectionOptions.ExcludeNewer;
+
 
             // retry options
             RetryCount.Text = copy.RetryOptions.RetryCount.ToString();

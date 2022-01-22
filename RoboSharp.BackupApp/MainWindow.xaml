@@ -147,6 +147,7 @@
                                             <RowDefinition />
                                             <RowDefinition />
                                             <RowDefinition />
+                                            <RowDefinition />
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -161,7 +162,8 @@
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Exclude Files (/XF File File ...)" />
                                         <TextBlock Grid.Row="5" Grid.Column="0" Text="Exclude Directories (/XD Dir Dir ...)" />
                                         <TextBlock Grid.Row="6" Grid.Column="0" Text="Exclude Older (/XO)" />
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Exclude Junction Points (/XJ)" />
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Exclude NEWER (/XN)" />
+                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Exclude Junction Points (/XJ)" />
 
                                         <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
 
@@ -172,7 +174,8 @@
                                         <TextBox Grid.Row="4" Grid.Column="2" x:Name="ExcludeFiles" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
                                         <TextBox Grid.Row="5" Grid.Column="2" x:Name="ExcludeDirectories" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
                                         <CheckBox Grid.Row="6" Grid.Column="2" x:Name="ExcludeOlder" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="7" Grid.Column="2" x:Name="ExcludeJunctionPoints" Margin="10,0,0,0" />
+                                        <CheckBox Grid.Row="7" Grid.Column="2" x:Name="ExcludeNewer" Margin="10,0,0,0" />
+                                        <CheckBox Grid.Row="8" Grid.Column="2" x:Name="ExcludeJunctionPoints" Margin="10,0,0,0" />
 
                                     </Grid>
                                 </Expander>

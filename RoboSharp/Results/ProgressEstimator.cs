@@ -192,22 +192,22 @@ namespace RoboSharp.Results
             CopyOpStarted = false;
 
             // EXTRA FILES
-            if (currentFile.FileClass == Config.LogParsing_ExtraFile)
+            if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Extra);
             }
             //MisMatch
-            else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_MismatchFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.MisMatch);
             }
             //Failed Files
-            else if (currentFile.FileClass == Config.LogParsing_FailedFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_FailedFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Failed);
             }
             //Identical Files
-            else if (currentFile.FileClass == Config.LogParsing_SameFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Skipped);
                 CurrentFile = null;
@@ -217,7 +217,7 @@ namespace RoboSharp.Results
             else
             {
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass == Config.LogParsing_NewFile)
+                if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase))
                 {
                     //Special handling for 0kb files -> They won't get Progress update, but will be created
                     if (currentFile.Size == 0)
@@ -225,20 +225,27 @@ namespace RoboSharp.Results
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                         SkippingFile = false;
                     }
-                    else if (!CopyOperation)
+                    else if (!CopyOperation) //Workaround for ListOnly Operation
                     {
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (currentFile.FileClass == Config.LogParsing_OlderFile)
+                else if (!CopyOperation)
                 {
-                    if (!CopyOperation && !command.SelectionOptions.ExcludeNewer)
-                        QueueByteCalc(currentFile, WhereToAdd.Copied);
-                }
-                else if (currentFile.FileClass == Config.LogParsing_NewerFile)
-                {
-                    if (!CopyOperation && !command.SelectionOptions.ExcludeOlder)
-                        QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.ExcludeOlder)
+                            QueueByteCalc(currentFile, WhereToAdd.Skipped);
+                        else
+                            QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.ExcludeNewer)
+                            QueueByteCalc(currentFile, WhereToAdd.Skipped);
+                        else
+                            QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
                 }
             }
         }
