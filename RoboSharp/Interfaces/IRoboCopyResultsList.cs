@@ -31,6 +31,9 @@ namespace RoboSharp.Interfaces
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
         IRoboCopyCombinedExitStatus Status { get; }
 
+        /// <summary> Collection of all RoboCopy Results contained within the list </summary>    
+        IReadOnlyList<RoboCopyResults> Collection { get; }
+
         /// <inheritdoc cref="List{T}.Count"/>
         int Count { get; }
 

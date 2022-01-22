@@ -88,13 +88,27 @@ namespace RoboSharp.Interfaces
         
         /// <inheritdoc cref="RoboCommand.Start(string, string, string)"/>
         Task Start(string domain = "", string username = "", string password = "");
-        
+
+        /// <inheritdoc cref="RoboCommand.Start_ListOnly(string, string, string)"/>
+        Task Start_ListOnly(string domain = "", string username = "", string password = "");
+
         /// <inheritdoc cref="RoboCommand.Stop()"/>
         void Stop();
         
         /// <inheritdoc cref="RoboCommand.Dispose()"/>
         void Dispose();
-        
+
+#if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+
+        /// <inheritdoc cref="RoboCommand.StartAsync_ListOnly(string, string, string)"/>
+        Task<Results.RoboCopyResults> StartAsync_ListOnly(string domain = "", string username = "", string password = "");
+
+        /// <inheritdoc cref="RoboCommand.StartAsync(string, string, string)"/>
+        Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "");
+
+#endif
+
+
         #endregion Methods
     }
 }
