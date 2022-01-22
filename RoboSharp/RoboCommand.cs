@@ -647,7 +647,7 @@ namespace RoboSharp
             if (data.IsNullOrWhiteSpace())
                 return;
 
-            if (data.EndsWith("%", StringComparison.Ordinal))
+            if (Regex.IsMatch(data, "^[0-9]+[.]?[0-9]*%", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace))
             {
                 //Increment ProgressEstimator
                 if (data == "100%")

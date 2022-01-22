@@ -89,7 +89,7 @@ namespace RoboSharp
         /// Produce verbose output, showing skipped files.
         /// [V]
         /// </summary>
-        public virtual bool VerboseOutput { get; set; }
+        public virtual bool VerboseOutput { get; set; } = true;
         /// <summary>
         /// Include source file time stamps in the output.
         /// [/TS]
