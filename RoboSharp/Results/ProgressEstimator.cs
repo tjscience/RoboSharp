@@ -279,7 +279,7 @@ namespace RoboSharp.Results
             return Task.Factory.StartNew(async () => 
                 {
                     DateTime LastUpdate = DateTime.Now;
-                    TimeSpan UpdatePeriod = new TimeSpan(0, 0, 0, 0, 125);
+                    TimeSpan UpdatePeriod = new TimeSpan(0, 0, 0, 0, 60);
                     bool DirAdded = false;
                     bool FileAdded = false;
 
