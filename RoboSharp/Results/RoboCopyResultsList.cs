@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -8,6 +8,7 @@ using System.ComponentModel;
 using RoboSharp.EventArgObjects;
 using RoboSharp.Interfaces;
 using StatType = RoboSharp.Results.Statistic.StatType;
+using System.Collections;
 
 namespace RoboSharp.Results
 {
@@ -19,31 +20,26 @@ namespace RoboSharp.Results
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCopyResultsList"/>
     /// </remarks>
-    public sealed class RoboCopyResultsList : ObservableList<RoboCopyResults>, IRoboCopyResultsList, INotifyCollectionChanged
+    public sealed class RoboCopyResultsList : IRoboCopyResultsList, IList<RoboCopyResults>, INotifyCollectionChanged
     {
         #region < Constructors >
 
         /// <inheritdoc cref="List{T}.List()"/>
-        public RoboCopyResultsList() : base() { Init(); }
+        public RoboCopyResultsList() { InitCollection(null); Init(); }
 
         /// <param name="result">Populate the new List object with this result as the first item.</param>
         /// <inheritdoc cref="List{T}.List(IEnumerable{T})"/>
-        public RoboCopyResultsList(RoboCopyResults result) :base(collection: new RoboCopyResults[] { result } ) { Init(); }
-
-        /// <inheritdoc cref="List{T}.List(int)"/>
-        public RoboCopyResultsList(int capacity): base(capacity: capacity) { Init(); }
+        public RoboCopyResultsList(RoboCopyResults result) { ResultsList.Add(result); InitCollection(null); Init(); }
 
         /// <inheritdoc cref="List{T}.List(IEnumerable{T})"/>
-        public RoboCopyResultsList(List<RoboCopyResults> collection) : base(collection) { Init(); }
-
-        /// <inheritdoc cref="List{T}.List(IEnumerable{T})"/>
-        public RoboCopyResultsList(IEnumerable<RoboCopyResults> collection) :base(collection) { Init(); }
+        public RoboCopyResultsList(IEnumerable<RoboCopyResults> collection) { InitCollection(collection); Init(); }
 
         /// <summary>
         /// Clone a RoboCopyResultsList into a new object
         /// </summary>
-        public RoboCopyResultsList(RoboCopyResultsList resultsList) : base(resultsList)
-        {            
+        public RoboCopyResultsList(RoboCopyResultsList resultsList)
+        {
+            InitCollection(resultsList);
             Total_DirStatsField = GetLazyStat(resultsList.Total_DirStatsField, GetLazyFunc(GetDirectoriesStatistics, StatType.Directories));
             Total_FileStatsField = GetLazyStat(resultsList.Total_FileStatsField, GetLazyFunc(GetFilesStatistics, StatType.Files));
             Total_ByteStatsField = GetLazyStat(resultsList.Total_ByteStatsField, GetLazyFunc(GetByteStatistics, StatType.Bytes));
@@ -51,10 +47,26 @@ namespace RoboSharp.Results
             ExitStatusSummaryField = GetLazyStat(resultsList.ExitStatusSummaryField, GetLazCombinedStatusFunc());
         }
 
+        #region < Constructor Helper Methods >
+
+        private void InitCollection(IEnumerable<RoboCopyResults> collection)
+        {
+            ResultsList.AddRange(collection);
+            ResultsList.CollectionChanged += OnCollectionChanged;
+        }
+
+        private void Init()
+        {
+            Total_DirStatsField = new Lazy<Statistic>(GetLazyFunc(GetDirectoriesStatistics, StatType.Directories));
+            Total_FileStatsField = new Lazy<Statistic>(GetLazyFunc(GetFilesStatistics, StatType.Files));
+            Total_ByteStatsField = new Lazy<Statistic>(GetLazyFunc(GetByteStatistics, StatType.Bytes));
+            Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>(GetLazyAverageSpeedFunc());
+            ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(GetLazCombinedStatusFunc());
+        }
+
         private Func<Statistic> GetLazyFunc(Func<IStatistic[]> Action, StatType StatType) => new Func<Statistic>(() => Statistic.AddStatistics(Action.Invoke(), StatType));
         private Func<AverageSpeedStatistic> GetLazyAverageSpeedFunc() => new Func<AverageSpeedStatistic>(() => AverageSpeedStatistic.GetAverage(GetSpeedStatistics()));
         private Func<RoboCopyCombinedExitStatus> GetLazCombinedStatusFunc() => new Func<RoboCopyCombinedExitStatus>(() => RoboCopyCombinedExitStatus.CombineStatuses(GetStatuses()));
-
         private Lazy<T> GetLazyStat<T>(Lazy<T> lazyStat, Func<T> action) where T : ICloneable
         {
             if (lazyStat.IsValueCreated)
@@ -68,20 +80,8 @@ namespace RoboSharp.Results
             }
         }
 
-        private void Init()
-        {
-            Total_DirStatsField = new Lazy<Statistic>(GetLazyFunc(GetDirectoriesStatistics, StatType.Directories));
-            Total_FileStatsField = new Lazy<Statistic>(GetLazyFunc(GetFilesStatistics, StatType.Files));
-            Total_ByteStatsField = new Lazy<Statistic>(GetLazyFunc(GetByteStatistics, StatType.Bytes));
-            Average_SpeedStatsField = new Lazy<AverageSpeedStatistic>(GetLazyAverageSpeedFunc());
-            ExitStatusSummaryField = new Lazy<RoboCopyCombinedExitStatus>(GetLazCombinedStatusFunc());
-        }
-
-        /// <inheritdoc cref="IRoboCopyResultsList.Clone"/>
-        public RoboCopyResultsList Clone() => new RoboCopyResultsList(this);
-
-        object ICloneable.Clone() => Clone();
-
+        #endregion
+        
         #endregion
 
         #region < Fields >
@@ -96,6 +96,7 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
+        private readonly ObservableList<RoboCopyResults> ResultsList = new ObservableList<RoboCopyResults>();
 
         #endregion
 
@@ -125,6 +126,19 @@ namespace RoboSharp.Results
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
         public IRoboCopyCombinedExitStatus Status => ExitStatusSummaryField?.Value;
 
+        /// <summary> The Collection of RoboCopy Results. Add/Removal of <see cref="RoboCopyResults"/> objects must be performed through this object's methods, not on the list directly. </summary>
+        public IReadOnlyList<RoboCopyResults> Collection => ResultsList;
+
+        /// <inheritdoc cref="List{T}.Count"/>
+        public int Count => ResultsList.Count;
+
+        /// <summary>
+        /// Get or Set the element at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index of the item to Get or Set.</param>
+        /// <exception cref="ArgumentOutOfRangeException"/>
+        public RoboCopyResults this[int index] { get => ResultsList[index]; set => ResultsList[index] = value; }
+
         #endregion
 
         #region < Get Array Methods ( Public ) >
@@ -135,7 +149,7 @@ namespace RoboSharp.Results
         /// <returns>New array of the ByteStatistic objects</returns>
         public IStatistic[] GetByteStatistics()
         {
-            List<Statistic> tmp = new List<Statistic>{ };
+            List<Statistic> tmp = new List<Statistic> { };
             foreach (RoboCopyResults r in this)
                 tmp.Add(r?.BytesStatistic);
             return tmp.ToArray();
@@ -191,11 +205,16 @@ namespace RoboSharp.Results
 
         #endregion
 
-        #region < Methods that handle List Modifications >
+        #region < INotifyCollectionChanged >
+
+        /// <summary>
+        /// <inheritdoc cref="ObservableList{T}.CollectionChanged"/>
+        /// </summary>
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         /// <summary>Process the Added/Removed items, then fire the event</summary>
         /// <inheritdoc cref="ObservableList{T}.OnCollectionChanged(NotifyCollectionChangedEventArgs)"/>
-        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Move) goto RaiseEvent; // Sorting causes no change in math -> Simply raise the event
 
@@ -235,7 +254,7 @@ namespace RoboSharp.Results
 
                 goto RaiseEvent;
             }
-                
+
             //Process New Items
             if (e.NewItems != null)
             {
@@ -244,7 +263,7 @@ namespace RoboSharp.Results
                 foreach (RoboCopyResults r in e?.NewItems)
                 {
                     i++;
-                    bool RaiseValueChangeEvent = (e.OldItems == null || e.OldItems.Count == 0 ) && ( i == i2 ); //Prevent raising the event if more calculation needs to be performed either from NewItems or from OldItems
+                    bool RaiseValueChangeEvent = (e.OldItems == null || e.OldItems.Count == 0) && (i == i2); //Prevent raising the event if more calculation needs to be performed either from NewItems or from OldItems
                     //Bytes
                     if (Total_ByteStatsField.IsValueCreated)
                         Total_ByteStatsField.Value.AddStatistic(r?.BytesStatistic, RaiseValueChangeEvent);
@@ -302,10 +321,54 @@ namespace RoboSharp.Results
                 }
             }
 
-            RaiseEvent:
+        RaiseEvent:
             //Raise the CollectionChanged event
-            base.OnCollectionChanged(e);
+            CollectionChanged?.Invoke(this, e);
         }
+
+        #endregion
+
+        #region < ICloneable >
+
+        /// <inheritdoc cref="IRoboCopyResultsList.Clone"/>
+        public RoboCopyResultsList Clone() => new RoboCopyResultsList(this);
+
+        object ICloneable.Clone() => Clone();
+
+        #endregion
+
+        #region < IList{T} Implementation >
+
+        bool ICollection<RoboCopyResults>.IsReadOnly => false;
+
+        /// <inheritdoc cref="IList{T}.IndexOf(T)"/>
+        public int IndexOf(RoboCopyResults item) => ResultsList.IndexOf(item);
+
+        /// <inheritdoc cref="ObservableList{T}.Insert(int, T)"/>
+        public void Insert(int index, RoboCopyResults item) => ResultsList.Insert(index, item);
+
+        /// <inheritdoc cref="ObservableList{T}.RemoveAt(int)"/>
+        public void RemoveAt(int index) => ResultsList.RemoveAt(index);
+
+        /// <inheritdoc cref="ObservableList{T}.Add(T)"/>
+        public void Add(RoboCopyResults item) => ResultsList.Add(item);
+
+        /// <inheritdoc cref="ObservableList{T}.Clear"/>
+        public void Clear() => ResultsList.Clear();
+
+        /// <inheritdoc cref="IList.Contains(object)"/>
+        public bool Contains(RoboCopyResults item) => ResultsList.Contains(item);
+
+        /// <inheritdoc cref="ICollection.CopyTo(Array, int)"/>
+        public void CopyTo(RoboCopyResults[] array, int arrayIndex) => ResultsList.CopyTo(array, arrayIndex);
+
+        /// <inheritdoc cref="ObservableList{T}.Remove(T)"/>
+        public bool Remove(RoboCopyResults item) => ResultsList.Remove(item);
+
+        /// <inheritdoc cref="List{T}.GetEnumerator"/>
+        public IEnumerator<RoboCopyResults> GetEnumerator() => ResultsList.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ResultsList.GetEnumerator();
 
         #endregion
 
