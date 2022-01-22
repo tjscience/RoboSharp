@@ -27,7 +27,7 @@ namespace RoboSharp
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueue"/>
     /// </remarks>
-    public sealed class RoboQueue : IDisposable, INotifyPropertyChanged, IEnumerable, INotifyCollectionChanged
+    public sealed class RoboQueue : IRoboQueue, IDisposable, INotifyPropertyChanged, IEnumerable<IRoboCommand>, INotifyCollectionChanged
     {
         #region < Constructors >
 
@@ -445,13 +445,13 @@ namespace RoboSharp
         /// Create a new instance of the <see cref="ListResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="ListResults"/> list.</returns>
-        public RoboCopyResultsList GetListResults() => new RoboCopyResultsList(ListResults);
+        public RoboCopyResultsList GetListResults() => new RoboCopyResultsList(ListResults.Collection);
 
         /// <summary>
         /// Create a new instance of the <see cref="RunResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="RunResults"/> list.</returns>
-        public RoboCopyResultsList GetRunResults() => new RoboCopyResultsList(RunResults);
+        public RoboCopyResultsList GetRunResults() => new RoboCopyResultsList(RunResults.Collection);
 
         /// <summary>
         /// Run <see cref="RoboCommand.Stop()"/> against all items in the list.
@@ -578,7 +578,7 @@ namespace RoboSharp
         private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyMode = false)
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
-            
+
             TaskCancelSource = new CancellationTokenSource();
             CancellationToken cancellationToken = TaskCancelSource.Token;
             var SleepCancelToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken).Token;
@@ -636,41 +636,53 @@ namespace RoboSharp
                    OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                    //Check if more jobs are allowed to run
-                   while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
+                   while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs && TaskList.Count < CommandList.Count)
                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
                }
                //Once all tasks are started, asynchronously wait for them all to complete.
-               await Task.Run( () => Task.WhenAll(TaskList.ToArray()), cancellationToken);
+               await Task.Run(() => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken);
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
             //Continuation Task return results to caller
-            Task ContinueWithTask = StartAll.ContinueWith((continuation) =>
+            Task ContinueWithTask = StartAll.ContinueWith( async (continuation) =>
             {
                 Estimator?.CancelTasks();
                 if (cancellationToken.IsCancellationRequested)
                 {
                     //If cancellation was requested -> Issue the STOP command to all commands in the list
                     Debugger.Instance.DebugMessage("RoboQueue Task Was Cancelled");
-                    TaskCancelSource.Dispose();
-                    TaskCancelSource = null;
-                    StopAll();
+                    await StopAllTask(TaskList);
                 }
                 else if(continuation.IsFaulted)
                 {
                     Debugger.Instance.DebugMessage("RoboQueue Task Faulted");
-                    TaskCancelSource.Dispose();
-                    TaskCancelSource = null;
-                    StopAll();
+                    await StopAllTask(TaskList);
                     throw continuation.Exception;
                 }
                 else
                 {
                     Debugger.Instance.DebugMessage("RoboQueue Task Completed");
-                    TaskCancelSource?.Dispose();
                 }
-            }, CancellationToken.None);
+
+                TaskCancelSource?.Dispose();
+                TaskCancelSource = null;
+
+            }, CancellationToken.None).Unwrap();
 
             return ContinueWithTask;
+        }
+
+        private async Task StopAllTask(IEnumerable<Task> StartedTasks)
+        {
+            CommandList.ForEach((c) => c.Stop());
+            await Task.WhenAll(StartedTasks);
+
+            IsCopyOperationRunning = false;
+            IsListOnlyRunning = false;
+            IsPaused = false;
+
+            TaskCancelSource.Dispose();
+            TaskCancelSource = null;
         }
 
         private void Cmd_OnProgressEstimatorCreated(RoboCommand sender, ProgressEstimatorCreatedEventArgs e)
@@ -766,11 +778,16 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Gets the enumerator for the enumeating through this object's <see cref="RoboCommand"/> objects
+        /// Gets the enumerator for the enumeating through this object's <see cref="IRoboCommand"/> objects
         /// </summary>
-        public IEnumerator GetEnumerator()
+        public IEnumerator<IRoboCommand> GetEnumerator()
         {
-            return CommandList.GetEnumerator();
+            return Commands.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)Commands).GetEnumerator();
         }
 
         #endregion
