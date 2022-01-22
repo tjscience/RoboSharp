@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using RoboSharp.Interfaces;
 using System.Threading.Tasks;
+using RoboSharp.Results;
 
 namespace RoboSharp
 {
@@ -318,6 +319,21 @@ namespace RoboSharp
         void IRoboCommand.Dispose()
         {
             roboCommand.Stop();
+        }
+
+        Task IRoboCommand.Start_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.Start_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
         }
         #endregion
 
