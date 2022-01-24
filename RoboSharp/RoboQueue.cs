@@ -432,6 +432,7 @@ namespace RoboSharp
 
         /// <summary>
         /// Occurs if the RoboQueue task is stopped due to an unhandled exception. Occurs instead of <see cref="RoboQueue.RunCompleted"/>
+        /// <br/> Also occurs if any of the RoboCommand objects raise <see cref="RoboCommand.TaskFaulted"/>
         /// </summary>
         public event UnhandledExceptionEventHandler TaskFaulted;
 
@@ -619,6 +620,7 @@ namespace RoboSharp
                    cmd.OnError += this.OnError;
                    cmd.OnFileProcessed += this.OnFileProcessed;
                    cmd.OnProgressEstimatorCreated += Cmd_OnProgressEstimatorCreated;
+                   cmd.TaskFaulted += TaskFaulted;
 
                    //Start the job
                    //Once the job ends, unsubscribe events
