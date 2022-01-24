@@ -170,7 +170,7 @@ namespace RoboSharp
         /// Indicates if a task is currently running or paused. <br/>
         /// When true, prevents starting new tasks and prevents modication of the list.
         /// </summary>
-        public bool IsRunning => isDisposing || IsCopyOperationRunning || IsListOnlyRunning;
+        public bool IsRunning => IsCopyOperationRunning || IsListOnlyRunning;
 
         /// <summary>
         /// This is set true when <see cref="PauseAll"/> is called while any of the items in the list were running, and set false when <see cref="ResumeAll"/> or <see cref="StopAll"/> is called.
@@ -460,9 +460,14 @@ namespace RoboSharp
         {
             //If a TaskCancelSource is present, request cancellation. The continuation tasks null the value out then call this method to ensure everything stopped once they complete. 
             if (TaskCancelSource != null && !TaskCancelSource.IsCancellationRequested)
-                TaskCancelSource.Cancel();
+            {
+                IsPaused = false;
+                TaskCancelSource.Cancel(); // Cancel the RoboCommand Task
+                //RoboCommand Continuation Task will call StopAllTask() method to ensure all processes are stopped & diposed.
+            }
             else if (TaskCancelSource == null)
             {
+                //This is supplied to allow stopping all commands if consumer manually looped through the list instead of using the Start* methods.
                 CommandList.ForEach((c) => c.Stop());
                 IsCopyOperationRunning = false;
                 IsListOnlyRunning = false;
@@ -477,7 +482,7 @@ namespace RoboSharp
         public void PauseAll()
         {
             CommandList.ForEach((c) => { if (c.IsRunning) c.Pause(); });
-            IsPaused = AnyPaused;
+            IsPaused = IsRunning || AnyPaused;
         }
 
         /// <summary>
@@ -636,11 +641,22 @@ namespace RoboSharp
                    OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                    //Check if more jobs are allowed to run
-                   while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs && TaskList.Count < CommandList.Count)
+                   if (IsPaused) cmd.Pause(); //Ensure job that just started gets paused if Pausing was requested
+                   while (!cancellationToken.IsCancellationRequested && (IsPaused || (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs && TaskList.Count < CommandList.Count)))
                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
+
+               } //End of ForEachLoop
+
+               //Asynchronous wait for either cancellation is requested OR all jobs to finish.
+               //- Task.WaitAll is blocking -> not ideal, and also throws if cancellation is requested -> also not ideal.
+               //- Task.WhenAll is awaitable, but does not provide allow cancellation
+               //- If Cancelled, the 'WhenAll' task continues to run, but the ContinueWith task here will stop all tasks, thus completing the WhenAll task
+               if (!cancellationToken.IsCancellationRequested)
+               {
+                   var tcs = new TaskCompletionSource<object>();
+                   cancellationToken.Register(() => tcs.TrySetResult(null));
+                   _ = await Task.WhenAny(Task.WhenAll(TaskList.ToArray()), tcs.Task);
                }
-               //Once all tasks are started, asynchronously wait for them all to complete.
-               await Task.Run(() => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken);
            }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
             //Continuation Task return results to caller
