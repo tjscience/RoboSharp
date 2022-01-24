@@ -447,13 +447,13 @@ namespace RoboSharp
         /// Create a new instance of the <see cref="ListResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="ListResults"/> list.</returns>
-        public RoboCopyResultsList GetListResults() => new RoboCopyResultsList(ListResults.Collection);
+        public RoboCopyResultsList GetListResults() => ListResults.Clone();
 
         /// <summary>
         /// Create a new instance of the <see cref="RunResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="RunResults"/> list.</returns>
-        public RoboCopyResultsList GetRunResults() => new RoboCopyResultsList(RunResults.Collection);
+        public RoboCopyResultsList GetRunResults() => RunResults.Clone();
 
         /// <summary>
         /// Run <see cref="RoboCommand.Stop()"/> against all items in the list.
