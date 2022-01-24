@@ -252,25 +252,29 @@ namespace RoboSharp
         /// </summary>
         public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
+        /// <summary>
+        /// Occurs if the RoboCommand task is stopped due to an unhandled exception. Occurs instead of <see cref="OnCommandCompleted"/>
+        /// </summary>
+        public event UnhandledExceptionEventHandler TaskFaulted;
+
         #endregion
 
         #region < Pause / Stop / Resume >
 
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
-        public void Pause()
+        public virtual void Pause()
         {
-            if (process != null && isPaused == false)
+            if (process != null && !process.HasExited && isPaused == false)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution paused.");
-                process.Suspend();
-                isPaused = true;
+                isPaused = process.Suspend();
             }
         }
 
         /// <summary>Resume execution of the RoboCopy process when <see cref="IsPaused"/> == true</summary>
-        public void Resume()
+        public virtual void Resume()
         {
-            if (process != null && isPaused == true)
+            if (process != null && !process.HasExited && isPaused == true)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
                 process.Resume();
@@ -279,7 +283,7 @@ namespace RoboSharp
         }
 
         /// <summary> Immediately Kill the RoboCopy process</summary>
-        public void Stop() => Stop(false);
+        public virtual void Stop() => Stop(false);
 
         private void Stop(bool DisposeProcess)
         {
@@ -287,15 +291,15 @@ namespace RoboSharp
             //If the removal of that check broke your application, please create a new issue thread on the repo.
             if (process != null)
             {
-                if (!process.HasExited)
+                if (!isCancelled && (!process?.HasExited ?? true))
                 {
-                    process.Kill();
+                    process?.Kill();
                     isCancelled = true;
                 }
                 //hasExited = true;
                 if (DisposeProcess)
                 {
-                    process.Dispose();
+                    process?.Dispose();
                     process = null;
                 }
             }
@@ -308,26 +312,53 @@ namespace RoboSharp
 
 #if NET45_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
         /// <summary>
-        /// Start the RoboCopy Process, then return the results.
+        /// awaits <see cref="Start(string, string, string)"/> then returns the results.
         /// </summary>
         /// <returns>Returns the RoboCopy results once RoboCopy has finished executing.</returns>        
         /// <inheritdoc cref="Start(string, string, string)"/>
-        public async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
+        public virtual async Task<Results.RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
         {
             await Start(domain, username, password);
             return GetResults();
         }
+
+        /// <summary>awaits <see cref="Start_ListOnly(string, string, string)"/> then returns the results.</summary>
+        /// <returns>Returns the List-Only results once RoboCopy has finished executing.</returns>
+        /// <inheritdoc cref="Start_ListOnly(string, string, string)"/>
+        public virtual async Task<Results.RoboCopyResults> StartAsync_ListOnly(string domain = "", string username = "", string password = "")
+        {
+            await Start_ListOnly(domain, username, password);
+            return GetResults();
+        }
+
 #endif
 
         /// <summary>
-        /// Start the RoboCopy Process.
+        /// Run the currently selected options in ListOnly mode by setting <see cref="LoggingOptions.ListOnly"/> = TRUE
         /// </summary>
+        /// <returns>Task that awaits <see cref="Start(string, string, string)"/>, then resets the ListOnly option to original value.</returns>
+        /// <inheritdoc cref="Start(string, string, string)"/>
+        public virtual async Task Start_ListOnly(string domain = "", string username = "", string password = "")
+        {
+            bool _listOnly = LoggingOptions.ListOnly;
+            LoggingOptions.ListOnly = true;
+            await Start(domain, username, password);
+            LoggingOptions.ListOnly = _listOnly;
+            return;
+        }
+
+        /// <summary>
+        /// Start the RoboCopy Process. 
+        /// </summary>
+        /// <remarks>
+        /// If overridden by a derived class, the override affects all Start* methods within RoboCommand. Base.Start() must be called to start the robocopy process.
+        /// </remarks>
         /// <param name="domain"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns>Returns a task that reports when the RoboCopy process has finished executing.</returns>
         /// <exception cref="InvalidOperationException"/>
-        public Task Start(string domain = "", string username = "", string password = "")
+        public virtual Task Start(string domain = "", string username = "", string password = "")
         {
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
@@ -408,7 +439,7 @@ namespace RoboSharp
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
                 ProgressEstimator = resultsBuilder.Estimator;
                 OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
-                return GetBackupTask(resultsBuilder, domain, username, password);
+                return GetRoboCopyTask(resultsBuilder, domain, username, password);
             }
         }
 
@@ -417,18 +448,15 @@ namespace RoboSharp
         /// </summary>
         /// <returns>The continuation task that cleans up after the task that watches RoboCopy has finished executing.</returns>
         /// <exception cref="InvalidOperationException"/>
-        private Task GetBackupTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
+        private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
-            if (process != null ) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
-            var tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
+            if (process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
 
-            isRunning = !cancellationToken.IsCancellationRequested;
+            isRunning = true;
             DateTime StartTime = DateTime.Now;
 
             backupTask = Task.Factory.StartNew(async () =>
            {
-               cancellationToken.ThrowIfCancellationRequested();
 
                process = new Process();
 
@@ -478,35 +506,48 @@ namespace RoboSharp
                process.OutputDataReceived += process_OutputDataReceived;
                process.ErrorDataReceived += process_ErrorDataReceived;
                process.EnableRaisingEvents = true;
+
+               //Setup the WaitForExitAsync Task
                //hasExited = false;
-               //Setup the Wait Cancellation Token
-               var WaitExitSource = new CancellationTokenSource();
-               process.Exited += (o,e) => Process_Exited(WaitExitSource);
+               var ProcessExitedAsync = new TaskCompletionSource<object>();
+               process.Exited += (sender, args) =>
+               {
+                   ProcessExitedAsync.TrySetResult(null);
+                   //hasExited = true;
+               };
+
+               //Start the Task
                Debugger.Instance.DebugMessage("RoboCopy process started.");
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               await process.WaitForExitAsync(WaitExitSource.Token);    //Wait asynchronously for process to exit
-               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied
+               _ = await ProcessExitedAsync.Task;
+               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
                {
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                }
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+           }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
 
-            Task continueWithTask = backupTask.ContinueWith( (continuation) => // this task always runs
+            Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
-                tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
+                bool WasCancelled = process.ExitCode == -1;
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
                 //Run Post-Processing of the Generated JobFile if one was created.
                 JobOptions.RunPostProcessing(this);
 
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
+
+                if (continuation.IsFaulted && !WasCancelled) // If some fault occurred while processing, throw the exception to caller
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
                 //Raise event announcing results are available
                 if (!hasError && resultsBuilder != null)
                     OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
-            });
+            }, CancellationToken.None);
 
             return continueWithTask;
         }
@@ -527,15 +568,23 @@ namespace RoboSharp
 #pragma warning restore CS1573
         {
             //If currently running and this is called, clone the command, then run the save method against the clone.
-            if (process != null )
+            if (process != null)
             {
                 var cmd = this.Clone();
                 cmd.StopIfDisposing = true;
-                await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
+                try
+                {
+                    await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
+                }
+                catch(Exception Fault)
+                {
+                    cmd.Dispose();
+                    throw Fault;
+                }
                 cmd.Dispose();
                 return;
             }
-            
+
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
             bool _NODD = JobOptions.NoDestinationDirectory;
@@ -545,14 +594,25 @@ namespace RoboSharp
             JobOptions.NoSourceDirectory = !IncludeSource;
             JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
-
-            await GetBackupTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
-
-            //Restore Original Settings
-            JobOptions.FilePath = _PATH;
-            JobOptions.NoSourceDirectory = _NOSD;
-            JobOptions.NoDestinationDirectory = _NODD;
-            JobOptions.PreventCopyOperation = _QUIT;
+            Exception e = null;
+            try
+            {
+                await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
+            }
+            catch (Exception Fault)
+            {
+                e = Fault;
+            }
+            finally
+            {
+                //Restore Original Settings
+                JobOptions.FilePath = _PATH;
+                JobOptions.NoSourceDirectory = _NOSD;
+                JobOptions.NoDestinationDirectory = _NODD;
+                JobOptions.PreventCopyOperation = _QUIT;
+                //If an exception occured, rethrow it.
+                if (e != null) throw e;
+            }
         }
 
 
@@ -570,13 +630,6 @@ namespace RoboSharp
             }
         }
 
-        /// <summary> Process has either run to completion or has been killed prematurely </summary>
-        void Process_Exited(CancellationTokenSource WaitExitSource)
-        {
-            //hasExited = true;
-            WaitExitSource.Cancel();
-        }
-
         /// <summary> React to Process.StandardOutput </summary>
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
@@ -590,14 +643,13 @@ namespace RoboSharp
             if (data.IsNullOrWhiteSpace())
                 return;
 
-            if (data.EndsWith("%", StringComparison.Ordinal))
+            if (Regex.IsMatch(data, "^[0-9]+[.]?[0-9]*%", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace))
             {
                 //Increment ProgressEstimator
                 if (data == "100%")
                     resultsBuilder?.AddFileCopied(currentFile);
                 else
                     resultsBuilder?.SetCopyOpStarted();
-                resultsBuilder?.SetCopyOpStarted();
 
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,

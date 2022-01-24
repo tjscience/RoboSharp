@@ -19,6 +19,7 @@ namespace RoboSharp
     /// Contains a private List{RoboCommand} object with controlled methods for access to it.  <br/>
     /// Attempting to modify the list while <see cref="IsRunning"/> = true results in <see cref="ListAccessDeniedException"/> being thrown.
     /// <para/>Implements the following: <br/>
+    /// <see cref="IRoboQueue"/> <br/>
     /// <see cref="IEnumerable"/> -- Allow enumerating through the collection that is stored in a private list -- Also see <see cref="Commands"/> <br/>
     /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes against the list <see cref="ObservableList{T}"/> <br/>
     /// <see cref="INotifyPropertyChanged"/> -- Most properties will trigger <see cref="PropertyChanged"/> events when updated.<br/>
@@ -27,7 +28,7 @@ namespace RoboSharp
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueue"/>
     /// </remarks>
-    public sealed class RoboQueue : IDisposable, INotifyPropertyChanged, IEnumerable, INotifyCollectionChanged
+    public sealed class RoboQueue : IRoboQueue, IDisposable, INotifyPropertyChanged, IEnumerable<IRoboCommand>, INotifyCollectionChanged
     {
         #region < Constructors >
 
@@ -170,7 +171,7 @@ namespace RoboSharp
         /// Indicates if a task is currently running or paused. <br/>
         /// When true, prevents starting new tasks and prevents modication of the list.
         /// </summary>
-        public bool IsRunning => isDisposing || IsCopyOperationRunning || IsListOnlyRunning;
+        public bool IsRunning => IsCopyOperationRunning || IsListOnlyRunning;
 
         /// <summary>
         /// This is set true when <see cref="PauseAll"/> is called while any of the items in the list were running, and set false when <see cref="ResumeAll"/> or <see cref="StopAll"/> is called.
@@ -428,6 +429,16 @@ namespace RoboSharp
 
         #endregion
 
+        #region < UnhandledException Fault >
+
+        /// <summary>
+        /// Occurs if the RoboQueue task is stopped due to an unhandled exception. Occurs instead of <see cref="RoboQueue.RunCompleted"/>
+        /// <br/> Also occurs if any of the RoboCommand objects raise <see cref="RoboCommand.TaskFaulted"/>
+        /// </summary>
+        public event UnhandledExceptionEventHandler TaskFaulted;
+
+        #endregion
+
         #endregion
 
         #region < Methods >
@@ -436,13 +447,13 @@ namespace RoboSharp
         /// Create a new instance of the <see cref="ListResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="ListResults"/> list.</returns>
-        public RoboCopyResultsList GetListResults() => new RoboCopyResultsList(ListResults);
+        public RoboCopyResultsList GetListResults() => ListResults.Clone();
 
         /// <summary>
         /// Create a new instance of the <see cref="RunResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="RunResults"/> list.</returns>
-        public RoboCopyResultsList GetRunResults() => new RoboCopyResultsList(RunResults);
+        public RoboCopyResultsList GetRunResults() => RunResults.Clone();
 
         /// <summary>
         /// Run <see cref="RoboCommand.Stop()"/> against all items in the list.
@@ -451,9 +462,14 @@ namespace RoboSharp
         {
             //If a TaskCancelSource is present, request cancellation. The continuation tasks null the value out then call this method to ensure everything stopped once they complete. 
             if (TaskCancelSource != null && !TaskCancelSource.IsCancellationRequested)
-                TaskCancelSource.Cancel();
+            {
+                IsPaused = false;
+                TaskCancelSource.Cancel(); // Cancel the RoboCommand Task
+                //RoboCommand Continuation Task will call StopAllTask() method to ensure all processes are stopped & diposed.
+            }
             else if (TaskCancelSource == null)
             {
+                //This is supplied to allow stopping all commands if consumer manually looped through the list instead of using the Start* methods.
                 CommandList.ForEach((c) => c.Stop());
                 IsCopyOperationRunning = false;
                 IsListOnlyRunning = false;
@@ -468,7 +484,7 @@ namespace RoboSharp
         public void PauseAll()
         {
             CommandList.ForEach((c) => { if (c.IsRunning) c.Pause(); });
-            IsPaused = AnyPaused;
+            IsPaused = IsRunning || AnyPaused;
         }
 
         /// <summary>
@@ -488,34 +504,35 @@ namespace RoboSharp
         /// Set all RoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
         /// </summary>
         /// <inheritdoc cref="StartJobs"/>
-        public Task StartAll_ListOnly(string domain = "", string username = "", string password = "")
+        public Task<IRoboCopyResultsList> StartAll_ListOnly(string domain = "", string username = "", string password = "")
         {
+            if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
 
             ListResultsObj.Clear();
             ListResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListResults));
 
-            //Store the setting for ListOnly prior to changing it
-            List<Tuple<IRoboCommand, bool>> OldListValues = new List<Tuple<IRoboCommand, bool>>();
-            CommandList.ForEach((c) =>
-            {
-                OldListValues.Add(new Tuple<IRoboCommand, bool>(c, c.LoggingOptions.ListOnly));
-                c.LoggingOptions.ListOnly = true;
-            });
             //Run the commands
             DateTime StartTime = DateTime.Now;
             Task Run = StartJobs(domain, username, password, true);
-            Task ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
             {
-                foreach (var obj in OldListValues)
-                    obj.Item1.LoggingOptions.ListOnly = obj.Item2;
                 //Set Flags
                 IsListOnlyRunning = false;
                 IsPaused = false;
-                ListOnlyCompleted = !WasCancelled;
+                ListOnlyCompleted = !WasCancelled && !continuation.IsFaulted;
+
+                // If some fault occurred while processing, throw the exception to caller
+                if (continuation.IsFaulted)
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
+
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
-            }
+                return (IRoboCopyResultsList)ListResultsObj.Clone();
+            }, CancellationToken.None
             );
             return ResultsTask;
         }
@@ -525,8 +542,10 @@ namespace RoboSharp
         #region < Run User-Set Parameters >
 
         /// <inheritdoc cref="StartJobs"/>
-        public Task StartAll(string domain = "", string username = "", string password = "")
+        public Task<IRoboCopyResultsList> StartAll(string domain = "", string username = "", string password = "")
         {
+            if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
+
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
 
@@ -534,13 +553,22 @@ namespace RoboSharp
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
             DateTime StartTime = DateTime.Now;
             Task Run = StartJobs(domain, username, password, false);
-            Task ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
             {
                 IsCopyOperationRunning = false;
                 IsPaused = false;
-                CopyOperationCompleted = !WasCancelled;
+                CopyOperationCompleted = !WasCancelled && !continuation.IsFaulted;
+
+                // If some fault occurred while processing, throw the exception to caller
+                if (continuation.IsFaulted)
+                {
+                    TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
+                    throw continuation.Exception;
+                }
+
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
-            }
+                return (IRoboCopyResultsList)RunResultsObj.Clone();
+            }, CancellationToken.None
             );
             return ResultsTask;
         }
@@ -554,7 +582,7 @@ namespace RoboSharp
         /// </summary>
         /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
         /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
-        private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyBinding = false)
+        private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyMode = false)
         {
             Debugger.Instance.DebugMessage("Starting Parallel execution of RoboQueue");
 
@@ -586,17 +614,18 @@ namespace RoboSharp
                    if (cancellationToken.IsCancellationRequested) break;
 
                    //Assign the events
-                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyBinding);
+                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyMode);
                    cmd.OnCommandCompleted += handler;
                    cmd.OnCommandError += this.OnCommandError;
                    cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
                    cmd.OnError += this.OnError;
                    cmd.OnFileProcessed += this.OnFileProcessed;
                    cmd.OnProgressEstimatorCreated += Cmd_OnProgressEstimatorCreated;
+                   cmd.TaskFaulted += TaskFaulted;
 
                    //Start the job
                    //Once the job ends, unsubscribe events
-                   Task C = cmd.Start(domain, username, password);
+                   Task C = !ListOnlyMode ? cmd.Start(domain, username, password) : cmd.Start_ListOnly(domain, username, password);
                    Task T = C.ContinueWith((t) =>
                    {
                        cmd.OnCommandCompleted -= handler;
@@ -604,6 +633,7 @@ namespace RoboSharp
                        cmd.OnCopyProgressChanged -= this.OnCopyProgressChanged;
                        cmd.OnError -= this.OnError;
                        cmd.OnFileProcessed -= this.OnFileProcessed;
+                       if (t.IsFaulted) throw t.Exception; // If some fault occurred while processing, throw the exception to caller
                    }, CancellationToken.None);
 
                    TaskList.Add(T);                    //Add the continuation task to the list.
@@ -614,34 +644,65 @@ namespace RoboSharp
                    OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
 
                    //Check if more jobs are allowed to run
-                   while (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs)
+                   if (IsPaused) cmd.Pause(); //Ensure job that just started gets paused if Pausing was requested
+                   while (!cancellationToken.IsCancellationRequested && (IsPaused || (MaxConcurrentJobs > 0 && JobsCurrentlyRunning >= MaxConcurrentJobs && TaskList.Count < CommandList.Count)))
                        await ThreadEx.CancellableSleep(500, SleepCancelToken);
-               }
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
 
-            //After all commands have started, continue with waiting for all commands to complete.
-            Task WhenAll = StartAll.ContinueWith((continuation) => Task.WaitAll(TaskList.ToArray(), cancellationToken), cancellationToken, TaskContinuationOptions.LongRunning, PriorityScheduler.BelowNormal);
+               } //End of ForEachLoop
+
+               //Asynchronous wait for either cancellation is requested OR all jobs to finish.
+               //- Task.WaitAll is blocking -> not ideal, and also throws if cancellation is requested -> also not ideal.
+               //- Task.WhenAll is awaitable, but does not provide allow cancellation
+               //- If Cancelled, the 'WhenAll' task continues to run, but the ContinueWith task here will stop all tasks, thus completing the WhenAll task
+               if (!cancellationToken.IsCancellationRequested)
+               {
+                   var tcs = new TaskCompletionSource<object>();
+                   _ = cancellationToken.Register(() => tcs.TrySetResult(null));
+                   _ = await Task.WhenAny(Task.WhenAll(TaskList.ToArray()), tcs.Task);
+               }
+
+           }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
 
             //Continuation Task return results to caller
-            Task ContinueWithTask = WhenAll.ContinueWith((continuation) =>
-            {
-                Estimator?.CancelTasks();
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    //If cancellation was requested -> Issue the STOP command to all commands in the list
-                    Debugger.Instance.DebugMessage("RoboQueue Task Was Cancelled");
-                    TaskCancelSource.Dispose();
-                    TaskCancelSource = null;
-                    StopAll();
-                }
-                else
-                {
-                    Debugger.Instance.DebugMessage("RoboQueue Task Completed");
-                    TaskCancelSource?.Dispose();
-                }
-            });
+            Task ContinueWithTask = StartAll.ContinueWith(async (continuation) =>
+           {
+               Estimator?.CancelTasks();
+               if (cancellationToken.IsCancellationRequested)
+               {
+                   //If cancellation was requested -> Issue the STOP command to all commands in the list
+                   Debugger.Instance.DebugMessage("RoboQueue Task Was Cancelled");
+                   await StopAllTask(TaskList);
+               }
+               else if (continuation.IsFaulted)
+               {
+                   Debugger.Instance.DebugMessage("RoboQueue Task Faulted");
+                   await StopAllTask(TaskList);
+                   throw continuation.Exception;
+               }
+               else
+               {
+                   Debugger.Instance.DebugMessage("RoboQueue Task Completed");
+               }
+
+               TaskCancelSource?.Dispose();
+               TaskCancelSource = null;
+
+           }, CancellationToken.None).Unwrap();
 
             return ContinueWithTask;
+        }
+
+        private async Task StopAllTask(IEnumerable<Task> StartedTasks)
+        {
+            CommandList.ForEach((c) => c.Stop());
+            await Task.WhenAll(StartedTasks);
+
+            IsCopyOperationRunning = false;
+            IsListOnlyRunning = false;
+            IsPaused = false;
+
+            TaskCancelSource.Dispose();
+            TaskCancelSource = null;
         }
 
         private void Cmd_OnProgressEstimatorCreated(RoboCommand sender, ProgressEstimatorCreatedEventArgs e)
@@ -737,11 +798,16 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Gets the enumerator for the enumeating through this object's <see cref="RoboCommand"/> objects
+        /// Gets the enumerator for the enumeating through this object's <see cref="IRoboCommand"/> objects
         /// </summary>
-        public IEnumerator GetEnumerator()
+        public IEnumerator<IRoboCommand> GetEnumerator()
         {
-            return CommandList.GetEnumerator();
+            return Commands.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)Commands).GetEnumerator();
         }
 
         #endregion

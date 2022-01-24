@@ -6,11 +6,14 @@ using System.Text;
 using RoboSharp.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp.Results
 {
     /// <summary>
     /// Object that provides <see cref="IStatistic"/> objects whose events can be bound to report estimated RoboCommand progress periodically.
+    /// <br/>
+    /// Note: Only works properly with /V verbose set TRUE.
     /// </summary>
     /// <remarks>
     /// Subscribe to <see cref="RoboCommand.OnProgressEstimatorCreated"/> or <see cref="RoboQueue.OnProgressEstimatorCreated"/> to be notified when the ProgressEstimator becomes available for binding <br/>
@@ -170,9 +173,10 @@ namespace RoboSharp.Results
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
             CurrentDir = currentDir;
-            if (currentDir.FileClass == Config.LogParsing_ExistingDir) { DirsToAdd.Enqueue(WhereToAdd.Skipped); }
-            else if (currentDir.FileClass == Config.LogParsing_NewDir) { DirsToAdd.Enqueue(WhereToAdd.Copied); }
-            else if (currentDir.FileClass == Config.LogParsing_ExtraDir) { DirsToAdd.Enqueue(WhereToAdd.Extra); }
+            if (currentDir.FileClass.Equals(Config.LogParsing_ExistingDir, StringComparison.CurrentCultureIgnoreCase)) { DirsToAdd.Enqueue(WhereToAdd.Skipped); }   // Existing Dir
+            else if (currentDir.FileClass.Equals(Config.LogParsing_NewDir, StringComparison.CurrentCultureIgnoreCase)) { DirsToAdd.Enqueue(WhereToAdd.Copied); }    //New Dir
+            else if (currentDir.FileClass.Equals(Config.LogParsing_ExtraDir, StringComparison.CurrentCultureIgnoreCase)) { DirsToAdd.Enqueue(WhereToAdd.Extra); }   //Extra Dir
+            else if (currentDir.FileClass.Equals(Config.LogParsing_DirectoryExclusion, StringComparison.CurrentCultureIgnoreCase)) { DirsToAdd.Enqueue(WhereToAdd.Skipped); }   //Excluded Dir
             else
             {
 
@@ -192,22 +196,22 @@ namespace RoboSharp.Results
             CopyOpStarted = false;
 
             // EXTRA FILES
-            if (currentFile.FileClass == Config.LogParsing_ExtraFile)
+            if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Extra);
             }
             //MisMatch
-            else if (currentFile.FileClass == Config.LogParsing_MismatchFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_MismatchFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.MisMatch);
             }
             //Failed Files
-            else if (currentFile.FileClass == Config.LogParsing_FailedFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_FailedFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Failed);
             }
             //Identical Files
-            else if (currentFile.FileClass == Config.LogParsing_SameFile)
+            else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))
             {
                 QueueByteCalc(currentFile, WhereToAdd.Skipped);
                 CurrentFile = null;
@@ -217,7 +221,7 @@ namespace RoboSharp.Results
             else
             {
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass == Config.LogParsing_NewFile)
+                if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase))
                 {
                     //Special handling for 0kb files -> They won't get Progress update, but will be created
                     if (currentFile.Size == 0)
@@ -225,20 +229,31 @@ namespace RoboSharp.Results
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                         SkippingFile = false;
                     }
-                    else if (!CopyOperation)
+                    else if (!CopyOperation) //Workaround for ListOnly Operation
                     {
                         QueueByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (currentFile.FileClass == Config.LogParsing_OlderFile)
+                else if (!CopyOperation)
                 {
-                    if (!CopyOperation && !command.SelectionOptions.ExcludeNewer)
-                        QueueByteCalc(currentFile, WhereToAdd.Copied);
-                }
-                else if (currentFile.FileClass == Config.LogParsing_NewerFile)
-                {
-                    if (!CopyOperation && !command.SelectionOptions.ExcludeOlder)
-                        QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.ExcludeOlder)
+                            QueueByteCalc(currentFile, WhereToAdd.Skipped);
+                        else
+                            QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.ExcludeNewer)
+                            QueueByteCalc(currentFile, WhereToAdd.Skipped);
+                        else
+                            QueueByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        QueueByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
                 }
             }
         }
@@ -246,12 +261,15 @@ namespace RoboSharp.Results
         /// <summary>
         /// Stage / perform the calculation for the ByteStatistic
         /// </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         private void QueueByteCalc(ProcessedFileInfo file, WhereToAdd whereTo)
         {
+            if (file == null) return;
             BytesToAdd.Enqueue(new Tuple<ProcessedFileInfo, WhereToAdd>(file, whereTo));
         }
 
         /// <summary>Catch start copy progress of large files</summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal void SetCopyOpStarted()
         {
             SkippingFile = false;
@@ -259,6 +277,7 @@ namespace RoboSharp.Results
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
+        [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal void AddFileCopied(ProcessedFileInfo currentFile)
         {
             SkippingFile = false;
@@ -279,7 +298,7 @@ namespace RoboSharp.Results
             return Task.Factory.StartNew(async () => 
                 {
                     DateTime LastUpdate = DateTime.Now;
-                    TimeSpan UpdatePeriod = new TimeSpan(0, 0, 0, 0, 125);
+                    TimeSpan UpdatePeriod = new TimeSpan(0, 0, 0, 0, 60);
                     bool DirAdded = false;
                     bool FileAdded = false;
 
@@ -310,7 +329,7 @@ namespace RoboSharp.Results
                     }
                     PushUpdate(ref DirAdded, ref FileAdded, tmpDir, tmpByte, tmpFile);
 
-                }, CancelSource.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+                }, CancelSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
             
         }
 

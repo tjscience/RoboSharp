@@ -144,7 +144,7 @@ namespace RoboSharp.Results
                 //After cancellation is requested, ensure the bag is emptied
                 BagClearOut(tmp, StatToAddTo, EventBag);
 
-            }, CS.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+            }, CS.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
             
             return TaskRef;
         }

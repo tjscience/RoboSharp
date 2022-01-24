@@ -6,11 +6,15 @@ using System.Text;
 using System.Text.RegularExpressions;
 using RoboSharp.Interfaces;
 using System.Threading.Tasks;
+using RoboSharp.Results;
 
 namespace RoboSharp
 {
     /// <summary>
     /// Represents a single RoboCopy Job File
+    /// <para/>Implements: <br/>
+    /// <see cref="IRoboCommand"/> <br/>
+    /// <see cref="ICloneable"/> <br/>
     /// </summary>
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobFile"/>
@@ -127,14 +131,14 @@ namespace RoboSharp
         /// <summary>
         /// Options are stored in a RoboCommand object for simplicity.
         /// </summary>
-        private RoboCommand roboCommand;
+        protected RoboCommand roboCommand;
 
         #endregion
 
         #region < Properties >
 
         /// <summary>FilePath of the Job File </summary>
-        public string FilePath { get; set; }
+        public virtual string FilePath { get; set; }
 
         /// <inheritdoc cref="RoboCommand.Name"/>
         public string Job_Name
@@ -288,7 +292,7 @@ namespace RoboSharp
         LoggingOptions IRoboCommand.LoggingOptions { get => roboCommand.LoggingOptions; set => roboCommand.LoggingOptions = value; }
         CopyOptions IRoboCommand.CopyOptions { get => ((IRoboCommand)roboCommand).CopyOptions; set => ((IRoboCommand)roboCommand).CopyOptions = value; }
         JobOptions IRoboCommand.JobOptions { get => ((IRoboCommand)roboCommand).JobOptions; }
-        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration; 
+        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration;
         string IRoboCommand.CommandOptions => roboCommand.CommandOptions;
 
         #endregion
@@ -318,6 +322,21 @@ namespace RoboSharp
         void IRoboCommand.Dispose()
         {
             roboCommand.Stop();
+        }
+
+        Task IRoboCommand.Start_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.Start_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
         }
         #endregion
 

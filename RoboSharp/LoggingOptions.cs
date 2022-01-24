@@ -79,104 +79,104 @@ namespace RoboSharp
         /// Do not copy, timestamp or delete any files.
         /// [/L]
         /// </summary>
-        public bool ListOnly { get; set; }
+        public virtual bool ListOnly { get; set; }
         /// <summary>
         /// Report all extra files, not just those selected.
         /// [X]
         /// </summary>
-        public bool ReportExtraFiles { get; set; }
+        public virtual bool ReportExtraFiles { get; set; }
         /// <summary>
         /// Produce verbose output, showing skipped files.
         /// [V]
         /// </summary>
-        public bool VerboseOutput { get; set; }
+        public virtual bool VerboseOutput { get; set; } = true;
         /// <summary>
         /// Include source file time stamps in the output.
         /// [/TS]
         /// </summary>
-        public bool IncludeSourceTimeStamps { get; set; }
+        public virtual bool IncludeSourceTimeStamps { get; set; }
         /// <summary>
         /// Include full path names of files in the output.
         /// [/FP]
         /// </summary>
-        public bool IncludeFullPathNames { get; set; }
+        public virtual bool IncludeFullPathNames { get; set; }
         /// <summary>
         /// Print sizes as bytes in the output.
         /// [/BYTES]
         /// </summary>
-        public bool PrintSizesAsBytes { get; set; }
+        public virtual bool PrintSizesAsBytes { get; set; }
         /// <summary>
         /// Do not log file sizes.
         /// [/NS]
         /// </summary>
-        public bool NoFileSizes { get; set; }
+        public virtual bool NoFileSizes { get; set; }
         /// <summary>
         /// Do not log file classes.
         /// [/NC]
         /// </summary>
-        public bool NoFileClasses { get; set; }
+        public virtual bool NoFileClasses { get; set; }
         /// <summary>
         /// Do not log file names.
         /// [/NFL]
         /// WARNING: If this is set to TRUE then GUI cannot handle showing progress correctly as it can't get information it requires from the log
         /// </summary>
-        public bool NoFileList { get; set; }
+        public virtual bool NoFileList { get; set; }
         /// <summary>
         /// Do not log directory names.
         /// [/NDL]
         /// </summary>
-        public bool NoDirectoryList { get; set; }
+        public virtual bool NoDirectoryList { get; set; }
         /// <summary>
         /// Do not log percentage copied.
         /// [/NP]
         /// </summary>
-        public bool NoProgress { get; set; }
+        public virtual bool NoProgress { get; set; }
         /// <summary>
         /// Show estimated time of arrival of copied files.
         /// [/ETA]
         /// </summary>
-        public bool ShowEstimatedTimeOfArrival { get; set; }
+        public virtual bool ShowEstimatedTimeOfArrival { get; set; }
         /// <summary>
         /// Output status to LOG file (overwrite existing log).
         /// [/LOG:file]
         /// </summary>
-        public string LogPath { get; set; }
+        public virtual string LogPath { get; set; }
         /// <summary>
         /// Output status to LOG file (append to existing log).
         /// [/LOG+:file]
         /// </summary>
-        public string AppendLogPath { get; set; }
+        public virtual string AppendLogPath { get; set; }
         /// <summary>
         /// Output status to LOG file as UNICODE (overwrite existing log).
         /// [/UNILOG:file]
         /// </summary>
-        public string UnicodeLogPath { get; set; }
+        public virtual string UnicodeLogPath { get; set; }
         /// <summary>
         /// Output status to LOG file as UNICODE (append to existing log).
         /// [/UNILOG+:file]
         /// </summary>
-        public string AppendUnicodeLogPath { get; set; }
+        public virtual string AppendUnicodeLogPath { get; set; }
         /// <summary>
         /// Output to RoboSharp and Log.
         /// [/TEE]
         /// </summary>
-        public bool OutputToRoboSharpAndLog { get; set; }
+        public virtual bool OutputToRoboSharpAndLog { get; set; }
         /// <summary>
         /// Do not output a Job Header.
         /// [/NJH]
         /// </summary>
-        public bool NoJobHeader { get; set; }
+        public virtual bool NoJobHeader { get; set; }
         /// <summary>
         /// Do not output a Job Summary.
         /// [/NJS]
         /// WARNING: If this is set to TRUE then statistics will not work correctly as this information is gathered from the job summary part of the log 
         /// </summary>
-        public bool NoJobSummary { get; set; }
+        public virtual bool NoJobSummary { get; set; }
         /// <summary>
         /// Output as UNICODE.
         /// [/UNICODE]
         /// </summary>
-        public bool OutputAsUnicode { get; set; }
+        public virtual bool OutputAsUnicode { get; set; }
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
         internal string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
