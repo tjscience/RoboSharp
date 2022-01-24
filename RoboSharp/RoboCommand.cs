@@ -451,8 +451,6 @@ namespace RoboSharp
         private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
             if (process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
-            var tokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = tokenSource.Token;
 
             isRunning = true;
             DateTime StartTime = DateTime.Now;
@@ -529,7 +527,7 @@ namespace RoboSharp
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                }
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+           }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {

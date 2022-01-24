@@ -656,10 +656,11 @@ namespace RoboSharp
                if (!cancellationToken.IsCancellationRequested)
                {
                    var tcs = new TaskCompletionSource<object>();
-                   cancellationToken.Register(() => tcs.TrySetResult(null));
+                   _ = cancellationToken.Register(() => tcs.TrySetResult(null));
                    _ = await Task.WhenAny(Task.WhenAll(TaskList.ToArray()), tcs.Task);
                }
-           }, cancellationToken, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+
+           }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
 
             //Continuation Task return results to caller
             Task ContinueWithTask = StartAll.ContinueWith(async (continuation) =>

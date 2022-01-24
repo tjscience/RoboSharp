@@ -264,6 +264,7 @@ namespace RoboSharp.Results
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         private void QueueByteCalc(ProcessedFileInfo file, WhereToAdd whereTo)
         {
+            if (file == null) return;
             BytesToAdd.Enqueue(new Tuple<ProcessedFileInfo, WhereToAdd>(file, whereTo));
         }
 
@@ -328,7 +329,7 @@ namespace RoboSharp.Results
                     }
                     PushUpdate(ref DirAdded, ref FileAdded, tmpDir, tmpByte, tmpFile);
 
-                }, CancelSource.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
+                }, CancelSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
             
         }
 
