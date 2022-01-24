@@ -187,6 +187,7 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
+            copy.LoggingOptions.ListOnly = ChkListOnly.IsChecked ?? false;
             copy.StopIfDisposing = true;
             return copy;
         }
@@ -254,6 +255,7 @@ namespace RoboSharp.BackupApp
             VerboseOutput.IsChecked = copy.LoggingOptions.VerboseOutput;
             NoFileSizes.IsChecked = copy.LoggingOptions.NoFileSizes;
             NoProgress.IsChecked = copy.LoggingOptions.NoProgress;
+            ChkListOnly.IsChecked = copy.LoggingOptions.ListOnly;
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)

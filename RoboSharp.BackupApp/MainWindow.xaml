@@ -208,6 +208,7 @@
                                             <RowDefinition />
                                             <RowDefinition />
                                             <RowDefinition />
+                                            <RowDefinition />
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -218,12 +219,14 @@
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Verbose Output (/V)" />
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="No File Size (/NS)" />
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="No Progress (/NP)" />
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="List Only (/L)" />
 
                                         <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
 
                                         <CheckBox Grid.Row="0" Grid.Column="2" x:Name="VerboseOutput" Margin="10,0,0,0" IsChecked="True" />
                                         <CheckBox Grid.Row="1" Grid.Column="2" x:Name="NoFileSizes" Margin="10,0,0,0" />
                                         <CheckBox Grid.Row="2" Grid.Column="2" x:Name="NoProgress" Margin="10,0,0,0" />
+                                        <CheckBox Grid.Row="3" Grid.Column="2" x:Name="ChkListOnly" Margin="10,0,0,0" />
 
                                     </Grid>
                                 </Expander>
