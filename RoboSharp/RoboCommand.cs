@@ -454,12 +454,11 @@ namespace RoboSharp
             var tokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = tokenSource.Token;
 
-            isRunning = !cancellationToken.IsCancellationRequested;
+            isRunning = true;
             DateTime StartTime = DateTime.Now;
 
             backupTask = Task.Factory.StartNew(async () =>
            {
-               cancellationToken.ThrowIfCancellationRequested();
 
                process = new Process();
 
@@ -509,16 +508,23 @@ namespace RoboSharp
                process.OutputDataReceived += process_OutputDataReceived;
                process.ErrorDataReceived += process_ErrorDataReceived;
                process.EnableRaisingEvents = true;
+
+               //Setup the WaitForExitAsync Task
                //hasExited = false;
-               //Setup the Wait Cancellation Token
-               var WaitExitSource = new CancellationTokenSource();
-               process.Exited += (o, e) => Process_Exited(WaitExitSource);
+               var ProcessExitedAsync = new TaskCompletionSource<object>();
+               process.Exited += (sender, args) =>
+               {
+                   ProcessExitedAsync.TrySetResult(null);
+                   //hasExited = true;
+               };
+
+               //Start the Task
                Debugger.Instance.DebugMessage("RoboCopy process started.");
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               await process.WaitForExitAsync(WaitExitSource.Token);    //Wait asynchronously for process to exit
-               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied
+               _ = await ProcessExitedAsync.Task;
+               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
                {
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                }
@@ -527,8 +533,7 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
-                bool WasCancelled = tokenSource.IsCancellationRequested;
-                tokenSource.Dispose(); tokenSource = null; // Dispose of the Cancellation Token
+                bool WasCancelled = process.ExitCode == -1;
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
                 //Run Post-Processing of the Generated JobFile if one was created.
@@ -625,13 +630,6 @@ namespace RoboSharp
                 hasError = true;
                 OnCommandError(this, new CommandErrorEventArgs(e.Data, null));
             }
-        }
-
-        /// <summary> Process has either run to completion or has been killed prematurely </summary>
-        void Process_Exited(CancellationTokenSource WaitExitSource)
-        {
-            //hasExited = true;
-            WaitExitSource.Cancel();
         }
 
         /// <summary> React to Process.StandardOutput </summary>
