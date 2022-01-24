@@ -15,7 +15,10 @@ namespace RoboSharp.Results
     /// <summary>
     /// Object used to represent results from multiple <see cref="RoboCommand"/>s. <br/>
     /// As <see cref="RoboCopyResults"/> are added to this object, it will update the Totals and Averages accordingly.<para/>
-    /// This object is derived from <see cref="List{T}"/>, where T = <see cref="RoboCopyResults"/>, and implements <see cref="INotifyCollectionChanged"/>
+    /// Implements:
+    /// <br/><see cref="IRoboCopyResultsList"/>
+    /// <br/><see cref="IList{RoboCopyResults}"/> where T = RoboCopyResults
+    /// <br/><see cref="INotifyCollectionChanged"/>
     /// </summary>
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCopyResultsList"/>
@@ -112,18 +115,23 @@ namespace RoboSharp.Results
         #region < Public Properties >
 
         /// <summary> Sum of all DirectoryStatistics objects </summary>
+        /// <remarks>Underlying value is Lazy{Statistic} object - Initial value not calculated until first request. </remarks>
         public IStatistic DirectoriesStatistic => Total_DirStatsField?.Value;
 
         /// <summary> Sum of all ByteStatistics objects </summary>
+        /// <remarks>Underlying value is Lazy{Statistic} object - Initial value not calculated until first request. </remarks>
         public IStatistic BytesStatistic => Total_ByteStatsField?.Value;
 
         /// <summary> Sum of all FileStatistics objects </summary>
+        /// <remarks>Underlying value is Lazy{Statistic} object - Initial value not calculated until first request. </remarks>
         public IStatistic FilesStatistic => Total_FileStatsField?.Value;
 
         /// <summary> Average of all SpeedStatistics objects </summary>
+        /// <remarks>Underlying value is Lazy{SpeedStatistic} object - Initial value not calculated until first request. </remarks>
         public ISpeedStatistic SpeedStatistic => Average_SpeedStatsField?.Value;
 
         /// <summary> Sum of all RoboCopyExitStatus objects </summary>
+        /// <remarks>Underlying value is Lazy object - Initial value not calculated until first request. </remarks>
         public IRoboCopyCombinedExitStatus Status => ExitStatusSummaryField?.Value;
 
         /// <summary> The Collection of RoboCopy Results. Add/Removal of <see cref="RoboCopyResults"/> objects must be performed through this object's methods, not on the list directly. </summary>

@@ -19,6 +19,7 @@ namespace RoboSharp
     /// Contains a private List{RoboCommand} object with controlled methods for access to it.  <br/>
     /// Attempting to modify the list while <see cref="IsRunning"/> = true results in <see cref="ListAccessDeniedException"/> being thrown.
     /// <para/>Implements the following: <br/>
+    /// <see cref="IRoboQueue"/> <br/>
     /// <see cref="IEnumerable"/> -- Allow enumerating through the collection that is stored in a private list -- Also see <see cref="Commands"/> <br/>
     /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes against the list <see cref="ObservableList{T}"/> <br/>
     /// <see cref="INotifyPropertyChanged"/> -- Most properties will trigger <see cref="PropertyChanged"/> events when updated.<br/>

@@ -12,6 +12,9 @@ namespace RoboSharp
 {
     /// <summary>
     /// Represents a single RoboCopy Job File
+    /// <para/>Implements: <br/>
+    /// <see cref="IRoboCommand"/> <br/>
+    /// <see cref="ICloneable"/> <br/>
     /// </summary>
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobFile"/>
