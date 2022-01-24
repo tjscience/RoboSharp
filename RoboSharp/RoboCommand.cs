@@ -291,15 +291,15 @@ namespace RoboSharp
             //If the removal of that check broke your application, please create a new issue thread on the repo.
             if (process != null)
             {
-                if (!process.HasExited)
+                if (!isCancelled && (!process?.HasExited ?? true))
                 {
-                    process.Kill();
+                    process?.Kill();
                     isCancelled = true;
                 }
                 //hasExited = true;
                 if (DisposeProcess)
                 {
-                    process.Dispose();
+                    process?.Dispose();
                     process = null;
                 }
             }
@@ -652,7 +652,6 @@ namespace RoboSharp
                     resultsBuilder?.AddFileCopied(currentFile);
                 else
                     resultsBuilder?.SetCopyOpStarted();
-                resultsBuilder?.SetCopyOpStarted();
 
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
