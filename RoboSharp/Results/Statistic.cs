@@ -125,6 +125,11 @@ namespace RoboSharp.Results
         #region < Properties >
 
         /// <summary>
+        /// Checks all values and determines if any of them are != 0.
+        /// </summary>
+        public bool NonZeroValue => TotalField != 0 || CopiedField != 0 || SkippedField != 0 || MismatchField != 0 || FailedField != 0 || ExtrasField != 0;
+
+        /// <summary>
         /// Name of the Statistics Object
         /// </summary>
         public string Name

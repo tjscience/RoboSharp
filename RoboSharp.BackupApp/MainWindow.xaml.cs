@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Collections.Generic;
 using Microsoft.Win32;
 using RoboSharp.Interfaces;
+using System.Diagnostics;
 
 namespace RoboSharp.BackupApp
 {
@@ -258,6 +259,7 @@ namespace RoboSharp.BackupApp
             ChkListOnly.IsChecked = copy.LoggingOptions.ListOnly;
         }
 
+        [DebuggerHidden()]
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
         {
             Console.WriteLine(e.Message);
