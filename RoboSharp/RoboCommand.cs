@@ -457,7 +457,7 @@ namespace RoboSharp
             isRunning = true;
             DateTime StartTime = DateTime.Now;
 
-            backupTask = Task.Factory.StartNew(async () =>
+            backupTask = Task.Run( async () =>
            {
 
                process = new Process();
@@ -514,8 +514,9 @@ namespace RoboSharp
                var ProcessExitedAsync = new TaskCompletionSource<object>();
                process.Exited += (sender, args) =>
                {
-                   ProcessExitedAsync.TrySetResult(null);
+                   process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
                    //hasExited = true;
+                   ProcessExitedAsync.TrySetResult(null);
                };
 
                //Start the Task
@@ -523,13 +524,13 @@ namespace RoboSharp
                process.Start();
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
-               _ = await ProcessExitedAsync.Task;
-               if (resultsBuilder != null)          // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
+               _ = await ProcessExitedAsync.Task;   //This allows task to release the thread to perform other work
+               if (resultsBuilder != null)      // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
                {
                    results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
                }
                Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Current).Unwrap();
+           }, CancellationToken.None);
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {

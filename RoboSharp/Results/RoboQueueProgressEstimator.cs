@@ -135,6 +135,7 @@ namespace RoboSharp.Results
             TaskRef = Task.Factory.StartNew( async () =>
             {
                 Statistic tmp = new Statistic(type: StatToAddTo.Type);
+                tmp.EnablePropertyChangeEvent = false;
                 while (!CS.IsCancellationRequested)
                 {
                     BagClearOut(tmp, StatToAddTo, EventBag);
