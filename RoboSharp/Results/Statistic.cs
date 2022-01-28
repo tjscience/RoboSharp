@@ -580,7 +580,7 @@ namespace RoboSharp.Results
 #endif
         public void AddStatistic(IStatistic stat)
         {
-            if (stat.Type == this.Type) 
+            if (stat.Type == this.Type && stat.NonZeroValue) 
                 Add(stat.Total, stat.Copied, stat.Extras, stat.Failed, stat.Mismatch, stat.Skipped);
         }
 
@@ -716,7 +716,7 @@ namespace RoboSharp.Results
 #endif
         public void Subtract(IStatistic stat)
         {
-            if (stat.Type == this.Type)
+            if (stat.Type == this.Type && stat.NonZeroValue)
                 Add(-stat.Total, -stat.Copied, -stat.Extras, -stat.Failed, -stat.Mismatch, -stat.Skipped);
         }
 
