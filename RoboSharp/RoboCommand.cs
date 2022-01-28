@@ -148,6 +148,8 @@ namespace RoboSharp
         private bool isCancelled;
         private Results.ResultsBuilder resultsBuilder;
         private Results.RoboCopyResults results;
+        /// <summary> Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> </summary>
+        private string LastDataReceived = "";
 
         #endregion Private Vars
 
@@ -633,23 +635,24 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            var currentFile = resultsBuilder?.Estimator?.CurrentFile;
-            var currentDir = resultsBuilder?.Estimator?.CurrentDir;
             resultsBuilder?.AddOutput(e.Data);
 
-            if (e.Data == null)
-                return;
-            var data = e.Data.Trim().Replace("\0", "");
-            if (data.IsNullOrWhiteSpace())
-                return;
+            if (e.Data == null) return; // Nothing to do
+            var data = e.Data.Trim().Replace("\0", ""); // ?
+            if (data.IsNullOrWhiteSpace()) return;  // Nothing to do
+            if (LastDataReceived == data) return;   // Sometimes RoboCopy reports same item multiple times - Typically for Progress indicators
+            LastDataReceived = data;
 
             if (Regex.IsMatch(data, "^[0-9]+[.]?[0-9]*%", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace))
             {
+                var currentFile = resultsBuilder?.Estimator?.CurrentFile;
+                var currentDir = resultsBuilder?.Estimator?.CurrentDir;
+
                 //Increment ProgressEstimator
                 if (data == "100%")
-                    resultsBuilder?.AddFileCopied(currentFile);
+                    resultsBuilder?.Estimator?.AddFileCopied(currentFile);
                 else
-                    resultsBuilder?.SetCopyOpStarted();
+                    resultsBuilder?.Estimator?.SetCopyOpStarted();
 
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
@@ -691,7 +694,7 @@ namespace RoboSharp
                         file.Name = splitData[1];
                     }
 
-                    resultsBuilder?.AddDir(file, !this.LoggingOptions.ListOnly);
+                    resultsBuilder?.Estimator?.AddDir(file, !this.LoggingOptions.ListOnly);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File
@@ -703,12 +706,11 @@ namespace RoboSharp
                     long.TryParse(splitData[1].Trim(), out size);
                     file.Size = size;
                     file.Name = splitData[2];
-                    resultsBuilder?.AddFile(file, !LoggingOptions.ListOnly);
+                    resultsBuilder?.Estimator?.AddFile(file, !LoggingOptions.ListOnly);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
                 {
-
                     // parse error code
                     var match = Configuration.ErrorTokenRegex.Match(data);
                     string value = match.Groups[1].Value;
