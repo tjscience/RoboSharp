@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using RoboSharp.Results;
@@ -15,7 +16,7 @@ namespace RoboSharp.Interfaces
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/IRoboCopyResultsList"/>
     /// </remarks>
-    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable, INotifyCollectionChanged
     {
         #region < Properties >
 
