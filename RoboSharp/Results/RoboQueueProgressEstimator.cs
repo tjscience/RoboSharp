@@ -35,9 +35,9 @@ namespace RoboSharp.Results
 
         //ThreadSafe Bags/Queues
         private readonly ConcurrentBag<IStatistic> SubscribedStats = new ConcurrentBag<IStatistic>();
-        private readonly ConcurrentBag<StatChangedEventArg> FileBag = new ConcurrentBag<StatChangedEventArg>();
-        private readonly ConcurrentBag<StatChangedEventArg> DirBag = new ConcurrentBag<StatChangedEventArg>();
-        private readonly ConcurrentBag<StatChangedEventArg> ByteBag = new ConcurrentBag<StatChangedEventArg>();
+        private readonly ConcurrentBag<PropertyChangedEventArgs> FileBag = new ConcurrentBag<PropertyChangedEventArgs>();
+        private readonly ConcurrentBag<PropertyChangedEventArgs> DirBag = new ConcurrentBag<PropertyChangedEventArgs>();
+        private readonly ConcurrentBag<PropertyChangedEventArgs> ByteBag = new ConcurrentBag<PropertyChangedEventArgs>();
 
         //Stats
         private readonly Statistic DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
@@ -125,7 +125,7 @@ namespace RoboSharp.Results
         private void StartAddingBytes() =>  AddStatTask(ref AddBytes, ByteStatsField, ByteBag, ref AddBytesCancelSource);
 
 
-        private Task AddStatTask(ref Task TaskRef, Statistic StatToAddTo, ConcurrentBag<StatChangedEventArg> EventBag, ref CancellationTokenSource CancelSource)
+        private Task AddStatTask(ref Task TaskRef, Statistic StatToAddTo, ConcurrentBag<PropertyChangedEventArgs> EventBag, ref CancellationTokenSource CancelSource)
         {
             if (TaskRef != null && TaskRef.Status <= TaskStatus.Running) return TaskRef; //Don't run if already running
 
@@ -150,7 +150,7 @@ namespace RoboSharp.Results
             return TaskRef;
         }
 
-        private void BagClearOut(Statistic Tmp, Statistic StatToAddTo, ConcurrentBag<StatChangedEventArg> EventBag)
+        private void BagClearOut(Statistic Tmp, Statistic StatToAddTo, ConcurrentBag<PropertyChangedEventArgs> EventBag)
         {
             DateTime incrementTimer = DateTime.Now;
             bool itemAdded = false;
@@ -182,9 +182,9 @@ namespace RoboSharp.Results
 
         #region < Event Binding for Auto-Updates ( Internal ) >
 
-        private void BindDirStat(object o, PropertyChangedEventArgs e) => DirBag.Add((StatChangedEventArg)e);
-        private void BindFileStat(object o, PropertyChangedEventArgs e) => FileBag.Add((StatChangedEventArg)e);
-        private void BindByteStat(object o, PropertyChangedEventArgs e) => ByteBag.Add((StatChangedEventArg)e);
+        private void BindDirStat(object o, PropertyChangedEventArgs e) => DirBag.Add(e);
+        private void BindFileStat(object o, PropertyChangedEventArgs e) => FileBag.Add(e);
+        private void BindByteStat(object o, PropertyChangedEventArgs e) => ByteBag.Add(e);
 
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
