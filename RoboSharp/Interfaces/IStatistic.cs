@@ -44,6 +44,9 @@ namespace RoboSharp.Interfaces
         /// <summary> Total Extra that exist in the Destination (but are missing from the Source)</summary>
         long Extras { get; }
 
+        /// <inheritdoc cref="Statistic.NonZeroValue"/>
+        bool NonZeroValue { get; }
+
         #endregion
 
         #region < Events >
