@@ -16,14 +16,28 @@ namespace RoboSharp.Results
     /// <summary>
     /// Updates the Statistics every 250ms
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueueProgressEstimator"/>
+    /// </remarks>
     internal class RoboQueueProgressEstimator : IProgressEstimator, IResults, IDisposable
     {
         #region < Constructors >
+
         internal RoboQueueProgressEstimator()
         {
-            ByteCalcRequested = new Lazy<bool>(() => { StartAddingBytes(); return true; });
-            DirCalcRequested = new Lazy<bool>(() => { StartAddingDirs(); return true; });
-            FileCalcRequested = new Lazy<bool>(() => { StartAddingFiles(); return true; });
+            UpdateTaskStarted = new Lazy<bool>(() =>
+            {
+                tmpDirs = new Statistic(Statistic.StatType.Directories);
+                tmpFiles = new Statistic(Statistic.StatType.Files);
+                tmpBytes = new Statistic(Statistic.StatType.Bytes);
+
+                tmpDirs.EnablePropertyChangeEvent = false;
+                tmpFiles.EnablePropertyChangeEvent = false;
+                tmpBytes.EnablePropertyChangeEvent = false;
+
+                StartUpdateTask(out UpdateTaskCancelSource);
+                return true;
+            });
         }
 
         #endregion
@@ -32,9 +46,6 @@ namespace RoboSharp.Results
 
         //ThreadSafe Bags/Queues
         private readonly ConcurrentBag<IStatistic> SubscribedStats = new ConcurrentBag<IStatistic>();
-        private readonly ConcurrentBag<StatChangedEventArg> FileBag = new ConcurrentBag<StatChangedEventArg>();
-        private readonly ConcurrentBag<StatChangedEventArg> DirBag = new ConcurrentBag<StatChangedEventArg>();
-        private readonly ConcurrentBag<StatChangedEventArg> ByteBag = new ConcurrentBag<StatChangedEventArg>();
 
         //Stats
         private readonly Statistic DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
@@ -42,19 +53,14 @@ namespace RoboSharp.Results
         private readonly Statistic ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
 
         //Lazy Bools
-        private readonly Lazy<bool> ByteCalcRequested;
-        private readonly Lazy<bool> DirCalcRequested;
-        private readonly Lazy<bool> FileCalcRequested;
+        private readonly Lazy<bool> UpdateTaskStarted;
 
         //Add Tasks
         private int UpdatePeriodInMilliSecond = 250;
-        private Task AddDirs;
-        private Task AddFiles;
-        private Task AddBytes;
-
-        private CancellationTokenSource AddFilesCancelSource;
-        private CancellationTokenSource AddDirsCancelSource;
-        private CancellationTokenSource AddBytesCancelSource;
+        private Statistic tmpDirs;
+        private Statistic tmpFiles;
+        private Statistic tmpBytes;
+        private CancellationTokenSource UpdateTaskCancelSource;
         private bool disposedValue;
 
         #endregion
@@ -65,19 +71,19 @@ namespace RoboSharp.Results
         /// Estimate of current number of directories processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic DirectoriesStatistic => DirCalcRequested.Value ? DirStatField : DirStatField;
+        public IStatistic DirectoriesStatistic => UpdateTaskStarted.Value ? DirStatField : DirStatField;
 
         /// <summary>
         /// Estimate of current number of files processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic FilesStatistic => FileCalcRequested.Value ? FileStatsField : FileStatsField;
+        public IStatistic FilesStatistic => UpdateTaskStarted.Value ? FileStatsField : FileStatsField;
 
         /// <summary>
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        public IStatistic BytesStatistic => ByteCalcRequested.Value ? ByteStatsField : ByteStatsField;
+        public IStatistic BytesStatistic => UpdateTaskStarted.Value ? ByteStatsField : ByteStatsField;
 
         RoboCopyExitStatus IResults.Status => new RoboCopyExitStatus((int)GetExitCode());
 
@@ -117,60 +123,75 @@ namespace RoboSharp.Results
 
         #region < Counting Methods ( private ) >
 
-        private void StartAddingFiles() => AddStatTask(ref AddFiles, FileStatsField, FileBag, ref AddFilesCancelSource);
-        private void StartAddingDirs() => AddStatTask(ref AddDirs, DirStatField, DirBag, ref AddDirsCancelSource);
-        private void StartAddingBytes() =>  AddStatTask(ref AddBytes, ByteStatsField, ByteBag, ref AddBytesCancelSource);
-
-
-        private Task AddStatTask(ref Task TaskRef, Statistic StatToAddTo, ConcurrentBag<StatChangedEventArg> EventBag, ref CancellationTokenSource CancelSource)
+        /// <summary>
+        /// Creates a LongRunning task that is meant to periodically push out Updates to the UI on a thread isolated from the event thread.
+        /// </summary>
+        /// <param name="CancelSource"></param>
+        /// <returns></returns>
+        private Task StartUpdateTask(out CancellationTokenSource CancelSource)
         {
-            if (TaskRef != null && TaskRef.Status <= TaskStatus.Running) return TaskRef; //Don't run if already running
-
             CancelSource = new CancellationTokenSource();
-            var CS = CancelSource; //Compiler required abstracting since this is a CancelSource is marked as ref
-
-            TaskRef = Task.Factory.StartNew( async () =>
+            var CST = CancelSource.Token;
+            return Task.Run(async () =>
             {
-                Statistic tmp = new Statistic(type: StatToAddTo.Type);
-                while (!CS.IsCancellationRequested)
+                while (!CST.IsCancellationRequested)
                 {
-                    BagClearOut(tmp, StatToAddTo, EventBag);
-                    await Task.Delay(UpdatePeriodInMilliSecond);
+                    PushUpdate();
+                    //Setup a new TaskCompletionSource that can be cancelled or times out
+                    var TCS = new TaskCompletionSource<object>();
+                    var CS = new CancellationTokenSource(UpdatePeriodInMilliSecond);
+                    var RC = CancellationTokenSource.CreateLinkedTokenSource(CS.Token, CST);
+                    RC.Token.Register(() => TCS.TrySetResult(null));
+                    //Wait for TCS to run - Blocking State since task is LongRunning
+                    await TCS.Task;
+                    RC.Dispose();
+                    CS.Dispose();
                 }
-                await Task.Delay(250); //Sleep for a bit to let the bag fill up
-                //After cancellation is requested, ensure the bag is emptied
-                BagClearOut(tmp, StatToAddTo, EventBag);
-
-            }, CS.Token, TaskCreationOptions.LongRunning, PriorityScheduler.BelowNormal).Unwrap();
-            
-            return TaskRef;
+                PushUpdate();
+            }, CST);
         }
 
-        private void BagClearOut(Statistic Tmp, Statistic StatToAddTo, ConcurrentBag<StatChangedEventArg> EventBag)
+        /// <summary>
+        /// Push the update to the public Stat Objects
+        /// </summary>
+        private void PushUpdate()
         {
-            DateTime incrementTimer = DateTime.Now;
-            bool itemAdded = false;
-            while (!EventBag.IsEmpty)
+            //Lock the Stat objects, clone, reset them, then push the update to the UI.
+            Statistic TD = null;
+            Statistic TB = null;
+            Statistic TF = null;
+            bool DirAdded;
+            bool FileAdded;
+            lock (tmpDirs)
             {
-                if (EventBag.TryTake(out var e))
+                DirAdded = tmpDirs.NonZeroValue;
+                if (DirAdded)
                 {
-                    Tmp.AddStatistic(e);
-                    itemAdded = true;
+                    TD = tmpDirs.Clone();
+                    tmpDirs.Reset();
                 }
-                //Update every X ms
-                TimeSpan diff = DateTime.Now.Subtract(incrementTimer);
-                if (diff.TotalMilliseconds > UpdatePeriodInMilliSecond)
+
+            }
+            lock (tmpFiles)
+            {
+                lock (tmpBytes)
                 {
-                    StatToAddTo.AddStatistic(Tmp);
-                    incrementTimer = DateTime.Now;
-                    Tmp.Reset();
-                    itemAdded = false;
+                    FileAdded = tmpFiles.NonZeroValue || tmpBytes.NonZeroValue;
+                    if (FileAdded)
+                    {
+                        TF = tmpFiles.Clone();
+                        TB = tmpBytes.Clone();
+                        tmpFiles.Reset();
+                        tmpBytes.Reset();
+                    }
                 }
             }
-            if (itemAdded)
+            //Push UI update after locks are released, to avoid holding up the other thread for too long
+            if (DirAdded) DirStatField.AddStatistic(TD);
+            if (FileAdded)
             {
-                StatToAddTo.AddStatistic(Tmp);
-                Tmp.Reset();
+                FileStatsField.AddStatistic(TF);
+                ByteStatsField.AddStatistic(TB);
             }
         }
 
@@ -178,9 +199,27 @@ namespace RoboSharp.Results
 
         #region < Event Binding for Auto-Updates ( Internal ) >
 
-        private void BindDirStat(object o, PropertyChangedEventArgs e) => DirBag.Add((StatChangedEventArg)e);
-        private void BindFileStat(object o, PropertyChangedEventArgs e) => FileBag.Add((StatChangedEventArg)e);
-        private void BindByteStat(object o, PropertyChangedEventArgs e) => ByteBag.Add((StatChangedEventArg)e);
+        private void BindDirStat(object o, PropertyChangedEventArgs e)
+        {
+            lock (tmpDirs)
+            {
+                tmpDirs.AddStatistic(e);
+            }
+        }
+        private void BindFileStat(object o, PropertyChangedEventArgs e)
+        {
+            lock (tmpFiles)
+            {
+                tmpFiles.AddStatistic(e);
+            }
+        }
+        private void BindByteStat(object o, PropertyChangedEventArgs e)
+        {
+            lock (tmpBytes)
+            {
+                tmpBytes.AddStatistic(e);
+            }
+        }
 
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
@@ -197,7 +236,11 @@ namespace RoboSharp.Results
         /// </summary>
         internal void BindToStatistic(IStatistic StatObject)
         {
-            SubscribedStats.Add(StatObject);
+            lock (SubscribedStats)
+            {
+                if (SubscribedStats.Contains(StatObject)) return;
+                SubscribedStats.Add(StatObject);
+            }
             if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
             else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
             else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
@@ -210,13 +253,16 @@ namespace RoboSharp.Results
         {
             if (SubscribedStats != null)
             {
-                foreach (IStatistic c in SubscribedStats)
+                lock (SubscribedStats)
                 {
-                    if (c != null)
+                    foreach (IStatistic c in SubscribedStats)
                     {
-                        c.PropertyChanged -= BindDirStat;
-                        c.PropertyChanged -= BindFileStat;
-                        c.PropertyChanged -= BindByteStat;
+                        if (c != null)
+                        {
+                            c.PropertyChanged -= BindDirStat;
+                            c.PropertyChanged -= BindFileStat;
+                            c.PropertyChanged -= BindByteStat;
+                        }
                     }
                 }
             }
@@ -233,17 +279,9 @@ namespace RoboSharp.Results
         {
             //Cancel the tasks
             UnBind();
-            AddFilesCancelSource?.Cancel();
-            AddDirsCancelSource?.Cancel();
-            AddBytesCancelSource?.Cancel();
-
-            AddFilesCancelSource?.Dispose();
-            AddDirsCancelSource?.Dispose();
-            AddBytesCancelSource?.Dispose();
-
-            AddFilesCancelSource = null;
-            AddDirsCancelSource = null;
-            AddBytesCancelSource = null;
+            UpdateTaskCancelSource?.Cancel();
+            UpdateTaskCancelSource?.Dispose();
+            UpdateTaskCancelSource = null;
         }
 
         protected virtual void Dispose(bool disposing)
