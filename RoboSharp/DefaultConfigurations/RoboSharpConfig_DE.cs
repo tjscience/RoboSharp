@@ -22,12 +22,14 @@ namespace RoboSharp.DefaultConfigurations
             //LogParsing_ExtraFile = "*EXTRA File";
             //LogParsing_MismatchFile = "*Mismatch";
             //LogParsing_FailedFile = "*Failed";
+            //LogParsing_FileExclusion = "named";
 
             // < Directory Tokens >
 
             //LogParsing_NewDir = "New Dir";
             //LogParsing_ExtraDir = "*EXTRA Dir";
             //LogParsing_ExistingDir = "Existing Dir";
+            //LogParsing_DirectoryExclusion = "named";
 
         }
     }

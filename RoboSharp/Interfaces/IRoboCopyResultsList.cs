@@ -8,27 +8,36 @@ namespace RoboSharp.Interfaces
 {
     /// <summary>
     /// Interface to provide Read-Only access to a <see cref="RoboCopyResultsList"/>
+    /// <para/>Implements: <br/>
+    /// <see cref="IEnumerable{T}"/> where T = <see cref="RoboCopyResults"/> <br/>
+    /// <see cref="ICloneable"/>
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/IRoboCopyResultsList"/>
+    /// </remarks>
     public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable
     {
         #region < Properties >
 
-        /// <summary> Sum of all DirectoryStatistics objects </summary>
+        /// <inheritdoc cref="RoboCopyResultsList.DirectoriesStatistic"/>
         IStatistic DirectoriesStatistic { get; }
 
-        /// <summary> Sum of all ByteStatistics objects </summary>
+        /// <inheritdoc cref="RoboCopyResultsList.BytesStatistic"/>
         IStatistic BytesStatistic { get; }
 
-        /// <summary> Sum of all FileStatistics objects </summary>
+        /// <inheritdoc cref="RoboCopyResultsList.FilesStatistic"/>
         IStatistic FilesStatistic { get; }
 
-        /// <summary> Average of all SpeedStatistics objects </summary>
+        /// <inheritdoc cref="RoboCopyResultsList.SpeedStatistic"/>
         ISpeedStatistic SpeedStatistic { get; }
 
-        /// <summary> Sum of all RoboCopyExitStatus objects </summary>
+        /// <inheritdoc cref="RoboCopyResultsList.Status"/>
         IRoboCopyCombinedExitStatus Status { get; }
 
-        /// <inheritdoc cref="List{T}.Count"/>
+        /// <inheritdoc cref="RoboCopyResultsList.Collection"/>
+        IReadOnlyList<RoboCopyResults> Collection { get; }
+
+        /// <inheritdoc cref="RoboCopyResultsList.Count"/>
         int Count { get; }
 
         #endregion

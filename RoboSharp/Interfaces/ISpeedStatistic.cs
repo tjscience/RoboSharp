@@ -10,6 +10,9 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// Provide Read-Only access to a SpeedStatistic
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/ISpeedStatistic"/>
+    /// </remarks>
     public interface ISpeedStatistic : INotifyPropertyChanged, ICloneable
     {
         /// <summary> Average Transfer Rate in Bytes/Second </summary>

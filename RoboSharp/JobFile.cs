@@ -6,14 +6,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using RoboSharp.Interfaces;
 using System.Threading.Tasks;
+using RoboSharp.Results;
 
 namespace RoboSharp
 {
     /// <summary>
     /// Represents a single RoboCopy Job File
+    /// <para/>Implements: <br/>
+    /// <see cref="IRoboCommand"/> <br/>
+    /// <see cref="ICloneable"/> <br/>
     /// </summary>
     /// <remarks>
-    /// For more information, a good resource is here: <see href="https://adamtheautomator.com/robocopy/#Robocopy_Jobs"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobFile"/>
     /// </remarks>
     public class JobFile : ICloneable, IRoboCommand
     {
@@ -32,6 +36,17 @@ namespace RoboSharp
         public JobFile(JobFile jobFile)
         {
             this.roboCommand = jobFile.roboCommand.Clone();
+        }
+
+        /// <summary>
+        /// Clone the RoboCommand's options objects into a new JobFile
+        /// </summary>
+        /// <param name="cmd">RoboCommand whose options shall be cloned</param>
+        /// <param name="filePath">Optional FilePath to specify for future call to <see cref="Save()"/></param>
+        public JobFile(RoboCommand cmd, string filePath = "")
+        {
+            FilePath = filePath ?? "";
+            roboCommand = cmd.Clone();
         }
 
         /// <summary>
@@ -111,20 +126,19 @@ namespace RoboSharp
         public const string JOBFILE_DialogFilter = "RoboCopy Job|*.RCJ";
         #endregion
 
-
         #region < Fields >
 
         /// <summary>
         /// Options are stored in a RoboCommand object for simplicity.
         /// </summary>
-        private RoboCommand roboCommand;
+        protected RoboCommand roboCommand;
 
         #endregion
 
         #region < Properties >
 
         /// <summary>FilePath of the Job File </summary>
-        public string FilePath { get; set; }
+        public virtual string FilePath { get; set; }
 
         /// <inheritdoc cref="RoboCommand.Name"/>
         public string Job_Name
@@ -148,28 +162,36 @@ namespace RoboSharp
         #endregion
 
         #region < Methods >
-
+#pragma warning disable CS1573
 
         /// <summary>
-        /// Save the JobFile to <paramref name="path"/>
+        /// Update the <see cref="FilePath"/> property and save the JobFile to the <paramref name="path"/>
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Update the <see cref="FilePath"/> property, then save the JobFile to this path.</param>
         /// <inheritdoc cref="Save()"/>
-        public void Save(string path)
+        /// <inheritdoc cref="RoboCommand.SaveAsJobFile(string, bool, bool, string, string, string)"/>
+        public async Task Save(string path, bool IncludeSource = false, bool IncludeDestination = false)
+
         {
+            if (path.IsNullOrWhiteSpace()) throw new ArgumentException("path Property is Empty");
             FilePath = path;
-            Save();
+            await roboCommand.SaveAsJobFile(FilePath, IncludeSource, IncludeDestination);
         }
 
         /// <summary>
-        /// Save the JobFile to <see cref="FilePath"/>
+        /// Save the JobFile to <see cref="FilePath"/>. <br/>
+        /// Source and Destination will be included by default.
         /// </summary>
+        /// <remarks>If path is null/empty, will throw <see cref="ArgumentException"/></remarks>
+        /// <returns>Task that completes when the JobFile has been saved.</returns>
         /// <exception cref="ArgumentException"/>
-        public void Save()
+        public async Task Save()
         {
             if (FilePath.IsNullOrWhiteSpace()) throw new ArgumentException("FilePath Property is Empty");
+            await roboCommand.SaveAsJobFile(FilePath, true, true);
         }
 
+#pragma warning restore CS1573
         #endregion
 
         #region < IRoboCommand Interface >
@@ -270,7 +292,7 @@ namespace RoboSharp
         LoggingOptions IRoboCommand.LoggingOptions { get => roboCommand.LoggingOptions; set => roboCommand.LoggingOptions = value; }
         CopyOptions IRoboCommand.CopyOptions { get => ((IRoboCommand)roboCommand).CopyOptions; set => ((IRoboCommand)roboCommand).CopyOptions = value; }
         JobOptions IRoboCommand.JobOptions { get => ((IRoboCommand)roboCommand).JobOptions; }
-        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration; 
+        RoboSharpConfiguration IRoboCommand.Configuration => roboCommand.Configuration;
         string IRoboCommand.CommandOptions => roboCommand.CommandOptions;
 
         #endregion
@@ -300,6 +322,21 @@ namespace RoboSharp
         void IRoboCommand.Dispose()
         {
             roboCommand.Stop();
+        }
+
+        Task IRoboCommand.Start_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.Start_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync_ListOnly(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
+        }
+
+        Task<RoboCopyResults> IRoboCommand.StartAsync(string domain, string username, string password)
+        {
+            return roboCommand.StartAsync_ListOnly();
         }
         #endregion
 

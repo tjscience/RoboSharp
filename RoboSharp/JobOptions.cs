@@ -9,6 +9,9 @@ namespace RoboSharp
     /// <summary>
     /// 
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/JobOptions"/>
+    /// </remarks>
     public class JobOptions : ICloneable
     {
         // For more information, a good resource is here: https://adamtheautomator.com/robocopy/#Robocopy_Jobs
@@ -26,7 +29,10 @@ namespace RoboSharp
         /// <param name="options">JobOptions object to clone</param>
         public JobOptions(JobOptions options)
         {
-
+            FilePath = options.FilePath;
+            NoDestinationDirectory = options.NoDestinationDirectory;
+            NoSourceDirectory = options.NoSourceDirectory;
+            PreventCopyOperation = options.PreventCopyOperation;
         }
 
         #endregion
@@ -93,7 +99,7 @@ namespace RoboSharp
         /// This causes RoboCopy to generate an RCJ file where the command options are stored to so it can be used later.<br/>
         /// <see cref="NoSourceDirectory"/> and <see cref="NoDestinationDirectory"/> options are only evaluated if this is set. <br/>
         /// </remarks>
-        public string FilePath { get; set; } = "";
+        public virtual string FilePath { get; set; } = "";
 
         /// <summary>
         /// RoboCopy will validate the command, then exit before performing any Move/Copy/List operations. <br/>
@@ -102,7 +108,7 @@ namespace RoboSharp
         /// <remarks>
         /// This option is typically used when generating JobFiles. RoboCopy will exit after saving the Job FIle to the specified <see cref="FilePath"/>
         /// </remarks>
-        public bool PreventCopyOperation { get; set; }
+        public virtual bool PreventCopyOperation { get; set; }
 
         /// <summary>
         /// <see cref="CopyOptions.Source"/> path will not be saved to the JobFile. <br/>
@@ -111,7 +117,7 @@ namespace RoboSharp
         /// <remarks>
         /// Default value is False, meaning if <see cref="CopyOptions.Source"/> is set, it will be saved to the JobFile RoboCopy generates.
         /// </remarks>
-        public bool NoSourceDirectory { get; set; }
+        public virtual bool NoSourceDirectory { get; set; }
 
         /// <summary>
         /// <see cref="CopyOptions.Destination"/> path will not be saved to the JobFile. <br/>
@@ -120,7 +126,7 @@ namespace RoboSharp
         /// <remarks>
         /// Default value is False, meaning if <see cref="CopyOptions.Destination"/> is set, it will be saved to the JobFile RoboCopy generates.
         /// </remarks>
-        public bool NoDestinationDirectory { get; set; }
+        public virtual bool NoDestinationDirectory { get; set; }
         #endregion
 
         #region < Methods >

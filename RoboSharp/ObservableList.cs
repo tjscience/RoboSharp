@@ -12,7 +12,8 @@ namespace System.Collections.Generic
     /// <typeparam name="T">Type of object the list will contain</typeparam>
     /// <remarks>
     /// This class is being provided by the RoboSharp DLL <br/>
-    /// <see href="https://github.com/tjscience/RoboSharp/tree/dev/RoboSharp/ObservableList.cs"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/SelectionOptions"/>
+    /// <see href="https://github.com/tjscience/RoboSharp/tree/dev/RoboSharp/ObservableList.cs"/> <br/>
     /// </remarks>
     public class ObservableList<T> : List<T>, INotifyCollectionChanged
     {
@@ -210,6 +211,7 @@ namespace System.Collections.Generic
         ///<inheritdoc cref="System.Collections.Generic.List{T}.AddRange(IEnumerable{T})"/>
         new public virtual void AddRange(IEnumerable<T> collection)
         {
+            if (collection == null || collection.Count() == 0) return;
             base.AddRange(collection);
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
         }
@@ -231,6 +233,7 @@ namespace System.Collections.Generic
         ///<remarks> Generates <see cref="CollectionChanged"/> event for items that were added and items that were shifted ( Event is raised twice )</remarks>
         new public virtual void InsertRange(int index, IEnumerable<T> collection)
         {
+            if (collection == null || collection.Count() == 0) return;
             int i = index + collection.Count() < this.Count ? collection.Count() : this.Count - index;
             List<T> movedItems = base.GetRange(index, i);
             base.InsertRange(index, collection);

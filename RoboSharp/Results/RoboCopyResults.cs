@@ -6,6 +6,9 @@ namespace RoboSharp.Results
     /// <summary>
     /// Results provided by the RoboCopy command. Includes the Log, Exit Code, and statistics parsed from the log.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCopyResults"/>
+    /// </remarks>
     public class RoboCopyResults : IResults
     {
         internal RoboCopyResults() { }

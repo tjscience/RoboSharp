@@ -152,7 +152,7 @@ namespace RoboSharp.BackupApp
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
                 copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
-            if (!string.IsNullOrWhiteSpace(RunHoursStartTime.Text)  && !string.IsNullOrWhiteSpace(RunHoursEndTime.Text))
+            if (!string.IsNullOrWhiteSpace(RunHoursStartTime.Text) && !string.IsNullOrWhiteSpace(RunHoursEndTime.Text))
             {
                 var s = $"{RunHoursStartTime.Text}-{RunHoursEndTime.Text}";
                 if (copy.CopyOptions.CheckRunHoursString(s))
@@ -169,10 +169,13 @@ namespace RoboSharp.BackupApp
             copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag = OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked ?? false;
             copy.SelectionOptions.IncludeAttributes = IncludeAttributes.Text;
             copy.SelectionOptions.ExcludeAttributes = ExcludeAttributes.Text;
+#pragma warning disable CS0618 // These are marked as obsolete, but remain here for testing purposes. Properties were marked as obsolete due to backend change, but functionality should remain the same.
             copy.SelectionOptions.ExcludeFiles = ExcludeFiles.Text;
             copy.SelectionOptions.ExcludeDirectories = ExcludeDirectories.Text;
+#pragma warning restore CS0618 
             copy.SelectionOptions.ExcludeOlder = ExcludeOlder.IsChecked ?? false;
             copy.SelectionOptions.ExcludeJunctionPoints = ExcludeJunctionPoints.IsChecked ?? false;
+            copy.SelectionOptions.ExcludeNewer = ExcludeNewer.IsChecked ?? false;
 
             // retry options
             if (!string.IsNullOrWhiteSpace(RetryCount.Text))
@@ -184,6 +187,7 @@ namespace RoboSharp.BackupApp
             copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
             copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
             copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
+            copy.LoggingOptions.ListOnly = ChkListOnly.IsChecked ?? false;
             copy.StopIfDisposing = true;
             return copy;
         }
@@ -234,10 +238,14 @@ namespace RoboSharp.BackupApp
             OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked = copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag;
             IncludeAttributes.Text = copy.SelectionOptions.IncludeAttributes;
             ExcludeAttributes.Text = copy.SelectionOptions.ExcludeAttributes;
+#pragma warning disable CS0618 // These are marked as obsolete, but remain here for testing purposes. Properties were marked as obsolete due to backend change, but functionality should remain the same.
             ExcludeFiles.Text = copy.SelectionOptions.ExcludeFiles;
             ExcludeDirectories.Text = copy.SelectionOptions.ExcludeDirectories;
+#pragma warning restore CS0618
             ExcludeOlder.IsChecked = copy.SelectionOptions.ExcludeOlder;
             ExcludeJunctionPoints.IsChecked = copy.SelectionOptions.ExcludeJunctionPoints;
+            ExcludeNewer.IsChecked = copy.SelectionOptions.ExcludeNewer;
+
 
             // retry options
             RetryCount.Text = copy.RetryOptions.RetryCount.ToString();
@@ -247,6 +255,7 @@ namespace RoboSharp.BackupApp
             VerboseOutput.IsChecked = copy.LoggingOptions.VerboseOutput;
             NoFileSizes.IsChecked = copy.LoggingOptions.NoFileSizes;
             NoProgress.IsChecked = copy.LoggingOptions.NoProgress;
+            ChkListOnly.IsChecked = copy.LoggingOptions.ListOnly;
         }
 
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
@@ -316,7 +325,7 @@ namespace RoboSharp.BackupApp
                 bool? FilePicked = FP.ShowDialog(this);
                 if (FilePicked ?? false)
                 {
-                    await GetCommand(false).SaveAsJobFile(FP.FileName);
+                    await GetCommand(false).SaveAsJobFile(FP.FileName, true, true);
                 }
                 else
                 {

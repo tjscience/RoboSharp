@@ -9,6 +9,9 @@ namespace RoboSharp
     /// <summary>
     /// Setup the ErrorToken and the path to RoboCopy.exe.
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboSharpConfiguration"/>
+    /// </remarks>
     public class RoboSharpConfiguration : ICloneable
     {
         #region Constructors 
@@ -121,7 +124,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_OlderFile
         {
-            get { return olderToken ?? GetDefaultConfiguration().olderToken ??  "Older"; }
+            get { return olderToken ?? GetDefaultConfiguration().olderToken ?? "Older"; }
             set { olderToken = value; }
         }
         private string olderToken;
@@ -176,6 +179,16 @@ namespace RoboSharp
         }
         private string failedToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.ExcludedFiles"/> filters
+        /// </summary>
+        public string LogParsing_FileExclusion
+        {
+            get { return fileExcludedToken ?? GetDefaultConfiguration().fileExcludedToken ?? "named"; } // TO DO: Needs Verification
+            set { fileExcludedToken = value; }
+        }
+        private string fileExcludedToken;
+
         #endregion
 
         #region < Directory Tokens >
@@ -185,7 +198,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_NewDir
         {
-            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken  ?? "New Dir"; }
+            get { return newerDirToken ?? GetDefaultConfiguration().newerDirToken ?? "New Dir"; }
             set { newerDirToken = value; }
         }
         private string newerDirToken;
@@ -210,6 +223,16 @@ namespace RoboSharp
         }
         private string existingDirToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : Folder was excluded by <see cref="SelectionOptions.ExcludedDirectories"/> filters
+        /// </summary>
+        public string LogParsing_DirectoryExclusion
+        {
+            get { return dirExcludedToken ?? GetDefaultConfiguration().dirExcludedToken ?? "named"; } // TO DO: Needs Verification
+            set { dirExcludedToken = value; }
+        }
+        private string dirExcludedToken;
+
         #endregion
 
         #endregion </ Tokens for Log Parsing >
@@ -232,24 +255,34 @@ namespace RoboSharp
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardErrorEncoding" path="/summary"/>
         public System.Text.Encoding StandardErrorEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
 
+
+        private RoboSharpConfiguration defaultConfig = null;
         private RoboSharpConfiguration GetDefaultConfiguration()
         {
+            if (defaultConfig != null) return defaultConfig;
+
             // check for default with language Tag xx-YY (e.g. en-US)
             var currentLanguageTag = System.Globalization.CultureInfo.CurrentUICulture.IetfLanguageTag;
             if (defaultConfigurations.ContainsKey(currentLanguageTag))
-                return defaultConfigurations[currentLanguageTag];
-
-            // check for default with language Tag xx (e.g. en)
-            var match = Regex.Match(currentLanguageTag, @"^\w+", RegexOptions.Compiled);
-            if (match.Success)
             {
-                var currentMainLanguageTag = match.Value;
-                if (defaultConfigurations.ContainsKey(currentMainLanguageTag))
-                    return defaultConfigurations[currentMainLanguageTag];
+                defaultConfig = defaultConfigurations[currentLanguageTag];
+            }
+            else
+            {
+                // check for default with language Tag xx (e.g. en)
+                var match = Regex.Match(currentLanguageTag, @"^\w+", RegexOptions.Compiled);
+                if (match.Success)
+                {
+                    var currentMainLanguageTag = match.Value;
+                    if (defaultConfigurations.ContainsKey(currentMainLanguageTag))
+                    {
+                        defaultConfig = defaultConfigurations[currentMainLanguageTag];
+                    }
+                }
             }
 
             // no match, fallback to en
-            return defaultConfigurations["en"];
+            return defaultConfig ?? defaultConfigurations["en"];
         }
     }
 }

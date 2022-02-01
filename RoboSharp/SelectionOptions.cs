@@ -3,12 +3,16 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace RoboSharp
 {
     /// <summary>
     /// RoboCopy Switches that determine which folders and files are selected for copying/moving
     /// </summary>
+    /// <remarks>
+    /// <see href="https://github.com/tjscience/RoboSharp/wiki/SelectionOptions"/>
+    /// </remarks>
     public class SelectionOptions : ICloneable
     {
         #region Constructors 
@@ -91,19 +95,24 @@ namespace RoboSharp
 
         private readonly List<string> excludedDirs = new List<string>();
         private readonly List<string> excludedFiles = new List<string>();
-        
+
         /// <summary>
-        /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string <br/>
-        /// Searches for a pattern of "{Non-WhiteSpaceChar}"
+        /// This regex is used when the { <see cref="ExcludeFiles"/> } and { <see cref="ExcludeDirectories"/> } properties are set in order to split the input string to a List{string}
         /// </summary>
         /// <remarks>
-        /// 
+        /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string.
         /// </remarks>
-        internal static Regex FileFolderNameRegexSplitter = new Regex("\\s*(?<VALUE>[\"]{0,1}.+?[\"]{0,1})(?:\\s+?)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public static Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-        private static void ParseAndAddToList(string value, List<string> list)
+        /// <summary>
+        /// Use { <see cref="FileFolderNameRegexSplitter"/> } to split the <paramref name="inputString"/>, then add the matches to the suppplied <paramref name="list"/>.
+        /// </summary>
+        /// <param name="inputString">String to perform <see cref="Regex.Matches(string)"/> against</param>
+        /// <param name="list">List to add regex matches to</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ParseAndAddToList(string inputString, List<string> list)
         {
-            MatchCollection collection = FileFolderNameRegexSplitter.Matches(value);
+            MatchCollection collection = FileFolderNameRegexSplitter.Matches(inputString);
             if (collection.Count == 0) return;
             foreach (Match c in collection)
             {
@@ -120,24 +129,24 @@ namespace RoboSharp
         /// Copies only files for which the Archive attribute is set.
         /// [/A]
         /// </summary>
-        public bool OnlyCopyArchiveFiles { get; set; }
+        public virtual bool OnlyCopyArchiveFiles { get; set; }
         /// <summary>
         /// Copies only files for which the Archive attribute is set, and resets the Archive attribute.
         /// [/M]
         /// </summary>
-        public bool OnlyCopyArchiveFilesAndResetArchiveFlag { get; set; }
+        public virtual bool OnlyCopyArchiveFilesAndResetArchiveFlag { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to include (eg. AH; RASHCNETO).
         /// Includes only files for which any of the specified attributes are set.
         /// [/IA:attributes]
         /// </summary>
-        public string IncludeAttributes { get; set; }
+        public virtual string IncludeAttributes { get; set; }
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to exclude (eg. AH; RASHCNETO).
         /// Excludes files for which any of the specified attributes are set.
         /// [/XA:attributes]
         /// </summary>
-        public string ExcludeAttributes { get; set; }
+        public virtual string ExcludeAttributes { get; set; }
         /// <summary>
         /// Files should be separated by spaces.
         /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
@@ -145,20 +154,32 @@ namespace RoboSharp
         /// </summary>
         /// <remarks>
         /// This property is now backed by the ExcludedFiles List{String} property. <br/>
-        /// Get -- String.Join(" ", ExcludExcludedFilesedDirs);<br/>
+        /// Get -> Ensures all strings in { <see cref="ExcludedFiles"/> } are wrapped in quotes if needed, and concats the items into a single string. <br/>
         /// Set -- Clears ExcludedFiles and splits this list using a regex to populate the list.
         /// </remarks>
-        [Obsolete("This obsolete property is now backed by the ExcludedFiles List<String> property.")]
+        [Obsolete("This property is now backed by the ExcludedFiles List<String> property. \n Both Get/Set accessors still work similar to previous:\n" +
+            "- 'Get' sanitizies then Joins all strings in the list into a single output string that is passed into RoboCopy.\n" +
+            "- 'Set' clears the ExcludedFiles list, then splits the input string using regex to repopulate the list."
+            )]
         public string ExcludeFiles
         {
-            get => String.Join(" ", excludedFiles);
-            set 
+            get
+            {
+                string RetString = "";
+                foreach (string s in excludedFiles)
+                {
+                    RetString += s.WrapPath() + " ";
+                }
+                return RetString.Trim();
+            }
+            set
             {
                 excludedFiles.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
                 ParseAndAddToList(value, excludedFiles);
             }
         }
+
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
@@ -177,16 +198,27 @@ namespace RoboSharp
         /// </summary>
         /// <remarks>
         /// This property is now backed by the ExcludedDirectories List{String} property. <br/>
-        /// Get -> String.Join(" ", ExcludedDirs);<br/>
+        /// Get -> Ensures all strings in { <see cref="ExcludedDirectories"/> } are wrapped in quotes if needed, and concats the items into a single string. <br/>
         /// Set -> Clears ExcludedDirs and splits this list using a regex to populate the list.
         /// </remarks>
-        [Obsolete("This obsolete property is now backed by the ExcludedDirectories List<String> property.")]
-        public string ExcludeDirectories 
+        [Obsolete("This property is now backed by the ExcludedDirectories List<String> property. \n Both Get/Set accessors still work similar to previous:\n" +
+            "- 'Get' sanitizies then Joins all strings in the list into a single output string that is passed into RoboCopy.\n" +
+            "- 'Set' clears the ExcludedDirectories list, then splits the input string using regex to repopulate the list."
+            )]
+        public string ExcludeDirectories
         {
-            get => String.Join(" ", excludedDirs);
+            get
+            {
+                string RetString = "";
+                foreach (string s in excludedDirs)
+                {
+                    RetString += s.WrapPath() + " ";
+                }
+                return RetString.Trim();
+            }
             set
             {
-                excludedFiles.Clear();
+                excludedDirs.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
                 ParseAndAddToList(value, excludedDirs);
             }
@@ -206,96 +238,96 @@ namespace RoboSharp
         /// Excludes changed files.
         /// [/XC]
         /// </summary>
-        public bool ExcludeChanged { get; set; }
+        public virtual bool ExcludeChanged { get; set; }
         /// <summary>
         /// Excludes newer files.
         /// [/XN]
         /// </summary>
-        public bool ExcludeNewer { get; set; }
+        public virtual bool ExcludeNewer { get; set; }
         /// <summary>
         /// Excludes older files.
         /// [/XO]
         /// </summary>
-        public bool ExcludeOlder { get; set; }
+        public virtual bool ExcludeOlder { get; set; }
         /// <summary>
         /// Excludes extra files and directories.
         /// [/XX]
         /// </summary>
-        public bool ExcludeExtra { get; set; }
+        public virtual bool ExcludeExtra { get; set; }
         /// <summary>
         /// Excludes lonely files and directories.
         /// [/XL]
         /// </summary>
-        public bool ExcludeLonely { get; set; }
+        public virtual bool ExcludeLonely { get; set; }
         /// <summary>
         /// Includes the same files.
         /// [/IS]
         /// </summary>
-        public bool IncludeSame { get; set; }
+        public virtual bool IncludeSame { get; set; }
         /// <summary>
         /// Includes tweaked files.
         /// [/IT]
         /// </summary>
-        public bool IncludeTweaked { get; set; }
+        public virtual bool IncludeTweaked { get; set; }
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the maximum file size (to exclude files bigger than N bytes).
         /// [/MAX:N]
         /// </summary>
-        public long MaxFileSize { get; set; }
+        public virtual long MaxFileSize { get; set; }
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the minimum file size (to exclude files smaller than N bytes).
         /// [/MIN:N]
         /// </summary>
-        public long MinFileSize { get; set; }
+        public virtual long MinFileSize { get; set; }
         /// <summary>
         /// Specifies the maximum file age (to exclude files older than N days or date).
         /// [/MAXAGE:N OR YYYYMMDD]
         /// </summary>
-        public string MaxFileAge { get; set; }
+        public virtual string MaxFileAge { get; set; }
         /// <summary>
         /// Specifies the minimum file age (exclude files newer than N days or date).
         /// [/MINAGE:N OR YYYYMMDD]
         /// </summary>
-        public string MinFileAge { get; set; }
+        public virtual string MinFileAge { get; set; }
         /// <summary>
         /// Specifies the maximum last access date (excludes files unused since Date).
         /// [/MAXLAD:YYYYMMDD]
         /// </summary>
-        public string MaxLastAccessDate { get; set; }
+        public virtual string MaxLastAccessDate { get; set; }
         /// <summary>
         /// Specifies the minimum last access date (excludes files used since N) If N is less 
         /// than 1900, N specifies the number of days. Otherwise, N specifies a date 
         /// in the format YYYYMMDD.
         /// [/MINLAD:N or YYYYMMDD]
         /// </summary>
-        public string MinLastAccessDate { get; set; }
+        public virtual string MinLastAccessDate { get; set; }
         /// <summary>
         /// Excludes junction points, which are normally included by default.
         /// [/XJ]
         /// </summary>
-        public bool ExcludeJunctionPoints { get; set; }
+        public virtual bool ExcludeJunctionPoints { get; set; }
         /// <summary>
         /// Assumes FAT file times (two-second precision).
         /// [/FFT]
         /// </summary>
-        public bool UseFatFileTimes { get; set; }
+        public virtual bool UseFatFileTimes { get; set; }
         /// <summary>
         /// Compensates for one-hour DST time differences.
         /// [/DST]
         /// </summary>
-        public bool CompensateForDstDifference { get; set; }
+        public virtual bool CompensateForDstDifference { get; set; }
         /// <summary>
         /// Excludes junction points for directories.
         /// [/XJD]
         /// </summary>
-        public bool ExcludeJunctionPointsForDirectories { get; set; }
+        public virtual bool ExcludeJunctionPointsForDirectories { get; set; }
         /// <summary>
         /// Excludes junction points for files.
         /// [/XJF]
         /// </summary>
-        public bool ExcludeJunctionPointsForFiles { get; set; }
+        public virtual bool ExcludeJunctionPointsForFiles { get; set; }
 
         #endregion Public Properties
 
@@ -378,7 +410,7 @@ namespace RoboSharp
             MinFileAge = MaxFileAge.ReplaceIfEmpty(options.MinFileAge);
             MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
             MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
-            
+
             //Bools
             OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
             OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;
