@@ -30,7 +30,7 @@ namespace RoboSharp.Results
         public RoboCopyExitCodes ExitCode => (RoboCopyExitCodes)ExitCodeValue;
 
         /// <inheritdoc cref="RoboCopyExitCodes.FilesCopiedSuccessful"/>
-        public bool Successful => ExitCodeValue < 0x10;
+        public bool Successful => !WasCancelled && ExitCodeValue < 0x10;
 
         /// <inheritdoc cref="RoboCopyExitCodes.MismatchedDirectoriesDetected"/>
         public bool HasWarnings => ExitCodeValue >= 0x4;

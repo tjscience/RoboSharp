@@ -47,18 +47,6 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="ProgressEstimator"/>
         internal ProgressEstimator Estimator { get; }
 
-        /// <inheritdoc cref="ProgressEstimator.AddDir(ProcessedFileInfo, bool)"/>
-        internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation) => Estimator.AddDir(currentDir, CopyOperation);
-
-        /// <inheritdoc cref="ProgressEstimator.AddFile(ProcessedFileInfo, bool)"/>
-        internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation) => Estimator.AddFile(currentFile, CopyOperation);
-
-        /// <inheritdoc cref="ProgressEstimator.AddFileCopied"/>
-        internal void AddFileCopied(ProcessedFileInfo currentFile) => Estimator.AddFileCopied(currentFile);
-
-        /// <inheritdoc cref="ProgressEstimator.SetCopyOpStarted"/>
-        internal void SetCopyOpStarted() => Estimator.SetCopyOpStarted();
-
         #endregion
 
         /// <summary>
@@ -69,7 +57,7 @@ namespace RoboSharp.Results
             if (output == null)
                 return;
 
-            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled))
+            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
                 return;
 
             outputLines.Add(output);

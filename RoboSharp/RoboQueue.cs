@@ -749,7 +749,6 @@ namespace RoboSharp
 
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects)
                     Estimator?.UnBind();
 
                     //RoboCommand objects attach to a process, so must be in the 'unmanaged' section.
@@ -758,7 +757,6 @@ namespace RoboSharp
                     CommandList.Clear();
                 }
 
-                // TODO: set large fields to null
                 disposedValue = true;
             }
         }

@@ -337,11 +337,11 @@ namespace RoboSharp.Results
         {
             EnablePropertyChangeEvent = false;
             //BytesPerSec
-            long i = Divisor < 1 ? 0 : (long)Math.Round(Combined_BytesPerSec / Divisor, 3);
+            var i = Divisor < 1 ? 0 : Math.Round(Combined_BytesPerSec / Divisor, 3);
             bool TriggerBPS = BytesPerSec != i;
             BytesPerSec = i;
             //MegaBytes
-            i = Divisor < 1 ? 0 : (long)Math.Round(Combined_MegaBytesPerMin / Divisor, 3);
+            i = Divisor < 1 ? 0 : Math.Round(Combined_MegaBytesPerMin / Divisor, 3);
             bool TriggerMBPM = MegaBytesPerMin != i;
             MegaBytesPerMin = i;
             //Trigger Events
