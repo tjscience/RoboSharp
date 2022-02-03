@@ -26,18 +26,13 @@ namespace RoboSharp.Results
 
         internal RoboQueueProgressEstimator()
         {
-            UpdateTaskStarted = new Lazy<bool>(() =>
-            {
-                tmpDirs = new Statistic(Statistic.StatType.Directories);
-                tmpFiles = new Statistic(Statistic.StatType.Files);
-                tmpBytes = new Statistic(Statistic.StatType.Bytes);
+            tmpDirs = new Statistic(Statistic.StatType.Directories);
+            tmpFiles = new Statistic(Statistic.StatType.Files);
+            tmpBytes = new Statistic(Statistic.StatType.Bytes);
 
-                tmpDirs.EnablePropertyChangeEvent = false;
-                tmpFiles.EnablePropertyChangeEvent = false;
-                tmpBytes.EnablePropertyChangeEvent = false;
-
-                return true;
-            });
+            tmpDirs.EnablePropertyChangeEvent = false;
+            tmpFiles.EnablePropertyChangeEvent = false;
+            tmpBytes.EnablePropertyChangeEvent = false;
         }
 
         #endregion
@@ -54,9 +49,9 @@ namespace RoboSharp.Results
 
         //Add Tasks
         private int UpdatePeriodInMilliSecond = 250;
-        private Statistic tmpDirs;
-        private Statistic tmpFiles;
-        private Statistic tmpBytes;
+        private readonly Statistic tmpDirs;
+        private readonly Statistic tmpFiles;
+        private readonly Statistic tmpBytes;
         private DateTime NextDirUpdate = DateTime.Now;
         private DateTime NextFileUpdate = DateTime.Now;
         private DateTime NextByteUpdate = DateTime.Now;
