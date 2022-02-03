@@ -225,7 +225,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Unbind all the ProgressEstimators
         /// </summary>
-        internal void CancelTasks() => Cancel(true);
+        internal void CancelTasks() => CancelTasks(true);
 
         private void CancelTasks(bool RunUpdateTask)
         {
