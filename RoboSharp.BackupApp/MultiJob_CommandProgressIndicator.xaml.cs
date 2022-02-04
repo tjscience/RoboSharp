@@ -49,6 +49,8 @@ namespace RoboSharp.BackupApp
         }   
         private string jobName;
 
+        private bool debugMode = false; //Set to TRUE to enable logs for troubleshooting the objects provided by RoboCommand.OnCopyProgressChanged and OnFileProcessed.
+
         private List<string> Dirs;
         private List<string> Files;
         private List<string> Dirs2;
@@ -68,7 +70,10 @@ namespace RoboSharp.BackupApp
             {
                 cmd.OnProgressEstimatorCreated += OnProgressEstimatorCreated;
             }
-            SetupListObjs();
+            if (debugMode == true)
+            { 
+                SetupListObjs();
+            }
             cmd.OnCopyProgressChanged += OnCopyProgressChanged;
             cmd.OnFileProcessed += OnFileProcessed;
             cmd.OnCommandCompleted += OnCommandCompleted;
@@ -162,23 +167,26 @@ namespace RoboSharp.BackupApp
                 ProgressBar.Value = e.CurrentFileProgress;
                 FileProgressPercent.Text = string.Format("{0}%", e.CurrentFileProgress);
             }));
-            
-            if (e.CurrentDirectory != null)
+
+            if (debugMode == true)
             {
-                var dirString = DirString(e.CurrentDirectory);
-                if (Dirs2.Count == 0 || dirString != Dirs2.Last())
+                if (e.CurrentDirectory != null)
                 {
-                    Dirs2.Add(dirString);
-                    OrderLog_2.Add(Environment.NewLine + DirString(e.CurrentDirectory));
+                    var dirString = DirString(e.CurrentDirectory);
+                    if (Dirs2.Count == 0 || dirString != Dirs2.Last())
+                    {
+                        Dirs2.Add(dirString);
+                        OrderLog_2.Add(Environment.NewLine + DirString(e.CurrentDirectory));
+                    }
                 }
-            }
-            if (e.CurrentFile != null)
-            {
-                var fileString = FileString(e.CurrentFile);
-                if (Files2.Count == 0 || fileString != Files2.Last())
+                if (e.CurrentFile != null)
                 {
-                    Files2.Add(fileString);
-                    OrderLog_2.Add(FileString(e.CurrentFile));
+                    var fileString = FileString(e.CurrentFile);
+                    if (Files2.Count == 0 || fileString != Files2.Last())
+                    {
+                        Files2.Add(fileString);
+                        OrderLog_2.Add(FileString(e.CurrentFile));
+                    }
                 }
             }
         }
@@ -192,15 +200,18 @@ namespace RoboSharp.BackupApp
                 CurrentSize.Text = e.ProcessedFile.Size.ToString();
             }));
 
-            if (e.ProcessedFile.FileClassType == FileClassType.NewDir)
+            if (debugMode == true)
             {
-                Dirs.Add(DirString(e.ProcessedFile));
-                OrderLog_1.Add(Environment.NewLine + DirString(e.ProcessedFile));
-            }
-            else if (e.ProcessedFile.FileClassType == FileClassType.File)
-            {
-                Files.Add(FileString(e.ProcessedFile));
-                OrderLog_1.Add(FileString(e.ProcessedFile));
+                if (e.ProcessedFile.FileClassType == FileClassType.NewDir)
+                {
+                    Dirs.Add(DirString(e.ProcessedFile));
+                    OrderLog_1.Add(Environment.NewLine + DirString(e.ProcessedFile));
+                }
+                else if (e.ProcessedFile.FileClassType == FileClassType.File)
+                {
+                    Files.Add(FileString(e.ProcessedFile));
+                    OrderLog_1.Add(FileString(e.ProcessedFile));
+                }
             }
         }
 
@@ -221,7 +232,7 @@ namespace RoboSharp.BackupApp
 
             try
             {
-                if (false) //Set to TRUE to enable these logs for troubleshooting the objects provided by RoboCommand.OnCopyProgressChanged and OnFileProcessed.
+                if (debugMode == true)
                 {
                     DirectoryInfo source = new DirectoryInfo(Command.CopyOptions.Source);
                     string path = System.IO.Path.Combine(source.Parent.FullName, "EventLogs") + "\\";
