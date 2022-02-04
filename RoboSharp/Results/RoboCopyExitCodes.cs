@@ -33,7 +33,7 @@ namespace RoboSharp.Results
         /// Serious error. Robocopy did not copy any files.<br/>
         /// Either a usage error or an error due to insufficient access privileges on the source or destination directories.
         /// </summary>
-        SeriousErrorOccoured = 0x10,
+        SeriousErrorOccurred = 0x10,
         /// <summary>The Robocopy process exited prior to completion</summary>
         Cancelled = -1,
     }
