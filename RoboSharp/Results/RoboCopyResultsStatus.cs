@@ -35,7 +35,7 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="RoboCopyExitCodes.MismatchedDirectoriesDetected"/>
         public bool HasWarnings => ExitCodeValue >= 0x4;
 
-        /// <inheritdoc cref="RoboCopyExitCodes.SeriousErrorOccoured"/>
+        /// <inheritdoc cref="RoboCopyExitCodes.SeriousErrorOccurred"/>
         public bool HasErrors => ExitCodeValue >= 0x10;
 
         /// <inheritdoc cref="RoboCopyExitCodes.Cancelled"/>
