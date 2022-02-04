@@ -572,7 +572,7 @@
             Check these errors further.
             </summary>
         </member>
-        <member name="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccoured">
+        <member name="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccurred">
             <summary>
             Serious error. Robocopy did not copy any files.<br/>
             Either a usage error or an error due to insufficient access privileges on the source or destination directorie
@@ -632,7 +632,7 @@
             <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.MismatchedDirectoriesDetected"/>
         </member>
         <member name="P:RoboSharp.Results.RoboCopyExitStatus.HasErrors">
-            <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccoured"/>
+            <inheritdoc cref="F:RoboSharp.Results.RoboCopyExitCodes.SeriousErrorOccurred"/>
         </member>
         <member name="M:RoboSharp.Results.RoboCopyExitStatus.ToString">
             <summary>
