@@ -63,9 +63,11 @@ namespace RoboSharp.Results
 
         internal enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
 
-        // Storage for last entered Directory and File objects
-        internal ProcessedFileInfo CurrentDir;
-        internal ProcessedFileInfo CurrentFile;
+        // Storage for last entered Directory and File objects 
+        /// <summary>Used for providing Source Directory in CopyProgressChanged args</summary>
+        internal ProcessedFileInfo CurrentDir { get; private set; }
+        /// <summary>Used for providing Source Directory in CopyProgressChanged args AND for byte Statistic</summary>
+        internal ProcessedFileInfo CurrentFile { get; private set; }
 
         //Stat objects to house the data temporarily before writing to publicly visible stat objects
         readonly Statistic tmpDir =new Statistic(type: Statistic.StatType.Directories);
@@ -187,23 +189,45 @@ namespace RoboSharp.Results
         /// <summary>Increment <see cref="DirStatField"/></summary>
         internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
-            CurrentDir = currentDir;
+            
             WhereToAdd? whereTo = null;
-            if (currentDir.FileClass.Equals(Config.LogParsing_ExistingDir, StringComparison.CurrentCultureIgnoreCase)) { whereTo = WhereToAdd.Skipped; }   // Existing Dir
-            else if (currentDir.FileClass.Equals(Config.LogParsing_NewDir, StringComparison.CurrentCultureIgnoreCase)) { whereTo = WhereToAdd.Copied; }    //New Dir
-            else if (currentDir.FileClass.Equals(Config.LogParsing_ExtraDir, StringComparison.CurrentCultureIgnoreCase)) { whereTo = WhereToAdd.Extra; }   //Extra Dir
-            else if (currentDir.FileClass.Equals(Config.LogParsing_DirectoryExclusion, StringComparison.CurrentCultureIgnoreCase)) { whereTo = WhereToAdd.Skipped; }   //Excluded Dir
+            bool SetCurrentDir = false;
+            if (currentDir.FileClass.Equals(Config.LogParsing_ExistingDir, StringComparison.CurrentCultureIgnoreCase))  // Existing Dir
+            { 
+                whereTo = WhereToAdd.Skipped;
+                SetCurrentDir = true;
+            }   
+            else if (currentDir.FileClass.Equals(Config.LogParsing_NewDir, StringComparison.CurrentCultureIgnoreCase))  //New Dir
+            { 
+                whereTo = WhereToAdd.Copied;
+                SetCurrentDir = true;
+            }    
+            else if (currentDir.FileClass.Equals(Config.LogParsing_ExtraDir, StringComparison.CurrentCultureIgnoreCase)) //Extra Dir
+            { 
+                whereTo = WhereToAdd.Extra;
+                SetCurrentDir = false;
+            }   
+            else if (currentDir.FileClass.Equals(Config.LogParsing_DirectoryExclusion, StringComparison.CurrentCultureIgnoreCase)) //Excluded Dir
+            { 
+                whereTo = WhereToAdd.Skipped;
+                SetCurrentDir = false;
+            }
+            //Store CurrentDir under various conditions
+            if (SetCurrentDir) CurrentDir = currentDir;
+
             lock (DirLock)
             {
                 switch (whereTo)
                 {
-                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++; break;
+                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++;break;
                     case WhereToAdd.Extra: tmpDir.Extras++; break;  //Extras do not count towards total
                     case WhereToAdd.Failed: tmpDir.Total++; tmpDir.Failed++; break;
                     case WhereToAdd.MisMatch: tmpDir.Total++; tmpDir.Mismatch++; break;
                     case WhereToAdd.Skipped: tmpDir.Total++; tmpDir.Skipped++; break;
                 }
             }
+            
+            
             //Check if the UpdateTask should push an update to the public fields
             if (Monitor.TryEnter(UpdateLock))
             {

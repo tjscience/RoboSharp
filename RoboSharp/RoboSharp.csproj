@@ -29,7 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="XML_Files\" />
+    <Compile Remove="XML_Files\**" />
+    <EmbeddedResource Remove="XML_Files\**" />
+    <None Remove="XML_Files\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
 </Project>
