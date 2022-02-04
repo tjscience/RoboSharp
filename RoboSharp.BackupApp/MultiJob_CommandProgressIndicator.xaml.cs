@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
 
 namespace RoboSharp.BackupApp
 {
@@ -45,8 +46,19 @@ namespace RoboSharp.BackupApp
                 }
             }
              
-        }
+        }   
         private string jobName;
+
+        private bool debugMode = false; //Set to TRUE to enable logs for troubleshooting the objects provided by RoboCommand.OnCopyProgressChanged and OnFileProcessed.
+
+        private List<string> Dirs;
+        private List<string> Files;
+        private List<string> Dirs2;
+        private List<string> Files2;
+        private List<string> OrderLog_1;
+        private List<string> OrderLog_2;
+
+
         public void BindToCommand(RoboCommand cmd)
         {
             Command = cmd;
@@ -58,10 +70,24 @@ namespace RoboSharp.BackupApp
             {
                 cmd.OnProgressEstimatorCreated += OnProgressEstimatorCreated;
             }
+            if (debugMode == true)
+            { 
+                SetupListObjs();
+            }
             cmd.OnCopyProgressChanged += OnCopyProgressChanged;
             cmd.OnFileProcessed += OnFileProcessed;
             cmd.OnCommandCompleted += OnCommandCompleted;
             JobName = cmd.Name;
+        }
+
+        private void SetupListObjs()
+        {
+            Dirs = new List<string> { "Dirs Reported by OnFileProcessed", "---------------------" };
+            Files = new List<string> { "Files Reported by OnFileProcessed", "---------------------" };
+            Dirs2 = new List<string> { "Unique Dirs Reported by CopyProgressChanged", "---------------------" };
+            Files2 = new List<string> { "Unique Files Reported by CopyProgressChanged", "---------------------" };
+            OrderLog_1 = new List<string> { "Files and Dirs In Order Reported by OnFileProcessed", "---------------------" };
+            OrderLog_2 = new List<string> { "Files and Dirs In Order Reported by CopyProgressChanged", "---------------------" };
         }
 
         #region < Buttons >
@@ -131,13 +157,38 @@ namespace RoboSharp.BackupApp
 
         #region < On*Processed >
 
-        void OnCopyProgressChanged(object sender, CopyProgressEventArgs e)
+        private string DirString(ProcessedFileInfo pf) => pf.FileClass + "(" + pf.Size + ") - " + pf.Name;
+        private string FileString(ProcessedFileInfo pf) => pf.FileClass + "(" + pf.Size + ") - " + pf.Name;
+
+        void OnCopyProgressChanged(object sender, CopyProgressEventArgs e) 
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
                 ProgressBar.Value = e.CurrentFileProgress;
                 FileProgressPercent.Text = string.Format("{0}%", e.CurrentFileProgress);
             }));
+
+            if (debugMode == true)
+            {
+                if (e.CurrentDirectory != null)
+                {
+                    var dirString = DirString(e.CurrentDirectory);
+                    if (Dirs2.Count == 0 || dirString != Dirs2.Last())
+                    {
+                        Dirs2.Add(dirString);
+                        OrderLog_2.Add(Environment.NewLine + DirString(e.CurrentDirectory));
+                    }
+                }
+                if (e.CurrentFile != null)
+                {
+                    var fileString = FileString(e.CurrentFile);
+                    if (Files2.Count == 0 || fileString != Files2.Last())
+                    {
+                        Files2.Add(fileString);
+                        OrderLog_2.Add(FileString(e.CurrentFile));
+                    }
+                }
+            }
         }
 
         void OnFileProcessed(object sender, FileProcessedEventArgs e)
@@ -148,6 +199,20 @@ namespace RoboSharp.BackupApp
                 CurrentFile.Text = e.ProcessedFile.Name;
                 CurrentSize.Text = e.ProcessedFile.Size.ToString();
             }));
+
+            if (debugMode == true)
+            {
+                if (e.ProcessedFile.FileClassType == FileClassType.NewDir)
+                {
+                    Dirs.Add(DirString(e.ProcessedFile));
+                    OrderLog_1.Add(Environment.NewLine + DirString(e.ProcessedFile));
+                }
+                else if (e.ProcessedFile.FileClassType == FileClassType.File)
+                {
+                    Files.Add(FileString(e.ProcessedFile));
+                    OrderLog_1.Add(FileString(e.ProcessedFile));
+                }
+            }
         }
 
         void OnCommandCompleted(object sender, RoboCommandCompletedEventArgs e)
@@ -164,6 +229,27 @@ namespace RoboSharp.BackupApp
             Command.OnCopyProgressChanged -= OnCopyProgressChanged;
             Command.OnFileProcessed -= OnFileProcessed;
             Command.OnCommandCompleted -= OnCommandCompleted;
+
+            try
+            {
+                if (debugMode == true)
+                {
+                    DirectoryInfo source = new DirectoryInfo(Command.CopyOptions.Source);
+                    string path = System.IO.Path.Combine(source.Parent.FullName, "EventLogs") + "\\";
+                    var PathDir = Directory.CreateDirectory(path);
+
+                    Dirs.Add(""); Dirs.Add(""); Dirs.AddRange(Files);
+                    File.AppendAllLines($"{path}{Command.Name}_OnFileProcessed.txt", Dirs);
+
+                    Dirs2.Add(""); Dirs2.Add(""); Dirs2.AddRange(Files2);
+                    File.AppendAllLines($"{path}{Command.Name}_CopyProgressChanged.txt", Dirs2);
+
+                    File.AppendAllLines($"{path}{Command.Name}_OnFileProcessed_InOrder.txt", OrderLog_1);
+                    File.AppendAllLines($"{path}{Command.Name}_CopyProgressChanged_InOrder.txt", OrderLog_2);
+                }
+                Directory.SetCurrentDirectory("C:\\");
+            }
+            catch { }
         }
         #endregion
     }
