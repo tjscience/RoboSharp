@@ -110,7 +110,7 @@ namespace RoboSharp
         #region < File Tokens >
 
         /// <summary>
-        /// Log Lines starting with this string indicate : New File -> Souce FILE Exists, Destination does not
+        /// Log Lines starting with this string indicate : New File -> Source FILE Exists, Destination does not
         /// </summary>
         public string LogParsing_NewFile
         {
