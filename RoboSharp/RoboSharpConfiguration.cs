@@ -164,7 +164,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_MismatchFile
         {
-            get { return mismatchToken ?? GetDefaultConfiguration().mismatchToken ?? "*Mismatch"; } // TO DO: Needs Verification
+            get { return mismatchToken ?? GetDefaultConfiguration().mismatchToken ?? "*Mismatch"; } // TODO: Needs Verification
             set { mismatchToken = value; }
         }
         private string mismatchToken;
@@ -174,7 +174,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_FailedFile
         {
-            get { return failedToken ?? GetDefaultConfiguration().failedToken ?? "*Failed"; } // TO DO: Needs Verification
+            get { return failedToken ?? GetDefaultConfiguration().failedToken ?? "*Failed"; } // TODO: Needs Verification
             set { failedToken = value; }
         }
         private string failedToken;
@@ -184,7 +184,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_FileExclusion
         {
-            get { return fileExcludedToken ?? GetDefaultConfiguration().fileExcludedToken ?? "named"; } // TO DO: Needs Verification
+            get { return fileExcludedToken ?? GetDefaultConfiguration().fileExcludedToken ?? "named"; } // TODO: Needs Verification
             set { fileExcludedToken = value; }
         }
         private string fileExcludedToken;
@@ -228,7 +228,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_DirectoryExclusion
         {
-            get { return dirExcludedToken ?? GetDefaultConfiguration().dirExcludedToken ?? "named"; } // TO DO: Needs Verification
+            get { return dirExcludedToken ?? GetDefaultConfiguration().dirExcludedToken ?? "named"; } // TODO: Needs Verification
             set { dirExcludedToken = value; }
         }
         private string dirExcludedToken;
