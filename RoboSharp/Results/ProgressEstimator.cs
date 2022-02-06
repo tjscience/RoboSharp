@@ -271,8 +271,11 @@ namespace RoboSharp.Results
             //Identical Files
             else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))
             {
+                if (!command.SelectionOptions.IncludeSame)
+                { 
                 PerformByteCalc(currentFile, WhereToAdd.Skipped);
                 CurrentFile = null;
+                }
             }
 
             //Files to be Copied/Skipped
@@ -306,6 +309,13 @@ namespace RoboSharp.Results
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
                         else
                             PerformByteCalc(currentFile, WhereToAdd.Copied);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.IncludeSame)
+                            PerformByteCalc(currentFile, WhereToAdd.Copied);
+                        else
+                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
                     else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))
                     {
