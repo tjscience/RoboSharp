@@ -285,7 +285,7 @@ namespace RoboSharp.Results
                         PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (!CopyOperation) // These checks are only performed during a ListOnly operation.
+                else if (!CopyOperation || currentFile.Size == 0) // These checks are only performed during a ListOnly operation.
                 {
                     if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
                     {
