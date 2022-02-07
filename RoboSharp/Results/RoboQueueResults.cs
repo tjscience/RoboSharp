@@ -17,9 +17,14 @@ namespace RoboSharp.Results
         internal RoboQueueResults() 
         {
             collection = new RoboCopyResultsList();
+            StartTime = DateTime.Now;
+            QueueProcessRunning = true;
         }
 
         private RoboCopyResultsList collection { get; }
+        private DateTime EndTimeField;
+        private TimeSpan TimeSpanField;
+        private bool QueueProcessRunning;
 
         /// <summary>
         /// Add a result to the collection
@@ -29,13 +34,30 @@ namespace RoboSharp.Results
         #region < IRoboQueueResults >
 
         /// <summary> Time the RoboQueue task was started </summary>
-        public DateTime StartTime { get; internal set; }
+        public DateTime StartTime { get; }
 
         /// <summary> Time the RoboQueue task was completed / cancelled. </summary>
-        public DateTime EndTime { get; internal set; }
+        /// <remarks> Should Only considered valid if <see cref="QueueComplete"/> = true.</remarks>
+        public DateTime EndTime 
+        { 
+            get => EndTimeField;
+            internal set 
+            {
+                EndTimeField = value;
+                TimeSpanField = value.Subtract(StartTime);
+                QueueProcessRunning = false;
+            }
+        }
 
         /// <summary> Length of Time RoboQueue was running </summary>
-        public TimeSpan TimeSpan { get; internal set; }
+        /// <remarks> Should Only considered valid if <see cref="QueueComplete"/> = true.</remarks>
+        public TimeSpan TimeSpan => TimeSpanField;
+
+        /// <summary> TRUE if the RoboQueue object that created this results set has not finished running yet. </summary>
+        public bool QueueRunning => QueueProcessRunning;
+
+        /// <summary> TRUE if the RoboQueue object that created this results has completed running, or has been cancelled. </summary>
+        public bool QueueComplete => !QueueProcessRunning;
 
         #endregion
 

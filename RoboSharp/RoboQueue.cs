@@ -507,10 +507,7 @@ namespace RoboSharp
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
 
-            ListResultsObj = new RoboQueueResults
-            {
-                StartTime = DateTime.Now
-            };
+            ListResultsObj = new RoboQueueResults();
             ListResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListResults));
 
             //Run the commands
@@ -529,7 +526,6 @@ namespace RoboSharp
                     throw continuation.Exception;
                 }
                 ListResultsObj.EndTime= DateTime.Now;
-                ListResultsObj.TimeSpan = ListResultsObj.EndTime.Subtract(ListResultsObj.StartTime);
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, true));
                 return (IRoboQueueResults)ListResultsObj;
             }, CancellationToken.None
@@ -549,10 +545,7 @@ namespace RoboSharp
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
 
-            RunResultsObj = new RoboQueueResults
-            {
-                StartTime = DateTime.Now
-            };
+            RunResultsObj = new RoboQueueResults();
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
             
             Task Run = StartJobs(domain, username, password, false);
@@ -570,7 +563,6 @@ namespace RoboSharp
                 }
 
                 RunResultsObj.EndTime = DateTime.Now;
-                RunResultsObj.TimeSpan = RunResultsObj.EndTime.Subtract(RunResultsObj.StartTime);
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, false));
                 return (IRoboQueueResults)RunResultsObj;
             }, CancellationToken.None
