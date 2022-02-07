@@ -311,6 +311,22 @@ namespace RoboSharp.Results
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
                     else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);

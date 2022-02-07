@@ -194,10 +194,50 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_AttribExclusion
         {
-            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; } // TODO: Needs Verification
+            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; } 
             set { attribExcludedToken = value; }
         }
         private string attribExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MaxFileSize"/> filters
+        /// </summary>
+        public string LogParsing_MaxFileSizeExclusion
+        {
+            get { return maxfilesizeExcludedToken ?? GetDefaultConfiguration().maxfilesizeExcludedToken ?? "large"; } 
+            set { maxfilesizeExcludedToken = value; }
+        }
+        private string maxfilesizeExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MinFileSize"/> filters
+        /// </summary>
+        public string LogParsing_MinFileSizeExclusion
+        {
+            get { return minfilesizeExcludedToken ?? GetDefaultConfiguration().minfilesizeExcludedToken ?? "small"; } 
+            set { minfilesizeExcludedToken = value; }
+        }
+        private string minfilesizeExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MaxFileAge"/> or <see cref="SelectionOptions.MaxLastAccessDate"/>filters
+        /// </summary>
+        public string LogParsing_MaxAgeOrAccessExclusion
+        {
+            get { return maxageoraccessExcludedToken ?? GetDefaultConfiguration().maxageoraccessExcludedToken ?? "too old"; }
+            set { maxageoraccessExcludedToken = value; }
+        }
+        private string maxageoraccessExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MinFileAge"/> or <see cref="SelectionOptions.MinLastAccessDate"/>filters
+        /// </summary>
+        public string LogParsing_MinAgeOrAccessExclusion
+        {
+            get { return minageoraccessExcludedToken ?? GetDefaultConfiguration().minageoraccessExcludedToken ?? "too new"; }
+            set { minageoraccessExcludedToken = value; }
+        }
+        private string minageoraccessExcludedToken;
 
         #endregion
 
