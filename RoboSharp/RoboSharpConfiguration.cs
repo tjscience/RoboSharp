@@ -189,6 +189,16 @@ namespace RoboSharp
         }
         private string fileExcludedToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.ExcludeAttributes"/> or <see cref="SelectionOptions.IncludeAttributes"/> filters
+        /// </summary>
+        public string LogParsing_AttribExclusion
+        {
+            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; } // TODO: Needs Verification
+            set { attribExcludedToken = value; }
+        }
+        private string attribExcludedToken;
+
         #endregion
 
         #region < Directory Tokens >
