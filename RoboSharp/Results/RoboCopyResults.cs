@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using RoboSharp.Interfaces;
 
 namespace RoboSharp.Results
@@ -9,7 +10,7 @@ namespace RoboSharp.Results
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboCopyResults"/>
     /// </remarks>
-    public class RoboCopyResults : IResults
+    public class RoboCopyResults : IResults, ITimeSpan
     {
         internal RoboCopyResults() { }
 
@@ -56,6 +57,15 @@ namespace RoboSharp.Results
 
         /// <summary> Output Text reported by RoboCopy </summary>
         public string[] LogLines { get; internal set; }
+
+        /// <summary> Time the RoboCopy process was started </summary>
+        public DateTime StartTime { get; internal set; }
+
+        /// <summary> Time the RoboCopy process was completed / cancelled. </summary>
+        public DateTime EndTime { get; internal set; }
+
+        /// <summary> Length of Time the RoboCopy Process ran </summary>
+        public TimeSpan TimeSpan { get; internal set; }
 
         #endregion
 

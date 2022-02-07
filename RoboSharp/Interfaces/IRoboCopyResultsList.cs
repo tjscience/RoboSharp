@@ -16,7 +16,7 @@ namespace RoboSharp.Interfaces
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/IRoboCopyResultsList"/>
     /// </remarks>
-    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, ICloneable, INotifyCollectionChanged
+    public interface IRoboCopyResultsList : IEnumerable<RoboCopyResults>, INotifyCollectionChanged
     {
         #region < Properties >
 
@@ -74,12 +74,6 @@ namespace RoboSharp.Interfaces
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
         ISpeedStatistic[] GetSpeedStatistics();
-
-        /// <summary>
-        /// Copy the values within the list to a new object
-        /// </summary>
-        /// <returns>new <see cref="RoboCopyResultsList"/> object</returns>
-        new RoboCopyResultsList Clone();
 
         #endregion
     }

@@ -62,7 +62,7 @@ namespace RoboSharp.Interfaces
         bool ListOnlyCompleted { get; }
 
         /// <inheritdoc cref="RoboQueue.ListResults"/>
-        IRoboCopyResultsList ListResults { get; }
+        IRoboQueueResults ListResults { get; }
 
         /// <inheritdoc cref="RoboQueue.MaxConcurrentJobs"/>
         int MaxConcurrentJobs { get; set; }
@@ -74,7 +74,7 @@ namespace RoboSharp.Interfaces
         IProgressEstimator ProgressEstimator { get; }
 
         /// <inheritdoc cref="RoboQueue.RunResults"/>
-        IRoboCopyResultsList RunResults { get; }
+        IRoboQueueResults RunResults { get; }
 
         /// <inheritdoc cref="RoboQueue.WasCancelled"/>
         bool WasCancelled { get; }
@@ -126,10 +126,10 @@ namespace RoboSharp.Interfaces
         void ResumeAll();
 
         /// <inheritdoc cref="RoboQueue.StartAll"/>
-        Task<IRoboCopyResultsList> StartAll(string domain = "", string username = "", string password = "");
+        Task<IRoboQueueResults> StartAll(string domain = "", string username = "", string password = "");
 
         /// <inheritdoc cref="RoboQueue.StartAll_ListOnly"/>
-        Task<IRoboCopyResultsList> StartAll_ListOnly(string domain = "", string username = "", string password = "");
+        Task<IRoboQueueResults> StartAll_ListOnly(string domain = "", string username = "", string password = "");
 
         /// <inheritdoc cref="RoboQueue.StopAll"/>
         void StopAll();
