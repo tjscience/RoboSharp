@@ -268,18 +268,12 @@ namespace RoboSharp.Results
             {
                 PerformByteCalc(currentFile, WhereToAdd.Failed);
             }
-            //Identical Files
-            else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))
-            {
-                PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                CurrentFile = null;
-            }
 
             //Files to be Copied/Skipped
             else
             {
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
-                if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase))
+                if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase)) // New File
                 {
                     //Special handling for 0kb files -> They won't get Progress update, but will be created
                     if (currentFile.Size == 0)
@@ -291,50 +285,57 @@ namespace RoboSharp.Results
                         PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (!CopyOperation)
+                else if (!CopyOperation) // These checks are only performed during a ListOnly operation.
                 {
-                    if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))
+                    if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
+                    {
+                        if (command.SelectionOptions.IncludeSame)
+                            PerformByteCalc(currentFile, WhereToAdd.Copied);
+                        else
+                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                    }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))  // ExcludeOlder
                     {
                         if (command.SelectionOptions.ExcludeOlder)
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
                         else
                             PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase))  //ExcludeNewer
                     {
                         if (command.SelectionOptions.ExcludeNewer)
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
                         else
                             PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_AttribExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_AttribExclusion, StringComparison.CurrentCultureIgnoreCase))  //AttributeExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))  //MaxFileSizeExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))  //MinFileSizeExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))  //MaxAgeOrAccessExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))  //MinAgeOrAccessExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase))  //ExcludeChanged
                     {
                         if (command.SelectionOptions.ExcludeChanged)
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
                         else
                             PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))  //FileExclusion
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
