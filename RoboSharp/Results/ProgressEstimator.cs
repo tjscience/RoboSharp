@@ -253,6 +253,9 @@ namespace RoboSharp.Results
             SkippingFile = false;
             CopyOpStarted = false;
 
+            // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
+            bool SpecialHandling = !CopyOperation || currentFile.Size == 0;
+
             // EXTRA FILES
             if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
             {
@@ -275,26 +278,24 @@ namespace RoboSharp.Results
                 SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
                 if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase)) // New File
                 {
-                    //Special handling for 0kb files -> They won't get Progress update, but will be created
-                    if (currentFile.Size == 0)
-                    {
-                        AddFileCopied(currentFile);
-                    }
-                    else if (!CopyOperation) //Workaround for ListOnly Operation
+                    //Special handling for 0kb files & ListOnly -> They won't get Progress update, but will be created
+                    if (SpecialHandling)
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Copied);
                     }
                 }
-                else if (!CopyOperation || currentFile.Size == 0) // These checks are only performed during a ListOnly operation.
+                else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
                 {
-                    if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
+                    if (command.SelectionOptions.IncludeSame)
                     {
-                        if (command.SelectionOptions.IncludeSame)
-                            PerformByteCalc(currentFile, WhereToAdd.Copied);
-                        else
-                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                        if (SpecialHandling) PerformByteCalc(currentFile, WhereToAdd.Copied);   // Only add to Copied if ListOnly / 0-bytes
                     }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))  // ExcludeOlder
+                    else
+                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                }
+                else if (SpecialHandling) // These checks are always performed during a ListOnly operation
+                {
+                    if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))  // ExcludeOlder
                     {
                         if (command.SelectionOptions.ExcludeOlder)
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
