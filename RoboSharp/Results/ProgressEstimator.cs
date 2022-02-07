@@ -327,6 +327,13 @@ namespace RoboSharp.Results
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                     }
+                    else if (currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (command.SelectionOptions.ExcludeChanged)
+                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                        else
+                            PerformByteCalc(currentFile, WhereToAdd.Copied);
+                    }
                     else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))
                     {
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);

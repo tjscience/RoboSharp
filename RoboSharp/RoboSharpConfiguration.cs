@@ -239,6 +239,16 @@ namespace RoboSharp
         }
         private string minageoraccessExcludedToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.ExcludeChanged"/> filters
+        /// </summary>
+        public string LogParsing_ChangedExclusion
+        {
+            get { return changedExcludedToken ?? GetDefaultConfiguration().changedExcludedToken ?? "changed"; }
+            set { changedExcludedToken = value; }
+        }
+        private string changedExcludedToken;
+
         #endregion
 
         #region < Directory Tokens >
