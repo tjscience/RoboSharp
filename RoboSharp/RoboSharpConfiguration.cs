@@ -249,6 +249,16 @@ namespace RoboSharp
         }
         private string changedExcludedToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was included by <see cref="SelectionOptions.IncludeTweaked"/> filters
+        /// </summary>
+        public string LogParsing_TweakedInclusion
+        {
+            get { return tweakedIncludedToken ?? GetDefaultConfiguration().tweakedIncludedToken ?? "tweaked"; }
+            set { tweakedIncludedToken = value; }
+        }
+        private string tweakedIncludedToken;
+
         #endregion
 
         #region < Directory Tokens >
