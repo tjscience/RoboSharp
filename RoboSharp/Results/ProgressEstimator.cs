@@ -355,10 +355,7 @@ namespace RoboSharp.Results
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal void AddFileCopied(ProcessedFileInfo currentFile)
         {
-            SkippingFile = false;
-            CopyOpStarted = false;
             PerformByteCalc(currentFile, WhereToAdd.Copied);
-            CurrentFile = null;
         }
 
         /// <summary>
@@ -367,6 +364,11 @@ namespace RoboSharp.Results
         private void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
         {
             if (file == null) return;
+            //Reset Flags
+            SkippingFile = false;
+            CopyOpStarted = false;
+            CurrentFile = null;
+            //Perform Math
             lock (FileLock)
             {
                 //Extra files do not contribute towards Copy Total.
