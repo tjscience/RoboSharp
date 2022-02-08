@@ -8,7 +8,7 @@ namespace RoboSharp.EventArgObjects
     /// <summary>
     /// Provide a base class that includes a StartTime, EndTime and will calculate the TimeSpan in between
     /// </summary>
-    public abstract class TimeSpanEventArgs : EventArgs
+    public abstract class TimeSpanEventArgs : EventArgs, RoboSharp.Interfaces.ITimeSpan
     {
         private TimeSpanEventArgs() : base() { }
         
@@ -21,10 +21,15 @@ namespace RoboSharp.EventArgObjects
         {
             StartTime = startTime;
             EndTime = endTime;
-            LazyTimeSpan = new Lazy<TimeSpan>(() => EndTime.Subtract(StartTime));
+            TimeSpan = EndTime.Subtract(StartTime);
         }
 
-        private readonly Lazy<TimeSpan> LazyTimeSpan;
+        internal TimeSpanEventArgs(DateTime startTime, DateTime endTime, TimeSpan tSpan) : base()
+        {
+            StartTime = startTime;
+            EndTime = endTime;
+            TimeSpan = tSpan;
+        }
 
         /// <summary>
         /// Local time the command started.
@@ -32,13 +37,13 @@ namespace RoboSharp.EventArgObjects
         public virtual DateTime StartTime { get; }
 
         /// <summary>
-        /// Local time the command started.
+        /// Local time the command stopped.
         /// </summary>
         public virtual DateTime EndTime { get; }
 
         /// <summary>
         /// Length of time the process took to run
         /// </summary>
-        public virtual TimeSpan TimeSpan => LazyTimeSpan.Value;
+        public virtual TimeSpan TimeSpan { get; }
     }
 }

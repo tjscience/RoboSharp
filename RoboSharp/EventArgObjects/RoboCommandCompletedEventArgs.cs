@@ -14,9 +14,7 @@ namespace RoboSharp
         /// Return the Results object
         /// </summary>
         /// <param name="results"></param>
-        /// <param name="startTime"></param>
-        /// <param name="endTime"></param>
-        internal RoboCommandCompletedEventArgs(Results.RoboCopyResults results, DateTime startTime, DateTime endTime) : base(startTime, endTime)
+        internal RoboCommandCompletedEventArgs(Results.RoboCopyResults results) : base(results.StartTime, results.EndTime, results.TimeSpan)
         {
             this.Results = results;
         }

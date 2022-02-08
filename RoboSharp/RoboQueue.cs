@@ -88,7 +88,6 @@ namespace RoboSharp
         private readonly ObservableList<IRoboCommand> CommandList = new ObservableList<IRoboCommand>();
         private RoboQueueProgressEstimator Estimator;
         private bool disposedValue;
-        private bool isDisposing;
         private CancellationTokenSource TaskCancelSource;
         private string NameField;
 
@@ -337,19 +336,17 @@ namespace RoboSharp
 
         /// <summary>
         /// Contains the results from the most recent run started via <see cref="StartAll_ListOnly(string, string, string)"/> <para/>
-        /// This list will be cleared and repopulated when the StartAll_ListOnly method is called.  <br/>
-        /// To store these results for future use, call <see cref="GetRunResults"/> after the StartAll_ListOnly task finishes.
+        /// Any time StartALL_ListOnly is called, a new RoboQueueResults object will be created.  <br/>
         /// </summary>
-        public IRoboCopyResultsList ListResults => ListResultsObj;
-        private RoboCopyResultsList ListResultsObj { get; } = new RoboCopyResultsList();
+        public IRoboQueueResults ListResults => ListResultsObj;
+        private RoboQueueResults ListResultsObj { get; set; }
 
         /// <summary>
         /// Contains the results from the most recent run started via <see cref="StartAll"/> <para/>
-        /// This list will be cleared and repopulated when the StartAll method is called.  <br/>
-        /// To store these results for future use, call <see cref="GetRunResults"/> after the StartAll task finishes.
+        /// Any time StartALL is called, a new RoboQueueResults object will be created.  <br/>
         /// </summary>
-        public IRoboCopyResultsList RunResults => RunResultsObj;
-        private RoboCopyResultsList RunResultsObj { get; } = new RoboCopyResultsList();
+        public IRoboQueueResults RunResults => RunResultsObj;
+        private RoboQueueResults RunResultsObj { get; set; }
 
         /* 
          * Possible To-Do: Code in ConcurrentQueue objects if issues arise with items being added to the ResultsObj lists.
@@ -444,16 +441,16 @@ namespace RoboSharp
         #region < Methods >
 
         /// <summary>
-        /// Create a new instance of the <see cref="ListResults"/> object
+        /// Get the current instance of the <see cref="ListResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="ListResults"/> list.</returns>
-        public RoboCopyResultsList GetListResults() => ListResults.Clone();
+        public RoboQueueResults GetListResults() => ListResultsObj;
 
         /// <summary>
-        /// Create a new instance of the <see cref="RunResults"/> object
+        /// Get the current of the <see cref="RunResults"/> object
         /// </summary>
         /// <returns>New instance of the <see cref="RunResults"/> list.</returns>
-        public RoboCopyResultsList GetRunResults() => RunResults.Clone();
+        public RoboQueueResults GetRunResults() => RunResultsObj;
 
         /// <summary>
         /// Run <see cref="RoboCommand.Stop()"/> against all items in the list.
@@ -504,19 +501,18 @@ namespace RoboSharp
         /// Set all RoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
         /// </summary>
         /// <inheritdoc cref="StartJobs"/>
-        public Task<IRoboCopyResultsList> StartAll_ListOnly(string domain = "", string username = "", string password = "")
+        public Task<IRoboQueueResults> StartAll_ListOnly(string domain = "", string username = "", string password = "")
         {
             if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
             IsListOnlyRunning = true;
             ListOnlyCompleted = false;
 
-            ListResultsObj.Clear();
+            ListResultsObj = new RoboQueueResults();
             ListResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(ListResults));
 
             //Run the commands
-            DateTime StartTime = DateTime.Now;
             Task Run = StartJobs(domain, username, password, true);
-            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboQueueResults> ResultsTask = Run.ContinueWith((continuation) =>
             {
                 //Set Flags
                 IsListOnlyRunning = false;
@@ -529,9 +525,9 @@ namespace RoboSharp
                     TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
                     throw continuation.Exception;
                 }
-
-                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, StartTime, DateTime.Now));
-                return (IRoboCopyResultsList)ListResultsObj.Clone();
+                ListResultsObj.EndTime= DateTime.Now;
+                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, true));
+                return (IRoboQueueResults)ListResultsObj;
             }, CancellationToken.None
             );
             return ResultsTask;
@@ -542,18 +538,18 @@ namespace RoboSharp
         #region < Run User-Set Parameters >
 
         /// <inheritdoc cref="StartJobs"/>
-        public Task<IRoboCopyResultsList> StartAll(string domain = "", string username = "", string password = "")
+        public Task<IRoboQueueResults> StartAll(string domain = "", string username = "", string password = "")
         {
             if (IsRunning) throw new InvalidOperationException("Cannot start a new RoboQueue Process while this RoboQueue is already running.");
 
             IsCopyOperationRunning = true;
             CopyOperationCompleted = false;
 
-            RunResultsObj.Clear();
+            RunResultsObj = new RoboQueueResults();
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
-            DateTime StartTime = DateTime.Now;
+            
             Task Run = StartJobs(domain, username, password, false);
-            Task<IRoboCopyResultsList> ResultsTask = Run.ContinueWith((continuation) =>
+            Task<IRoboQueueResults> ResultsTask = Run.ContinueWith((continuation) =>
             {
                 IsCopyOperationRunning = false;
                 IsPaused = false;
@@ -566,8 +562,9 @@ namespace RoboSharp
                     throw continuation.Exception;
                 }
 
-                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, StartTime, DateTime.Now));
-                return (IRoboCopyResultsList)RunResultsObj.Clone();
+                RunResultsObj.EndTime = DateTime.Now;
+                RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(RunResultsObj, false));
+                return (IRoboQueueResults)RunResultsObj;
             }, CancellationToken.None
             );
             return ResultsTask;
@@ -745,8 +742,6 @@ namespace RoboSharp
         {
             if (!disposedValue)
             {
-                isDisposing = true; //Set flag to prevent code modifying the list during disposal 
-
                 if (disposing)
                 {
                     Estimator?.UnBind();

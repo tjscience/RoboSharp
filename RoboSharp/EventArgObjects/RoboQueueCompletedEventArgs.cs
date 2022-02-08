@@ -12,15 +12,21 @@ namespace RoboSharp.EventArgObjects
     /// </summary>
     public class RoboQueueCompletedEventArgs : TimeSpanEventArgs
     {
-        internal RoboQueueCompletedEventArgs(RoboCopyResultsList runResults, DateTime startTime, DateTime endTime) : base(startTime, endTime)
+        internal RoboQueueCompletedEventArgs(RoboQueueResults runResults, bool listOnlyRun) : base(runResults.StartTime, runResults.EndTime, runResults.TimeSpan)
         {
-            RunResults = new RoboCopyResultsList(runResults);
+            RunResults = runResults;
+            CopyOperation = !listOnlyRun;
         }
 
         /// <summary>
-        /// Command that started.
+        /// RoboQueue Results Object
         /// </summary>
-        public RoboCopyResultsList RunResults { get; }
+        public RoboQueueResults RunResults { get; }
+
+        /// <summary>
+        /// TRUE if this run was a COPY OPERATION, FALSE is the results were created after a <see cref="RoboQueue.StartAll_ListOnly(string, string, string)"/> call.
+        /// </summary>
+        public bool CopyOperation { get; }
 
     }
 }

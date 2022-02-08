@@ -549,7 +549,12 @@ namespace RoboSharp
                 }
                 //Raise event announcing results are available
                 if (!hasError && resultsBuilder != null)
-                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results, StartTime, DateTime.Now));
+                {
+                    results.StartTime = StartTime;
+                    results.EndTime = DateTime.Now;
+                    results.TimeSpan = results.EndTime.Subtract(results.StartTime);
+                    OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
+                }
             }, CancellationToken.None);
 
             return continueWithTask;

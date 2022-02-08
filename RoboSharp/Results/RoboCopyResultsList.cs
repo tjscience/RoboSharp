@@ -338,10 +338,8 @@ namespace RoboSharp.Results
 
         #region < ICloneable >
 
-        /// <inheritdoc cref="IRoboCopyResultsList.Clone"/>
+        /// <summary> Clone this object to a new RoboCopyResultsList </summary>
         public RoboCopyResultsList Clone() => new RoboCopyResultsList(this);
-
-        object ICloneable.Clone() => Clone();
 
         #endregion
 
