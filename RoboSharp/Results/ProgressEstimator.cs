@@ -246,7 +246,8 @@ namespace RoboSharp.Results
         {
             if (SkippingFile)
             {
-                PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                // This calc must be performed with the PREVIOUS file, not the object submitted into the method
+                PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
             }
 
             CurrentFile = currentFile;
