@@ -294,6 +294,9 @@
                                     </ListBox>
                                 </Grid>
                             </GroupBox>
+                            <GroupBox Header="RoboSharp Debugging"  Grid.Row="6" Margin="345,10,0,0" Height="302" Width="189"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1">
+                                <CheckBox x:Name="chk_SaveEventLogs" Content="EventLogging" ToolTip="Create LogFiles for OnCopyProgressChanged and OnFileProcessed"  Margin="85,0,-2,253" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
+                            </GroupBox>
                         </Grid>
                     </ScrollViewer>
                 </Grid>
