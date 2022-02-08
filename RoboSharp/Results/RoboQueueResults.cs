@@ -12,7 +12,7 @@ namespace RoboSharp.Results
     /// <summary>
     /// Object returned by RoboQueue when a run has completed.
     /// </summary>
-    public class RoboQueueResults : IRoboQueueResults, IRoboCopyResultsList, ITimeSpan
+    public sealed class RoboQueueResults : IRoboQueueResults, IRoboCopyResultsList, ITimeSpan
     {
         internal RoboQueueResults() 
         {
