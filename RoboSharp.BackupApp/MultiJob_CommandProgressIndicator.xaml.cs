@@ -49,8 +49,26 @@ namespace RoboSharp.BackupApp
         }   
         private string jobName;
 
-        private bool debugMode = false; //Set to TRUE to enable logs for troubleshooting the objects provided by RoboCommand.OnCopyProgressChanged and OnFileProcessed.
+        //Set to TRUE to enable logs for troubleshooting the objects provided by RoboCommand.OnCopyProgressChanged and OnFileProcessed.
+        private bool debugMode { 
+            get 
+            {
+                bool tmp = Dispatcher.Invoke(() =>
+                {
+                    if (this.Parent is null) return false;
+                    var window = Window.GetWindow(this.Parent);
+                    if (window.GetType() == typeof(RoboSharp.BackupApp.MainWindow))
+                    {
+                        return ((RoboSharp.BackupApp.MainWindow)window).chk_SaveEventLogs.IsChecked ?? false;
+                    }
+                    return false;
+                });
+                if (tmp && !ListObjSetupComplete) SetupListObjs();
+                return tmp;
+            }
+        }
 
+        private bool ListObjSetupComplete;
         private List<string> Dirs;
         private List<string> Files;
         private List<string> Dirs2;
@@ -62,6 +80,7 @@ namespace RoboSharp.BackupApp
         public void BindToCommand(RoboCommand cmd)
         {
             Command = cmd;
+            ListObjSetupComplete = false;
             if (cmd.IProgressEstimator != null)
             {
                 BindToProgressEstimator(cmd.IProgressEstimator);
@@ -88,6 +107,7 @@ namespace RoboSharp.BackupApp
             Files2 = new List<string> { "Unique Files Reported by CopyProgressChanged", "---------------------" };
             OrderLog_1 = new List<string> { "Files and Dirs In Order Reported by OnFileProcessed", "---------------------" };
             OrderLog_2 = new List<string> { "Files and Dirs In Order Reported by CopyProgressChanged", "---------------------" };
+            ListObjSetupComplete = true;
         }
 
         #region < Buttons >

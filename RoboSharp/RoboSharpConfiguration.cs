@@ -189,6 +189,76 @@ namespace RoboSharp
         }
         private string fileExcludedToken;
 
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.ExcludeAttributes"/> or <see cref="SelectionOptions.IncludeAttributes"/> filters
+        /// </summary>
+        public string LogParsing_AttribExclusion
+        {
+            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; } 
+            set { attribExcludedToken = value; }
+        }
+        private string attribExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MaxFileSize"/> filters
+        /// </summary>
+        public string LogParsing_MaxFileSizeExclusion
+        {
+            get { return maxfilesizeExcludedToken ?? GetDefaultConfiguration().maxfilesizeExcludedToken ?? "large"; } 
+            set { maxfilesizeExcludedToken = value; }
+        }
+        private string maxfilesizeExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MinFileSize"/> filters
+        /// </summary>
+        public string LogParsing_MinFileSizeExclusion
+        {
+            get { return minfilesizeExcludedToken ?? GetDefaultConfiguration().minfilesizeExcludedToken ?? "small"; } 
+            set { minfilesizeExcludedToken = value; }
+        }
+        private string minfilesizeExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MaxFileAge"/> or <see cref="SelectionOptions.MaxLastAccessDate"/>filters
+        /// </summary>
+        public string LogParsing_MaxAgeOrAccessExclusion
+        {
+            get { return maxageoraccessExcludedToken ?? GetDefaultConfiguration().maxageoraccessExcludedToken ?? "too old"; }
+            set { maxageoraccessExcludedToken = value; }
+        }
+        private string maxageoraccessExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.MinFileAge"/> or <see cref="SelectionOptions.MinLastAccessDate"/>filters
+        /// </summary>
+        public string LogParsing_MinAgeOrAccessExclusion
+        {
+            get { return minageoraccessExcludedToken ?? GetDefaultConfiguration().minageoraccessExcludedToken ?? "too new"; }
+            set { minageoraccessExcludedToken = value; }
+        }
+        private string minageoraccessExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was excluded by <see cref="SelectionOptions.ExcludeChanged"/> filters
+        /// </summary>
+        public string LogParsing_ChangedExclusion
+        {
+            get { return changedExcludedToken ?? GetDefaultConfiguration().changedExcludedToken ?? "changed"; }
+            set { changedExcludedToken = value; }
+        }
+        private string changedExcludedToken;
+
+        /// <summary>
+        /// Log Lines starting with this string indicate : File was included by <see cref="SelectionOptions.IncludeTweaked"/> filters
+        /// </summary>
+        public string LogParsing_TweakedInclusion
+        {
+            get { return tweakedIncludedToken ?? GetDefaultConfiguration().tweakedIncludedToken ?? "tweaked"; }
+            set { tweakedIncludedToken = value; }
+        }
+        private string tweakedIncludedToken;
+
         #endregion
 
         #region < Directory Tokens >
