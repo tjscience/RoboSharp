@@ -61,10 +61,7 @@ namespace RoboSharp.BackupApp
             ListBox_RoboQueueJobs_OptionsPage.ItemsSource = RoboQueue;
             MultiJobErrorGrid.ItemsSource = MultiJobErrors;
 
-            MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
             MultiJob_ListOnlyResults.UpdateDescriptionLblText("List of results from this List-Only Operation.\nThis list is reset every time the queue is restarted.");
-
-            MultiJob_RunResults.BindToList(RoboQueue.RunResults);
             MultiJob_RunResults.UpdateDescriptionLblText("List of results from this Copy/Move Operation.\nThis list is reset every time the queue is restarted.");
 
             cmbConcurrentJobs_OptionsPage.ItemsSource = AllowedJobCounts;
@@ -422,9 +419,15 @@ namespace RoboSharp.BackupApp
                 MultiJobExpander_Progress.IsExpanded = true;
 
                 if (chkListOnly.IsChecked == true)
+                { 
                     await RoboQueue.StartAll_ListOnly();
+                    MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
+                }
                 else
+                { 
                     await RoboQueue.StartAll();
+                    MultiJob_RunResults.BindToList(RoboQueue.RunResults);
+                }
 
                 btnPauseQueue.IsEnabled = false;
                 btnAddToQueue.Content = "Add to Queue";

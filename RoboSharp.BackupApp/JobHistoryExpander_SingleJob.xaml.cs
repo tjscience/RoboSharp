@@ -71,7 +71,6 @@ namespace RoboSharp.BackupApp
             Unbind();
 
             //Set starting values 
-            //Set starting values 
             ResultsList = list;
             ByteStat = list.BytesStatistic;
             DirStat = list.DirectoriesStatistic;
