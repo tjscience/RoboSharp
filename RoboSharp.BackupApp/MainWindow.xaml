@@ -333,7 +333,7 @@
                                     </Grid.ColumnDefinitions>
                                     <!-- ListBox / Edit / Remove buttons -->
                                     <ListBox x:Name="ListBox_RoboQueueJobs_MultiJobPage" Grid.Row="0" Grid.Column="0" SelectionChanged="RoboQueueListBoxSelectionChanged"/>
-                                    <Button x:Name="btnUPdateSelectedJob_Copy" Content="Update Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="98" Click="btn_LoadSelected"/>
+                                    <Button x:Name="btnUpdateSelectedJob_Copy" Content="Update Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="98" Click="btn_LoadSelected"/>
                                     <Button x:Name="btnRemoveSelectedJob_Copy" Content="Remove Selected" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="98" Click="btn_RemoveSelected"/>
                                     <!-- Commands Count To Run -->
                                     <Label x:Name="lblConcurrentJobs_Copy" Grid.Row="0" Grid.Column="1"  Margin="5,0,40,0" Content="Commands to run at once (0 = all):" HorizontalAlignment="Right" VerticalAlignment="Top"/>

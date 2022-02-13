@@ -305,7 +305,7 @@ namespace RoboSharp.BackupApp
                 }
                 else
                 {
-                    MessageBox.Show("Job File Not Loaded / Not Selected.");
+                    MessageBox.Show("Job File Not Loaded / Not Selected");
                 }
             }
             catch
@@ -328,7 +328,7 @@ namespace RoboSharp.BackupApp
                 }
                 else
                 {
-                    MessageBox.Show("Job File Not Save");
+                    MessageBox.Show("Job File Not Saved");
                 }
             }
             catch
@@ -395,52 +395,60 @@ namespace RoboSharp.BackupApp
         {
             if (!RoboQueue.IsRunning)
             {
-                MultiJobProgressBar_JobsComplete.Value = 0;
-                MultiJobProgressBar_JobsComplete.Minimum = 0;
-                MultiJobProgressBar_JobsComplete.Maximum = RoboQueue.ListCount;
+                if (RoboQueue.ListCount > 0)
+                {
+                    MultiJobProgressBar_JobsComplete.Value = 0;
+                    MultiJobProgressBar_JobsComplete.Minimum = 0;
+                    MultiJobProgressBar_JobsComplete.Maximum = RoboQueue.ListCount;
 
-                btnAddToQueue.IsEnabled = false;
-                btnRemoveSelectedJob.IsEnabled = false;
-                btnRemoveSelectedJob_Copy.IsEnabled = false;
-                btnReplaceSelected.IsEnabled = false;
-                btnUPdateSelectedJob_Copy.IsEnabled = false;
+                    btnAddToQueue.IsEnabled = false;
+                    btnRemoveSelectedJob.IsEnabled = false;
+                    btnRemoveSelectedJob_Copy.IsEnabled = false;
+                    btnReplaceSelected.IsEnabled = false;
+                    btnUpdateSelectedJob_Copy.IsEnabled = false;
 
-                btnStartJobQueue.IsEnabled = true;
-                btnStartJobQueue.Content = "Stop Queued Jobs";
+                    btnStartJobQueue.IsEnabled = true;
+                    btnStartJobQueue.Content = "Stop Queued Jobs";
 
-                btnStartJobQueue_Copy.IsEnabled = true;
-                btnStartJobQueue_Copy.Content = "Stop Queued Jobs";
+                    btnStartJobQueue_Copy.IsEnabled = true;
+                    btnStartJobQueue_Copy.Content = "Stop Queued Jobs";
 
-                btnPauseQueue.IsEnabled = true;
+                    btnPauseQueue.IsEnabled = true;
 
-                RoboQueueProgressStackPanel.Children.Clear();
+                    RoboQueueProgressStackPanel.Children.Clear();
 
-                MultiJobProgressTab.IsSelected = true;
-                MultiJobExpander_Progress.IsExpanded = true;
+                    MultiJobProgressTab.IsSelected = true;
+                    MultiJobExpander_Progress.IsExpanded = true;
 
-                if (chkListOnly.IsChecked == true)
-                { 
-                    await RoboQueue.StartAll_ListOnly();
-                    MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
+                    if (chkListOnly.IsChecked == true)
+                    { 
+                        await RoboQueue.StartAll_ListOnly();
+                        MultiJob_ListOnlyResults.BindToList(RoboQueue.ListResults);
+                    }
+                    else
+                    { 
+                        await RoboQueue.StartAll();
+                        MultiJob_RunResults.BindToList(RoboQueue.RunResults);
+                    }
+
+                    btnPauseQueue.IsEnabled = false;
+                    btnAddToQueue.Content = "Add to Queue";
+                    btnStartJobQueue.Content = "Start Queued Jobs";
+                    btnStartJobQueue_Copy.Content = "Start Queued Jobs";
+
+                    btnAddToQueue.IsEnabled = true;
+                    btnRemoveSelectedJob.IsEnabled = true;
+                    btnRemoveSelectedJob_Copy.IsEnabled = true;
+                    btnReplaceSelected.IsEnabled = true;
+                    btnUpdateSelectedJob_Copy.IsEnabled = true;
                 }
                 else
-                { 
-                    await RoboQueue.StartAll();
-                    MultiJob_RunResults.BindToList(RoboQueue.RunResults);
+                {
+                    MessageBox.Show("Job Queue is Empty");
                 }
-
-                btnPauseQueue.IsEnabled = false;
-                btnAddToQueue.Content = "Add to Queue";
-                btnStartJobQueue.Content = "Start Queued Jobs";
-                btnStartJobQueue_Copy.Content = "Start Queued Jobs";
-
-                btnAddToQueue.IsEnabled = true;
-                btnRemoveSelectedJob.IsEnabled = true;
-                btnRemoveSelectedJob_Copy.IsEnabled = true;
-                btnReplaceSelected.IsEnabled = true;
-                btnUPdateSelectedJob_Copy.IsEnabled = true;
-
             }
+
+
             else
                 RoboQueue.StopAll();
         }
