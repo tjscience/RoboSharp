@@ -79,13 +79,13 @@ namespace RoboSharp.Results
 
         #region < Fields >
 
-        private string NameField;
-        private long TotalField;
-        private long CopiedField;
-        private long SkippedField;
-        private long MismatchField;
-        private long FailedField;
-        private long ExtrasField;
+        private string NameField = "";
+        private long TotalField = 0;
+        private long CopiedField = 0;
+        private long SkippedField = 0;
+        private long MismatchField = 0;
+        private long FailedField = 0;
+        private long ExtrasField = 0;
 
         #endregion
 
