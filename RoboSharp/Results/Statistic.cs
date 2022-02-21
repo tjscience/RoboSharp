@@ -22,6 +22,10 @@ namespace RoboSharp.Results
     /// </remarks>
     public class Statistic : IStatistic
     {
+        internal static IStatistic Default_Bytes = new Statistic(type: StatType.Bytes);
+        internal static IStatistic Default_Files = new Statistic(type: StatType.Files);
+        internal static IStatistic Default_Dirs = new Statistic(type: StatType.Directories);
+
         #region < Constructors >
 
         /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>

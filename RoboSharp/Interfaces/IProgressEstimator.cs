@@ -38,5 +38,8 @@ namespace RoboSharp.Interfaces
         /// </summary>
         RoboCopyExitCodes GetExitCode();
 
+        /// <summary> Event that occurs when this IProgressEstimatorObject's IStatistic values have been updated. </summary>
+        event ProgressEstimator.UIUpdateEventHandler ValuesUpdated;
+
     }
 }

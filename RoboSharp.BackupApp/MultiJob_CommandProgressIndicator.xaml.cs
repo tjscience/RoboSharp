@@ -152,25 +152,17 @@ namespace RoboSharp.BackupApp
                 ProgressEstimator_Directories.Text = "Directories";
                 ProgressEstimator_Bytes.Text = "Bytes";
             });
-            e.BytesStatistic.PropertyChanged += ByteStats_PropertyChanged;
-            e.DirectoriesStatistic.PropertyChanged += DirStats_PropertyChanged;
-            e.FilesStatistic.PropertyChanged += FileStats_PropertyChanged;
+            e.ValuesUpdated += IProgressEstimatorValuesUpdated;
         }
 
-        private void FileStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        private void IProgressEstimatorValuesUpdated(Interfaces.IProgressEstimator sender, EventArgObjects.IProgressEstimatorUpdateEventArgs e)
         {
-            ProgressEstimator_Files.Dispatcher.Invoke(() => ProgressEstimator_Files.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        private void DirStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            ProgressEstimator_Directories.Dispatcher.Invoke(() => ProgressEstimator_Directories.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-        }
-
-        private void ByteStats_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            ProgressEstimator_Bytes.Dispatcher.Invoke(() => ProgressEstimator_Bytes.Text = ((RoboSharp.Results.Statistic)sender).ToString(true, true, "\n", true));
-
+            Dispatcher.Invoke(() =>
+            {
+                ProgressEstimator_Files.Text = e.FilesStatistic.ToString(true, true, "\n", true);
+                ProgressEstimator_Bytes.Text = e.BytesStatistic.ToString(true, true, "\n", true);
+                ProgressEstimator_Directories.Text = e.DirectoriesStatistic.ToString(true, true, "\n", true);
+            });
         }
 
         #endregion

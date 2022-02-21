@@ -40,7 +40,7 @@ namespace RoboSharp.Results
         #region < Private Members >
 
         //ThreadSafe Bags/Queues
-        private readonly ConcurrentBag<IStatistic> SubscribedStats = new ConcurrentBag<IStatistic>();
+        private readonly ConcurrentDictionary<IProgressEstimator, object> SubscribedStats = new ConcurrentDictionary<IProgressEstimator, object>();
 
         //Stats
         private readonly Statistic DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
@@ -52,9 +52,9 @@ namespace RoboSharp.Results
         private readonly Statistic tmpDirs;
         private readonly Statistic tmpFiles;
         private readonly Statistic tmpBytes;
-        private DateTime NextDirUpdate = DateTime.Now;
-        private DateTime NextFileUpdate = DateTime.Now;
-        private DateTime NextByteUpdate = DateTime.Now;
+        private DateTime NextUpdate = DateTime.Now;
+        private object StatLock = new object();
+        private object UpdateLock = new object();
         private bool disposedValue;
 
         #endregion
@@ -81,6 +81,9 @@ namespace RoboSharp.Results
 
         RoboCopyExitStatus IResults.Status => new RoboCopyExitStatus((int)GetExitCode());
 
+        /// <inheritdoc cref="IProgressEstimator.ValuesUpdated"/>
+        public event ProgressEstimator.UIUpdateEventHandler ValuesUpdated;
+
         #endregion
 
         #region < Public Methods >
@@ -94,19 +97,19 @@ namespace RoboSharp.Results
             Results.RoboCopyExitCodes code = 0;
 
             //Files Copied
-            if (FileStatsField.Copied > 0)
+            if (FilesStatistic.Copied > 0)
                 code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
 
             //Extra
-            if (DirStatField.Extras > 0 || FileStatsField.Extras > 0)
+            if (DirectoriesStatistic.Extras > 0 || FilesStatistic.Extras > 0)
                 code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
 
             //MisMatch
-            if (DirStatField.Mismatch > 0 || FileStatsField.Mismatch > 0)
+            if (DirectoriesStatistic.Mismatch > 0 || FilesStatistic.Mismatch > 0)
                 code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
 
             //Failed
-            if (DirStatField.Failed > 0 || FileStatsField.Failed > 0)
+            if (DirectoriesStatistic.Failed > 0 || FilesStatistic.Failed > 0)
                 code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
 
             return code;
@@ -117,83 +120,57 @@ namespace RoboSharp.Results
 
         #region < Counting Methods ( private ) >
 
-        private void BindDirStat(object o, PropertyChangedEventArgs e)
-        {
-            Statistic tmp = null;
-            lock (tmpDirs)
-            {
-                tmpDirs.AddStatistic(e);
-                if (tmpDirs.NonZeroValue && DateTime.Now >= NextDirUpdate)
-                {
-                    tmp = tmpDirs.Clone();
-                    tmpDirs.Reset();
-                    NextDirUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
-                }
-            }
-            if (tmp != null)
-                lock (DirStatField)
-                    DirStatField.AddStatistic(tmp);
-        }
-
-        private void BindFileStat(object o, PropertyChangedEventArgs e)
-        {
-            Statistic tmp = null;
-            lock (tmpFiles)
-            {
-                tmpFiles.AddStatistic(e);
-                if (tmpFiles.NonZeroValue && DateTime.Now >= NextFileUpdate)
-                {
-                    tmp = tmpFiles.Clone();
-                    tmpFiles.Reset();
-                    NextFileUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
-                }
-            }
-            if (tmp != null) 
-                lock (FileStatsField)
-                    FileStatsField.AddStatistic(tmp);
-        }
-
-        private void BindByteStat(object o, PropertyChangedEventArgs e)
-        {
-            Statistic tmp = null;
-            lock (tmpBytes)
-            {
-                tmpBytes.AddStatistic(e);
-                if (tmpBytes.NonZeroValue && DateTime.Now >= NextByteUpdate)
-                {
-                    tmp = tmpBytes.Clone();
-                    tmpBytes.Reset();
-                    NextByteUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
-                }
-            }
-            if (tmp != null) 
-                lock (ByteStatsField)
-                    ByteStatsField.AddStatistic(tmp);
-        }
-
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
         /// </summary>
         internal void BindToProgressEstimator(IProgressEstimator estimator)
         {
-            BindToStatistic(estimator.BytesStatistic);
-            BindToStatistic(estimator.DirectoriesStatistic);
-            BindToStatistic(estimator.FilesStatistic);
+            if (!SubscribedStats.ContainsKey(estimator))
+            {
+                SubscribedStats.TryAdd(estimator, null);
+                estimator.ValuesUpdated += Estimator_ValuesUpdated;
+            }
         }
 
-        /// <summary>
-        /// Subscribe to the update events of a <see cref="Statistic"/> object
-        /// </summary>
-        internal void BindToStatistic(IStatistic StatObject)
+        private void Estimator_ValuesUpdated(IProgressEstimator sender, IProgressEstimatorUpdateEventArgs e)
         {
-            lock (SubscribedStats)
+            Statistic bytes = null;
+            Statistic files = null;
+            Statistic dirs = null;
+            
+            lock (StatLock)
             {
-                if (SubscribedStats.Contains(StatObject)) return;
-                SubscribedStats.Add(StatObject);
-            }
-            if (StatObject.Type == Statistic.StatType.Directories) StatObject.PropertyChanged += BindDirStat; //Directories
-            else if (StatObject.Type == Statistic.StatType.Files) StatObject.PropertyChanged += BindFileStat; //Files
-            else if (StatObject.Type == Statistic.StatType.Bytes) StatObject.PropertyChanged += BindByteStat; // Bytes
+                //Update the Temp Stats
+                tmpBytes.AddStatistic(e.ValueChange_Bytes);
+                tmpFiles.AddStatistic(e.ValueChange_Files);
+                tmpDirs.AddStatistic(e.ValueChange_Directories);
+
+                //Check if Update Required
+                //Check if the UpdateTask should push an update to the public fields
+                if (Monitor.TryEnter(UpdateLock))
+                {
+                    if (DateTime.Now >= NextUpdate)
+                    {
+                        bytes = tmpBytes.Clone();
+                        tmpBytes.Reset();
+
+                        files = tmpFiles.Clone();
+                        tmpFiles.Reset();
+
+                        dirs = tmpDirs.Clone();
+                        tmpDirs.Reset();
+                    }
+
+                    // Perform the Add Events
+                    ByteStatsField.AddStatistic(bytes);
+                    FileStatsField.AddStatistic(files);
+                    DirStatField.AddStatistic(dirs);
+
+                    ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, bytes, files, dirs));
+                    NextUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
+                    Monitor.Exit(UpdateLock);
+                }
+            }//End StatLock
         }
 
         /// <summary>
@@ -203,17 +180,9 @@ namespace RoboSharp.Results
         {
             if (SubscribedStats != null)
             {
-                lock (SubscribedStats)
+                foreach (var est in SubscribedStats.Keys)
                 {
-                    foreach (IStatistic c in SubscribedStats)
-                    {
-                        if (c != null)
-                        {
-                            c.PropertyChanged -= BindDirStat;
-                            c.PropertyChanged -= BindFileStat;
-                            c.PropertyChanged -= BindByteStat;
-                        }
-                    }
+                    est.ValuesUpdated -= Estimator_ValuesUpdated;
                 }
             }
         }
@@ -235,18 +204,10 @@ namespace RoboSharp.Results
             if (RunUpdateTask)
             {
                 Task.Run( async () => { 
-                    lock (tmpDirs) 
-                        lock (tmpFiles)
-                            lock (tmpBytes)
-                            {
-                                NextDirUpdate = DateTime.Now.AddMilliseconds(124);
-                                NextFileUpdate = NextDirUpdate;
-                                NextByteUpdate = NextDirUpdate;
-                            }
+                    lock (UpdateLock)
+                        NextUpdate = DateTime.Now.AddMilliseconds(124);
                     await Task.Delay(125);
-                    BindDirStat(null, null);
-                    BindFileStat(null, null);
-                    BindByteStat(null, null);
+                    Estimator_ValuesUpdated(null, IProgressEstimatorUpdateEventArgs.DummyArgs);
                 });
             }
         }

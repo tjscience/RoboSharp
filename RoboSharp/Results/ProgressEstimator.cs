@@ -7,6 +7,7 @@ using RoboSharp.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using RoboSharp.EventArgObjects;
 
 namespace RoboSharp.Results
 {
@@ -106,6 +107,12 @@ namespace RoboSharp.Results
         public IStatistic BytesStatistic => ByteStatsField;
 
         RoboCopyExitStatus IResults.Status => new RoboCopyExitStatus((int)GetExitCode());
+
+        /// <summary>  </summary>
+        public delegate void UIUpdateEventHandler(IProgressEstimator sender, IProgressEstimatorUpdateEventArgs e);
+
+        /// <inheritdoc cref="IProgressEstimator.ValuesUpdated"/>
+        public event UIUpdateEventHandler ValuesUpdated;
 
         #endregion
 
@@ -491,8 +498,12 @@ namespace RoboSharp.Results
             if (DirAdded) DirStatField.AddStatistic(TD);
             if (FileAdded)
             {
-                FileStatsField.AddStatistic(TF);
                 ByteStatsField.AddStatistic(TB);
+                FileStatsField.AddStatistic(TF);
+            }
+            if (DirAdded | FileAdded)
+            {
+                ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, TB, TF, TD));
             }
         }
 
