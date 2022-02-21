@@ -53,8 +53,8 @@ namespace RoboSharp.Results
         private readonly Statistic tmpFiles;
         private readonly Statistic tmpBytes;
         private DateTime NextUpdate = DateTime.Now;
-        private object StatLock = new object();
-        private object UpdateLock = new object();
+        private readonly object StatLock = new object();
+        private readonly object UpdateLock = new object();
         private bool disposedValue;
 
         #endregion
@@ -137,42 +137,50 @@ namespace RoboSharp.Results
             Statistic bytes = null;
             Statistic files = null;
             Statistic dirs = null;
+            bool updateReqd = false;
+
+            //Wait indefinitely until the tmp stats are released -- Previously -> lock(StatLock) { }
+            Monitor.Enter(StatLock);
             
-            lock (StatLock)
+            //Update the Temp Stats
+            tmpBytes.AddStatistic(e.ValueChange_Bytes);
+            tmpFiles.AddStatistic(e.ValueChange_Files);
+            tmpDirs.AddStatistic(e.ValueChange_Directories);
+
+            //Check if an update should be pushed to the public fields
+            //If another thread already has this locked, then it is pushing out an update -> This thread exits the method after releasing StatLock
+            if (Monitor.TryEnter(UpdateLock))
             {
-                //Update the Temp Stats
-                tmpBytes.AddStatistic(e.ValueChange_Bytes);
-                tmpFiles.AddStatistic(e.ValueChange_Files);
-                tmpDirs.AddStatistic(e.ValueChange_Directories);
-
-                //Check if Update Required
-                //Check if the UpdateTask should push an update to the public fields
-                if (Monitor.TryEnter(UpdateLock))
+                if (DateTime.Now >= NextUpdate)
                 {
-                    if (DateTime.Now >= NextUpdate)
-                    {
-                        bytes = tmpBytes.Clone();
-                        tmpBytes.Reset();
+                    bytes = tmpBytes.Clone();
+                    tmpBytes.Reset();
 
-                        files = tmpFiles.Clone();
-                        tmpFiles.Reset();
+                    files = tmpFiles.Clone();
+                    tmpFiles.Reset();
 
-                        dirs = tmpDirs.Clone();
-                        tmpDirs.Reset();
-                    
-
-                    // Perform the Add Events
-                    ByteStatsField.AddStatistic(bytes);
-                    FileStatsField.AddStatistic(files);
-                    DirStatField.AddStatistic(dirs);
-
-                    ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, bytes, files, dirs));
-                    NextUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
-                    Monitor.Exit(UpdateLock);
-
-                    }
+                    dirs = tmpDirs.Clone();
+                    tmpDirs.Reset();
+                    updateReqd = true;
                 }
-            }//End StatLock
+            }
+
+            Monitor.Exit(StatLock); //Release the tmp Stats lock
+
+            if (updateReqd)
+            {
+                // Perform the Add Events
+                ByteStatsField.AddStatistic(bytes);
+                FileStatsField.AddStatistic(files);
+                DirStatField.AddStatistic(dirs);
+                //Raise the event, then update the NextUpdate time period
+                ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, bytes, files, dirs));
+                NextUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
+            }
+
+            //Release the UpdateLock 
+            if (Monitor.IsEntered(UpdateLock)) 
+                Monitor.Exit(UpdateLock); 
         }
 
         /// <summary>
