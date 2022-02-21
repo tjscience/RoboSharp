@@ -159,7 +159,7 @@ namespace RoboSharp.Results
 
                         dirs = tmpDirs.Clone();
                         tmpDirs.Reset();
-                    }
+                    
 
                     // Perform the Add Events
                     ByteStatsField.AddStatistic(bytes);
@@ -169,6 +169,8 @@ namespace RoboSharp.Results
                     ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, bytes, files, dirs));
                     NextUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);
                     Monitor.Exit(UpdateLock);
+
+                    }
                 }
             }//End StatLock
         }
