@@ -151,17 +151,26 @@ namespace RoboSharp.Results
             //If another thread already has this locked, then it is pushing out an update -> This thread exits the method after releasing StatLock
             if (Monitor.TryEnter(UpdateLock))
             {
-                if (DateTime.Now >= NextUpdate)
+                updateReqd = DateTime.Now >= NextUpdate && (tmpFiles.NonZeroValue || tmpDirs.NonZeroValue || tmpBytes.NonZeroValue);
+                if (updateReqd)
                 {
-                    bytes = tmpBytes.Clone();
-                    tmpBytes.Reset();
+                    if (tmpBytes.NonZeroValue)
+                    {
+                        bytes = tmpBytes.Clone();
+                        tmpBytes.Reset();
+                    }
 
-                    files = tmpFiles.Clone();
-                    tmpFiles.Reset();
+                    if (tmpFiles.NonZeroValue)
+                    {
+                        files = tmpFiles.Clone();
+                        tmpFiles.Reset();
+                    }
 
-                    dirs = tmpDirs.Clone();
-                    tmpDirs.Reset();
-                    updateReqd = true;
+                    if (tmpDirs.NonZeroValue)
+                    {
+                        dirs = tmpDirs.Clone();
+                        tmpDirs.Reset();
+                    }
                 }
             }
 
@@ -170,9 +179,9 @@ namespace RoboSharp.Results
             if (updateReqd)
             {
                 // Perform the Add Events
-                ByteStatsField.AddStatistic(bytes);
-                FileStatsField.AddStatistic(files);
-                DirStatField.AddStatistic(dirs);
+                if (bytes != null) ByteStatsField.AddStatistic(bytes);
+                if (files != null) FileStatsField.AddStatistic(files);
+                if (dirs != null) DirStatField.AddStatistic(dirs);
                 //Raise the event, then update the NextUpdate time period
                 ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, bytes, files, dirs));
                 NextUpdate = DateTime.Now.AddMilliseconds(UpdatePeriodInMilliSecond);

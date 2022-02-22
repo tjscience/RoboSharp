@@ -471,37 +471,33 @@ namespace RoboSharp.Results
             Statistic TD = null;
             Statistic TB = null;
             Statistic TF = null;
-            bool DirAdded;
-            bool FileAdded;
             lock (DirLock)
             {
-                DirAdded = tmpDir.NonZeroValue;
-                if (DirAdded)
+                if (tmpDir.NonZeroValue)
                 {
                     TD = tmpDir.Clone();
                     tmpDir.Reset();
                 }
-
             }
             lock (FileLock)
             {
-                FileAdded = tmpFile.NonZeroValue || tmpByte.NonZeroValue;
-                if (FileAdded)
+                if (tmpFile.NonZeroValue)
                 {
                     TF = tmpFile.Clone();
+                    tmpFile.Reset();
+                }
+                if (tmpFile.NonZeroValue)
+                {
                     TB = tmpByte.Clone();
                     tmpByte.Reset();
-                    tmpFile.Reset();
                 }
             }
             //Push UI update after locks are released, to avoid holding up the other thread for too long
-            if (DirAdded) DirStatField.AddStatistic(TD);
-            if (FileAdded)
-            {
-                ByteStatsField.AddStatistic(TB);
-                FileStatsField.AddStatistic(TF);
-            }
-            if (DirAdded | FileAdded)
+            if (TD != null) DirStatField.AddStatistic(TD);
+            if (TB != null) ByteStatsField.AddStatistic(TB);
+            if (TF != null) FileStatsField.AddStatistic(TF);
+            //Raise the event if any of the values have been updated
+            if (TF != null || TD != null || TB != null)
             {
                 ValuesUpdated?.Invoke(this, new IProgressEstimatorUpdateEventArgs(this, TB, TF, TD));
             }
