@@ -617,7 +617,7 @@ namespace RoboSharp.Results
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void AddStatistic(IStatistic stat)
         {
-            if (stat.Type == this.Type && stat.NonZeroValue) 
+            if (stat != null && stat.Type == this.Type && stat.NonZeroValue) 
                 Add(stat.Total, stat.Copied, stat.Extras, stat.Failed, stat.Mismatch, stat.Skipped);
         }
 
