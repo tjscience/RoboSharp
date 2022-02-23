@@ -47,24 +47,20 @@ namespace RoboSharp
         /// <summary>
         /// Loads an XML file into a new JobFile object
         /// </summary>
-        /// <param name="filePath"><inheritdoc cref="LoadFile(string)"/></param>
+        /// <param name="filePath"><inheritdoc cref="LoadRoboCommand(string)"/></param>
         /// <returns>new JobFile object creation is successful, otherwise returns null.</returns>
         public static JobFile LoadJobFile(string filePath) 
         {
-            var tmp = LoadFile(filePath);
-            return tmp == null ? null : new JobFile(LoadRoboCommand(filePath));
+            var tmp = LoadRoboCommand(filePath);
+            return tmp == null ? null : new JobFile(tmp);
         }
 
         /// <summary>
         /// Load an XML file into a new RoboCommand object
         /// </summary>
-        /// <param name="filePath"><inheritdoc cref="LoadFile(string)"/></param>
-        /// <returns>new RoboCommand object creation is successful, otherwise returns null.</returns>
-        public static RoboCommand LoadRoboCommand(string filePath) => LoadFile(filePath);
-
         /// <param name="filePath">path to some XML file</param>
-        /// <returns>new RoboCommand object if creation is successful, otherwise returns null.</returns>
-        private static RoboCommand LoadFile(string filePath)
+        /// <returns>new RoboCommand object creation is successful, otherwise returns null.</returns>
+        public static RoboCommand LoadRoboCommand(string filePath)
         {
             return Deserialize<RoboCommand>(filePath);
         }
