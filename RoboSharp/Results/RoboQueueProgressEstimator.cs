@@ -245,7 +245,6 @@ namespace RoboSharp.Results
             }
         }
 
-        // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
         ~RoboQueueProgressEstimator()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
