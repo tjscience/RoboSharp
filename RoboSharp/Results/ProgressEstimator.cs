@@ -486,7 +486,7 @@ namespace RoboSharp.Results
                     TF = tmpFile.Clone();
                     tmpFile.Reset();
                 }
-                if (tmpFile.NonZeroValue)
+                if (tmpByte.NonZeroValue)
                 {
                     TB = tmpByte.Clone();
                     tmpByte.Reset();
