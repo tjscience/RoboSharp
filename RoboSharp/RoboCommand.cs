@@ -560,6 +560,10 @@ namespace RoboSharp
             return continueWithTask;
         }
 
+        #endregion
+
+        #region < Save & Load Job Files >
+
         /// <summary>
         /// Save this RoboCommand's options to a new RoboCopyJob ( *.RCJ ) file. <br/>
         /// Note: This will not save the path submitted into <see cref="JobOptions.FilePath"/>.
@@ -605,7 +609,13 @@ namespace RoboSharp
             Exception e = null;
             try
             {
+#if DEBUG
+                //TODO: Convert XML writer to its own method
+                RoboSharpXML.SaveRoboCommand(this, path);
+                await Task.Delay(0);
+#else
                 await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
+#endif
             }
             catch (Exception Fault)
             {
@@ -623,8 +633,12 @@ namespace RoboSharp
             }
         }
 
+#if DEBUG
+        // TODO: Add Comments once in release mode & remove IF DEBUG
+        internal static RoboCommand LoadFromXML(string filepath) => RoboSharpXML.LoadRoboCommand(filepath);
+#endif
 
-        #endregion
+#endregion
 
         #region < Process Event Handlers >
 
@@ -750,9 +764,9 @@ namespace RoboSharp
             }
         }
 
-        #endregion
+#endregion
 
-        #region < Other Public Methods >
+#region < Other Public Methods >
 
         /// <inheritdoc cref="Results.RoboCopyResults"/>
         /// <returns>The RoboCopyResults object from the last run</returns>
@@ -813,9 +827,9 @@ namespace RoboSharp
             //this.StopIfDisposing |= ((IRoboCommand)jobFile).StopIfDisposing;
         }
 
-        #endregion
+#endregion
 
-        #region < IDisposable Implementation >
+#region < IDisposable Implementation >
 
         bool disposed = false;
 
@@ -859,6 +873,6 @@ namespace RoboSharp
             disposed = true;
         }
 
-        #endregion IDisposable Implementation
+#endregion IDisposable Implementation
     }
 }

@@ -139,8 +139,10 @@ namespace RoboSharp
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
+        [System.Xml.Serialization.XmlIgnore()]
         public IEnumerable<string> FileFilter
         {
+            //TODO: Modify to allow serialization
             get
             {
                 return fileFilter;
