@@ -80,7 +80,7 @@ namespace RoboSharp
         /// </summary>
         /// <param name="filePath">path to some XML file</param>
         /// <returns>new object if creation is successful, otherwise returns null.</returns>
-        public static T Deserialize<T>(string filePath) where T : class
+        private static T Deserialize<T>(string filePath) where T : class
         {
             var serializer = new XmlSerializer(typeof(T));
             //TODO: Check valid path
