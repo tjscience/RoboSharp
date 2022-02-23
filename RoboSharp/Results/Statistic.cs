@@ -22,6 +22,10 @@ namespace RoboSharp.Results
     /// </remarks>
     public class Statistic : IStatistic
     {
+        internal static IStatistic Default_Bytes = new Statistic(type: StatType.Bytes);
+        internal static IStatistic Default_Files = new Statistic(type: StatType.Files);
+        internal static IStatistic Default_Dirs = new Statistic(type: StatType.Directories);
+
         #region < Constructors >
 
         /// <summary> Create a new Statistic object of <see cref="StatType"/> </summary>
@@ -75,13 +79,13 @@ namespace RoboSharp.Results
 
         #region < Fields >
 
-        private string NameField;
-        private long TotalField;
-        private long CopiedField;
-        private long SkippedField;
-        private long MismatchField;
-        private long FailedField;
-        private long ExtrasField;
+        private string NameField = "";
+        private long TotalField = 0;
+        private long CopiedField = 0;
+        private long SkippedField = 0;
+        private long MismatchField = 0;
+        private long FailedField = 0;
+        private long ExtrasField = 0;
 
         #endregion
 
@@ -613,7 +617,7 @@ namespace RoboSharp.Results
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void AddStatistic(IStatistic stat)
         {
-            if (stat.Type == this.Type && stat.NonZeroValue) 
+            if (stat != null && stat.Type == this.Type && stat.NonZeroValue) 
                 Add(stat.Total, stat.Copied, stat.Extras, stat.Failed, stat.Mismatch, stat.Skipped);
         }
 

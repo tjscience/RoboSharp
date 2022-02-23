@@ -502,16 +502,20 @@ namespace RoboSharp.BackupApp
 
         private void RoboQueue_OnProgressEstimatorCreated(RoboQueue sender, EventArgObjects.ProgressEstimatorCreatedEventArgs e)
         {
-            e.ResultsEstimate.DirectoriesStatistic.OnTotalChanged += DirectoriesStatistic_PropertyChanged;
-            e.ResultsEstimate.FilesStatistic.OnTotalChanged += FilesStatistic_PropertyChanged;
-            e.ResultsEstimate.BytesStatistic.OnTotalChanged += BytesStatistic_PropertyChanged;
+            e.ResultsEstimate.ValuesUpdated += IProgressEstimatorValuesUpdated;
         }
 
-        private void DirectoriesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Directories, sender);
-        private void FilesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Files, sender);
-        private void BytesStatistic_PropertyChanged(Results.Statistic sender, System.ComponentModel.PropertyChangedEventArgs e) => UpdateLabel(ProgressEstimator_Bytes, sender);
+        private void IProgressEstimatorValuesUpdated(Interfaces.IProgressEstimator sender, EventArgObjects.IProgressEstimatorUpdateEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                UpdateLabel(ProgressEstimator_Directories, e.DirectoriesStatistic);
+                UpdateLabel(ProgressEstimator_Files, e.FilesStatistic);
+                UpdateLabel(ProgressEstimator_Bytes, e.BytesStatistic);
+            });
+        }
 
-        private void UpdateLabel(TextBlock lbl, RoboSharp.Results.Statistic stat)
+        private void UpdateLabel(TextBlock lbl, RoboSharp.Interfaces.IStatistic stat)
         {
             Dispatcher.Invoke(() =>
             {
