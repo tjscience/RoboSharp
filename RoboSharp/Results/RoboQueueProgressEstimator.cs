@@ -237,7 +237,6 @@ namespace RoboSharp.Results
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects)
                 }
 
                 //Cancel the tasks
