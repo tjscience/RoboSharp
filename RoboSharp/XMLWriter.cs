@@ -63,37 +63,37 @@ namespace RoboSharp
         public static RoboCommand LoadRoboCommand(string filePath) => LoadFile(filePath);
 
         /// <param name="filePath">path to some XML file</param>
-        /// <returns>new RoboCommand object creation is successful, otherwise returns null.</returns>
+        /// <returns>new RoboCommand object if creation is successful, otherwise returns null.</returns>
         private static RoboCommand LoadFile(string filePath)
         {
-            var serializer = new XmlSerializer(typeof(RoboCommand));
-            //TODO: Check valid path
-            using (var xmlReader = XmlReader.Create(filePath))
-            {
-                if (serializer.CanDeserialize(xmlReader))
-                {
-                    var obj = serializer.Deserialize(xmlReader) as RoboCommand;
-                    return obj;
-                }
-            }
-            return null; //If you get here, return null because deserialization failed
+            return Deserialize<RoboCommand>(filePath);
         }
 
         /// <summary>
         /// Load an XML file into a new RoboQueue object
         /// </summary>
         /// <param name="filePath">path to some XML file</param>
-        /// <returns>new RoboCommand object creation is successful, otherwise returns null.</returns>
+        /// <returns>new RoboQueue object if creation is successful, otherwise returns null.</returns>
         public static RoboQueue LoadRoboQueue(string filePath)
         {
-            var serializer = new XmlSerializer(typeof(RoboQueue));
+            return Deserialize<RoboQueue>(filePath);
+        }
+
+        /// <summary>
+        /// Load an XML file into a new object
+        /// </summary>
+        /// <param name="filePath">path to some XML file</param>
+        /// <returns>new object if creation is successful, otherwise returns null.</returns>
+        public static T Deserialize<T>(string filePath) where T : class
+        {
+            var serializer = new XmlSerializer(typeof(T));
             //TODO: Check valid path
             using (var xmlReader = XmlReader.Create(filePath))
             {
                 if (serializer.CanDeserialize(xmlReader))
                 {
-                    var obj = serializer.Deserialize(xmlReader) as RoboQueue;
-                    return obj;
+                    var obj = serializer.Deserialize(xmlReader);
+                    return (T)obj;
                 }
             }
             return null; //If you get here, return null because deserialization failed
