@@ -170,15 +170,8 @@ namespace RoboSharp.Results
             // - if copy operation wasn't completed, register it as failed instead.
             // - if file was to be marked as 'skipped', then register it as skipped.
 
-            if (FileFailed && CurrentFile != null)
-            {
-                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
-               // FileStatsField.Failed++;
-               // ByteStatsField.Failed += CurrentFile.Size;
-            }
 
-
-            if (CopyOpStarted && CurrentFile != null)
+            if ((FileFailed | CopyOpStarted) && CurrentFile != null)
             {
                 FileStatsField.Failed++;
                 ByteStatsField.Failed += CurrentFile.Size;
