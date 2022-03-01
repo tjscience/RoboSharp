@@ -256,7 +256,8 @@ namespace RoboSharp.Results
 
             if (FileFailed)
             {
-                PerformByteCalc(currentFile, WhereToAdd.Failed);
+                // This calc must be performed with the PREVIOUS file, not the object submitted into the method
+                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
                 FileFailed = false;
             }
 
