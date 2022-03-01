@@ -55,6 +55,8 @@ namespace RoboSharp.Results
         private readonly RoboCommand command;
         private bool SkippingFile;
         private bool CopyOpStarted;
+        internal bool FileFailed { get; set; }
+
         private RoboSharpConfiguration Config => command?.Configuration;
 
         // Stat Objects that will be publicly visible
@@ -251,6 +253,13 @@ namespace RoboSharp.Results
         /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
+
+            if (FileFailed)
+            {
+                PerformByteCalc(currentFile, WhereToAdd.Failed);
+                FileFailed = false;
+            }
+
             if (SkippingFile)
             {
                 // This calc must be performed with the PREVIOUS file, not the object submitted into the method

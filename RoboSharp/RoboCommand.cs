@@ -722,6 +722,8 @@ namespace RoboSharp
                     string value = match.Groups[1].Value;
                     int parsedValue = Int32.Parse(value);
 
+                    ProgressEstimator.FileFailed = true;
+
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
                     if (errorCode.Key != null)
                     {
