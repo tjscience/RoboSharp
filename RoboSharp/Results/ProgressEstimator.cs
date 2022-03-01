@@ -175,6 +175,7 @@ namespace RoboSharp.Results
             {
                 FileStatsField.Failed++;
                 ByteStatsField.Failed += CurrentFile.Size;
+                FileFailed = false;
             }
             else if (SkippingFile && CurrentFile != null)
             {
