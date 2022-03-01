@@ -173,6 +173,8 @@ namespace RoboSharp.Results
             if (FileFailed && CurrentFile != null)
             {
                 PerformByteCalc(CurrentFile, WhereToAdd.Failed);
+               // FileStatsField.Failed++;
+               // ByteStatsField.Failed += CurrentFile.Size;
             }
 
 
