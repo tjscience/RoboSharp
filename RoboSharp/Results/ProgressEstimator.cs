@@ -255,8 +255,13 @@ namespace RoboSharp.Results
         /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
-
-            if (SkippingFile)
+            if (FileFailed)
+            {
+                // This calc must be performed with the PREVIOUS file, not the object submitted into the method
+                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
+                FileFailed = false;
+            }
+            else if (SkippingFile)
             {
                 // This calc must be performed with the PREVIOUS file, not the object submitted into the method
                 PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
