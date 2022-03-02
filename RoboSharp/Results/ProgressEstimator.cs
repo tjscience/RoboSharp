@@ -165,23 +165,22 @@ namespace RoboSharp.Results
             //Stop the Update Task
             UpdateTaskCancelSource?.Cancel();
             UpdateTaskTrigger?.TrySetResult(null);
-            PushUpdate(); // Perform Final calculation before generated Results Object
-
+           
             // - if copy operation wasn't completed, register it as failed instead.
             // - if file was to be marked as 'skipped', then register it as skipped.
 
 
             if ((FileFailed | CopyOpStarted) && CurrentFile != null)
             {
-                FileStatsField.Failed++;
-                ByteStatsField.Failed += CurrentFile.Size;
+                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
                 FileFailed = false;
             }
             else if (SkippingFile && CurrentFile != null)
             {
-                FileStatsField.Skipped++;
-                ByteStatsField.Skipped += CurrentFile.Size;
+                PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
             }
+
+            PushUpdate(); // Perform Final calculation before generated Results Object
 
             // Package up
             return new RoboCopyResults()
