@@ -256,13 +256,13 @@ namespace RoboSharp.Results
         {
             if (FileFailed)
             {
-                // This calc must be performed with the PREVIOUS file, not the object submitted into the method
+                // This calc must be performed with the PREVIOUS file (CurrentFile rather than currentFile), not the object submitted into the method
                 PerformByteCalc(CurrentFile, WhereToAdd.Failed);
                 FileFailed = false;
             }
             else if (SkippingFile)
             {
-                // This calc must be performed with the PREVIOUS file, not the object submitted into the method
+                // This calc must be performed with the PREVIOUS file (CurrentFile rather than currentFile), not the object submitted into the method
                 PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
             }
 
