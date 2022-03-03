@@ -53,8 +53,8 @@ namespace RoboSharp.Results
         #region < Private Members >
 
         private readonly RoboCommand command;
-        private bool SkippingFile;
-        private bool CopyOpStarted;
+        private bool SkippingFile { get; set; }
+        private bool CopyOpStarted { get; set; }
         internal bool FileFailed { get; set; }
 
         private RoboSharpConfiguration Config => command?.Configuration;
@@ -169,18 +169,16 @@ namespace RoboSharp.Results
             // - if copy operation wasn't completed, register it as failed instead.
             // - if file was to be marked as 'skipped', then register it as skipped.
 
-
             if ((FileFailed | CopyOpStarted) && CurrentFile != null)
             {
                 PerformByteCalc(CurrentFile, WhereToAdd.Failed);
-                FileFailed = false;
             }
             else if (SkippingFile && CurrentFile != null)
             {
                 PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
             }
 
-            PushUpdate(); // Perform Final calculation before generated Results Object
+            PushUpdate(); // Perform Final calculation before generating the Results Object
 
             // Package up
             return new RoboCopyResults()
@@ -258,7 +256,6 @@ namespace RoboSharp.Results
             {
                 // This calc must be performed with the PREVIOUS file (CurrentFile rather than currentFile), not the object submitted into the method
                 PerformByteCalc(CurrentFile, WhereToAdd.Failed);
-                FileFailed = false;
             }
             else if (SkippingFile)
             {
@@ -269,6 +266,7 @@ namespace RoboSharp.Results
             CurrentFile = currentFile;
             SkippingFile = false;
             CopyOpStarted = false;
+            FileFailed = false;
 
             // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
             bool SpecialHandling = !CopyOperation || currentFile.Size == 0;
@@ -392,6 +390,7 @@ namespace RoboSharp.Results
             //Reset Flags
             SkippingFile = false;
             CopyOpStarted = false;
+            FileFailed = false;
             CurrentFile = null;
             //Perform Math
             lock (FileLock)
