@@ -71,6 +71,8 @@ namespace RoboSharp.Results
         internal ProcessedFileInfo CurrentDir { get; private set; }
         /// <summary>Used for providing Source Directory in CopyProgressChanged args AND for byte Statistic</summary>
         internal ProcessedFileInfo CurrentFile { get; private set; }
+        /// <summary> Marked as TRUE if this is LIST ONLY mode or the file is 0KB  -- Value set during 'AddFile' method </summary>
+        private bool CurrentFile_SpecialHandling { get; set; }
 
         //Stat objects to house the data temporarily before writing to publicly visible stat objects
         readonly Statistic tmpDir =new Statistic(type: Statistic.StatType.Directories);
@@ -169,15 +171,7 @@ namespace RoboSharp.Results
             // - if copy operation wasn't completed, register it as failed instead.
             // - if file was to be marked as 'skipped', then register it as skipped.
 
-            if ((FileFailed | CopyOpStarted) && CurrentFile != null)
-            {
-                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
-            }
-            else if (SkippingFile && CurrentFile != null)
-            {
-                PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
-            }
-
+            ProcessPreviousFile();
             PushUpdate(); // Perform Final calculation before generating the Results Object
 
             // Package up
@@ -249,19 +243,37 @@ namespace RoboSharp.Results
 
         #region < Calculate Files (Internal) >
 
+        /// <summary>
+        /// Performs final processing of the previous file if needed
+        /// </summary>
+        private void ProcessPreviousFile()
+        {
+            if (CurrentFile != null)
+            {
+                if (FileFailed)
+                {
+                    PerformByteCalc(CurrentFile, WhereToAdd.Failed);
+                }
+                else if (CopyOpStarted && CurrentFile_SpecialHandling)
+                {
+                    PerformByteCalc(CurrentFile, WhereToAdd.Copied);
+                }
+                else if (SkippingFile)
+                {
+                    PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
+                }
+                else if (UpdateTaskCancelSource?.IsCancellationRequested ?? true)
+                {
+                    //Default marks as failed - This should only occur during the 'GetResults()' method due to the if statement above.
+                    PerformByteCalc(CurrentFile, WhereToAdd.Failed);
+                }
+            }
+        }
+
         /// <summary>Increment <see cref="FileStatsField"/></summary>
         internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
-            if (FileFailed)
-            {
-                // This calc must be performed with the PREVIOUS file (CurrentFile rather than currentFile), not the object submitted into the method
-                PerformByteCalc(CurrentFile, WhereToAdd.Failed);
-            }
-            else if (SkippingFile)
-            {
-                // This calc must be performed with the PREVIOUS file (CurrentFile rather than currentFile), not the object submitted into the method
-                PerformByteCalc(CurrentFile, WhereToAdd.Skipped);
-            }
+            ProcessPreviousFile();
 
             CurrentFile = currentFile;
             SkippingFile = false;
@@ -270,6 +282,7 @@ namespace RoboSharp.Results
 
             // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
             bool SpecialHandling = !CopyOperation || currentFile.Size == 0;
+            CurrentFile_SpecialHandling = SpecialHandling;
 
             // EXTRA FILES
             if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
@@ -296,73 +309,62 @@ namespace RoboSharp.Results
                     //Special handling for 0kb files & ListOnly -> They won't get Progress update, but will be created
                     if (SpecialHandling)
                     {
-                        PerformByteCalc(currentFile, WhereToAdd.Copied);
+                        SetCopyOpStarted();
                     }
                 }
                 else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
                 {
                     if (command.SelectionOptions.IncludeSame)
                     {
-                        if (SpecialHandling) PerformByteCalc(currentFile, WhereToAdd.Copied);   // Only add to Copied if ListOnly / 0-bytes
+                        if (SpecialHandling) SetCopyOpStarted();   // Only add to Copied if ListOnly / 0-bytes
                     }
                     else
                         PerformByteCalc(currentFile, WhereToAdd.Skipped);
                 }
                 else if (SpecialHandling) // These checks are always performed during a ListOnly operation
                 {
-                    if (currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase))  // ExcludeOlder
+
+                    switch (true)
                     {
-                        if (command.SelectionOptions.ExcludeOlder)
+                        //Skipped Or Copied Conditions
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase):    // ExcludeNewer
+                            SkippedOrCopied(currentFile, command.SelectionOptions.ExcludeNewer);
+                            break;
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase):    // ExcludeOlder
+                            SkippedOrCopied(currentFile, command.SelectionOptions.ExcludeOlder);
+                            break;
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase):  //ExcludeChanged
+                            SkippedOrCopied(currentFile, command.SelectionOptions.ExcludeChanged);
+                            break;
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_TweakedInclusion, StringComparison.CurrentCultureIgnoreCase):  //IncludeTweaked
+                            SkippedOrCopied(currentFile, !command.SelectionOptions.IncludeTweaked);
+                            break;
+
+                        //Mark As Skip Conditions
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase):    //FileExclusion
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_AttribExclusion, StringComparison.CurrentCultureIgnoreCase):  //AttributeExclusion
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_MaxFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase):     //MaxFileSizeExclusion
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_MinFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase):     //MinFileSizeExclusion
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_MaxAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase):  //MaxAgeOrAccessExclusion
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_MinAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase):  //MinAgeOrAccessExclusion
                             PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                        else
-                            PerformByteCalc(currentFile, WhereToAdd.Copied);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase))  //ExcludeNewer
-                    {
-                        if (command.SelectionOptions.ExcludeNewer)
-                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                        else
-                            PerformByteCalc(currentFile, WhereToAdd.Copied);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_AttribExclusion, StringComparison.CurrentCultureIgnoreCase))  //AttributeExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))  //MaxFileSizeExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinFileSizeExclusion, StringComparison.CurrentCultureIgnoreCase))  //MinFileSizeExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MaxAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))  //MaxAgeOrAccessExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_MinAgeOrAccessExclusion, StringComparison.CurrentCultureIgnoreCase))  //MinAgeOrAccessExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase))  //ExcludeChanged
-                    {
-                        if (command.SelectionOptions.ExcludeChanged)
-                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                        else
-                            PerformByteCalc(currentFile, WhereToAdd.Copied);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_TweakedInclusion, StringComparison.CurrentCultureIgnoreCase))  //IncludeTweaked
-                    {
-                        if (command.SelectionOptions.IncludeTweaked)
-                            PerformByteCalc(currentFile, WhereToAdd.Copied);
-                        else
-                            PerformByteCalc(currentFile, WhereToAdd.Skipped);
-                    }
-                    else if (currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase))  //FileExclusion
-                    {
-                        PerformByteCalc(currentFile, WhereToAdd.Skipped);
+                            break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Method meant only to be called from AddFile method while SpecialHandling is true - helps normalize code and avoid repetition
+        /// </summary>
+        private void SkippedOrCopied(ProcessedFileInfo currentFile, bool MarkSkipped)
+        {
+            if (MarkSkipped)
+                PerformByteCalc(currentFile, WhereToAdd.Skipped);
+            else
+            {
+                SetCopyOpStarted();
+                //PerformByteCalc(currentFile, WhereToAdd.Copied);
             }
         }
 
@@ -387,11 +389,14 @@ namespace RoboSharp.Results
         private void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
         {
             if (file == null) return;
+            
             //Reset Flags
             SkippingFile = false;
             CopyOpStarted = false;
             FileFailed = false;
             CurrentFile = null;
+            CurrentFile_SpecialHandling = false;
+
             //Perform Math
             lock (FileLock)
             {
