@@ -4,7 +4,7 @@
         xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:RoboSharp.BackupApp" mc:Ignorable="av" x:Class="RoboSharp.BackupApp.MainWindow"
         Title="Backup App" Height="700" Width="750" ResizeMode="CanResizeWithGrip" MinWidth="750" MaxWidth="750" MinHeight="650" >
     <Grid IsSharedSizeScope="True">
-        <TabControl SelectionChanged="TabControl_SelectionChanged">
+        <TabControl>
             <TabItem Header="Options" x:Name="OptionsTab">
                 <Grid>
                     <ScrollViewer Margin="0,0,0,0" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto">
@@ -114,7 +114,7 @@
                                         <CheckBox Grid.Row="6" Grid.Column="2" x:Name="EnableRestartModeWithBackupFallback" Margin="10,0,0,0" />
                                         <CheckBox Grid.Row="7" Grid.Column="2" x:Name="UseUnbufferedIo" Margin="10,0,0,0" />
                                         <CheckBox Grid.Row="8" Grid.Column="2" x:Name="EnableEfsRawMode" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="9" Grid.Column="2" x:Name="CopyFlags" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
+                                        <TextBox Grid.Row="9" Grid.Column="2" x:Name="CopyFlags" Margin="10,0,0,0" PreviewTextInput="IsCopyFlag_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
                                         <CheckBox Grid.Row="10" Grid.Column="2" x:Name="CopyFilesWithSecurity" Margin="10,0,0,0" />
                                         <CheckBox Grid.Row="11" Grid.Column="2" x:Name="CopyAll" Margin="10,0,0,0" />
                                         <CheckBox Grid.Row="12" Grid.Column="2" x:Name="RemoveFileInformation" Margin="10,0,0,0" />

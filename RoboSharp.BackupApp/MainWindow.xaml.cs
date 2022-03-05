@@ -685,23 +685,23 @@ namespace RoboSharp.BackupApp
         {
             if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
                 e.Handled = true;
+            if ("bdfgijklmopquvwxyzBDFGIJKLMOPQUVWXYZ".Contains(e.Text))
+                e.Handled = true;
+            if (((TextBox)sender).Text.Contains(e.Text))
+                e.Handled = true;
+        }
+
+        private void IsCopyFlag_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
+                e.Handled = true;
             if ("bcefghijklmnpqrvwxyzBCEFGHIJKLMNPQRVWXYZ".Contains(e.Text))
                 e.Handled = true;
             if (((TextBox)sender).Text.Contains(e.Text))
                 e.Handled = true;
         }
 
-        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
         #endregion
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 
     public class FileError

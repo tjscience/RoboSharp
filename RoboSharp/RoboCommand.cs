@@ -722,6 +722,12 @@ namespace RoboSharp
                     string value = match.Groups[1].Value;
                     int parsedValue = Int32.Parse(value);
 
+                    /* 
+                     * Mark the current file as Failed
+                     * TODO: This data may have to be parsed to determine if it involved the current file's filename, or some other error. At time of writing, it appears that it doesn't require this check.
+                     * */
+                    ProgressEstimator.FileFailed = true;
+
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
                     if (errorCode.Key != null)
                     {
