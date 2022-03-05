@@ -728,6 +728,7 @@ namespace RoboSharp
                      * */
                     ProgressEstimator.FileFailed = true;
 
+
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
                     if (errorCode.Key != null)
                     {
