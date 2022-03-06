@@ -56,6 +56,8 @@ namespace RoboSharp
 
         #endregion
 
+        private static Regex BaseErrTokenRegex = new Regex("(?<Date>.*?)\\s+IDENTIFIER\\s+(?<ErrCode>[0-9]+)\\s+(?<SignedErrCode>\\([0-9Xx]+\\))\\s+(?<Descrip>[\\w\\s]+(?!:))(?<Path>.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
+
         private static readonly IDictionary<string, RoboSharpConfiguration>
             defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
         {
@@ -114,7 +116,7 @@ namespace RoboSharp
         {
             return new Regex(BaseErrTokenRegex.ToString().Replace("IDENTIFER", errorToken), BaseErrTokenRegex.Options);
         }
-        private static Regex BaseErrTokenRegex = new Regex("(?<Date>.*?)\\s+IDENTIFIER\\s+(?<ErrCode>[0-9]+)\\s+(?<SignedErrCode>\\([0-9Xx]+\\))\\s+(?<Descrip>[\\w\\s]+(?!:))(?<Path>.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
+        
 
         #region < Tokens for Log Parsing >
 
