@@ -13,20 +13,31 @@ namespace RoboSharpUnitTesting
     static class StaticMethods
     {
         public static string TestDestination { get; } = "C:\\RoboSharpUnitTests";
-        public static string TestSource2 => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
+        public static string Source_LargerNewer => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
+        public static string Source_Standard => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
 
-        public static string ConvertToLinedString(this IEnumerable<string> strings)
+        /// <summary>
+        /// Generate the Starter Options and Test Objects to compare
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <param name="UseLargerFileSet">When set to TRUE, uses the larger file set (which is also newer save times)</param>
+        public static RoboCommand GenerateCommand(bool UseLargerFileSet)
         {
-            string ret = "";
-            foreach (string s in strings)
-                ret += s + "\n";
-            return ret;
+            // Build the base command
+            var cmd = new RoboCommand();
+            cmd.CopyOptions.Source = UseLargerFileSet ? Source_LargerNewer : Source_Standard;
+            cmd.CopyOptions.Destination = TestDestination;
+            cmd.CopyOptions.CopySubdirectoriesIncludingEmpty = true;
+            return cmd;
         }
 
-        public static void SetValues(this Statistic stat, int total, int copied, int failed, int extras, int mismatch, int skipped)
+        public static async Task<RoboSharpTestResults> RunTest(RoboCommand cmd)
         {
-            stat.Reset();
-            stat.Add(total, copied, extras, failed, mismatch, skipped);
+            IProgressEstimator prog = null;
+            cmd.OnProgressEstimatorCreated += (o, e) => prog = e.ResultsEstimate;
+            var results = await cmd.StartAsync();
+            return new RoboSharpTestResults(results, prog);
         }
 
         /// <summary>
@@ -40,27 +51,18 @@ namespace RoboSharpUnitTesting
             }
         }
 
-        /// <summary>
-        /// Generate the Starter Options and Test Objects to compare
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        public static RoboCommand GenerateCommand()
+        public static string ConvertToLinedString(this IEnumerable<string> strings)
         {
-            // Build the base command
-            var cmd = new RoboCommand();
-            cmd.CopyOptions.Source = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
-            cmd.CopyOptions.Destination = TestDestination;
-            cmd.CopyOptions.CopySubdirectoriesIncludingEmpty = true;
-            return cmd;
+            string ret = "";
+            foreach (string s in strings)
+                ret += s + "\n";
+            return ret;
         }
 
-        public static async Task<RoboSharpTestResults> RunTest(RoboCommand cmd)
+        public static void SetValues(this Statistic stat, int total, int copied, int failed, int extras, int mismatch, int skipped)
         {
-            IProgressEstimator prog = null;
-            cmd.OnProgressEstimatorCreated += (o, e) => prog = e.ResultsEstimate;
-            var results = await cmd.StartAsync();
-            return new RoboSharpTestResults(results, prog);
+            stat.Reset();
+            stat.Add(total, copied, extras, failed, mismatch, skipped);
         }
     }
 }
