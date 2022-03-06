@@ -27,6 +27,9 @@ namespace RoboSharp.Results
 
         private readonly List<string> outputLines = new List<string>();
 
+        /// <summary>This is the last line that was logged.</summary>
+        internal string LastLine => outputLines.Count > 0 ? outputLines.Last() : "";
+
         #endregion
 
         #region < Command Options Properties >
