@@ -717,6 +717,7 @@ namespace RoboSharp
                 }
                 else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
                 {
+
                     // parse error code
                     var match = Configuration.ErrorTokenRegex.Match(data);
                     string value = match.Groups[1].Value;
@@ -732,11 +733,11 @@ namespace RoboSharp
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
                     if (errorCode.Key != null)
                     {
-                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
+                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue,file.Name));
                     }
                     else
                     {
-                        OnError(this, new ErrorEventArgs(data, parsedValue));
+                        OnError(this, new ErrorEventArgs(data, parsedValue,file.Name));
                     }
                 }
                 else if (!data.StartsWith("----------")) // System Message
