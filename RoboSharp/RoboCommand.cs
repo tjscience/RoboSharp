@@ -733,11 +733,11 @@ namespace RoboSharp
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
                     if (errorCode.Key != null)
                     {
-                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue,file.Name));
+                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue,""));
                     }
                     else
                     {
-                        OnError(this, new ErrorEventArgs(data, parsedValue,file.Name));
+                        OnError(this, new ErrorEventArgs(data, parsedValue,""));
                     }
                 }
                 else if (!data.StartsWith("----------")) // System Message
