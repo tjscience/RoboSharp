@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace RoboSharpUnitTesting
 {
-    static class StaticMethods
+    static class Test_Setup
     {
         public static string TestDestination { get; } = "C:\\RoboSharpUnitTests";
         public static string Source_LargerNewer => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");

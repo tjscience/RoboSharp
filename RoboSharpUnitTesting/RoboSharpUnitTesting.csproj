@@ -50,9 +50,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExpectedResults.cs" />
-    <Compile Include="StaticMethods.cs" />
-    <Compile Include="TestResults.cs" />
-    <Compile Include="RoboSharpResultsTesting.cs" />
+    <Compile Include="Test_Setup.cs" />
+    <Compile Include="RoboSharpTestResults.cs" />
+    <Compile Include="ProgressEstimatorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
