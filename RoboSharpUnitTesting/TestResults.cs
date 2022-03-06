@@ -17,7 +17,7 @@ namespace RoboSharpUnitTesting
         {
             Results = results;
             Estimator = estimator;
-            Errors = CompareIResults(results, (ProgressEstimator)estimator, false).ToArray();
+            Errors = CompareIResults(results, (ProgressEstimator)estimator).ToArray();
         }
 
         public IProgressEstimator Estimator { get; }
@@ -58,29 +58,28 @@ namespace RoboSharpUnitTesting
             }
         }
 
-        public static List<string> CompareIResults(IResults expected, IResults actual, bool IsEstimator)
+        public static List<string> CompareIResults(IResults expected, IResults actual)
         {
             var Errors = new List<string>();
-            CompareStatistics(expected.DirectoriesStatistic, actual.DirectoriesStatistic, IsEstimator, ref Errors);
-            CompareStatistics(expected.FilesStatistic, actual.FilesStatistic, IsEstimator, ref Errors);
-            CompareStatistics(expected.BytesStatistic, actual.BytesStatistic, IsEstimator, ref Errors);
+            CompareStatistics(expected.DirectoriesStatistic, actual.DirectoriesStatistic, ref Errors);
+            CompareStatistics(expected.FilesStatistic, actual.FilesStatistic, ref Errors);
+            CompareStatistics(expected.BytesStatistic, actual.BytesStatistic, ref Errors);
             return Errors;
         }
 
-        public static bool CompareStatistics(IStatistic expectedResults, IStatistic results, bool IsEstimator, ref List<string> Errors)
+        public static bool CompareStatistics(IStatistic expectedResults, IStatistic results, ref List<string> Errors)
         {
-            ErrGenerator("Total", IsEstimator, expectedResults, results, ref Errors);
-            ErrGenerator("Copied", IsEstimator, expectedResults, results, ref Errors);
-            ErrGenerator("Extras", IsEstimator, expectedResults, results, ref Errors);
-            ErrGenerator("Skipped", IsEstimator, expectedResults, results, ref Errors);
-            ErrGenerator("Failed", IsEstimator, expectedResults, results, ref Errors);
-            ErrGenerator("Mismatch", IsEstimator, expectedResults, results, ref Errors);
+            ErrGenerator("Total", expectedResults, results, ref Errors);
+            ErrGenerator("Copied", expectedResults, results, ref Errors);
+            ErrGenerator("Extras", expectedResults, results, ref Errors);
+            ErrGenerator("Skipped", expectedResults, results, ref Errors);
+            ErrGenerator("Failed", expectedResults, results, ref Errors);
+            ErrGenerator("Mismatch", expectedResults, results, ref Errors);
             return Errors.Count == 0;
         }
 
-        private static void ErrGenerator(string propName, bool IsEstimator, IStatistic expected, IStatistic actual, ref List<string> Errors)
+        private static void ErrGenerator(string propName, IStatistic expected, IStatistic actual, ref List<string> Errors)
         {
-            string whatErrored = IsEstimator ? $"ProgressEstimator.{expected.Type}" : $"Results.{expected.Type}";
             long eSize = 0; long aSize = 0;
             switch(propName)
             {
@@ -92,7 +91,7 @@ namespace RoboSharpUnitTesting
                 case "Skipped": eSize = expected.Skipped; aSize = actual.Skipped; break;
             }
             if (eSize != aSize)
-                Errors.Add($"{whatErrored}.{propName} -- Expected: {eSize}  || Actual: {aSize}");
+                Errors.Add($"{expected.Type}.{propName} -- Expected: {eSize}  || Actual: {aSize}");
         }
     }
 }
