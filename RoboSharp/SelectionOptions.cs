@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace RoboSharp
 {
@@ -330,6 +331,40 @@ namespace RoboSharp
         public virtual bool ExcludeJunctionPointsForFiles { get; set; }
 
         #endregion Public Properties
+
+        /// <param name="AttributesToInclude"><inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/></param>
+        /// <inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/>
+        public void SetIncludedAttributes(FileAttributes? AttributesToInclude) => this.IncludeAttributes = ConvertFileAttrToString(AttributesToInclude);
+
+        /// <param name="AttributesToExclude"><inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/></param>
+        /// <inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/>
+        public void SetExcludedAttributes(FileAttributes? AttributesToExclude) => this.ExcludeAttributes = ConvertFileAttrToString(AttributesToExclude);
+
+        /// <summary>
+        /// Converts a <see cref="FileAttributes"/> enum to its RASHCNETO string.
+        /// </summary>
+        /// <param name="attributes">
+        /// Accepts: ReadOnly, Archive, System, Hidden, Compressed, NotContentIndexed, Encrypted, Temporary, Offline <br/>
+        /// Ignores: All Other Attributes <br/>
+        /// Pass in NULL value to return empty string.
+        /// </param>
+        /// <returns>RASHCNETO depending on submitted enum</returns>
+        public static string ConvertFileAttrToString(FileAttributes? attributes)
+        {
+            if (attributes is null) return String.Empty;
+            string s = "";
+            var Attr = (FileAttributes)attributes;
+            if (Attr.HasFlag(FileAttributes.ReadOnly)) s += "R";
+            if (Attr.HasFlag(FileAttributes.Archive)) s += "A";
+            if (Attr.HasFlag(FileAttributes.System)) s += "S";
+            if (Attr.HasFlag(FileAttributes.Hidden)) s += "H";
+            if (Attr.HasFlag(FileAttributes.Compressed)) s += "C";
+            if (Attr.HasFlag(FileAttributes.NotContentIndexed)) s += "N";
+            if (Attr.HasFlag(FileAttributes.Encrypted)) s += "E";
+            if (Attr.HasFlag(FileAttributes.Temporary)) s += "T";
+            if (Attr.HasFlag(FileAttributes.Offline)) s += "O";
+            return s;
+        }
 
         internal string Parse()
         {
