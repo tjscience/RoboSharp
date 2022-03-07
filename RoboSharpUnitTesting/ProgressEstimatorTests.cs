@@ -98,6 +98,33 @@ namespace RoboSharpUnitTesting
             UnitTestResults.AssertTest();
         }
 
+        [TestMethod]
+        public void Test_ExcludeLastAccessDate()
+        {
+            //Create the command and base values for the Expected Results
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, ListOnlyMode);
+
+            //Set last access time to date in the past for two files
+            string filePath1 = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD", "1024_Bytes.txt");
+            string filePath2 = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD", "4_Bytes.txt");
+            File.SetLastAccessTime(filePath1, new DateTime(1980, 1, 1));
+            File.SetLastAccessTime(filePath2, new DateTime(1980, 1, 1));
+
+            //Set Up Results
+            cmd.SelectionOptions.MaxLastAccessDate = "19900101";
+
+            Test_Setup.ClearOutTestDestination();
+            RoboSharpTestResults UnitTestResults = Test_Setup.RunTest(cmd).Result;
+
+            //Evaluate the results and pass/Fail the test
+            UnitTestResults.AssertTest();
+
+            //Set last access time back to today for two files
+            File.SetLastAccessTime(filePath1, DateTime.Now);
+            File.SetLastAccessTime(filePath2, DateTime.Now);
+        }
+
+
         #region < Attribute Testing >
 
         /*TODO: While these all report identical values from RoboCopy and progressEstimator, they aren't working as expected.
