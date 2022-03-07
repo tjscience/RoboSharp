@@ -22,13 +22,14 @@ namespace RoboSharpUnitTesting
         /// <remarks>
         /// </remarks>
         /// <param name="UseLargerFileSet">When set to TRUE, uses the larger file set (which is also newer save times)</param>
-        public static RoboCommand GenerateCommand(bool UseLargerFileSet)
+        public static RoboCommand GenerateCommand(bool UseLargerFileSet, bool ListOnlyMode)
         {
             // Build the base command
             var cmd = new RoboCommand();
             cmd.CopyOptions.Source = UseLargerFileSet ? Source_LargerNewer : Source_Standard;
             cmd.CopyOptions.Destination = TestDestination;
             cmd.CopyOptions.CopySubdirectoriesIncludingEmpty = true;
+            cmd.LoggingOptions.ListOnly = ListOnlyMode;
             return cmd;
         }
 
