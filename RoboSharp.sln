@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2027
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32002.261
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoboSharp.BackupApp", "RoboSharp.BackupApp\RoboSharp.BackupApp.csproj", "{5DB0CD4C-E049-4257-ABBB-C61F11413A0E}"
 EndProject
@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoboSharp", "RoboSharp\RoboSharp.csproj", "{8185F775-00EF-4F28-98BC-6B3F8944C23A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoboSharpUnitTesting", "RoboSharpUnitTesting\RoboSharpUnitTesting.csproj", "{A62C4662-1861-4D57-B6ED-1BED42DE11F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{8185F775-00EF-4F28-98BC-6B3F8944C23A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8185F775-00EF-4F28-98BC-6B3F8944C23A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8185F775-00EF-4F28-98BC-6B3F8944C23A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A62C4662-1861-4D57-B6ED-1BED42DE11F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A62C4662-1861-4D57-B6ED-1BED42DE11F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A62C4662-1861-4D57-B6ED-1BED42DE11F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A62C4662-1861-4D57-B6ED-1BED42DE11F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
