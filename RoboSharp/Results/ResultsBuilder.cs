@@ -43,6 +43,8 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="CopyOptions.Destination"/>
         internal string Destination { get; set; }
 
+        internal List<ErrorEventArgs> RoboCopyErrors { get; } = new List<ErrorEventArgs>();
+
         #endregion
 
         #region < Counters in case cancellation >
@@ -98,6 +100,7 @@ namespace RoboSharp.Results
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
             res.LogLines = outputLines.ToArray();
+            res.RoboCopyErrors = this.RoboCopyErrors.ToArray();
             res.Source = this.Source;
             res.Destination = this.Destination;
             res.CommandOptions = this.CommandOptions;

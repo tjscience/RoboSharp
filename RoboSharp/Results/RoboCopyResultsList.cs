@@ -211,6 +211,18 @@ namespace RoboSharp.Results
             return tmp.ToArray();
         }
 
+        /// <summary>
+        /// Combine the <see cref="RoboCopyResults.RoboCopyErrors"/> into a single array of errors
+        /// </summary>
+        /// <returns>New array of the ErrorEventArgs objects</returns>
+        public ErrorEventArgs[] GetErrors()
+        {
+            List<ErrorEventArgs> tmp = new List<ErrorEventArgs> { };
+            foreach (RoboCopyResults r in this)
+                tmp.AddRange(r?.RoboCopyErrors);
+            return tmp.ToArray();
+        }
+
         #endregion
 
         #region < INotifyCollectionChanged >

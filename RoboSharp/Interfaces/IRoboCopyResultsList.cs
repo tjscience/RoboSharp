@@ -75,6 +75,12 @@ namespace RoboSharp.Interfaces
         /// <returns>New array of the FilesStatistic objects</returns>
         ISpeedStatistic[] GetSpeedStatistics();
 
+        /// <summary>
+        /// Combine the <see cref="RoboCopyResults.RoboCopyErrors"/> into a single array of errors
+        /// </summary>
+        /// <returns>New array of the ErrorEventArgs objects</returns>
+        ErrorEventArgs[] GetErrors();
+
         #endregion
     }
 }

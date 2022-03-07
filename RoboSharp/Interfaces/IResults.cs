@@ -7,7 +7,7 @@ using RoboSharp.Results;
 namespace RoboSharp.Interfaces
 {
     /// <summary>
-    /// Provides <see cref="IStatistic"/> objects for File, Directory, and Bytes
+    /// Provides <see cref="IStatistic"/> objects for File, Directory, and Bytes to allow comparison between ProgressEstimator and RoboCopyResults objects
     /// </summary>
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/IResults"/>
@@ -25,5 +25,6 @@ namespace RoboSharp.Interfaces
 
         /// <inheritdoc cref="RoboCopyExitStatus"/>
         RoboCopyExitStatus Status { get; }
+
     }
 }

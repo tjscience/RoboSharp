@@ -728,7 +728,7 @@ namespace RoboSharp
                 else if (Configuration.ErrorTokenRegex.IsMatch(lastData)) // Error Message - Uses previous data instead since RoboCopy reports errors onto line 1, then description onto line 2.
                 {
                     ErrorEventArgs args = new ErrorEventArgs(lastData, data, Configuration.ErrorTokenRegex);
-                    //TODO: Add to ResultsBuilder and Results
+                    resultsBuilder.RoboCopyErrors.Add(args);
 
                     //Check to Raise the event
                     OnError?.Invoke(this, args);

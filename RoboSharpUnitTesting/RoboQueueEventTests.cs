@@ -63,8 +63,10 @@ namespace RoboSharpUnitTesting
             using (var f = File.CreateText(Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt")))
             {
                 f.WriteLine("StartTest!");
-                RunTestThenAssert(RQ, ref TestPassed);
+                RQ.StartAll().Wait();
+                f.Flush();
             }
+            Assert.IsTrue(TestPassed);
         }
 
         [TestMethod]

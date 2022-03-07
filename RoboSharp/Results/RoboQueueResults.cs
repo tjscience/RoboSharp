@@ -138,6 +138,12 @@ namespace RoboSharp.Results
         {
             return ((IEnumerable)collection).GetEnumerator();
         }
+
+        /// <inheritdoc cref="IRoboCopyResultsList.GetErrors"/>
+        public ErrorEventArgs[] GetErrors()
+        {
+            return ((IRoboCopyResultsList)collection).GetErrors();
+        }
         #endregion
     }
 }
