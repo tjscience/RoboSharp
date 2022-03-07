@@ -57,6 +57,37 @@ namespace RoboSharpUnitTesting
             }
         }
 
+        /// <summary>
+        /// Write the LogLines to the Test Log
+        /// </summary>
+        /// <param name="Results"></param>
+        public static void WriteLogLines(RoboCopyResults Results)
+        {
+            //Write the summary at the top for easier reference
+            if (Results is null)
+            {
+                Console.WriteLine("Results Object is null!");
+                return;
+            }
+            int i = 0;
+            Console.WriteLine("SUMMARY LINES:");
+            foreach (string s in Results.LogLines)
+            {
+                if (s.Trim().StartsWith("---------"))
+                    i++;
+                else if (i > 3)
+                {
+                    Console.WriteLine(s);
+                }
+            }
+            Console.WriteLine("\n\n LOG LINES:");
+            //Write the log lines
+            foreach (string s in Results.LogLines)
+            {
+                Console.WriteLine(s);
+            }
+        }
+
         public static string ConvertToLinedString(this IEnumerable<string> strings)
         {
             string ret = "";
@@ -70,6 +101,7 @@ namespace RoboSharpUnitTesting
             stat.Reset();
             stat.Add(total, copied, extras, failed, mismatch, skipped);
         }
+
     }
 }
 

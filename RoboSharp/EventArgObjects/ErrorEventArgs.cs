@@ -26,6 +26,11 @@ namespace RoboSharp
         public int ErrorCode { get; }
 
         /// <summary>
+        /// Signed Error Code
+        /// </summary>
+        public string SignedErrorCode { get; }
+
+        /// <summary>
         /// The File or Directory Path the Error refers to
         /// </summary>
         public string ErrorPath { get; }
@@ -72,7 +77,8 @@ namespace RoboSharp
             ErrorPath = groups["Path"].Value;
 
             //Error Code
-            ErrorCode = Convert.ToInt32(groups["ErrCode"]);
+            ErrorCode = Convert.ToInt32(groups["ErrCode"].Value);
+            SignedErrorCode = groups["SignedErrCode"].Value;
 
             //Error String
             Error = errorData;
