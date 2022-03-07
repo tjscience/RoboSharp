@@ -113,8 +113,8 @@ namespace RoboSharp
         internal static Regex ErrorTokenRegexGenerator(string errorToken)
         {
             Regex BaseErrTokenRegex = new Regex("(?<Date>.*?)\\s+IDENTIFIER\\s+(?<ErrCode>[0-9]+)\\s+(?<SignedErrCode>\\([0-9Xx]+\\))\\s+(?<Descrip>[\\w\\s]+(?!:))(?<Path>.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
-
-            return new Regex(BaseErrTokenRegex.ToString().Replace("IDENTIFER", errorToken), BaseErrTokenRegex.Options);
+            string pattern = BaseErrTokenRegex.ToString().Replace("IDENTIFIER", errorToken);
+            return new Regex(pattern, BaseErrTokenRegex.Options);
         }
         
 
