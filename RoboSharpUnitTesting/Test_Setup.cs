@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RoboSharpUnitTesting
@@ -46,8 +47,12 @@ namespace RoboSharpUnitTesting
         /// </summary>
         public static void ClearOutTestDestination()
         {
+
             if (Directory.Exists(TestDestination))
             {
+                var files = new DirectoryInfo(TestDestination).GetFiles("*", SearchOption.AllDirectories);
+                foreach (var f in files)
+                    File.SetAttributes(f.FullName, FileAttributes.Normal);
                 Directory.Delete(TestDestination, true);
             }
         }
