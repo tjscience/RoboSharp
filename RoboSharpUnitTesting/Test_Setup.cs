@@ -13,9 +13,9 @@ namespace RoboSharpUnitTesting
 {
     static class Test_Setup
     {
-        public static string TestDestination { get; } = "C:\\RoboSharpUnitTests";
-        public static string Source_LargerNewer => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
-        public static string Source_Standard => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
+        public static string TestDestination { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_DESTINATION");
+        public static string Source_LargerNewer { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
+        public static string Source_Standard { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
 
         /// <summary>
         /// Generate the Starter Options and Test Objects to compare
