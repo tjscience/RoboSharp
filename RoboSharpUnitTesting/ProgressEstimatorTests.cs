@@ -148,15 +148,15 @@ namespace RoboSharpUnitTesting
                 else
                     File.SetAttributes(f.FullName, FileAttributes.Normal);
                 f.Refresh();
-                var attr = f.Attributes;
+                var attr = f.Attributes;    // For Debugging to evaluate the attributes
             }
 
             //Set file attribute to read only
             string fileName = "1024_Bytes.txt";
             string filePath = Path.Combine(sourcePath, fileName);
-            File.SetAttributes(filePath, attributes);    // Always mark the flag as normal since it wipes out all other flags
-            var attr2 = File.GetAttributes(filePath);
-            
+            File.SetAttributes(filePath, attributes);   // Always mark the flag as normal since it wipes out all other flags
+            var attr2 = File.GetAttributes(filePath);   // For Debugging to evaluate the attributes
+
             //Set Up Results
             Statistic expectedFileCounts = new Statistic(Statistic.StatType.Files);
             if (Include)
