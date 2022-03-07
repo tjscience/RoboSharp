@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp;
 using System;
+using System.IO;
 
 namespace RoboSharpUnitTesting
 {
@@ -67,6 +68,29 @@ namespace RoboSharpUnitTesting
 
             //Evaluate the results and pass/Fail the test
             UnitTestResults.AssertTest();
+        }
+
+        [TestMethod]
+        public void Test_TopLevelFolderOnly_IgnoreAttribReadOnly()
+        {
+            //Create the command and base values for the Expected Results
+            RoboCommand cmd = Test_Setup.GenerateCommand(false);
+            
+            //Set file attribute to read only
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD", "1024_Bytes.txt");
+            File.SetAttributes(filePath, FileAttributes.ReadOnly);
+
+            //Set Up Results
+            cmd.SelectionOptions.ExcludeAttributes = "R";
+
+            Test_Setup.ClearOutTestDestination();
+            RoboSharpTestResults UnitTestResults = Test_Setup.RunTest(cmd).Result;
+
+            //Evaluate the results and pass/Fail the test
+            UnitTestResults.AssertTest();
+
+            //Set file back to normal attributes again
+            File.SetAttributes(filePath, FileAttributes.Normal);
         }
 
     }
