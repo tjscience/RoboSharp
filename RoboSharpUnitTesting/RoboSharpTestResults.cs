@@ -41,6 +41,13 @@ namespace RoboSharpUnitTesting
             {
                 throw CustomAssertException.Factory(this, e);
             }
+            try
+            {
+                Assert.IsFalse(Results.LogLines.Any(s => s.Contains("Invalid Parameter")));
+            }catch (Exception e )
+            {
+                throw new AssertFailedException("INVALID Parameter! -- See LogLines");
+            }
         }
 
         class CustomAssertException : AssertFailedException

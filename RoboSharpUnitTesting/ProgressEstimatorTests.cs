@@ -88,14 +88,13 @@ namespace RoboSharpUnitTesting
             Test_Setup.ClearOutTestDestination();
             Directory.CreateDirectory(Test_Setup.TestDestination);
             RoboSharpTestResults UnitTestResults;
+            cmd.CopyOptions.DoNotCopyDirectoryInfo = true ;
             //Create a file in the destination that would normally be copied, then lock it to force an error being generated.
             string fPath = Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt");
             Console.WriteLine("Configuration File Error Token: " + cmd.Configuration.ErrorToken);
             Console.WriteLine("Error Token Regex: " + cmd.Configuration.ErrorTokenRegex);
             Console.WriteLine("Creating and locking file: " + fPath);
-            var f = File.CreateText(fPath);
-                f.AutoFlush = false;
-                f.WriteLine("StartTest!");
+            var f = File.Open(fPath, FileMode.Create);    
                 Console.WriteLine("Running Test");
                 UnitTestResults = Test_Setup.RunTest(cmd).Result;
                 Console.WriteLine("Test Complete");
