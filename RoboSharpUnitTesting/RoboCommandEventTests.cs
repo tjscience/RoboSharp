@@ -57,6 +57,7 @@ namespace RoboSharpUnitTesting
             using (var f = File.CreateText(Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt")))
             {
                 f.WriteLine("StartTest!");
+                Console.WriteLine("Expecting 1 File Failed!\n\n");
                 RunTestThenAssert(cmd, ref TestPassed);
             }
         }
