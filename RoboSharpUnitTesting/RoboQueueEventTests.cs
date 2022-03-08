@@ -19,8 +19,8 @@ namespace RoboSharpUnitTesting
         private static void RunTestThenAssert(RoboQueue Q, ref bool testPassed)
         {
             Q.StartAll().Wait();
-            Test_Setup.WriteLogLines(Q.RunResults[0], true);
-            Assert.IsTrue(testPassed);
+            if (Q.RunResults.Count > 0) Test_Setup.WriteLogLines(Q.RunResults[0], true);
+            if (!testPassed) throw new AssertFailedException("Subscribed Event was not Raised!");
         }
 
         [TestMethod]
@@ -78,7 +78,6 @@ namespace RoboSharpUnitTesting
             RunTestThenAssert(RQ, ref TestPassed);
         }
 
-        
 
         [TestMethod]
         public void RoboQueue_ProgressEstimatorCreated()
@@ -123,7 +122,7 @@ namespace RoboSharpUnitTesting
             bool TestPassed = false;
             RQ.ListResultsUpdated += (o, e) => TestPassed = true;
             RQ.StartAll_ListOnly().Wait();
-            Assert.IsTrue(TestPassed);
+            if (!TestPassed) throw new AssertFailedException("ListResultsUpdated Event was not Raised!");
         }
 
         [TestMethod]
@@ -133,7 +132,7 @@ namespace RoboSharpUnitTesting
             bool TestPassed = false;
             RQ.CollectionChanged += (o, e) => TestPassed = true;
             RQ.AddCommand(new RoboCommand());
-            Assert.IsTrue(TestPassed);
+            if (!TestPassed) throw new AssertFailedException("CollectionChanged Event was not Raised!");
         }
 
         [TestMethod]
@@ -143,7 +142,7 @@ namespace RoboSharpUnitTesting
             bool TestPassed = false;
             RQ.CollectionChanged += (o, e) => TestPassed = true;
             RQ.RemoveCommand(cmd);
-            Assert.IsTrue(TestPassed);
+            if (!TestPassed) throw new AssertFailedException("CollectionChanged Event was not Raised!");
         }
         
         [TestMethod]
@@ -153,7 +152,7 @@ namespace RoboSharpUnitTesting
             bool TestPassed = false;
             RQ.CollectionChanged += (o, e) => TestPassed = true;
             RQ.ReplaceCommand(new RoboCommand(), 0);
-            Assert.IsTrue(TestPassed);
+            if (!TestPassed) throw new AssertFailedException("CollectionChanged Event was not Raised!");
         }
 
         // Property Change would have to be tested for every time the property is changed, which can get odd to test.

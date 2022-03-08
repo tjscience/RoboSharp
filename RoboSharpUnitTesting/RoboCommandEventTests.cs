@@ -13,7 +13,7 @@ namespace RoboSharpUnitTesting
         {
             var results = cmd.StartAsync().Result;
             Test_Setup.WriteLogLines(results);
-            Assert.IsTrue(EventBool);
+            if (!EventBool) throw new AssertFailedException("Subscribed Event was not Raised!");
         }
 
         [TestMethod]
