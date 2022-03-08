@@ -19,11 +19,12 @@ namespace RoboSharpUnitTesting
         private static void RunTestThenAssert(RoboQueue Q, ref bool testPassed)
         {
             Q.StartAll().Wait();
+            Test_Setup.WriteLogLines(Q.RunResults[0], true);
             Assert.IsTrue(testPassed);
         }
 
         [TestMethod]
-        public void RoboCommand_OnCommandCompleted()
+        public void RoboQueue_OnCommandCompleted()
         {
             var RQ = GenerateRQ(out RoboCommand cmd);
             bool TestPassed = false;
@@ -32,7 +33,7 @@ namespace RoboSharpUnitTesting
         }
 
         [TestMethod]
-        public void RoboCommand_OnCommandError()
+        public void RoboQueue_OnCommandError()
         {
             var RQ = GenerateRQ(out RoboCommand cmd);
             cmd.CopyOptions.Source += "FolderDoesNotExist";
@@ -42,7 +43,7 @@ namespace RoboSharpUnitTesting
         }
 
         [TestMethod]
-        public void RoboCommand_OnCopyProgressChanged()
+        public void RoboQueue_OnCopyProgressChanged()
         {
             var RQ = GenerateRQ(out RoboCommand cmd);
             Test_Setup.ClearOutTestDestination();
@@ -52,7 +53,7 @@ namespace RoboSharpUnitTesting
         }
 
         [TestMethod]
-        public void RoboCommand_OnError()
+        public void RoboQueue_OnError()
         {
             //Create a file in the destination that would normally be copied, then lock it to force an error being generated.
             var RQ = GenerateRQ(out RoboCommand cmd);
@@ -63,14 +64,12 @@ namespace RoboSharpUnitTesting
             using (var f = File.CreateText(Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt")))
             {
                 f.WriteLine("StartTest!");
-                RQ.StartAll().Wait();
-                f.Flush();
+                RunTestThenAssert(RQ, ref TestPassed);
             }
-            Assert.IsTrue(TestPassed);
         }
 
         [TestMethod]
-        public void RoboCommand_OnFileProcessed()
+        public void RoboQueue_OnFileProcessed()
         {
             var RQ = GenerateRQ(out RoboCommand cmd);
             Test_Setup.ClearOutTestDestination();
@@ -170,7 +169,7 @@ namespace RoboSharpUnitTesting
         //}
 
         //[TestMethod] //TODO: Unsure how to force the TaskFaulted Unit test, as it should never actually occurr.....
-        //public void RoboCommand_TaskFaulted()
+        //public void RoboQueue_TaskFaulted()
         //{
         //    var RQ = GenerateRQ(out RoboCommand cmd);
         //    bool TestPassed = false;

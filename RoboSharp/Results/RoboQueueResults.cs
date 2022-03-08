@@ -84,6 +84,8 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="IRoboCopyResultsList.Count"/>
         public int Count => ((IRoboCopyResultsList)collection).Count;
 
+        public RoboCopyResults this[int i] => ((IRoboCopyResultsList)collection)[i];
+
         /// <inheritdoc cref="RoboCopyResultsList.CollectionChanged"/>
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {

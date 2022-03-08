@@ -61,7 +61,7 @@ namespace RoboSharpUnitTesting
         /// Write the LogLines to the Test Log
         /// </summary>
         /// <param name="Results"></param>
-        public static void WriteLogLines(RoboCopyResults Results)
+        public static void WriteLogLines(RoboCopyResults Results, bool SummaryOnly = false)
         {
             //Write the summary at the top for easier reference
             if (Results is null)
@@ -76,15 +76,14 @@ namespace RoboSharpUnitTesting
                 if (s.Trim().StartsWith("---------"))
                     i++;
                 else if (i > 3)
-                {
                     Console.WriteLine(s);
-                }
             }
-            Console.WriteLine("\n\n LOG LINES:");
-            //Write the log lines
-            foreach (string s in Results.LogLines)
+            if (!SummaryOnly)
             {
-                Console.WriteLine(s);
+                Console.WriteLine("\n\n LOG LINES:");
+                //Write the log lines
+                foreach (string s in Results.LogLines)
+                    Console.WriteLine(s);
             }
         }
 

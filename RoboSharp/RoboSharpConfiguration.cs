@@ -82,7 +82,7 @@ namespace RoboSharp
         /// <summary>
         /// Regex to identify Error Tokens with during LogLine parsing
         /// </summary>
-        internal Regex ErrorTokenRegex
+        public Regex ErrorTokenRegex
         {
             get
             {
