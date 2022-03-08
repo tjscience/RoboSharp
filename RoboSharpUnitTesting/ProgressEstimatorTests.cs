@@ -93,14 +93,14 @@ namespace RoboSharpUnitTesting
             Console.WriteLine("Configuration File Error Token: " + cmd.Configuration.ErrorToken);
             Console.WriteLine("Error Token Regex: " + cmd.Configuration.ErrorTokenRegex);
             Console.WriteLine("Creating and locking file: " + fPath);
-            using (var f = File.CreateText(fPath))
-            {
+            var f = File.CreateText(fPath);
+                f.AutoFlush = false;
                 f.WriteLine("StartTest!");
                 Console.WriteLine("Running Test");
                 UnitTestResults = Test_Setup.RunTest(cmd).Result;
                 Console.WriteLine("Test Complete");
-            }
             Console.WriteLine("Releasing File: " + fPath);
+            f.Close();
             //Evaluate the results and pass/Fail the test
             UnitTestResults.AssertTest();
         }
