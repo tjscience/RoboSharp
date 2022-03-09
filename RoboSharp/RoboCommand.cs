@@ -641,6 +641,7 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
+            var lastData = resultsBuilder.LastLine;
             resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null) return; // Nothing to do
@@ -715,34 +716,27 @@ namespace RoboSharp
                     resultsBuilder?.Estimator?.AddFile(file, !LoggingOptions.ListOnly);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
-                else if (OnError != null && Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message
+                else if (Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message - Mark the current file as FAILED immediately - Don't raise OnError event until error description comes in though
                 {
-                    // parse error code
-                    var match = Configuration.ErrorTokenRegex.Match(data);
-                    string value = match.Groups[1].Value;
-                    int parsedValue = Int32.Parse(value);
-
                     /* 
                      * Mark the current file as Failed
                      * TODO: This data may have to be parsed to determine if it involved the current file's filename, or some other error. At time of writing, it appears that it doesn't require this check.
                      * */
-                    ProgressEstimator.FileFailed = true;
 
-                    var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data.Contains(x.Key));
-                    if (errorCode.Key != null)
-                    {
-                        OnError(this, new ErrorEventArgs(string.Format("{0}{1}{2}", data, Environment.NewLine, errorCode.Value), parsedValue));
-                    }
-                    else
-                    {
-                        OnError(this, new ErrorEventArgs(data, parsedValue));
-                    }
+                    ProgressEstimator.FileFailed = true;
+                }
+                else if (Configuration.ErrorTokenRegex.IsMatch(lastData)) // Error Message - Uses previous data instead since RoboCopy reports errors onto line 1, then description onto line 2.
+                {
+                    ErrorEventArgs args = new ErrorEventArgs(lastData, data, Configuration.ErrorTokenRegex);
+                    resultsBuilder.RoboCopyErrors.Add(args);
+
+                    //Check to Raise the event
+                    OnError?.Invoke(this, args);
                 }
                 else if (!data.StartsWith("----------")) // System Message
                 {
                     // Do not log errors that have already been logged
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
-
                     if (errorCode.Key == null)
                     {
                         var file = new ProcessedFileInfo();

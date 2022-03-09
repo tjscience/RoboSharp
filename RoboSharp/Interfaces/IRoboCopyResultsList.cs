@@ -20,6 +20,13 @@ namespace RoboSharp.Interfaces
     {
         #region < Properties >
 
+        /// <summary>
+        /// Get the <see cref="RoboCopyResults"/> objects at the specified index.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="IndexOutOfRangeException"/>
+        RoboCopyResults this[int i] { get; }
+        
         /// <inheritdoc cref="RoboCopyResultsList.DirectoriesStatistic"/>
         IStatistic DirectoriesStatistic { get; }
 
@@ -74,6 +81,12 @@ namespace RoboSharp.Interfaces
         /// </summary>
         /// <returns>New array of the FilesStatistic objects</returns>
         ISpeedStatistic[] GetSpeedStatistics();
+
+        /// <summary>
+        /// Combine the <see cref="RoboCopyResults.RoboCopyErrors"/> into a single array of errors
+        /// </summary>
+        /// <returns>New array of the ErrorEventArgs objects</returns>
+        ErrorEventArgs[] GetErrors();
 
         #endregion
     }

@@ -35,28 +35,18 @@ namespace RoboSharpUnitTesting
         {
             try
             {
-                int i = 0;
-                //Write the summary at the top for easier reference
-                Console.WriteLine("SUMMARY LINES:");
-                foreach (string s in Results.LogLines)
-                {
-                    if (s.Trim().StartsWith("---------")) 
-                        i++;
-                    else if (i>3)
-                    {
-                        Console.WriteLine(s);
-                    }
-                }
-                Console.WriteLine("\n\n LOG LINES:");
-                //Write the log lines
-                foreach (string s in Results.LogLines)
-                {
-                    Console.WriteLine(s);
-                }
+                Test_Setup.WriteLogLines(Results);
                 Assert.IsTrue(!IsErrored);
             }catch(AssertFailedException e)
             {
                 throw CustomAssertException.Factory(this, e);
+            }
+            try
+            {
+                Assert.IsFalse(Results.LogLines.Any(s => s.Contains("Invalid Parameter")));
+            }catch (Exception e )
+            {
+                throw new AssertFailedException("INVALID Parameter! -- See LogLines");
             }
         }
 
@@ -72,40 +62,40 @@ namespace RoboSharpUnitTesting
             }
         }
 
-        public static List<string> CompareIResults(IResults expected, IResults actual)
+        public static List<string> CompareIResults(IResults RCResults, IResults PEResults)
         {
             var Errors = new List<string>();
-            CompareStatistics(expected.DirectoriesStatistic, actual.DirectoriesStatistic, ref Errors);
-            CompareStatistics(expected.FilesStatistic, actual.FilesStatistic, ref Errors);
-            CompareStatistics(expected.BytesStatistic, actual.BytesStatistic, ref Errors);
+            CompareStatistics(RCResults.DirectoriesStatistic, PEResults.DirectoriesStatistic, ref Errors);
+            CompareStatistics(RCResults.FilesStatistic, PEResults.FilesStatistic, ref Errors);
+            CompareStatistics(RCResults.BytesStatistic, PEResults.BytesStatistic, ref Errors);
             return Errors;
         }
 
-        public static bool CompareStatistics(IStatistic expectedResults, IStatistic results, ref List<string> Errors)
+        public static bool CompareStatistics(IStatistic RCResults, IStatistic PEResults, ref List<string> Errors)
         {
-            ErrGenerator("Total", expectedResults, results, ref Errors);
-            ErrGenerator("Copied", expectedResults, results, ref Errors);
-            ErrGenerator("Extras", expectedResults, results, ref Errors);
-            ErrGenerator("Skipped", expectedResults, results, ref Errors);
-            ErrGenerator("Failed", expectedResults, results, ref Errors);
-            ErrGenerator("Mismatch", expectedResults, results, ref Errors);
+            ErrGenerator("Total", RCResults, PEResults, ref Errors);
+            ErrGenerator("Copied", RCResults, PEResults, ref Errors);
+            ErrGenerator("Extras", RCResults, PEResults, ref Errors);
+            ErrGenerator("Skipped", RCResults, PEResults, ref Errors);
+            ErrGenerator("Failed", RCResults, PEResults, ref Errors);
+            ErrGenerator("Mismatch", RCResults, PEResults, ref Errors);
             return Errors.Count == 0;
         }
 
-        private static void ErrGenerator(string propName, IStatistic expected, IStatistic actual, ref List<string> Errors)
+        private static void ErrGenerator(string propName, IStatistic RCResults, IStatistic PEResults, ref List<string> Errors)
         {
             long eSize = 0; long aSize = 0;
             switch(propName)
             {
-                case "Total": eSize = expected.Total; aSize = actual.Total; break;
-                case "Copied": eSize = expected.Copied; aSize = actual.Copied; break;
-                case "Extras": eSize = expected.Extras; aSize = actual.Extras; break;
-                case "Failed": eSize = expected.Failed; aSize = actual.Failed; break;
-                case "Mismatch": eSize = expected.Mismatch; aSize = actual.Mismatch; break;
-                case "Skipped": eSize = expected.Skipped; aSize = actual.Skipped; break;
+                case "Total": eSize = RCResults.Total; aSize = PEResults.Total; break;
+                case "Copied": eSize = RCResults.Copied; aSize = PEResults.Copied; break;
+                case "Extras": eSize = RCResults.Extras; aSize = PEResults.Extras; break;
+                case "Failed": eSize = RCResults.Failed; aSize = PEResults.Failed; break;
+                case "Mismatch": eSize = RCResults.Mismatch; aSize = PEResults.Mismatch; break;
+                case "Skipped": eSize = RCResults.Skipped; aSize = PEResults.Skipped; break;
             }
             if (eSize != aSize)
-                Errors.Add($"{expected.Type}.{propName} -- Expected: {eSize}  || Actual: {aSize}");
+                Errors.Add($"{RCResults.Type}.{propName} -- RoboCopy: {eSize}  || ProgressEstimator: {aSize}");
         }
     }
 }

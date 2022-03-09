@@ -82,7 +82,7 @@ namespace RoboSharp
         /// <summary>
         /// Regex to identify Error Tokens with during LogLine parsing
         /// </summary>
-        internal Regex ErrorTokenRegex
+        public Regex ErrorTokenRegex
         {
             get
             {
@@ -96,7 +96,7 @@ namespace RoboSharp
                 }
             // Generate a new Regex Statement
             RegenRegex:
-                errorTokenRegex = new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
+                errorTokenRegex = ErrorTokenRegexGenerator(ErrorToken); //new Regex($" {this.ErrorToken} " + @"(\d{1,3}) \(0x\d{8}\) ");
                 ErrRegexInitRequired = false;
                 return errorTokenRegex;
             }
@@ -104,6 +104,19 @@ namespace RoboSharp
         /// <summary> Field backing <see cref="ErrorTokenRegex"/> property - Protected to allow DefaultConfig derived classes to set within constructor </summary>
         protected Regex errorTokenRegex;
         private bool ErrRegexInitRequired = false;
+
+        /// <summary>
+        /// Generate a new ErrorTokenRegex object from by insterting the <see cref="ErrorToken"/> into a standardized pattern.
+        /// </summary>
+        /// <param name="errorToken">Language Specific <see cref="ErrorToken"/></param>
+        /// <returns></returns>
+        internal static Regex ErrorTokenRegexGenerator(string errorToken)
+        {
+            Regex BaseErrTokenRegex = new Regex("(?<Date>.*?)\\s+IDENTIFIER\\s+(?<ErrCode>[0-9]+)\\s+(?<SignedErrCode>\\([0-9Xx]+\\))\\s+(?<Descrip>[\\w\\s]+(?!:))(?<Path>.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture);
+            string pattern = BaseErrTokenRegex.ToString().Replace("IDENTIFIER", errorToken);
+            return new Regex(pattern, BaseErrTokenRegex.Options);
+        }
+        
 
         #region < Tokens for Log Parsing >
 

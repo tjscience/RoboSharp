@@ -14,7 +14,8 @@ namespace RoboSharp.DefaultConfigurations
         public RoboSharpConfig_EN() : base()
         {
             errorToken = "ERROR";
-            errorTokenRegex = new Regex($" ERROR " + @"(\d{1,3}) \(0x\d{8}\) ", RegexOptions.Compiled);
+            errorTokenRegex = RoboSharpConfiguration.ErrorTokenRegexGenerator(errorToken);
+            //errorTokenRegex = new Regex($" ERROR " + @"(\d{1,3}) \(0x\d{8}\) ", RegexOptions.Compiled);            
 
             // < File Tokens >
 

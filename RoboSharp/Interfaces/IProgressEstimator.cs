@@ -12,26 +12,26 @@ namespace RoboSharp.Interfaces
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/IProgressEstimator"/>
     /// </remarks>
-    public interface IProgressEstimator
+    public interface IProgressEstimator : IResults
     {
 
         /// <summary>
         /// Estimate of current number of directories processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        IStatistic DirectoriesStatistic { get; }
+        new IStatistic DirectoriesStatistic { get; }
 
         /// <summary>
         /// Estimate of current number of files processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        IStatistic FilesStatistic { get; }
+        new IStatistic FilesStatistic { get; }
 
         /// <summary>
         /// Estimate of current number of bytes processed while the job is still running. <br/>
         /// Estimate is provided by parsing of the LogLines produces by RoboCopy.
         /// </summary>
-        IStatistic BytesStatistic { get; }
+        new IStatistic BytesStatistic { get; }
 
         /// <summary>
         /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.

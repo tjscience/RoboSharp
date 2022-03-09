@@ -84,6 +84,8 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="IRoboCopyResultsList.Count"/>
         public int Count => ((IRoboCopyResultsList)collection).Count;
 
+        public RoboCopyResults this[int i] => ((IRoboCopyResultsList)collection)[i];
+
         /// <inheritdoc cref="RoboCopyResultsList.CollectionChanged"/>
         public event NotifyCollectionChangedEventHandler CollectionChanged
         {
@@ -137,6 +139,12 @@ namespace RoboSharp.Results
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ((IEnumerable)collection).GetEnumerator();
+        }
+
+        /// <inheritdoc cref="IRoboCopyResultsList.GetErrors"/>
+        public ErrorEventArgs[] GetErrors()
+        {
+            return ((IRoboCopyResultsList)collection).GetErrors();
         }
         #endregion
     }

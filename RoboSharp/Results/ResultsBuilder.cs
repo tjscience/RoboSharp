@@ -27,6 +27,9 @@ namespace RoboSharp.Results
 
         private readonly List<string> outputLines = new List<string>();
 
+        /// <summary>This is the last line that was logged.</summary>
+        internal string LastLine => outputLines.Count > 0 ? outputLines.Last() : "";
+
         #endregion
 
         #region < Command Options Properties >
@@ -39,6 +42,8 @@ namespace RoboSharp.Results
         
         /// <inheritdoc cref="CopyOptions.Destination"/>
         internal string Destination { get; set; }
+
+        internal List<ErrorEventArgs> RoboCopyErrors { get; } = new List<ErrorEventArgs>();
 
         #endregion
 
@@ -95,6 +100,7 @@ namespace RoboSharp.Results
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
             res.LogLines = outputLines.ToArray();
+            res.RoboCopyErrors = this.RoboCopyErrors.ToArray();
             res.Source = this.Source;
             res.Destination = this.Destination;
             res.CommandOptions = this.CommandOptions;

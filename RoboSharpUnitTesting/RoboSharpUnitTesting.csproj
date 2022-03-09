@@ -50,10 +50,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExpectedResults.cs" />
+    <Compile Include="RoboQueueEventTests.cs" />
     <Compile Include="Test_Setup.cs" />
     <Compile Include="RoboSharpTestResults.cs" />
     <Compile Include="ProgressEstimatorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RoboCommandEventTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

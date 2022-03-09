@@ -2,6 +2,7 @@
 using RoboSharp;
 using RoboSharp.Results;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace RoboSharpUnitTesting
@@ -84,16 +85,39 @@ namespace RoboSharpUnitTesting
         public void Test_FileInUse()
         {
             //Create the command and base values for the Expected Results
+            List<string> CommandErrorData = new List<string>();
             RoboCommand cmd = Test_Setup.GenerateCommand(true, ListOnlyMode);
+            cmd.OnCommandError += (o, e) =>
+            {
+                CommandErrorData.Add(e.Error);
+                if (e.Exception != null)
+                {
+                    CommandErrorData.Add("ExceptionData: " + e.Exception.Message);
+                }
+            };
+            
             Test_Setup.ClearOutTestDestination();
             Directory.CreateDirectory(Test_Setup.TestDestination);
             RoboSharpTestResults UnitTestResults;
             //Create a file in the destination that would normally be copied, then lock it to force an error being generated.
-            using (var f = File.CreateText(Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt")))
-            {
-                f.WriteLine("StartTest!");
+            string fPath = Path.Combine(Test_Setup.TestDestination, "4_Bytes.txt");
+            Console.WriteLine("Configuration File Error Token: " + cmd.Configuration.ErrorToken);
+            Console.WriteLine("Error Token Regex: " + cmd.Configuration.ErrorTokenRegex);
+            Console.WriteLine("Creating and locking file: " + fPath);
+            var f = File.Open(fPath, FileMode.Create);    
+                Console.WriteLine("Running Test");
                 UnitTestResults = Test_Setup.RunTest(cmd).Result;
-            }
+                Console.WriteLine("Test Complete");
+            Console.WriteLine("Releasing File: " + fPath);
+            f.Close();
+            if (CommandErrorData.Count > 0)
+            {
+                Console.WriteLine("\nCommand Error Data Received:");
+                foreach (string s in CommandErrorData)
+                    Console.WriteLine(s);
+            }else
+                Console.WriteLine("\nCommand Error Data Received: None");
+
             //Evaluate the results and pass/Fail the test
             UnitTestResults.AssertTest();
         }
