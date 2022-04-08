@@ -6,7 +6,7 @@
     <Version>1.2.6</Version>
     <Copyright>Copyright 2021</Copyright>
     <Authors>Terry</Authors>
-    <owners>WiBa-US</owners>
+    <owners>Terry</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
