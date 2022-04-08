@@ -100,8 +100,8 @@ namespace RoboSharp
         /// <summary>Create a new RoboCommand object</summary>
         /// <param name="name"><inheritdoc cref="Name" path="*"/></param>
         /// <param name="stopIfDisposing"><inheritdoc cref="StopIfDisposing" path="*"/></param>
-        /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source"/></param>
-        /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination"/></param>
+        /// <param name="source"><inheritdoc cref="RoboSharp.CopyOptions.Source" path="*"/></param>
+        /// <param name="destination"><inheritdoc cref="RoboSharp.CopyOptions.Destination" path="*"/></param>
         private void Init(string name = "", bool stopIfDisposing = true, string source = "", string destination = "")
         {
             Name = name;
