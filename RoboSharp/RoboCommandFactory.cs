@@ -11,7 +11,7 @@ namespace RoboSharp
     /// Object that provides methods to generate new <see cref="RoboCommand"/> objects using the public constructors. 
     /// <br/> This class can not be inherited
     /// </summary>
-    public sealed class RoboCommandFactory : IRoboFactory
+    public sealed class RoboCommandFactory : IRoboCommandFactoryBase
     {
         /// <inheritdoc cref="RoboCommandFactory"/>
         public static RoboCommandFactory Factory { get; } = new RoboCommandFactory();
@@ -70,11 +70,11 @@ namespace RoboSharp
 
         #region < Interface Implementation >
 
-        IRoboCommand IRoboFactory.GetRoboCommand()
+        IRoboCommand IRoboCommandFactoryBase.GetRoboCommand()
             => Factory.GetRoboCommand();
 
 
-        IRoboCommand IRoboFactory.GetRoboCommand(string source, string destination)
+        IRoboCommand IRoboCommandFactoryBase.GetRoboCommand(string source, string destination)
             => Factory.GetRoboCommand(source, destination, true);
 
         //IRoboCommand IRoboFactory.GetRoboCommand(string name, bool stopIfDisposing)

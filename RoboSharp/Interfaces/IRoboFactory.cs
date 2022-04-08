@@ -10,7 +10,7 @@ namespace RoboSharp.Interfaces
     /// Interface for a class factory object to produce <see cref="IRoboCommand"/> objects <br/>
     /// Usable by consumers to specify a factory object their library can rely on to create classes derived from the <see cref="RoboCommand"/> object. <br/>
     /// </summary>
-    public interface IRoboFactory
+    public interface IRoboCommandFactoryBase
     {
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object using the parameterless constructor
