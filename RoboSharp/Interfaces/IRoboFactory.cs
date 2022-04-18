@@ -25,6 +25,8 @@ namespace RoboSharp.Interfaces
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> with the specified source and destination
         /// </summary>
+        /// <param name="source"><inheritdoc cref="CopyOptions.Source" path="*"/></param>
+        /// <param name="destination"><inheritdoc cref="CopyOptions.Destination" path="*"/></param>
         /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, bool)"/>
         IRoboCommand GetRoboCommand(string source, string destination);
 
