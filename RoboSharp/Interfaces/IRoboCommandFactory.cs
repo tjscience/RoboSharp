@@ -10,7 +10,7 @@ namespace RoboSharp.Interfaces
     /// Interface for a class factory object to produce <see cref="IRoboCommand"/> objects <br/>
     /// Usable by consumers to specify a factory object their library can rely on to create classes derived from the <see cref="RoboCommand"/> object. <br/>
     /// </summary>
-    public interface IRoboCommandFactoryBase
+    public interface IRoboCommandFactory
     {
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object using the parameterless constructor
@@ -21,14 +21,19 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.RoboCommand()"/>
         IRoboCommand GetRoboCommand();
 
-
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> with the specified source and destination
         /// </summary>
         /// <param name="source"><inheritdoc cref="CopyOptions.Source" path="*"/></param>
         /// <param name="destination"><inheritdoc cref="CopyOptions.Destination" path="*"/></param>
         /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, bool)"/>
-        IRoboCommand GetRoboCommand(string source, string destination);
+        IRoboCommand FromSourceAndDestination(string source, string destination);
+
+        /// <inheritdoc cref="RoboCommandFactory.FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
+        IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags);
+
+        /// <inheritdoc cref="RoboCommandFactory.FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
+        IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags);
 
         /*
          * The constructors within the region below have been intentionally left out of the interface. 
@@ -37,6 +42,7 @@ namespace RoboSharp.Interfaces
          *
          * Should consumers require the interface to be expanded, they can produce their own interface that is derived from this one.
          */
+
         #region
 
         ///// <summary>
