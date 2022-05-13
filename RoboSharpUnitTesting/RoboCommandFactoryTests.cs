@@ -20,22 +20,22 @@ namespace RoboSharp.Tests
         }
 
         [TestMethod()]
-        public void FromSourceAndDestinationTest()
+        public void GetRoboCommandTest1()
         {
             string source = @"C:\TestSource";
             string dest = @"C:\TestDest";
-            var cmd = RoboCommand.Factory.FromSourceAndDestination(source, dest);
+            var cmd = RoboCommand.Factory.GetRoboCommand(source, dest);
             Assert.IsNotNull(cmd);
             Assert.AreEqual(source, cmd.CopyOptions.Source);
             Assert.AreEqual(dest, cmd.CopyOptions.Destination);
         }
 
         [TestMethod()]
-        public void FromSourceAndDestinationTest1()
+        public void FromSourceAndDestinationTest2()
         {
             string source = @"C:\TestSource";
             string dest = @"C:\TestDest";
-            var cmd = RoboCommand.Factory.FromSourceAndDestination(source, dest, CopyOptions.CopyActionFlags.Mirror, SelectionOptions.SelectionFlags.ExcludeNewer);
+            var cmd = RoboCommand.Factory.GetRoboCommand(source, dest, CopyOptions.CopyActionFlags.Mirror, SelectionOptions.SelectionFlags.ExcludeNewer);
             Assert.IsNotNull(cmd);
             Assert.AreEqual(source, cmd.CopyOptions.Source);
             Assert.AreEqual(dest, cmd.CopyOptions.Destination);

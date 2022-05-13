@@ -27,13 +27,13 @@ namespace RoboSharp.Interfaces
         /// <param name="source"><inheritdoc cref="CopyOptions.Source" path="*"/></param>
         /// <param name="destination"><inheritdoc cref="CopyOptions.Destination" path="*"/></param>
         /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, bool)"/>
-        IRoboCommand FromSourceAndDestination(string source, string destination);
+        IRoboCommand GetRoboCommand(string source, string destination);
 
         /// <inheritdoc cref="RoboCommandFactory.FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
-        IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags);
+        IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags);
 
         /// <inheritdoc cref="RoboCommandFactory.FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
-        IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags);
+        IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags);
 
         /*
          * The constructors within the region below have been intentionally left out of the interface. 

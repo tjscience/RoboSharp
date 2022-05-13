@@ -33,7 +33,7 @@ namespace RoboSharp
         /// <param name="destination"><inheritdoc cref="CopyOptions.Destination" path="*"/></param>
         /// <returns>new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.</returns>
         /// <inheritdoc cref="GetRoboCommand()"/>
-        public virtual IRoboCommand FromSourceAndDestination(string source, string destination)
+        public virtual IRoboCommand GetRoboCommand(string source, string destination)
         {
             var cmd = GetRoboCommand();
             cmd.CopyOptions.Source = source;
@@ -47,20 +47,20 @@ namespace RoboSharp
         /// <remarks/>
         /// <param name="copyActionFlags">The options to apply to the generated <see cref="IRoboCommand"/> object </param>
         /// <param name="selectionFlags">The options to apply to the generated <see cref="IRoboCommand"/> object </param>
-        /// <inheritdoc cref="FromSourceAndDestination(string, string)"/>]
+        /// <inheritdoc cref="GetRoboCommand(string, string)"/>]
         /// <param name="destination"/><param name="source"/>
-        public virtual IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags)
+        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags)
         {
-            var cmd = FromSourceAndDestination(source, destination);
+            var cmd = GetRoboCommand(source, destination);
             cmd.CopyOptions.ApplyActionFlags(copyActionFlags);
             cmd.SelectionOptions.ApplySelectionFlags(selectionFlags);
             return cmd;
         }
 
-        /// <inheritdoc cref="FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
-        public virtual IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags)
+        /// <inheritdoc cref="GetRoboCommand(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
+        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags)
         {
-            return FromSourceAndDestination(source, destination, copyActionFlags, SelectionOptions.SelectionFlags.Default);
+            return GetRoboCommand(source, destination, copyActionFlags, SelectionOptions.SelectionFlags.Default);
         }
     }
 }

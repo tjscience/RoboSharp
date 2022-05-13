@@ -523,7 +523,6 @@ namespace RoboSharp
         /// <param name="flags">Options to apply</param>
         public virtual void ApplySelectionFlags(SelectionFlags flags)
         {
-            
             this.ExcludeChanged = flags.HasFlag(SelectionFlags.ExcludeChanged);
             this.ExcludeExtra = flags.HasFlag(SelectionFlags.ExcludeExtra);
             this.ExcludeJunctionPoints = flags.HasFlag(SelectionFlags.ExcludeJunctionPoints);

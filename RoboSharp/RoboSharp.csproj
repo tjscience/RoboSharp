@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net45;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.2.6</Version>
-    <Copyright>Copyright 2021</Copyright>
+    <Version>1.2.7</Version>
+    <Copyright>Copyright 2022</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
