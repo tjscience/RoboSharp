@@ -1,5 +1,6 @@
 ﻿using RoboSharp.Interfaces;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,95 +8,59 @@ using System.Threading.Tasks;
 
 namespace RoboSharp
 {
+    
     /// <summary>
-    /// Object that provides methods to generate new <see cref="RoboCommand"/> objects using the public constructors. 
-    /// <br/> This class can not be inherited
+    /// Object that provides methods to generate new <see cref="IRoboCommand"/> objects.
     /// </summary>
-    public sealed class RoboCommandFactory : IRoboCommandFactoryBase
+    public class RoboCommandFactory : IRoboCommandFactory
     {
-        /// <inheritdoc cref="RoboCommandFactory"/>
-        public static RoboCommandFactory Factory { get; } = new RoboCommandFactory();
 
-        #region < RoboCommand Generation >
+        /// <summary>
+        /// Create a new <see cref="IRoboCommand"/> object using default settings.
+        /// </summary>
+        /// <remarks>
+        /// This method is used by the other methods within the <see cref="RoboCommandFactory"/> to generate the inital <see cref="IRoboCommand"/> object that will be returned. 
+        /// All settings are then applied to the object's options components.
+        /// </remarks>
+        /// <returns>new <see cref="IRoboCommand"/> object using the parameterless constructor</returns>
+        public virtual IRoboCommand GetRoboCommand() => new RoboCommand();
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-
-        public RoboCommand GetRoboCommand()
-
+        /// <summary>
+        /// Create a new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.
+        /// </summary>
+        /// <remarks/>
+        /// <param name="source"><inheritdoc cref="CopyOptions.Source" path="*"/></param>
+        /// <param name="destination"><inheritdoc cref="CopyOptions.Destination" path="*"/></param>
+        /// <returns>new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.</returns>
+        /// <inheritdoc cref="GetRoboCommand()"/>
+        public virtual IRoboCommand FromSourceAndDestination(string source, string destination)
         {
-            return new RoboCommand();
+            var cmd = GetRoboCommand();
+            cmd.CopyOptions.Source = source;
+            cmd.CopyOptions.Destination = destination;
+            return cmd;
         }
 
-        public RoboCommand GetRoboCommand(string name, bool stopIfDisposing = true)
+        /// <summary>
+        /// Create a new <see cref="IRoboCommand"/> object with the specified options
+        /// </summary>
+        /// <remarks/>
+        /// <param name="copyActionFlags">The options to apply to the generated <see cref="IRoboCommand"/> object </param>
+        /// <param name="selectionFlags">The options to apply to the generated <see cref="IRoboCommand"/> object </param>
+        /// <inheritdoc cref="FromSourceAndDestination(string, string)"/>]
+        /// <param name="destination"/><param name="source"/>
+        public virtual IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags)
         {
-            return new RoboCommand(name, stopIfDisposing);
+            var cmd = FromSourceAndDestination(source, destination);
+            cmd.CopyOptions.ApplyActionFlags(copyActionFlags);
+            cmd.SelectionOptions.ApplySelectionFlags(selectionFlags);
+            return cmd;
         }
 
-        public RoboCommand GetRoboCommand(string source, string destination, bool stopIfDisposing = true)
+        /// <inheritdoc cref="FromSourceAndDestination(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
+        public virtual IRoboCommand FromSourceAndDestination(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags)
         {
-            return new RoboCommand(source, destination, stopIfDisposing);
+            return FromSourceAndDestination(source, destination, copyActionFlags, SelectionOptions.SelectionFlags.Default);
         }
-
-        public RoboCommand GetRoboCommand(string source, string destination, string name, bool stopIfDisposing = true)
-        {
-            return new RoboCommand(source, destination, name, stopIfDisposing);
-        }
-
-        public RoboCommand GetRoboCommand(string name, string source = null, string destination = null, bool stopIfDisposing = true,
-            RoboSharpConfiguration configuration = null,
-            CopyOptions copyOptions = null,
-            SelectionOptions selectionOptions = null,
-            RetryOptions retryOptions = null,
-            LoggingOptions loggingOptions = null,
-            JobOptions jobOptions = null)
-        {
-            return new RoboCommand(name, source, destination, stopIfDisposing, configuration, copyOptions, selectionOptions, retryOptions, loggingOptions, jobOptions);
-        }
-
-        public RoboCommand GetRoboCommand(
-            RoboCommand command,
-            string NewSource = null,
-            string NewDestination = null,
-            bool LinkConfiguration = true,
-            bool LinkRetryOptions = true,
-            bool LinkSelectionOptions = false,
-            bool LinkLoggingOptions = false,
-            bool LinkJobOptions = false)
-        {
-            return new RoboCommand(command, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions, LinkJobOptions);
-        }
-
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-        #endregion
-
-        #region < Interface Implementation >
-
-        IRoboCommand IRoboCommandFactoryBase.GetRoboCommand()
-            => Factory.GetRoboCommand();
-
-
-        IRoboCommand IRoboCommandFactoryBase.GetRoboCommand(string source, string destination)
-            => Factory.GetRoboCommand(source, destination, true);
-
-        //IRoboCommand IRoboFactory.GetRoboCommand(string name, bool stopIfDisposing)
-        //    => ((IRoboFactory)Factory).GetRoboCommand(name, stopIfDisposing);
-
-        //IRoboCommand IRoboFactory.GetRoboCommand(string source, string destination, bool stopIfDisposing)
-        //    => ((IRoboFactory)Factory).GetRoboCommand(source, destination, stopIfDisposing);
-
-        //IRoboCommand IRoboFactory.GetRoboCommand(string source, string destination, string name, bool stopIfDisposing)
-        //    => ((IRoboFactory)Factory).GetRoboCommand(source, destination, name, stopIfDisposing);
-
-
-        //IRoboCommand IRoboFactory.GetRoboCommand(string name, string source, string destination, bool stopIfDisposing, RoboSharpConfiguration configuration, CopyOptions copyOptions, SelectionOptions selectionOptions, RetryOptions retryOptions, LoggingOptions loggingOptions, JobOptions jobOptions)
-        //    => ((IRoboFactory)Factory).GetRoboCommand(name, source, destination, stopIfDisposing, configuration, copyOptions, selectionOptions, retryOptions, loggingOptions, jobOptions);
-
-
-        //IRoboCommand IRoboFactory.GetRoboCommand(RoboCommand command, string NewSource, string NewDestination, bool LinkConfiguration, bool LinkRetryOptions, bool LinkSelectionOptions, bool LinkLoggingOptions, bool LinkJobOptions)
-        //    => ((IRoboFactory)Factory).GetRoboCommand(command, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions, LinkJobOptions);
-
-
-        #endregion
-
     }
 }
