@@ -84,6 +84,8 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void Test_FileInUse()
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
+
             //Create the command and base values for the Expected Results
             List<string> CommandErrorData = new List<string>();
             RoboCommand cmd = Test_Setup.GenerateCommand(true, ListOnlyMode);
