@@ -439,7 +439,7 @@ namespace RoboSharp
         /// <summary>
         /// Combine this object with another RetryOptions object. <br/>
         /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
-        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// String\Long Values will only be replaced if the primary object has a null/empty value for that property.
         /// </summary>
         /// <param name="options"></param>
         public void Merge(SelectionOptions options)
@@ -454,11 +454,17 @@ namespace RoboSharp
             MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
             MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
 
+            //Long
+            MaxFileSize |= options.MaxFileSize;
+            MinFileSize |= options.MinFileSize;
+
+            //Lists
+            ExcludedFiles.AddRange(options.ExcludedFiles);
+            ExcludedDirectories.AddRange(options.ExcludedDirectories);
+
             //Bools
             OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
             OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;
-            ExcludedFiles.AddRange(options.ExcludedFiles);
-            ExcludedDirectories.AddRange(options.ExcludedDirectories);
             ExcludeChanged |= options.ExcludeChanged;
             ExcludeNewer |= options.ExcludeNewer;
             ExcludeOlder |= options.ExcludeOlder;
@@ -466,12 +472,13 @@ namespace RoboSharp
             ExcludeLonely |= options.ExcludeLonely;
             IncludeSame |= options.IncludeSame;
             IncludeTweaked |= options.IncludeTweaked;
-            MaxFileSize |= options.MaxFileSize;
-            MinFileSize |= options.MinFileSize;
             ExcludeJunctionPoints |= options.ExcludeJunctionPoints;
+            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
+            ExcludeJunctionPointsForDirectories |= options.ExcludeJunctionPointsForDirectories;
+
             UseFatFileTimes |= options.UseFatFileTimes;
             CompensateForDstDifference |= options.CompensateForDstDifference; ;
-            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
+            
         }
 
         /// <summary>
@@ -485,29 +492,29 @@ namespace RoboSharp
             /// </summary>
             Default = 0,
             /// <inheritdoc cref="SelectionOptions.ExcludeChanged"/>
-            ExcludeChanged = 4,
+            ExcludeChanged = 1,
             /// <inheritdoc cref="SelectionOptions.ExcludeExtra"/>
-            ExcludeExtra = 8,
+            ExcludeExtra = 2,
             /// <inheritdoc cref="SelectionOptions.ExcludeLonely"/>
-            ExcludeLonely = 16,
+            ExcludeLonely = 4,
             /// <inheritdoc cref="SelectionOptions.ExcludeNewer"/>
-            ExcludeNewer = 32,
+            ExcludeNewer = 8,
             /// <inheritdoc cref="SelectionOptions.ExcludeOlder"/>
-            ExcludeOlder = 64,
+            ExcludeOlder = 16,
             /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPoints"/>
-            ExcludeJunctionPoints = 128,
+            ExcludeJunctionPoints = 32,
             /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForDirectories"/>
-            ExcludeJunctionPointsForDirectories = 256,
+            ExcludeJunctionPointsForDirectories = 64,
             /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForFiles"/>
-            ExcludeJunctionPointsForFiles = 512,
+            ExcludeJunctionPointsForFiles = 128,
             /// <inheritdoc cref="SelectionOptions.IncludeSame"/>
-            IncludeSame = 1024,
+            IncludeSame = 256,
             /// <inheritdoc cref="SelectionOptions.IncludeTweaked"/>
-            IncludeTweaked = 2048,
+            IncludeTweaked = 512,
             /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFiles"/>
-            OnlyCopyArchiveFiles = 4096,
+            OnlyCopyArchiveFiles = 1024,
             /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag"/>
-            OnlyCopyArchiveFilesAndResetArchiveFlag = 8192,
+            OnlyCopyArchiveFilesAndResetArchiveFlag = 2048,
         }
 
         /// <summary>
