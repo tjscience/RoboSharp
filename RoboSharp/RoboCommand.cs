@@ -19,6 +19,11 @@ namespace RoboSharp
     /// </remarks>
     public class RoboCommand : IDisposable, IRoboCommand, ICloneable
     {
+        /// <summary>
+        /// The base <see cref="RoboCommandFactory"/> object provided by the RoboSharp library.
+        /// </summary>
+        public static RoboCommandFactory Factory { get; } = new RoboCommandFactory();
+
         #region < Constructors >
 
         /// <summary>Create a new RoboCommand object</summary>
@@ -26,6 +31,20 @@ namespace RoboSharp
         {
             InitClassProperties();
             Init();
+        }
+
+        /// <summary>
+        /// Create a new RoboCommand object with the provided settings.
+        /// </summary>
+        /// <inheritdoc cref="Init"/>
+        /// <inheritdoc cref="CopyOptions.CopyOptions(string, string, CopyOptions.CopyActionFlags)"/>
+        /// <inheritdoc cref="SelectionOptions.SelectionOptions(SelectionOptions.SelectionFlags)"/>
+        public RoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default)
+        {
+            InitClassProperties();
+            Init("", true, source, destination);
+            this.copyOptions.ApplyActionFlags(copyActionFlags);
+            this.selectionOptions.ApplySelectionFlags(selectionFlags);
         }
 
         /// <inheritdoc cref="Init"/>
