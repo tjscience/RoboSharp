@@ -20,7 +20,8 @@ namespace RoboSharp
         /// </summary>
         /// <remarks>
         /// This method is used by the other methods within the <see cref="RoboCommandFactory"/> to generate the inital <see cref="IRoboCommand"/> object that will be returned. 
-        /// All settings are then applied to the object's options components.
+        /// <br/>All settings are then applied to the object's options components (such as the source/destination parameters)
+        /// <br/>As such, overriding this one method will to provide will provide the other factory methods with the customized default IRobocommand object.
         /// </remarks>
         /// <returns>new <see cref="IRoboCommand"/> object using the parameterless constructor</returns>
         public virtual IRoboCommand GetRoboCommand() => new RoboCommand();
