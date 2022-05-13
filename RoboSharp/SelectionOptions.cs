@@ -24,6 +24,14 @@ namespace RoboSharp
         public SelectionOptions() { }
 
         /// <summary>
+        /// Create new SelectionOptions using the provided <paramref name="selectionFlags"/>
+        /// </summary>
+        public SelectionOptions(SelectionFlags selectionFlags)
+        {
+            ApplySelectionFlags(selectionFlags);
+        }
+
+        /// <summary>
         /// Clone a SelectionOptions Object
         /// </summary>
         public SelectionOptions(SelectionOptions options)
@@ -431,7 +439,7 @@ namespace RoboSharp
         /// <summary>
         /// Combine this object with another RetryOptions object. <br/>
         /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
-        /// String Values will only be replaced if the primary object has a null/empty value for that property.
+        /// String\Long Values will only be replaced if the primary object has a null/empty value for that property.
         /// </summary>
         /// <param name="options"></param>
         public void Merge(SelectionOptions options)
@@ -446,11 +454,17 @@ namespace RoboSharp
             MaxLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MaxLastAccessDate);
             MinLastAccessDate = MaxFileAge.ReplaceIfEmpty(options.MinLastAccessDate);
 
+            //Long
+            MaxFileSize |= options.MaxFileSize;
+            MinFileSize |= options.MinFileSize;
+
+            //Lists
+            ExcludedFiles.AddRange(options.ExcludedFiles);
+            ExcludedDirectories.AddRange(options.ExcludedDirectories);
+
             //Bools
             OnlyCopyArchiveFiles |= options.OnlyCopyArchiveFiles;
             OnlyCopyArchiveFilesAndResetArchiveFlag |= options.OnlyCopyArchiveFilesAndResetArchiveFlag;
-            ExcludedFiles.AddRange(options.ExcludedFiles);
-            ExcludedDirectories.AddRange(options.ExcludedDirectories);
             ExcludeChanged |= options.ExcludeChanged;
             ExcludeNewer |= options.ExcludeNewer;
             ExcludeOlder |= options.ExcludeOlder;
@@ -458,12 +472,93 @@ namespace RoboSharp
             ExcludeLonely |= options.ExcludeLonely;
             IncludeSame |= options.IncludeSame;
             IncludeTweaked |= options.IncludeTweaked;
-            MaxFileSize |= options.MaxFileSize;
-            MinFileSize |= options.MinFileSize;
             ExcludeJunctionPoints |= options.ExcludeJunctionPoints;
+            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
+            ExcludeJunctionPointsForDirectories |= options.ExcludeJunctionPointsForDirectories;
+
             UseFatFileTimes |= options.UseFatFileTimes;
             CompensateForDstDifference |= options.CompensateForDstDifference; ;
-            ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
+            
+        }
+
+        /// <summary>
+        /// Enum to define various selection options that can be toggled for the RoboCopy process.
+        /// </summary>
+        [Flags]
+        public enum SelectionFlags
+        {
+            /// <summary>
+            /// Set RoboCopy options to their defaults
+            /// </summary>
+            Default = 0,
+            /// <inheritdoc cref="SelectionOptions.ExcludeChanged"/>
+            ExcludeChanged = 1,
+            /// <inheritdoc cref="SelectionOptions.ExcludeExtra"/>
+            ExcludeExtra = 2,
+            /// <inheritdoc cref="SelectionOptions.ExcludeLonely"/>
+            ExcludeLonely = 4,
+            /// <inheritdoc cref="SelectionOptions.ExcludeNewer"/>
+            ExcludeNewer = 8,
+            /// <inheritdoc cref="SelectionOptions.ExcludeOlder"/>
+            ExcludeOlder = 16,
+            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPoints"/>
+            ExcludeJunctionPoints = 32,
+            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForDirectories"/>
+            ExcludeJunctionPointsForDirectories = 64,
+            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForFiles"/>
+            ExcludeJunctionPointsForFiles = 128,
+            /// <inheritdoc cref="SelectionOptions.IncludeSame"/>
+            IncludeSame = 256,
+            /// <inheritdoc cref="SelectionOptions.IncludeTweaked"/>
+            IncludeTweaked = 512,
+            /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFiles"/>
+            OnlyCopyArchiveFiles = 1024,
+            /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag"/>
+            OnlyCopyArchiveFilesAndResetArchiveFlag = 2048,
+        }
+
+        /// <summary>
+        /// Apply the <see cref="SelectionFlags"/> to this command
+        /// </summary>
+        /// <param name="flags">Options to apply</param>
+        public virtual void ApplySelectionFlags(SelectionFlags flags)
+        {
+            this.ExcludeChanged = flags.HasFlag(SelectionFlags.ExcludeChanged);
+            this.ExcludeExtra = flags.HasFlag(SelectionFlags.ExcludeExtra);
+            this.ExcludeJunctionPoints = flags.HasFlag(SelectionFlags.ExcludeJunctionPoints);
+            this.ExcludeJunctionPointsForDirectories = flags.HasFlag(SelectionFlags.ExcludeJunctionPointsForDirectories);
+            this.ExcludeJunctionPointsForFiles = flags.HasFlag(SelectionFlags.ExcludeJunctionPointsForFiles);
+            this.ExcludeLonely = flags.HasFlag(SelectionFlags.ExcludeLonely);
+            this.ExcludeNewer = flags.HasFlag(SelectionFlags.ExcludeNewer);
+            this.ExcludeOlder = flags.HasFlag(SelectionFlags.ExcludeOlder);
+            this.IncludeSame = flags.HasFlag(SelectionFlags.IncludeSame);
+            this.IncludeTweaked = flags.HasFlag(SelectionFlags.IncludeTweaked);
+            this.OnlyCopyArchiveFiles = flags.HasFlag(SelectionFlags.OnlyCopyArchiveFiles);
+            this.OnlyCopyArchiveFilesAndResetArchiveFlag = flags.HasFlag(SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag);
+        }
+
+        /// <summary>
+        /// Translate the selection bools of this object to its <see cref="SelectionFlags"/> representation
+        /// </summary>
+        /// <returns>The <see cref="SelectionFlags"/> representation of this object.</returns>
+        public SelectionFlags GetSelectionFlags()
+        {
+            var flags = SelectionFlags.Default;
+
+            if (this.ExcludeChanged) flags |= SelectionFlags.ExcludeChanged;
+            if (this.ExcludeExtra) flags |= SelectionFlags.ExcludeExtra;
+            if (this.ExcludeJunctionPoints) flags |= SelectionFlags.ExcludeJunctionPoints;
+            if (this.ExcludeJunctionPointsForDirectories) flags |= SelectionFlags.ExcludeJunctionPointsForDirectories;
+            if (this.ExcludeJunctionPointsForFiles) flags |= SelectionFlags.ExcludeJunctionPointsForFiles;
+            if (this.ExcludeLonely) flags |= SelectionFlags.ExcludeLonely;
+            if (this.ExcludeNewer) flags |= SelectionFlags.ExcludeNewer;
+            if (this.ExcludeOlder) flags |= SelectionFlags.ExcludeOlder;
+            if (this.IncludeSame) flags |= SelectionFlags.IncludeSame;
+            if (this.IncludeTweaked) flags |= SelectionFlags.IncludeTweaked;
+            if (this.OnlyCopyArchiveFiles) flags |= SelectionFlags.OnlyCopyArchiveFiles;
+            if (this.OnlyCopyArchiveFilesAndResetArchiveFlag) flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag;
+            
+            return flags;
         }
     }
 }

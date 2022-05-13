@@ -55,6 +55,8 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void RoboQueue_OnError()
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
+
             //Create a file in the destination that would normally be copied, then lock it to force an error being generated.
             var RQ = GenerateRQ(out RoboCommand cmd);
             bool TestPassed = false;

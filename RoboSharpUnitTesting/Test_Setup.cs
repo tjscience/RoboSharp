@@ -18,6 +18,15 @@ namespace RoboSharpUnitTesting
         public static string Source_Standard { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
 
         /// <summary>
+        /// Check if running on AppVeyor -> Certain tests will always fail due to appveyor's setup -> this allows them to pass the checks on appveyor by just not running them
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsRunningOnAppVeyor()
+        {
+            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
+        }
+
+        /// <summary>
         /// Generate the Starter Options and Test Objects to compare
         /// </summary>
         /// <remarks>

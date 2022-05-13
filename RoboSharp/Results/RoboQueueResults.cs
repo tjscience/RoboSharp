@@ -84,6 +84,7 @@ namespace RoboSharp.Results
         /// <inheritdoc cref="IRoboCopyResultsList.Count"/>
         public int Count => ((IRoboCopyResultsList)collection).Count;
 
+        ///<summary>Gets the <see cref="RoboCopyResults"/> object at the specified index. </summary>
         public RoboCopyResults this[int i] => ((IRoboCopyResultsList)collection)[i];
 
         /// <inheritdoc cref="RoboCopyResultsList.CollectionChanged"/>

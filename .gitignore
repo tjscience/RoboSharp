@@ -5,3 +5,4 @@ obj
 /packages
 /*.sln.GhostDoc.xml
 RoboSharp/RoboSharp.csproj
+nuget.config

@@ -23,6 +23,19 @@ namespace RoboSharp
         public CopyOptions() { }
 
         /// <summary>
+        /// Create a new CopyOptions object with the provided settings
+        /// </summary>
+        /// <param name="source"><inheritdoc cref="Source" path="*"/></param>
+        /// <param name="destination"><inheritdoc cref="Destination" path="*"/></param>
+        /// <param name="flags"><inheritdoc cref="CopyActionFlags" path="*"/></param>
+        public CopyOptions(string source, string destination, CopyActionFlags flags) 
+        {
+            this.Source = source ?? string.Empty;
+            this.Destination = destination ?? string.Empty;
+            this.ApplyActionFlags(flags); 
+        }
+
+        /// <summary>
         /// Clone a CopyOptions Object
         /// </summary>
         /// <param name="copyOptions">CopyOptions object to clone</param>
@@ -114,8 +127,13 @@ namespace RoboSharp
         #endregion Option Constants
 
         #region Option Defaults
-
-        private IEnumerable<string> fileFilter = new[] { "*.*" };
+        
+        /// <summary>
+        /// The Default File Filter used that will allow copying of all files
+        /// </summary>
+        public const string DefaultFileFilter = "*.*" ;
+        
+        private IEnumerable<string> fileFilter = new[] { DefaultFileFilter };
         private string copyFlags = "DAT";
         private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
 
@@ -535,6 +553,65 @@ namespace RoboSharp
             bool StartMatch = RunHours_Check1.IsMatch(times.Groups["StartTime"].Value) || RunHours_Check2.IsMatch(times.Groups["StartTime"].Value);
             bool EndMatch = RunHours_Check1.IsMatch(times.Groups["EndTime"].Value) || RunHours_Check2.IsMatch(times.Groups["EndTime"].Value);
             return StartMatch && EndMatch;
+        }
+
+        #endregion
+
+        #region < Flags >
+
+        /// <summary>
+        /// Enum to define the high-level copy action to be taken by RoboCopy process.
+        /// </summary>
+        [Flags]
+        public enum CopyActionFlags
+        {
+            /// <summary>
+            /// Default Functionality is to only copy the files within the source directory - does not copy any files within the subfolders.
+            /// </summary>
+            Default = 0,
+            /// <inheritdoc cref="CopyOptions.CopySubdirectories"/>
+            CopySubdirectories = 1,
+            /// <inheritdoc cref="CopyOptions.CopySubdirectoriesIncludingEmpty"/>
+            CopySubdirectoriesIncludingEmpty = 2,
+            /// <inheritdoc cref="CopyOptions.Purge"/>
+            Purge = 4,
+            /// <inheritdoc cref="CopyOptions.CreateDirectoryAndFileTree"/>
+            CreateDirectoryAndFileTree = 8,
+            /// <inheritdoc cref="CopyOptions.MoveFiles"/>
+            MoveFiles = 16,
+            /// <inheritdoc cref="CopyOptions.MoveFilesAndDirectories"/>
+            MoveFilesAndDirectories = 32,
+            /// <inheritdoc cref="CopyOptions.Mirror"/>
+            Mirror = CopySubdirectoriesIncludingEmpty | Purge, //6
+        }
+
+        /// <summary>
+        /// Apply the <see cref="CopyActionFlags"/> to the command
+        /// </summary>
+        /// <param name="flags">Options to apply</param>
+        public virtual void ApplyActionFlags(CopyActionFlags flags)
+        {
+            this.CopySubdirectories = flags.HasFlag(CopyActionFlags.CopySubdirectories);
+            this.CopySubdirectoriesIncludingEmpty = flags.HasFlag(CopyActionFlags.CopySubdirectoriesIncludingEmpty);
+            this.Purge = flags.HasFlag(CopyActionFlags.Purge);
+            this.Mirror = flags.HasFlag(CopyActionFlags.Mirror);
+            this.MoveFiles = flags.HasFlag(CopyActionFlags.MoveFiles);
+            this.MoveFilesAndDirectories = flags.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+        }
+
+        /// <summary>
+        /// Get the <see cref="CopyActionFlags"/> representation of this object
+        /// </summary>
+        public virtual CopyActionFlags GetCopyActionFlags()
+        {
+            var flags = CopyActionFlags.Default;
+            if (this.CopySubdirectories) flags |=CopyActionFlags.CopySubdirectories;
+            if (this.CopySubdirectoriesIncludingEmpty) flags |=CopyActionFlags.CopySubdirectoriesIncludingEmpty;
+            if (this.Purge) flags |=CopyActionFlags.Purge;
+            if (this.Mirror) flags |=CopyActionFlags.Mirror;
+            if (this.MoveFiles) flags |=CopyActionFlags.MoveFiles;
+            if (this.MoveFilesAndDirectories) flags |=CopyActionFlags.MoveFilesAndDirectories;
+            return flags;
         }
 
         #endregion
