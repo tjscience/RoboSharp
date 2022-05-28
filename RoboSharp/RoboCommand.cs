@@ -241,32 +241,32 @@ namespace RoboSharp
         #region < Events >
 
         /// <summary>Handles <see cref="OnFileProcessed"/></summary>
-        public delegate void FileProcessedHandler(RoboCommand sender, FileProcessedEventArgs e);
+        public delegate void FileProcessedHandler(IRoboCommand sender, FileProcessedEventArgs e);
         /// <summary>Occurs each time a new item has started processing</summary>
         public event FileProcessedHandler OnFileProcessed;
 
         /// <summary>Handles <see cref="OnCommandError"/></summary>
-        public delegate void CommandErrorHandler(RoboCommand sender, CommandErrorEventArgs e);
+        public delegate void CommandErrorHandler(IRoboCommand sender, CommandErrorEventArgs e);
         /// <summary>Occurs when an error occurs while generating the command that prevents the RoboCopy process from starting.</summary>
         public event CommandErrorHandler OnCommandError;
 
         /// <summary>Handles <see cref="OnError"/></summary>
-        public delegate void ErrorHandler(RoboCommand sender, ErrorEventArgs e);
+        public delegate void ErrorHandler(IRoboCommand sender, ErrorEventArgs e);
         /// <summary>Occurs an error is detected by RoboCopy </summary>
         public event ErrorHandler OnError;
 
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
-        public delegate void CommandCompletedHandler(RoboCommand sender, RoboCommandCompletedEventArgs e);
+        public delegate void CommandCompletedHandler(IRoboCommand sender, RoboCommandCompletedEventArgs e);
         /// <summary>Occurs when the RoboCopy process has finished executing and results are available.</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
-        public delegate void CopyProgressHandler(RoboCommand sender, CopyProgressEventArgs e);
+        public delegate void CopyProgressHandler(IRoboCommand sender, CopyProgressEventArgs e);
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
-        public delegate void ProgressUpdaterCreatedHandler(RoboCommand sender, ProgressEstimatorCreatedEventArgs e);
+        public delegate void ProgressUpdaterCreatedHandler(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e);
         /// <summary>
         /// Occurs when a <see cref="Results.ProgressEstimator"/> is created during <see cref="Start"/>, allowing binding to occur within the event subscriber. <br/>
         /// This event will occur once per Start.

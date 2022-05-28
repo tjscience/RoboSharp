@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RoboSharp.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,12 @@ namespace RoboSharp.EventArgObjects
     public class RoboQueueCommandStartedEventArgs : EventArgs
     {
         private RoboQueueCommandStartedEventArgs() : base() { }
-        internal RoboQueueCommandStartedEventArgs(RoboCommand cmd) : base() { Command = cmd; StartTime = DateTime.Now; }
+        internal RoboQueueCommandStartedEventArgs(IRoboCommand cmd) : base() { Command = cmd; StartTime = DateTime.Now; }
 
         /// <summary>
         /// Command that started.
         /// </summary>
-        public RoboCommand Command { get; }
+        public IRoboCommand Command { get; }
 
         /// <summary>
         /// Returns TRUE if the command's <see cref="RoboSharp.Results.ProgressEstimator"/> is available for binding

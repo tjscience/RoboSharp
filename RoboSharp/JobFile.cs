@@ -276,6 +276,19 @@ namespace RoboSharp
             }
         }
 
+        event UnhandledExceptionEventHandler IRoboCommand.TaskFaulted
+        {
+            add
+            {
+                ((IRoboCommand)roboCommand).TaskFaulted += value;
+            }
+
+            remove
+            {
+                ((IRoboCommand)roboCommand).TaskFaulted -= value;
+            }
+        }
+
         #endregion
 
         #region < Properties >
@@ -337,6 +350,11 @@ namespace RoboSharp
         Task<RoboCopyResults> IRoboCommand.StartAsync(string domain, string username, string password)
         {
             return roboCommand.StartAsync_ListOnly();
+        }
+
+        RoboCopyResults IRoboCommand.GetResults()
+        {
+            return ((IRoboCommand)roboCommand).GetResults();
         }
         #endregion
 
