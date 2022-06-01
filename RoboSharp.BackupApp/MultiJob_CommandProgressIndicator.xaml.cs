@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
+using RoboSharp.Interfaces;
 
 namespace RoboSharp.BackupApp
 {
@@ -26,14 +27,14 @@ namespace RoboSharp.BackupApp
             InitializeComponent();
         }
 
-        public MultiJob_CommandProgressIndicator(RoboCommand cmd)
+        public MultiJob_CommandProgressIndicator(IRoboCommand cmd)
         {
             InitializeComponent();
             BindToCommand(cmd);
         }
 
 
-        public RoboCommand Command { get; private set; }
+        public IRoboCommand Command { get; private set; }
 
         public string JobName { 
             get => jobName;
@@ -77,7 +78,7 @@ namespace RoboSharp.BackupApp
         private List<string> OrderLog_2;
 
 
-        public void BindToCommand(RoboCommand cmd)
+        public void BindToCommand(IRoboCommand cmd)
         {
             Command = cmd;
             ListObjSetupComplete = false;
