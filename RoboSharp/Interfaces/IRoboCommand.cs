@@ -76,6 +76,9 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.OnProgressEstimatorCreated"/>
         event RoboCommand.ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
+        /// <inheritdoc cref="RoboCommand.TaskFaulted"/>
+        event System.UnhandledExceptionEventHandler TaskFaulted;
+
         #endregion Events
 
         #region Methods
@@ -91,6 +94,10 @@ namespace RoboSharp.Interfaces
 
         /// <inheritdoc cref="RoboCommand.Start_ListOnly(string, string, string)"/>
         Task Start_ListOnly(string domain = "", string username = "", string password = "");
+
+
+        /// <inheritdoc cref="RoboCommand.GetResults"/>
+        Results.RoboCopyResults GetResults();
 
         /// <inheritdoc cref="RoboCommand.Stop()"/>
         void Stop();

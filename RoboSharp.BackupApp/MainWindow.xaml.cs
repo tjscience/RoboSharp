@@ -547,7 +547,7 @@ namespace RoboSharp.BackupApp
         /// <summary>
         /// Disable associated MultiJob_CommandProgressIndicator to window
         /// </summary>
-        private void RoboQueue_OnCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e)
+        private void RoboQueue_OnCommandCompleted(IRoboCommand sender, RoboCommandCompletedEventArgs e)
         {
             UpdateCommandsRunningBox();
             Dispatcher.Invoke(() =>
@@ -586,7 +586,7 @@ namespace RoboSharp.BackupApp
         /// <summary>
         /// Log the Error to the Errors expander
         /// </summary>
-        private void RoboQueue_OnError(RoboCommand sender, ErrorEventArgs e)
+        private void RoboQueue_OnError(IRoboCommand sender, ErrorEventArgs e)
         {
             Dispatcher.BeginInvoke((Action)(() =>
             {
@@ -602,7 +602,7 @@ namespace RoboSharp.BackupApp
         /// Occurs while a command is starting prior to Robocopy starting (for example, due to missing source location), but won't break the entire RoboQueue. 
         /// That single job will just not start, all others will.
         /// </remarks>
-        private void RoboQueue_OnCommandError(RoboCommand sender, CommandErrorEventArgs e)
+        private void RoboQueue_OnCommandError(IRoboCommand sender, CommandErrorEventArgs e)
         {
             btn_StartQueue(null, null); // Stop Everything
 

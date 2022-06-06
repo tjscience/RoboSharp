@@ -16,14 +16,14 @@ using RoboSharp.Results;
 namespace RoboSharp
 {
     /// <summary>
-    /// Contains a private List{RoboCommand} object with controlled methods for access to it.  <br/>
+    /// Contains a private List{IRoboCommand} object with controlled methods for access to it.  <br/>
     /// Attempting to modify the list while <see cref="IsRunning"/> = true results in <see cref="ListAccessDeniedException"/> being thrown.
     /// <para/>Implements the following: <br/>
     /// <see cref="IRoboQueue"/> <br/>
     /// <see cref="IEnumerable"/> -- Allow enumerating through the collection that is stored in a private list -- Also see <see cref="Commands"/> <br/>
     /// <see cref="INotifyCollectionChanged"/> -- Allow subscription to collection changes against the list <see cref="ObservableList{T}"/> <br/>
     /// <see cref="INotifyPropertyChanged"/> -- Most properties will trigger <see cref="PropertyChanged"/> events when updated.<br/>
-    /// <see cref="IDisposable"/> -- Allow disposal of all <see cref="RoboCommand"/> objects in the list.
+    /// <see cref="IDisposable"/> -- Allow disposal of all <see cref="IRoboCommand"/> objects in the list.
     /// </summary>
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueue"/>
@@ -52,10 +52,10 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/>.
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="IRoboCommand"/>.
         /// </summary>
         /// <inheritdoc cref="RoboQueue(IEnumerable{IRoboCommand}, string, int)"/>
-        public RoboQueue(RoboCommand roboCommand, string name = "", int maxConcurrentJobs = 1)
+        public RoboQueue(IRoboCommand roboCommand, string name = "", int maxConcurrentJobs = 1)
         {
             CommandList.Add(roboCommand);
             Init(name, maxConcurrentJobs);
@@ -63,9 +63,9 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="RoboCommand"/> collection.
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="IRoboCommand"/> collection.
         /// </summary>
-        /// <param name="roboCommand">RoboCommand(s) to populate the list with.</param>
+        /// <param name="roboCommand">IRoboCommand(s) to populate the list with.</param>
         /// <param name="name"><inheritdoc cref="Name"/></param>
         /// <param name="maxConcurrentJobs"><inheritdoc cref="MaxConcurrentJobs"/></param>
         public RoboQueue(IEnumerable<IRoboCommand> roboCommand, string name = "", int maxConcurrentJobs = 1)
@@ -108,19 +108,19 @@ namespace RoboSharp
         #region < Properties Dependent on CommandList >
 
         /// <summary> 
-        /// Checks <see cref="RoboCommand.IsRunning"/> property of all items in the list. 
+        /// Checks <see cref="IRoboCommand.IsRunning"/> property of all items in the list. 
         /// <br/> INotifyPropertyChanged is not raised when this property changes.
         /// </summary>
         public bool AnyRunning => CommandList.Any(c => c.IsRunning);
 
         /// <summary> 
-        /// Checks <see cref="RoboCommand.IsPaused"/> property of all items in the list. 
+        /// Checks <see cref="IRoboCommand.IsPaused"/> property of all items in the list. 
         /// <br/> INotifyPropertyChanged is not raised when this property changes.
         /// </summary>
         public bool AnyPaused => CommandList.Any(c => c.IsPaused);
 
         /// <summary> 
-        /// Checks <see cref="RoboCommand.IsCancelled"/> property of all items in the list. 
+        /// Checks <see cref="IRoboCommand.IsCancelled"/> property of all items in the list. 
         /// <br/> INotifyPropertyChanged is not raised when this property changes.
         /// </summary>
         public bool AnyCancelled => CommandList.Any(c => c.IsCancelled);
@@ -284,7 +284,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Report how many <see cref="RoboCommand.Start"/> tasks has completed during the run. <br/>
+        /// Report how many <see cref="IRoboCommand.Start"/> tasks has completed during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job exits.
         /// </summary>
         public int JobsComplete
@@ -301,7 +301,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Report how many <see cref="RoboCommand.Start"/> tasks has completed successfully during the run. <br/>
+        /// Report how many <see cref="IRoboCommand.Start"/> tasks has completed successfully during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job exits.
         /// </summary>
         public int JobsCompletedSuccessfully
@@ -318,7 +318,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Report how many <see cref="RoboCommand.Start"/> tasks have been started during the run. <br/>
+        /// Report how many <see cref="IRoboCommand.Start"/> tasks have been started during the run. <br/>
         /// This value is reset to 0 when a new run starts, and increments as each job starts.
         /// </summary>
         public int JobsStarted
@@ -358,10 +358,10 @@ namespace RoboSharp
 
         #region < Events >
 
-        #region < RoboCommand Events  >
+        #region < IRoboCommand Events  >
 
         /// <inheritdoc cref="RoboCommand.OnFileProcessed"/>
-        /// <remarks>This bind to every RoboCommand in the list.</remarks>
+        /// <remarks>This bind to every IRoboCommand in the list.</remarks>
         public event RoboCommand.FileProcessedHandler OnFileProcessed;
 
         /// <inheritdoc cref="RoboCommand.OnCommandError"/>
@@ -461,8 +461,8 @@ namespace RoboSharp
             if (TaskCancelSource != null && !TaskCancelSource.IsCancellationRequested)
             {
                 IsPaused = false;
-                TaskCancelSource.Cancel(); // Cancel the RoboCommand Task
-                //RoboCommand Continuation Task will call StopAllTask() method to ensure all processes are stopped & diposed.
+                TaskCancelSource.Cancel(); // Cancel the IRoboCommand Task
+                //IRoboCommand Continuation Task will call StopAllTask() method to ensure all processes are stopped & diposed.
             }
             else if (TaskCancelSource == null)
             {
@@ -476,7 +476,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Loop through the items in the list and issue <see cref="RoboCommand.Pause"/> on any commands where <see cref="RoboCommand.IsRunning"/> is true.
+        /// Loop through the items in the list and issue <see cref="IRoboCommand.Pause"/> on any commands where <see cref="IRoboCommand.IsRunning"/> is true.
         /// </summary>
         public void PauseAll()
         {
@@ -485,7 +485,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Loop through the items in the list and issue <see cref="RoboCommand.Resume"/> on any commands where <see cref="RoboCommand.IsPaused"/> is true.
+        /// Loop through the items in the list and issue <see cref="IRoboCommand.Resume"/> on any commands where <see cref="IRoboCommand.IsPaused"/> is true.
         /// </summary>
         public void ResumeAll()
         {
@@ -498,7 +498,7 @@ namespace RoboSharp
         #region < Run List-Only Mode >
 
         /// <summary>
-        /// Set all RoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
+        /// Set all IRoboCommand objects to ListOnly mode, run them, then set all RoboCommands back to their previous ListOnly mode setting.
         /// </summary>
         /// <inheritdoc cref="StartJobs"/>
         public Task<IRoboQueueResults> StartAll_ListOnly(string domain = "", string username = "", string password = "")
@@ -577,7 +577,7 @@ namespace RoboSharp
         /// <summary>
         /// Create Task that Starts all RoboCommands. 
         /// </summary>
-        /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all RoboCommand objects during this run. </remarks>
+        /// <remarks> <paramref name="domain"/>, <paramref name="password"/>, and <paramref name="username"/> are applied to all IRoboCommand objects during this run. </remarks>
         /// <returns> New Task that finishes after all RoboCommands have stopped executing </returns>
         private Task StartJobs(string domain = "", string username = "", string password = "", bool ListOnlyMode = false)
         {
@@ -606,7 +606,7 @@ namespace RoboSharp
                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(Estimator));
 
                //Start all commands, running as many as allowed
-               foreach (RoboCommand cmd in CommandList)
+               foreach (IRoboCommand cmd in CommandList)
                {
                    if (cancellationToken.IsCancellationRequested) break;
 
@@ -702,16 +702,16 @@ namespace RoboSharp
             TaskCancelSource = null;
         }
 
-        private void Cmd_OnProgressEstimatorCreated(RoboCommand sender, ProgressEstimatorCreatedEventArgs e)
+        private void Cmd_OnProgressEstimatorCreated(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e)
         {
             Estimator?.BindToProgressEstimator(e.ResultsEstimate);
             sender.OnProgressEstimatorCreated -= Cmd_OnProgressEstimatorCreated;
         }
 
         /// <summary>
-        /// Intercept OnCommandCompleted from each RoboCommand, react, then raise this object's OnCommandCompleted event
+        /// Intercept OnCommandCompleted from each IRoboCommand, react, then raise this object's OnCommandCompleted event
         /// </summary>
-        private void RaiseCommandCompleted(RoboCommand sender, RoboCommandCompletedEventArgs e, bool ListOnlyBinding)
+        private void RaiseCommandCompleted(IRoboCommand sender, RoboCommandCompletedEventArgs e, bool ListOnlyBinding)
         {
             if (ListOnlyBinding)
             {
@@ -746,8 +746,8 @@ namespace RoboSharp
                 {
                     Estimator?.UnBind();
 
-                    //RoboCommand objects attach to a process, so must be in the 'unmanaged' section.
-                    foreach (RoboCommand cmd in CommandList)
+                    //IRoboCommand objects attach to a process, so must be in the 'unmanaged' section.
+                    foreach (IRoboCommand cmd in CommandList)
                         cmd.Dispose();
                     CommandList.Clear();
                 }
@@ -757,7 +757,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Finalizer -> Ensures that all RoboCommand objects get disposed of properly when program exits
+        /// Finalizer -> Ensures that all IRoboCommand objects get disposed of properly when program exits
         /// </summary>
         ~RoboQueue()
         {
@@ -766,7 +766,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Dispose all RoboCommand objects contained in the list. - This will kill any Commands that have <see cref="RoboCommand.StopIfDisposing"/> = true (default) <br/>
+        /// Dispose all IRoboCommand objects contained in the list. - This will kill any Commands that have <see cref="RoboCommand.StopIfDisposing"/> = true (default) <br/>
         /// </summary>
         public void Dispose()
         {
@@ -824,7 +824,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.Add(T)"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void AddCommand(RoboCommand item)
+        public void AddCommand(IRoboCommand item)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Add(item);
@@ -835,7 +835,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.Insert(int, T)"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void AddCommand(int index, RoboCommand item)
+        public void AddCommand(int index, IRoboCommand item)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Insert(index, item);
@@ -859,7 +859,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.Remove(T)"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void RemoveCommand(RoboCommand item)
+        public void RemoveCommand(IRoboCommand item)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Remove(item);
@@ -907,8 +907,8 @@ namespace RoboSharp
             OnPropertyChanged("Commands");
         }
 
-        /// <summary>Performs <see cref="RemoveCommand(int)"/> then <see cref="AddCommand(int, RoboCommand)"/></summary>
-        public void ReplaceCommand(RoboCommand item, int index)
+        /// <summary>Performs <see cref="RemoveCommand(int)"/> then <see cref="AddCommand(int, IRoboCommand)"/></summary>
+        public void ReplaceCommand(IRoboCommand item, int index)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Replace(index, item);
