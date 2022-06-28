@@ -689,7 +689,7 @@ namespace RoboSharp
                 var currentDir = resultsBuilder?.Estimator?.CurrentDir;
 
                 //Increment ProgressEstimator
-                if (data == "100%")
+                if (data.StartsWith("100%"))
                     resultsBuilder?.Estimator?.AddFileCopied(currentFile);
                 else
                     resultsBuilder?.Estimator?.SetCopyOpStarted();
@@ -697,7 +697,7 @@ namespace RoboSharp
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
                     new CopyProgressEventArgs(
-                        Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture),
+                        Convert.ToDouble(data.Substring(0, data.IndexOf('%')), CultureInfo.InvariantCulture),
                         currentFile, currentDir
                     ));
 
