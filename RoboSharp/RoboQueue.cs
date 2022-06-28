@@ -598,9 +598,12 @@ namespace RoboSharp
             //Create a Task to Start all the RoboCommands
             Task StartAll = Task.Factory.StartNew(async () =>
            {
+               CommandList.RemoveAll((c) => c is null); // Remove all null references
+               
                //Reset results of all commands in the list
                foreach (RoboCommand cmd in CommandList)
-                   cmd.ResetResults();
+                   cmd?.ResetResults();
+
 
                Estimator = new RoboQueueProgressEstimator();
                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(Estimator));
