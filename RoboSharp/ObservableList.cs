@@ -32,6 +32,8 @@ namespace System.Collections.Generic
 
         #region < Events >
 
+        private object LockObject { get; } = new object();
+
         /// <summary> This event fires whenever the List's array is updated. </summary>
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
@@ -116,8 +118,11 @@ namespace System.Collections.Generic
         /// <returns>True if the <paramref name="itemToReplace"/> was found in the list and successfully replaced. Otherwise false.</returns>
         public virtual bool Replace(T itemToReplace, T newItem)
         {
-            if (!this.Contains(itemToReplace)) return false;
-            return Replace(this.IndexOf(itemToReplace), newItem);
+            lock (LockObject)
+            {
+                if (!this.Contains(itemToReplace)) return false;
+                return Replace(this.IndexOf(itemToReplace), newItem);
+            }
         }
 
 
@@ -130,8 +135,11 @@ namespace System.Collections.Generic
         /// <exception cref="IndexOutOfRangeException"/>
         public virtual bool Replace(int index, T newItem)
         {
-            this[index] = newItem;
-            return true;
+            lock (LockObject)
+            {
+                this[index] = newItem;
+                return true;
+            }
         }
 
         /// <summary>
@@ -146,25 +154,28 @@ namespace System.Collections.Generic
         /// <exception cref="ArgumentNullException"/>
         public virtual bool Replace(int index, IEnumerable<T> collection)
         {
-            int collectionCount = collection.Count();
-            int ItemsAfterIndex = this.Count - index;     // # of items in the list after the index
-            int CountToReplace = collectionCount <= ItemsAfterIndex ? collectionCount : ItemsAfterIndex;  //# if items that will be replaced
-            int AdditionalItems = collectionCount - CountToReplace; //# of additional items that will be added to the list.
+            lock (LockObject)
+            {
+                int collectionCount = collection.Count();
+                int ItemsAfterIndex = this.Count - index;     // # of items in the list after the index
+                int CountToReplace = collectionCount <= ItemsAfterIndex ? collectionCount : ItemsAfterIndex;  //# if items that will be replaced
+                int AdditionalItems = collectionCount - CountToReplace; //# of additional items that will be added to the list.
 
-            List<T> oldItemsList = this.GetRange(index, CountToReplace);
+                List<T> oldItemsList = this.GetRange(index, CountToReplace);
 
-            //Insert the collection
-            base.RemoveRange(index, CountToReplace);
-            if (AdditionalItems > 0)
-                base.AddRange(collection);
-            else
-                base.InsertRange(index, collection);
+                //Insert the collection
+                base.RemoveRange(index, CountToReplace);
+                if (AdditionalItems > 0)
+                    base.AddRange(collection);
+                else
+                    base.InsertRange(index, collection);
 
-            List<T> insertedList = collection.ToList();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: insertedList.GetRange(0, CountToReplace), oldItems: oldItemsList, index));
-            if (AdditionalItems > 0)
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, insertedList.GetRange(CountToReplace, AdditionalItems)));
-            return true;
+                List<T> insertedList = collection.ToList();
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: insertedList.GetRange(0, CountToReplace), oldItems: oldItemsList, index));
+                if (AdditionalItems > 0)
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, insertedList.GetRange(CountToReplace, AdditionalItems)));
+                return true;
+            }
         }
 
         #endregion
@@ -181,20 +192,29 @@ namespace System.Collections.Generic
             set {
                 if (index >= 0 && index < Count)
                 {
-                    //Perform Replace
-                    T old = base[index];
-                    base[index] = value;
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem: value, oldItem: old, index));
+                    lock (LockObject)
+                    {
+                        //Perform Replace
+                        T old = base[index];
+                        base[index] = value;
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem: value, oldItem: old, index));
+                    }
                 }
                 else if (index == Count && index <= Capacity - 1)
                 {
-                    //Append value to end only if the capacity doesn't need to be changed
-                    base.Add(value);
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value, index));
+                    lock (LockObject)
+                    {
+                        //Append value to end only if the capacity doesn't need to be changed
+                        base.Add(value);
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, value, index));
+                    }
                 }
                 else
                 {
-                    base[index] = value; // Generate ArgumentOutOfRangeException exception
+                    lock (LockObject)
+                    {
+                        base[index] = value; // Generate ArgumentOutOfRangeException exception
+                    }
                 }
             }
         }
@@ -204,20 +224,26 @@ namespace System.Collections.Generic
         ///<inheritdoc cref="List{T}.Add(T)"/>
         new public virtual void Add(T item)
         {
-            base.Add(item);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
+            lock (LockObject)
+            {
+                base.Add(item);
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item));
+            }
         }
 
         ///<inheritdoc cref="System.Collections.Generic.List{T}.AddRange(IEnumerable{T})"/>
         new public virtual void AddRange(IEnumerable<T> collection)
         {
-            if (collection == null || collection.Count() == 0) return;
-            foreach (var i in collection)
+            lock (LockObject)
             {
-                Add(i);
+                if (collection == null || collection.Count() == 0) return;
+                foreach (var i in collection)
+                {
+                    Add(i);
+                }
+                //base.AddRange(collection);
+                //OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
             }
-            //base.AddRange(collection);
-            //OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
         }
 
         #endregion
@@ -228,21 +254,27 @@ namespace System.Collections.Generic
         ///<remarks> Generates <see cref="CollectionChanged"/> event for item that was added and item that was shifted ( Event is raised twice ) </remarks>
         new public virtual void Insert(int index, T item)
         {
-            base.Insert(index, item);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index: index));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, this[index + 1], index + 1, index));
+            lock (LockObject)
+            {
+                base.Insert(index, item);
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index: index));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, this[index + 1], index + 1, index));
+            }
         }
 
         ///<inheritdoc cref="List{T}.InsertRange(int, IEnumerable{T})"/>
         ///<remarks> Generates <see cref="CollectionChanged"/> event for items that were added and items that were shifted ( Event is raised twice )</remarks>
         new public virtual void InsertRange(int index, IEnumerable<T> collection)
         {
-            if (collection == null || collection.Count() == 0) return;
-            int i = index + collection.Count() < this.Count ? collection.Count() : this.Count - index;
-            List<T> movedItems = base.GetRange(index, i);
-            base.InsertRange(index, collection);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, changedItems: collection.ToList(), index));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItems: movedItems, IndexOf(movedItems[0]), index));
+            lock (LockObject)
+            {
+                if (collection == null || collection.Count() == 0) return;
+                int i = index + collection.Count() < this.Count ? collection.Count() : this.Count - index;
+                List<T> movedItems = base.GetRange(index, i);
+                base.InsertRange(index, collection);
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, changedItems: collection.ToList(), index));
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItems: movedItems, IndexOf(movedItems[0]), index));
+            }
         }
 
         #endregion
@@ -252,55 +284,70 @@ namespace System.Collections.Generic
         ///<inheritdoc cref="List{T}.Clear"/>
         new public virtual void Clear()
         {
-            base.Clear();
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            lock (LockObject)
+            {
+                base.Clear();
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
         }
 
         ///<inheritdoc cref="List{T}.Remove(T)"/>
         new public virtual bool Remove(T item)
         {
-            if (!base.Contains(item)) return false;
-
-            int i = base.IndexOf(item);
-            if (base.Remove(item))
+            lock (LockObject)
             {
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, i));
-                return true;
+                if (!base.Contains(item)) return false;
+
+                int i = base.IndexOf(item);
+                if (base.Remove(item))
+                {
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, i));
+                    return true;
+                }
+                else
+                    return false;
             }
-            else
-                return false;
         }
 
         ///<inheritdoc cref="List{T}.RemoveAt(int)"/>
         new public virtual void RemoveAt(int index)
         {
-            T item = base[index];
-            base.RemoveAt(index);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index: index));
+            lock (LockObject)
+            {
+                T item = base[index];
+                base.RemoveAt(index);
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index: index));
+            }
         }
 
         ///<inheritdoc cref="List{T}.RemoveRange(int,int)"/>
         new public virtual void RemoveRange(int index, int count)
         {
-            List<T> removedItems = base.GetRange(index, count);
-            if (removedItems.Count > 0)
+            lock (LockObject)
             {
-                base.RemoveRange(index, count);
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems.ToList(), index));
+                List<T> removedItems = base.GetRange(index, count);
+                if (removedItems.Count > 0)
+                {
+                    base.RemoveRange(index, count);
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems.ToList(), index));
+                }
             }
         }
 
         ///<inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
         new public virtual int RemoveAll(Predicate<T> match)
         {
-            List<T> removedItems = base.FindAll(match);
-            int ret = removedItems.Count;
-            if (ret > 0)
+            lock (LockObject)
             {
-                ret = base.RemoveAll(match);
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems));
+                List<T> removedItems = base.FindAll(match);
+                int ret = removedItems.Count;
+                if (ret > 0)
+                {
+                    ret = base.RemoveAll(match);
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems));
+                }
+                return ret;
             }
-            return ret;
         }
 
         #endregion
@@ -381,31 +428,34 @@ namespace System.Collections.Generic
         /// </param>
         protected void PerformMove(Action MoveAction, List<T> OriginalOrder, bool verbose)
         {
-            //Store Old List Order
-            List<T> OldIndexList = this.ToList();
-
-            //Perform the move
-            MoveAction.Invoke();
-
-            //Generate the event
-            foreach (T obj in OriginalOrder)
+            lock (LockObject)
             {
-                int oldIndex = OldIndexList.IndexOf(obj);
-                int newIndex = this.IndexOf(obj);
-                if (oldIndex != newIndex)
+                //Store Old List Order
+                List<T> OldIndexList = this.ToList();
+
+                //Perform the move
+                MoveAction.Invoke();
+
+                //Generate the event
+                foreach (T obj in OriginalOrder)
                 {
-                    if (verbose)
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: obj, newIndex, oldIndex));
-                    else
+                    int oldIndex = OldIndexList.IndexOf(obj);
+                    int newIndex = this.IndexOf(obj);
+                    if (oldIndex != newIndex)
                     {
-                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                        break;
+                        if (verbose)
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: obj, newIndex, oldIndex));
+                        else
+                        {
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                            break;
+                        }
                     }
                 }
-            }
 
-            //OldIndexList no longer needed
-            OldIndexList.Clear();
+                //OldIndexList no longer needed
+                OldIndexList.Clear();
+            }
         }
 
         #endregion
