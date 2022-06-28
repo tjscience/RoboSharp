@@ -212,8 +212,12 @@ namespace System.Collections.Generic
         new public virtual void AddRange(IEnumerable<T> collection)
         {
             if (collection == null || collection.Count() == 0) return;
-            base.AddRange(collection);
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
+            foreach (var i in collection)
+            {
+                Add(i);
+            }
+            //base.AddRange(collection);
+            //OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
         }
 
         #endregion
