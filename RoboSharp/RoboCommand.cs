@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Interfaces;
 using RoboSharp.EventArgObjects;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -25,6 +26,19 @@ namespace RoboSharp
         public static RoboCommandFactory Factory { get; } = new RoboCommandFactory();
 
         #region < Constructors >
+
+        /// <summary>
+        /// The static constructor for the class to take care of any setup / fixes required before running any operations.
+        /// </summary>
+        static RoboCommand()
+        {
+#if NETCOREAPP
+            // NetCoreApp and Net5 do not support encoding 437 by default, so we must register it to support .zip files.
+            //https://stackoverflow.com/questions/56802715/firefoxwebdriver-no-data-is-available-for-encoding-437/61203841#61203841
+            CodePagesEncodingProvider.Instance.GetEncoding(437);
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+        }
 
         /// <summary>Create a new RoboCommand object</summary>
         public RoboCommand()
