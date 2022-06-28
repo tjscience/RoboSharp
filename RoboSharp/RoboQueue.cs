@@ -637,6 +637,7 @@ namespace RoboSharp
                    }, CancellationToken.None);
 
                    TaskList.Add(T);                    //Add the continuation task to the list.
+                   await C.WaitUntilAsync(TaskStatus.Running);  // Wait until this job has started running before raising events
 
                    //Raise Events
                    JobsStarted++; OnPropertyChanged("JobsStarted");
