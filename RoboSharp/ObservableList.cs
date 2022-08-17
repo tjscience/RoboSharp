@@ -47,16 +47,19 @@ namespace System.Collections.Generic
         {
             // This Syncronization code was taken from here: https://stackoverflow.com/a/54733415/12135042
             // This ensures that the CollectionChanged event is invoked from the proper thread, no matter where the change came from.
-
-            if (SynchronizationContext.Current == _synchronizationContext)
+            if (CollectionChanged != null)
             {
-                // Execute the CollectionChanged event on the current thread
-                CollectionChanged?.Invoke(this, e);
-            }
-            else
-            {
-                // Raises the CollectionChanged event on the creator thread
-                _synchronizationContext.Send((callback) => CollectionChanged?.Invoke(this, e), null);
+                if (SynchronizationContext.Current == _synchronizationContext)
+                {
+                    // Execute the CollectionChanged event on the current thread
+                    CollectionChanged?.Invoke(this, e);
+                }
+                else
+                {
+                    // Raises the CollectionChanged event on the appropriate thread
+                    var syncContext = _synchronizationContext ?? SynchronizationContext.Current;
+                    syncContext.Send((callback) => CollectionChanged?.Invoke(this, e), null);
+                }
             }
         }
         private SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
