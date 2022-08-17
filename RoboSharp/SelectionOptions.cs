@@ -348,6 +348,14 @@ namespace RoboSharp
         /// <inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/>
         public void SetExcludedAttributes(FileAttributes? AttributesToExclude) => this.ExcludeAttributes = ConvertFileAttrToString(AttributesToExclude);
 
+        /// <summary> Gets the <see cref="FileAttributes"/> representation of the <see cref="IncludeAttributes"/> string</summary>
+        /// <inheritdoc cref="ConvertFileAttrStringToEnum"/>
+        public FileAttributes? GetIncludedAttributes() => ConvertFileAttrStringToEnum(this.IncludeAttributes);
+
+        /// <summary> Gets the <see cref="FileAttributes"/> representation of the <see cref="ExcludeAttributes"/> string</summary>
+        /// <inheritdoc cref="ConvertFileAttrStringToEnum"/>
+        public FileAttributes? GetExcludedAttributes() => ConvertFileAttrStringToEnum(this.ExcludeAttributes);
+
         /// <summary>
         /// Converts a <see cref="FileAttributes"/> enum to its RASHCNETO string.
         /// </summary>
@@ -372,6 +380,33 @@ namespace RoboSharp
             if (Attr.HasFlag(FileAttributes.Temporary)) s += "T";
             if (Attr.HasFlag(FileAttributes.Offline)) s += "O";
             return s;
+        }
+
+        /// <summary>
+        /// Converts a RASHCNETO string to its <see cref="FileAttributes"/> enum.
+        /// </summary>
+        /// <param name="attributes">
+        /// Accepts: ReadOnly, Archive, System, Hidden, Compressed, NotContentIndexed, Encrypted, Temporary, Offline <br/>
+        /// Ignores: All Other Attributes <br/>
+        /// Pass in NULL value to return empty string.
+        /// </param>
+        /// <returns>If the string is parsable, returns the enum. Otherwise returns null.</returns>
+        public static FileAttributes? ConvertFileAttrStringToEnum(string attributes)
+        {
+            if (attributes is null | attributes == string.Empty) return null;
+            attributes = attributes.ToUpper();
+            if (!System.Text.RegularExpressions.Regex.IsMatch(attributes, @"^[RASHCNETO]{0,9}$", RegexOptions.Compiled | RegexOptions.IgnoreCase)) throw new Exception("Invalid RASHCNETO string!");
+            FileAttributes? attr = null;
+            if (attributes.Contains('R')) attr |= FileAttributes.ReadOnly;
+            if (attributes.Contains('A')) attr |= FileAttributes.Archive;
+            if (attributes.Contains('S')) attr |= FileAttributes.System;
+            if (attributes.Contains('H')) attr |= FileAttributes.Hidden;
+            if (attributes.Contains('C')) attr |= FileAttributes.Compressed;
+            if (attributes.Contains('N')) attr |= FileAttributes.NotContentIndexed;
+            if (attributes.Contains('E')) attr |= FileAttributes.Encrypted;
+            if (attributes.Contains('T')) attr |= FileAttributes.Temporary;
+            if (attributes.Contains('O')) attr |= FileAttributes.Offline;
+            return attr;
         }
 
         internal string Parse()
