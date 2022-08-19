@@ -61,6 +61,16 @@ namespace System.Collections.Generic
         /// </summary>
         private List<T> InternalList { get; set; }
 
+        /// <summary>
+        /// set TRUE to only enable RESET notifications, as opposed to full notifications. (WPF Compatibility)
+        /// </summary>
+        public bool ResetNotificationsOnly { get; set; } = false;
+        
+        /// <summary>
+        /// Used by <see cref="SuppressNotifications"/> and <see cref="UnSuppressNotifications"/> for methods that interact with multiple items
+        /// </summary>
+        private bool _suppressNotifications { get; set; }
+
         /// <inheritdoc/>
         public int Capacity => InternalList.Capacity;
         /// <inheritdoc/>
@@ -70,7 +80,9 @@ namespace System.Collections.Generic
         /// <inheritdoc/>
         public bool IsSynchronized => ((ICollection)InternalList).IsSynchronized;
         /// <inheritdoc/>
-        public bool IsReadOnly => ((ICollection<T>)InternalList).IsReadOnly;
+        bool ICollection<T>.IsReadOnly => ((ICollection<T>)InternalList).IsReadOnly;
+        /// <inheritdoc/>
+        bool IList.IsReadOnly => ((ICollection<T>)InternalList).IsReadOnly;
 
         #endregion
 
@@ -87,6 +99,19 @@ namespace System.Collections.Generic
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
+        private void SuppressNotifications()
+        {
+            _suppressNotifications = !ResetNotificationsOnly;
+        }
+        private void UnSuppressNotifications()
+        {
+            if (_suppressNotifications)
+            {
+                _suppressNotifications = false;
+                NotifyCollectionChanged();
+            }
+        }
+
         /// <summary>
         /// Raise the <see cref="CollectionChanged"/> event. <br/>
         /// <para/>
@@ -95,20 +120,37 @@ namespace System.Collections.Generic
         /// <param name="e"></param>
         protected virtual void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            if (_suppressNotifications) return;
+            if (ResetNotificationsOnly && e.Action != NotifyCollectionChangedAction.Reset) e = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+
             // This Syncronization code was taken from here: https://stackoverflow.com/a/54733415/12135042
             // This ensures that the CollectionChanged event is invoked from the proper thread, no matter where the change came from.
             if (CollectionChanged != null)
             {
-                if (SynchronizationContext.Current == _synchronizationContext)
+                NotifyCollectionChangedEventArgs ResetArgs = null;
+                bool isWPF = false;
+                foreach (NotifyCollectionChangedEventHandler handler in CollectionChanged.GetInvocationList())
                 {
-                    // Execute the CollectionChanged event on the current thread
-                    CollectionChanged?.Invoke(this, e);
-                }
-                else
-                {
-                    // Raises the CollectionChanged event on the appropriate thread
-                    var syncContext = _synchronizationContext ?? SynchronizationContext.Current;
-                    syncContext.Send((callback) => CollectionChanged?.Invoke(this, e), null);
+                    if (!ResetNotificationsOnly)
+                    {
+                        // Check for a WPF Control that only accepts the 'RESET' signal
+                        var target = handler.Target.GetType().ToString();
+                        isWPF = target.StartsWith("System.Windows.Data.");
+                        if (isWPF) ResetArgs = ResetArgs ?? (e.Action == NotifyCollectionChangedAction.Reset ? e : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                    }
+
+                    if (SynchronizationContext.Current == _synchronizationContext)
+                    {
+                        // Execute the CollectionChanged event on the current thread
+                        handler(this, isWPF ? ResetArgs : e);
+
+                    }
+                    else
+                    {
+                        // Raises the CollectionChanged event on the appropriate thread
+                        var syncContext = _synchronizationContext ?? SynchronizationContext.Current;
+                        syncContext.Send((callback) => handler(this, isWPF ? ResetArgs : e), null);
+                    }
                 }
             }
         }
@@ -199,12 +241,12 @@ namespace System.Collections.Generic
             lock (LockObject)
             {
                 if (collection == null || collection.Count() == 0) return;
+                SuppressNotifications();
                 foreach (var i in collection)
                 {
                     Add(i);
                 }
-                //InternalList.AddRange(collection);
-                //OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, collection.ToList()));
+                UnSuppressNotifications();
             }
         }
 
@@ -341,8 +383,10 @@ namespace System.Collections.Generic
             lock (LockObject)
             {
                 InternalList.Insert(index, item);
+                SuppressNotifications();
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index: index));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, this[index + 1], index + 1, index));
+                UnSuppressNotifications();
             }
         }
 
@@ -352,12 +396,15 @@ namespace System.Collections.Generic
         {
             lock (LockObject)
             {
+                
                 if (collection == null || collection.Count() == 0) return;
                 int i = index + collection.Count() < this.Count ? collection.Count() : this.Count - index;
                 List<T> movedItems = InternalList.GetRange(index, i);
                 InternalList.InsertRange(index, collection);
+                SuppressNotifications();
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, changedItems: collection.ToList(), index));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItems: movedItems, IndexOf(movedItems[0]), index));
+                UnSuppressNotifications();
             }
         }
 
@@ -406,7 +453,9 @@ namespace System.Collections.Generic
                 if (ret > 0)
                 {
                     ret = InternalList.RemoveAll(match);
+                    SuppressNotifications();
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems));
+                    UnSuppressNotifications();
                 }
                 return ret;
             }
@@ -432,7 +481,9 @@ namespace System.Collections.Generic
                 if (removedItems.Count > 0)
                 {
                     InternalList.RemoveRange(index, count);
+                    SuppressNotifications();
                     OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems.ToList(), index));
+                    UnSuppressNotifications();
                 }
             }
         }
@@ -442,70 +493,47 @@ namespace System.Collections.Generic
         #region < Reverse >
 
         ///<inheritdoc cref="List{T}.Reverse()"/>
-        public virtual void Reverse() => Reverse(true);
-
-        ///<inheritdoc cref="Reverse(int, int, bool)"/>
-        public virtual void Reverse(int index, int count) => Reverse(index, count, true);
-
-        ///<inheritdoc cref="List{T}.Reverse()"/>
-        ///<inheritdoc cref="PerformMove"/>
-        public virtual void Reverse(bool verbose)
-        {
-            PerformMove(new Action(() => InternalList.Reverse()), InternalList, verbose);
-        }
+        public virtual void Reverse() => PerformMove(new Action(() => InternalList.Reverse()), InternalList);
 
         ///<inheritdoc cref="List{T}.Reverse(int, int)"/>
-        ///<inheritdoc cref="PerformMove"/>
-        public virtual void Reverse(int index, int count, bool verbose)
+        public virtual void Reverse(int index, int count)
         {
             List<T> OriginalOrder = InternalList.GetRange(index, count);
-            PerformMove(new Action(() => InternalList.Reverse(index, count)), OriginalOrder, verbose);
+            PerformMove(new Action(() => InternalList.Reverse(index, count)), OriginalOrder);
         }
 
         #endregion
 
         #region < Sort >
 
-        ///<inheritdoc cref="Sort(bool)"/>
-        public virtual void Sort() => Sort(true);
-
-        ///<inheritdoc cref="Sort(Comparison{T},bool)"/>
-        public virtual void Sort(Comparison<T> comparison) => Sort(comparison, true);
-
-        ///<inheritdoc cref="Sort(IComparer{T}, bool)"/>
-        public virtual void Sort(IComparer<T> comparer) => Sort(comparer, true);
-
-        ///<inheritdoc cref="Sort(int, int, IComparer{T},bool)"/>
-        public virtual void Sort(int index, int count, IComparer<T> comparer) => Sort(index, count, comparer, true);
-
         ///<inheritdoc cref="List{T}.Sort()"/>
         ///<inheritdoc cref="PerformMove"/>
-        public virtual void Sort(bool verbose)
+        public virtual void Sort()
         {
-            PerformMove(new Action(() => InternalList.Sort()), InternalList, verbose);
+            PerformMove(new Action(() => InternalList.Sort()), InternalList);
         }
 
         ///<inheritdoc cref="List{T}.Sort(Comparison{T})"/>
         ///<inheritdoc cref="PerformMove"/>
-        public virtual void Sort(Comparison<T> comparison, bool verbose)
+        public virtual void Sort(Comparison<T> comparison)
         {
-            PerformMove(new Action(() => InternalList.Sort(comparison)), InternalList, verbose);
+            PerformMove(new Action(() => InternalList.Sort(comparison)), InternalList);
         }
 
         ///<inheritdoc cref="List{T}.Sort(IComparer{T})"/>
         ///<inheritdoc cref="PerformMove"/>
-        public virtual void Sort(IComparer<T> comparer, bool verbose)
+        public virtual void Sort(IComparer<T> comparer)
         {
-            PerformMove(new Action(() => InternalList.Sort(comparer)), InternalList, verbose);
+            PerformMove(new Action(() => InternalList.Sort(comparer)), InternalList);
         }
 
         ///<inheritdoc cref="List{T}.Sort(int, int, IComparer{T})"/>
         ///<inheritdoc cref="PerformMove"/>
-        public virtual void Sort(int index, int count, IComparer<T> comparer, bool verbose)
+        public virtual void Sort(int index, int count, IComparer<T> comparer)
         {
             List<T> OriginalOrder = InternalList.GetRange(index, count);
             Action action = new Action(() => InternalList.Sort(index, count, comparer));
-            PerformMove(action, OriginalOrder, verbose);
+            PerformMove(action, OriginalOrder);
         }
 
         #endregion
@@ -567,15 +595,10 @@ namespace System.Collections.Generic
 
         /// <remarks>
         /// Per <see cref="INotifyCollectionChanged"/> rules, generates <see cref="CollectionChanged"/> event for every item that has moved within the list. <br/>
-        /// Set <paramref name="verbose"/> parameter in overload to generate a single <see cref="NotifyCollectionChangedAction.Reset"/> event instead.
         /// </remarks>
         /// <param name="MoveAction">Action to perform that will rearrange items in the list - should not add, remove or replace!</param>
         /// <param name="OriginalOrder">List of items that are intended to rearrage - can be whole or subset of list</param>
-        /// <param name="verbose">
-        /// If TRUE: Create a 'Move' OnCollectionChange event for all items that were moved within the list. <para/>
-        /// If FALSE: Generate a single event with <see cref="NotifyCollectionChangedAction.Reset"/>
-        /// </param>
-        protected void PerformMove(Action MoveAction, List<T> OriginalOrder, bool verbose)
+        protected void PerformMove(Action MoveAction, List<T> OriginalOrder)
         {
             lock (LockObject)
             {
@@ -586,22 +609,20 @@ namespace System.Collections.Generic
                 MoveAction.Invoke();
 
                 //Generate the event
-                foreach (T obj in OriginalOrder)
+                if (ResetNotificationsOnly)
+                    NotifyCollectionChanged();
+                else
                 {
-                    int oldIndex = OldIndexList.IndexOf(obj);
-                    int newIndex = this.IndexOf(obj);
-                    if (oldIndex != newIndex)
+                    foreach (T obj in OriginalOrder)
                     {
-                        if (verbose)
-                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: obj, newIndex, oldIndex));
-                        else
+                        int oldIndex = OldIndexList.IndexOf(obj);
+                        int newIndex = this.IndexOf(obj);
+                        if (oldIndex != newIndex)
                         {
-                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-                            break;
+                            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Move, changedItem: obj, newIndex, oldIndex));
                         }
                     }
                 }
-
                 //OldIndexList no longer needed
                 OldIndexList.Clear();
             }
@@ -668,10 +689,17 @@ namespace System.Collections.Generic
                 else
                     InternalList.InsertRange(index, collection);
 
-                List<T> insertedList = collection.ToList();
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: insertedList.GetRange(0, CountToReplace), oldItems: oldItemsList, index));
-                if (AdditionalItems > 0)
-                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, insertedList.GetRange(CountToReplace, AdditionalItems)));
+                //Notify
+                if (ResetNotificationsOnly)
+                    NotifyCollectionChanged();
+                else
+                {
+                    List<T> insertedList = collection.ToList();
+                    OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItems: insertedList.GetRange(0, CountToReplace), oldItems: oldItemsList, index));
+                    if (AdditionalItems > 0)
+                        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, insertedList.GetRange(CountToReplace, AdditionalItems)));
+                }
+
                 return true;
             }
         }
