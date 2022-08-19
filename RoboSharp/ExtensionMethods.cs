@@ -242,3 +242,34 @@ namespace System.Threading
         }
     }
 }
+
+namespace System.Collections.Generic
+{
+    /// <summary>
+    /// Static methods that allow converting collections to <see cref="ObservableList{T}"/>
+    /// </summary>
+    public static class ObservableListExtensions
+    {
+        /// <summary>
+        /// Copy the items from the collection into a new <see cref="ObservableList{T}"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <returns>new <see cref="ObservableList{T}"/> object</returns>
+        public static ObservableList<T> AsObservableList<T>(IEnumerable<T> collection)
+        {
+            return new ObservableList<T>(collection);
+        }
+
+        /// <summary>
+        /// Wrap the list into an <see cref="ObservableList{T}"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <returns>new <see cref="ObservableList{T}"/> object</returns>
+        public static ObservableList<T> AsObservableList<T>(List<T> collection)
+        {
+            return new ObservableList<T>(collection);
+        }
+    }
+}
