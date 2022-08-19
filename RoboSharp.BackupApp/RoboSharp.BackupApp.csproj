@@ -99,7 +99,6 @@
     <Compile Include="MultiJob_CommandProgressIndicator.xaml.cs">
       <DependentUpon>MultiJob_CommandProgressIndicator.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ObservableListTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
