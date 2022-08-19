@@ -199,15 +199,15 @@ namespace RoboSharp.BackupApp
             ThrowIfCountUnexpected("ReverseTest");
 
             SetExpectations(ResetAction, 1, 0);
-            OList.Sort(false);                          //  -> 7 items moved -> 1 event (Reset)
+            OList.Sort();                          //  -> 7 items moved -> 1 event (Reset)
             ThrowIfCountUnexpected("SortTest_1");
 
             SetExpectations(ResetAction, 1, 0);
-            OList.Reverse(false);                            //  -> 7 items moved
+            OList.Reverse();                            //  -> 7 items moved
             ThrowIfCountUnexpected("ReverseTest_2");
 
             SetMoveExpectation(OList.Count, 0);
-            OList.Sort(true);             
+            OList.Sort();             
             ThrowIfCountUnexpected("SortTest_2");
         }
 
