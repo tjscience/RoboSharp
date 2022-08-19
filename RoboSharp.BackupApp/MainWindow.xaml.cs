@@ -44,9 +44,6 @@ namespace RoboSharp.BackupApp
             VersionManager.VersionCheck = VersionManager.VersionCheckType.UseWMI;
             var v = VersionManager.Version;
 
-            //UnitTests
-            new ObservableListTester().RunTest(); // Test ObservableList works properly
-
             //Button Setup
             btnAddToQueue.IsEnabled = true;
             btnStartJobQueue.IsEnabled = false;
