@@ -101,7 +101,7 @@ namespace System.Collections.Generic
 
         private void SuppressNotifications()
         {
-            _suppressNotifications = !ResetNotificationsOnly;
+            _suppressNotifications = ResetNotificationsOnly;
         }
         private void UnSuppressNotifications()
         {
@@ -134,7 +134,7 @@ namespace System.Collections.Generic
                     if (!ResetNotificationsOnly)
                     {
                         // Check for a WPF Control that only accepts the 'RESET' signal
-                        var target = handler.Target.GetType().ToString();
+                        var target = handler.Target?.GetType()?.ToString() ?? string.Empty;
                         isWPF = target.StartsWith("System.Windows.Data.");
                         if (isWPF) ResetArgs = ResetArgs ?? (e.Action == NotifyCollectionChangedAction.Reset ? e : new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
                     }
