@@ -27,7 +27,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Clone a SpeedStatistic
         /// </summary>
-        public SpeedStatistic(SpeedStatistic stat)
+        public SpeedStatistic(ISpeedStatistic stat)
         {
             BytesPerSec = stat.BytesPerSec;
             MegaBytesPerMin = stat.MegaBytesPerMin;

@@ -14,6 +14,33 @@ namespace RoboSharp.Results
     {
         internal RoboCopyResults() { }
 
+        /// <summary>
+        /// Constructor available for consumers to use in custom IRoboCommand implementations
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="bytes"></param>
+        /// <param name="files"></param>
+        /// <param name="directories"></param>
+        /// <param name="speed"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="status"></param>
+        /// <param name="logLines"></param>
+        public RoboCopyResults(string source, string destination, IStatistic bytes, IStatistic files, IStatistic directories, ISpeedStatistic speed, DateTime startTime, DateTime endTime = default,  RoboCopyExitStatus status = null, params string[] logLines)
+        {
+            DirectoriesStatistic = new Statistic(directories);
+            FilesStatistic = new Statistic(files);
+            BytesStatistic = new Statistic(bytes);
+            SpeedStatistic = new SpeedStatistic(speed);
+            Source = source;
+            Destination = destination;
+            StartTime = startTime;
+            EndTime = endTime ==  default ?  DateTime.Now : endTime;
+            TimeSpan = EndTime - StartTime;
+            Status = status ?? new RoboCopyExitStatus(ProgressEstimator.GetExitCode(files, directories));
+        }
+
         #region < Properties >
 
         /// <inheritdoc cref="CopyOptions.Source"/>

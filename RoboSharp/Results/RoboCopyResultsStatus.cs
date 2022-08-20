@@ -16,11 +16,19 @@ namespace RoboSharp.Results
     public class RoboCopyExitStatus
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// Initializes a new instance of the class.
         /// </summary>
         public RoboCopyExitStatus(int exitCodeValue)
         {
             ExitCodeValue = exitCodeValue;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the class.
+        /// </summary>
+        public RoboCopyExitStatus(RoboCopyExitCodes exitCodeValue)
+        {
+            ExitCodeValue = (int)exitCodeValue;
         }
 
         /// <summary>ExitCode as reported by RoboCopy</summary>

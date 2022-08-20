@@ -18,13 +18,21 @@ namespace RoboSharp.EventArgObjects
         
         private IProgressEstimatorUpdateEventArgs() : base() { }
 
-        internal IProgressEstimatorUpdateEventArgs(IProgressEstimator estimator, IStatistic ByteChange, IStatistic FileChange, IStatistic DirChange) : base()
+        /// <summary>
+        /// Generate new args
+        /// </summary>
+        /// <param name="estimator"></param>
+        /// <param name="ByteChange"></param>
+        /// <param name="FileChange"></param>
+        /// <param name="DirChange"></param>
+        public IProgressEstimatorUpdateEventArgs(IProgressEstimator estimator, IStatistic ByteChange, IStatistic FileChange, IStatistic DirChange) : base()
         {
             Estimator = estimator;
             ValueChange_Bytes = ByteChange ?? Statistic.Default_Bytes;
             ValueChange_Files = FileChange ?? Statistic.Default_Files;
             ValueChange_Directories = DirChange ?? Statistic.Default_Dirs;
         }
+
 
         /// <summary>
         /// <inheritdoc cref="Results.ProgressEstimator"/>

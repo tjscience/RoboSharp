@@ -35,7 +35,11 @@ namespace RoboSharp.Results
 
         private ProgressEstimator() { }
 
-        internal ProgressEstimator(RoboCommand cmd)
+        /// <summary>
+        /// Create a new ProgressEstimator object
+        /// </summary>
+        /// <param name="cmd"></param>
+        public ProgressEstimator(IRoboCommand cmd)
         {
             command = cmd;
             DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
@@ -52,7 +56,7 @@ namespace RoboSharp.Results
 
         #region < Private Members >
 
-        private readonly RoboCommand command;
+        private IRoboCommand command { get; }
         private bool SkippingFile { get; set; }
         private bool CopyOpStarted { get; set; }
         internal bool FileFailed { get; set; }
@@ -126,24 +130,30 @@ namespace RoboSharp.Results
         /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
         /// </summary>
         /// <returns></returns>
-        public RoboCopyExitCodes GetExitCode()
+        public RoboCopyExitCodes GetExitCode() => GetExitCode(FileStatsField, DirStatField);
+
+        /// <summary>
+        /// Parse the Statistics into a <see cref="RoboCopyExitCodes"/> enum.
+        /// </summary>
+        /// <returns></returns>
+        public static RoboCopyExitCodes GetExitCode(IStatistic files, IStatistic dirs)
         {
             Results.RoboCopyExitCodes code = 0;
 
             //Files Copied
-            if (FileStatsField.Copied > 0)
+            if (files.Copied > 0)
                 code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
 
             //Extra
-            if (DirStatField.Extras > 0 | FileStatsField.Extras > 0)
+            if (dirs.Extras > 0 | files.Extras > 0)
                 code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
 
             //MisMatch
-            if (DirStatField.Mismatch > 0 | FileStatsField.Mismatch > 0)
+            if (dirs.Mismatch > 0 | files.Mismatch > 0)
                 code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
 
             //Failed
-            if (DirStatField.Failed > 0 | FileStatsField.Failed > 0)
+            if (dirs.Failed > 0 | files.Failed > 0)
                 code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
 
             return code;
@@ -162,7 +172,7 @@ namespace RoboSharp.Results
         /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
         /// </remarks>
         /// <returns></returns>
-        internal RoboCopyResults GetResults()
+        public RoboCopyResults GetResults()
         {
             //Stop the Update Task
             UpdateTaskCancelSource?.Cancel();
@@ -189,7 +199,7 @@ namespace RoboSharp.Results
         #region < Calculate Dirs (Internal) >
 
         /// <summary>Increment <see cref="DirStatField"/></summary>
-        internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
+        public void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
         {
             
             WhereToAdd? whereTo = null;
@@ -271,7 +281,7 @@ namespace RoboSharp.Results
         }
 
         /// <summary>Increment <see cref="FileStatsField"/></summary>
-        internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
+        public void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
             ProcessPreviousFile();
 
@@ -370,7 +380,7 @@ namespace RoboSharp.Results
 
         /// <summary>Catch start copy progress of large files</summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal void SetCopyOpStarted()
+        public void SetCopyOpStarted()
         {
             SkippingFile = false;
             CopyOpStarted = true;
@@ -378,7 +388,7 @@ namespace RoboSharp.Results
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal void AddFileCopied(ProcessedFileInfo currentFile)
+        public void AddFileCopied(ProcessedFileInfo currentFile)
         {
             PerformByteCalc(currentFile, WhereToAdd.Copied);
         }

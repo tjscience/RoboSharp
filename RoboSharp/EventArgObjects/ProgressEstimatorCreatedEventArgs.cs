@@ -14,7 +14,7 @@ namespace RoboSharp.EventArgObjects
     {
         private ProgressEstimatorCreatedEventArgs() : base() { }
 
-        internal ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
+        public ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
         {
             ResultsEstimate = estimator;
         }

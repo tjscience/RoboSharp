@@ -75,6 +75,17 @@ namespace RoboSharp
             Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
+        /// <summary>
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="IRoboCommand"/> collection.
+        /// </summary>
+        /// <param name="roboCommands">IRoboCommand(s) to populate the list with.</param>
+        public RoboQueue(params IRoboCommand[] roboCommands)
+        {
+            CommandList.AddRange(roboCommands);
+            Init();
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
+        }
+
         private void Init(string name = "", int maxConcurrentJobs = 1)
         {
             NameField = name;
@@ -849,6 +860,16 @@ namespace RoboSharp
         /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
         public void AddCommand(IEnumerable<IRoboCommand> collection)
+        {
+            if (IsRunning) throw new ListAccessDeniedException();
+            CommandList.AddRange(collection);
+            OnPropertyChanged("ListCount");
+            OnPropertyChanged("Commands");
+        }
+
+        /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
+        /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
+        public void AddCommand(params IRoboCommand[] collection)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.AddRange(collection);

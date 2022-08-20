@@ -20,11 +20,14 @@ namespace RoboSharp.Results
     /// <remarks>
     /// <see href="https://github.com/tjscience/RoboSharp/wiki/RoboQueueProgressEstimator"/>
     /// </remarks>
-    internal class RoboQueueProgressEstimator : IProgressEstimator, IResults, IDisposable
+    public class RoboQueueProgressEstimator : IProgressEstimator, IResults, IDisposable
     {
         #region < Constructors >
 
-        internal RoboQueueProgressEstimator()
+        /// <summary>
+        /// Create a new ProgressEstimator
+        /// </summary>
+        public RoboQueueProgressEstimator()
         {
             tmpDirs = new Statistic(Statistic.StatType.Directories);
             tmpFiles = new Statistic(Statistic.StatType.Files);
@@ -123,7 +126,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Subscribe to the update events of a <see cref="ProgressEstimator"/> object
         /// </summary>
-        internal void BindToProgressEstimator(IProgressEstimator estimator)
+        public void BindToProgressEstimator(IProgressEstimator estimator)
         {
             if (!SubscribedStats.ContainsKey(estimator))
             {
@@ -195,7 +198,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Unsubscribe from all bound Statistic objects
         /// </summary>
-        internal void UnBind()
+        public void UnBind()
         {
             if (SubscribedStats != null)
             {
@@ -213,7 +216,7 @@ namespace RoboSharp.Results
         /// <summary>
         /// Unbind all the ProgressEstimators
         /// </summary>
-        internal void CancelTasks() => CancelTasks(true);
+        public void CancelTasks() => CancelTasks(true);
 
         private void CancelTasks(bool RunUpdateTask)
         {
@@ -238,6 +241,7 @@ namespace RoboSharp.Results
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
+                    CancelTasks();
                 }
 
                 //Cancel the tasks
