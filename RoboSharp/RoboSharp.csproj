@@ -12,6 +12,7 @@
     <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
     <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
+    <LangVersion>8.0</LangVersion>
     <summary>
       pull request #107
     </summary>

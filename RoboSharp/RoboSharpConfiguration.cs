@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using RoboSharp.ConsumerHelpers;
 using RoboSharp.DefaultConfigurations;
 
 namespace RoboSharp
@@ -367,5 +368,60 @@ namespace RoboSharp
             // no match, fallback to en
             return defaultConfig ?? defaultConfigurations["en"];
         }
+
+        #region < Helpers >
+
+        /// <inheritdoc cref="GetDirectoryClass(DirectoryClasses, RoboSharpConfiguration)"/>
+        public string GetDirectoryClass(DirectoryClasses status) => GetDirectoryClass(status, this);
+
+        /// <inheritdoc cref="GetFileClass(FileClasses, RoboSharpConfiguration)"/>
+        public string GetFileClass(FileClasses status) => GetFileClass(status, this);
+
+        /// <summary> Get the string representing the enum from the configuration </summary>
+        /// <param name="config">The configuration file to pull the log parsing string from</param>
+        /// <param name="status">The status to look up from the configuration</param>
+        /// <returns>The string from the config that is associated with this enum value</returns>
+        public static string GetDirectoryClass(DirectoryClasses status, RoboSharpConfiguration config)
+        {
+            if (config is null) throw new ArgumentNullException(nameof(config));
+            return status switch
+            {
+                DirectoryClasses.Exclusion => config.LogParsing_DirectoryExclusion,
+                DirectoryClasses.ExistingDir => config.LogParsing_ExistingDir,
+                DirectoryClasses.ExtraDir => config.LogParsing_ExtraDir,
+                DirectoryClasses.NewDir => config.LogParsing_NewDir,
+                _ => throw new NotImplementedException($"DirectoryClass Status Type '{status}' Not Implemented!")
+            };
+        }
+
+        /// <summary> Get the string representing the enum from the configuration </summary>
+        /// <param name="config">The configuration file to pull the log parsing string from</param>
+        /// <param name="status">The status to look up from the configuration</param>
+        /// <returns>The string from the config that is associated with this enum value</returns>
+        public static string GetFileClass(FileClasses status, RoboSharpConfiguration config)
+        {
+            if (config is null) throw new ArgumentNullException(nameof(config));
+            return status switch
+            {
+                FileClasses.AttribExclusion => config.LogParsing_AttribExclusion,
+                FileClasses.ChangedExclusion => config.LogParsing_ChangedExclusion,
+                FileClasses.ExtraFile => config.LogParsing_ExtraFile,
+                FileClasses.Failed => config.LogParsing_FailedFile,
+                FileClasses.FileExclusion => config.LogParsing_FileExclusion,
+                FileClasses.MaxAgeSizeExclusion => config.LogParsing_MaxAgeOrAccessExclusion,
+                FileClasses.MaxFileSizeExclusion => config.LogParsing_MaxFileSizeExclusion,
+                FileClasses.MinAgeSizeExclusion => config.LogParsing_MinAgeOrAccessExclusion,
+                FileClasses.MinFileSizeExclusion => config.LogParsing_MinFileSizeExclusion,
+                FileClasses.MisMatch => config.LogParsing_MismatchFile,
+                FileClasses.NewerFile => config.LogParsing_NewerFile,
+                FileClasses.NewFile => config.LogParsing_NewFile,
+                FileClasses.OlderFile => config.LogParsing_OlderFile,
+                FileClasses.SameFile => config.LogParsing_SameFile,
+                FileClasses.TweakedInclusion => config.LogParsing_TweakedInclusion,
+                _ => throw new NotImplementedException($"FileClass Status Type '{status}' Not Implemented!")
+            };
+        }
+
+        #endregion
     }
 }

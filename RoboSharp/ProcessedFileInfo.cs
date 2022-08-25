@@ -1,4 +1,7 @@
-﻿namespace RoboSharp
+﻿using RoboSharp.Interfaces;
+using System.IO;
+
+namespace RoboSharp
 {
     /// <summary>
     /// Message Type reported by RoboCopy
@@ -22,20 +25,36 @@
         public ProcessedFileInfo() { }
 
         /// <summary>
-        /// Get the value from the FileInfo
+        /// Generate a new object by explicitly defining the values
+        /// </summary>
+        /// <param name="name"><inheritdoc cref="Name" path="*" /></param>
+        /// <param name="type"><inheritdoc cref="FileClassType" path="*" /></param>
+        /// <param name="class"><inheritdoc cref="FileClass" path="*" /></param>
+        /// <param name="size"><inheritdoc cref="Size" path="*" /></param>
+        public ProcessedFileInfo(string name, FileClassType type, string @class, long size)
+        {
+            Name = name;
+            FileClassType = type;
+            FileClass = @class;
+            Size = size;
+        }
+
+        /// <summary>
+        /// Create a new ProcessedFileInfo object that represents some file
         /// </summary>
         /// <param name="file"></param>
-        /// <param name="useFullName"/>
-        public ProcessedFileInfo(System.IO.FileInfo file, bool useFullName = false)
+        /// <param name="status">The status of the file to look up from the config</param>
+        /// <param name="config">The config the get the status string from</param>
+        public ProcessedFileInfo(System.IO.FileInfo file, FileClasses status, RoboSharpConfiguration config)
         {
             FileClassType = FileClassType.File;
-            FileClass = "File";
-            Name = useFullName ? file.FullName : file.Name;
+            FileClass = config.GetFileClass(status);
+            Name = file.Name;
             Size = file.Length;
         }
 
         /// <summary>
-        /// Report a message
+        /// Report a message from the process
         /// </summary>
         /// <param name="systemMessage"></param>
         public ProcessedFileInfo(string systemMessage)
@@ -47,17 +66,18 @@
         }
 
         /// <summary>
-        /// 
+        /// Create a new ProcessedFileInfo object that represents some directory
         /// </summary>
         /// <param name="directory">the Directory</param>
-        /// <param name="size">number of files/folders in the directory (if desired to fill this out)</param>
-        /// <param name="useFullName" />
-        public ProcessedFileInfo(System.IO.DirectoryInfo directory, long size = 0, bool useFullName = false)
+        /// <param name="size">number of files/folders in the directory - If left at -1, then it will check check using the <paramref name="directory"/> length</param>
+        /// <param name="status">The status of the file to look up from the config</param>
+        /// <param name="config">The config the get the status string from</param>
+        public ProcessedFileInfo(System.IO.DirectoryInfo directory, DirectoryClasses status, RoboSharpConfiguration config, long size = -1)
         {
             FileClassType = FileClassType.NewDir;
-            FileClass = "NewDir";
-            Name = useFullName ? directory.FullName : directory.Name;
-            Size = size;
+            FileClass = config.GetDirectoryClass(status);
+            Name = directory.Name;
+            Size = size != -1 ? size : Directory.GetFiles(directory.FullName).Length;
         }
 
         /// <summary>Description of the item as reported by RoboCopy</summary>
@@ -75,5 +95,29 @@
 
         /// <summary>Folder or File Name / Message Text</summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Set the <see cref="FileClass"/> property <br/>
+        /// Only meant for consumers to use upon custom implementations of IRoboCommand
+        /// </summary>
+        /// <param name="status">Status to set</param>
+        /// <param name="config">configuration provider</param>
+        public void SetDirectoryClass(DirectoryClasses status, RoboSharpConfiguration config)
+        {
+            if (FileClassType != FileClassType.NewDir) throw new System.Exception("Unable to apply DirectoryClass status to File or System Message");
+            FileClass = config.GetDirectoryClass(status);
+        }
+        /// <inheritdoc cref="SetDirectoryClass(DirectoryClasses, RoboSharpConfiguration)"/>
+        public void SetDirectoryClass(DirectoryClasses status, IRoboCommand config) => SetDirectoryClass(status, config.Configuration);
+
+
+        /// <inheritdoc cref="SetDirectoryClass(DirectoryClasses, RoboSharpConfiguration)"/>
+        public void SetFileClass(FileClasses status, RoboSharpConfiguration config)
+        {
+            if (FileClassType != FileClassType.File) throw new System.Exception("Unable to apply DirectoryClass status to File or System Message");
+            FileClass = config.GetFileClass(status);
+        }
+        /// <inheritdoc cref="SetDirectoryClass(DirectoryClasses, RoboSharpConfiguration)"/>
+        public void SetFileClass(FileClasses status, IRoboCommand config) => SetFileClass(status, config.Configuration);
     }
 }
