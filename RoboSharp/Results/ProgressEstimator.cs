@@ -31,6 +31,33 @@ namespace RoboSharp.Results
     /// </remarks>
     public class ProgressEstimator : IProgressEstimator, IResults
     {
+        /// <summary>
+        /// Enum used to control addition of directory and file statistics
+        /// </summary>
+        public enum WhereToAdd { 
+
+            /// <summary>
+            /// File was copied/moved successfully
+            /// </summary>
+            Copied, 
+            /// <summary>
+            /// File was skipped
+            /// </summary>
+            Skipped, 
+            /// <summary>
+            /// File exists in destination but not in source
+            /// </summary>
+            Extra, 
+            /// <summary>
+            /// Source and Destination files are not the same, but no changes occurred
+            /// </summary>
+            MisMatch, 
+            /// <summary>
+            /// The copy/move operation failed
+            /// </summary>
+            Failed 
+        }
+
         #region < Constructors >
 
         private ProgressEstimator() { }
@@ -67,8 +94,6 @@ namespace RoboSharp.Results
         private readonly Statistic DirStatField;
         private readonly Statistic FileStatsField;
         private readonly Statistic ByteStatsField;
-
-        internal enum WhereToAdd { Copied, Skipped, Extra, MisMatch, Failed }
 
         // Storage for last entered Directory and File objects 
         /// <summary>Used for providing Source Directory in CopyProgressChanged args</summary>
@@ -201,7 +226,8 @@ namespace RoboSharp.Results
         /// <summary>Increment <see cref="DirectoriesStatistic"/></summary>
         public void AddDir(ProcessedFileInfo currentDir)
         {
-            
+            if (currentDir.FileClassType != FileClassType.NewDir) return;
+
             WhereToAdd? whereTo = null;
             bool SetCurrentDir = false;
             if (currentDir.FileClass.Equals(Config.LogParsing_ExistingDir, StringComparison.CurrentCultureIgnoreCase))  // Existing Dir
@@ -280,9 +306,24 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary>Increment <see cref="FileStatsField"/></summary>
+        /// <summary>
+        /// Call this method after determining what to do with a file, but before starting to copy it.<br/>
+        /// Compares the <see cref="ProcessedFileInfo.FileClass"/> against the configuration strings to identify how to process the file. <br/>
+        /// Also compares against the current <see cref="SelectionOptions"/> and <see cref="CopyOptions"/> to determine if the file should be copied or skipped.
+        /// </summary>
+        /// <remarks>
+        /// Standard Operation: Robocopy reports that it has determined what to do with a file, reports that determination, then starts reporting copy progress. <br/> <br/>
+        /// Notes for Custom Implementations: ]
+        /// <br/> - <paramref name="currentFile"/> should be generated using the appropriate message from the <see cref="ProcessedFileInfo.ProcessedFileInfo(System.IO.FileInfo, FileClasses, RoboSharpConfiguration)"/> constructor
+        /// <br/> - <see cref="SetCopyOpStarted"/> and <see cref="AddFileCopied(ProcessedFileInfo)"/> should be used if using this method.
+        /// <br/> - Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
+        /// </remarks>
+        /// <param name="currentFile">The file that was just added to the stack</param>
+        /// <param name="CopyOperation">TRUE if this is a copy operation, FALSE is this is a List-Only operation</param>
         public void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
+            if (currentFile.FileClassType == FileClassType.NewDir | currentFile.FileClassType == FileClassType.SystemMessage) return;
+
             ProcessPreviousFile();
 
             CurrentFile = currentFile;
@@ -378,7 +419,13 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary>Catch start copy progress of large files</summary>
+        /// <summary>Catch start copy progress of large files ( Called when progress less than 100% )</summary>
+        /// <remarks>
+        /// For Custom Implementations: <br/>
+        /// - <see cref="AddFile(ProcessedFileInfo, bool)"/> should have been called prior to this being called. <br/>
+        /// - Should use <see cref="AddFileCopied(ProcessedFileInfo)"/> after progress reaches 100% <br/><br/>
+        /// !! Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
+        /// </remarks>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void SetCopyOpStarted()
         {
@@ -387,6 +434,9 @@ namespace RoboSharp.Results
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
+        /// <remarks>
+        /// For Custom Implementations: Safe to use with <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/>
+        /// </remarks>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void AddFileCopied(ProcessedFileInfo currentFile)
         {
@@ -394,11 +444,16 @@ namespace RoboSharp.Results
         }
 
         /// <summary>
-        /// Perform the calculation for the ByteStatistic
+        /// Adds the file statistics to the <see cref="BytesStatistic"/> and the <see cref="FilesStatistic"/> internal counters.
         /// </summary>
-        private void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
+        /// <remarks>
+        /// This method resets internal flags that other methods set to log how the current file should be handled. <br/>
+        /// As such, if using this method for pushing updates to the estimator, no other methods that accept files should be used.
+        /// </remarks>
+        public void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
         {
             if (file == null) return;
+            if (file.FileClassType != FileClassType.File) return;
             
             //Reset Flags
             SkippingFile = false;
