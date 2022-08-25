@@ -65,38 +65,30 @@ namespace RoboSharp.ConsumerHelpers
             };
             var SO = command.SelectionOptions;
 
-            // Name Filters
-            if (!command.CopyOptions.ShouldIncludeFileName(pair.Source.Name, ref includeFileNameRegexCollection) || SO.ShouldExcludeFileName(pair.Source.Name, ref excludeFileNameRegexCollection))
-            {
-                info.SetFileClass(FileClasses.FileExclusion, command.Configuration);
-            }
+            // Order of the following checks was done to allow what are likely the fastest checks to go first. More complex checks (such as DateTime parsing) are towards the bottom.
+
             //EXTRA
-            else if (IsExtra(pair))// SO.ShouldExcludeExtra(pair))
+            if (IsExtra(pair))// SO.ShouldExcludeExtra(pair))
             {
                 info.SetFileClass(FileClasses.ExtraFile, command.Configuration);
                 info.Name = pair.Destination.Name;
                 info.Size = pair.Destination.Length;
                 return false;
             }
-            //FileAttributes
-            else if (!SO.ShouldIncludeAttributes(pair) ||  SO.ShouldExcludeFileAttributes(pair))
-            {
-                info.SetFileClass(FileClasses.AttribExclusion, command.Configuration);
-            }
             //Lonely
             else if (SO.ShouldExcludeLonely(pair))
             {
                 info.SetFileClass(FileClasses.ExtraFile, command.Configuration); // TO-DO: Does RoboCopy identify Lonely seperately? If so, we need a token for it!
             }
-            //Max File Age
-            else if (SO.ShouldExcludeMaxFileAge(pair))
+            //Exclude Newer
+            else if (SO.ShouldExcludeNewer(pair))
             {
-                info.SetFileClass(FileClasses.MaxAgeSizeExclusion, command.Configuration);
+                info.SetFileClass(FileClasses.NewerFile, command.Configuration);
             }
-            //Min File Age
-            else if (SO.ShouldExcludeMinFileAge(pair))
+            //Exclude Older
+            else if (SO.ShouldExcludeOlder(pair))
             {
-                info.SetFileClass(FileClasses.MinAgeSizeExclusion, command.Configuration);
+                info.SetFileClass(FileClasses.OlderFile, command.Configuration);
             }
             //MaxFileSize
             else if (SO.ShouldExcludeMaxFileSize(pair.Source.Length))
@@ -108,6 +100,21 @@ namespace RoboSharp.ConsumerHelpers
             {
                 info.SetFileClass(FileClasses.MinFileSizeExclusion, command.Configuration);
             }
+            //FileAttributes
+            else if (!SO.ShouldIncludeAttributes(pair) ||  SO.ShouldExcludeFileAttributes(pair))
+            {
+                info.SetFileClass(FileClasses.AttribExclusion, command.Configuration);
+            }
+            //Max File Age
+            else if (SO.ShouldExcludeMaxFileAge(pair))
+            {
+                info.SetFileClass(FileClasses.MaxAgeSizeExclusion, command.Configuration);
+            }
+            //Min File Age
+            else if (SO.ShouldExcludeMinFileAge(pair))
+            {
+                info.SetFileClass(FileClasses.MinAgeSizeExclusion, command.Configuration);
+            }
             //Max Last Access Date
             else if (SO.ShouldExcludeMaxLastAccessDate(pair))
             {
@@ -118,16 +125,11 @@ namespace RoboSharp.ConsumerHelpers
             {
                 info.SetFileClass(FileClasses.MinAgeSizeExclusion, command.Configuration); // TO-DO: Does RoboCopy iddentify Last Access Date exclusions seperately? If so, we need a token for it!
             }
-            ////Exclude Newer
-            //else if (SO.ShouldExcludeNewer(pair))
-            //{
-            //    info.SetFileClass(FileClasses.NewerFile, command.Configuration);
-            //}
-            //Exclude Older
-            //else if (SO.ShouldExcludeOlder(pair))
-            //{
-            //    info.SetFileClass(FileClasses.OlderFile, command.Configuration);
-            //}
+            // Name Filters - These are last check since Regex will likely take the longest to evaluate
+            if (!command.CopyOptions.ShouldIncludeFileName(pair.Source.Name, ref includeFileNameRegexCollection) || SO.ShouldExcludeFileName(pair.Source.Name, ref excludeFileNameRegexCollection))
+            {
+                info.SetFileClass(FileClasses.FileExclusion, command.Configuration);
+            }
             else
             {
                 // File passed all checks - It should be copied!
@@ -156,7 +158,6 @@ namespace RoboSharp.ConsumerHelpers
                     info.SetFileClass(FileClasses.SameFile, command.Configuration);
                     return command.SelectionOptions.IncludeSame;
                 }
-
             }
 
             return false; // File failed one of the checks, do not copy.
