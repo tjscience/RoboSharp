@@ -734,7 +734,7 @@ namespace RoboSharp
                         file.Name = splitData[1];
                     }
 
-                    resultsBuilder?.Estimator?.AddDir(file, !this.LoggingOptions.ListOnly);
+                    resultsBuilder?.Estimator?.AddDir(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File

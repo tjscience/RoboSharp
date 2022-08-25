@@ -198,8 +198,8 @@ namespace RoboSharp.Results
 
         #region < Calculate Dirs (Internal) >
 
-        /// <summary>Increment <see cref="DirStatField"/></summary>
-        public void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
+        /// <summary>Increment <see cref="DirectoriesStatistic"/></summary>
+        public void AddDir(ProcessedFileInfo currentDir)
         {
             
             WhereToAdd? whereTo = null;
