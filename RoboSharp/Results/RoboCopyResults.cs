@@ -39,6 +39,7 @@ namespace RoboSharp.Results
             EndTime = endTime ==  default ?  DateTime.Now : endTime;
             TimeSpan = EndTime - StartTime;
             Status = status ?? new RoboCopyExitStatus(ProgressEstimator.GetExitCode(files, directories));
+            LogLines = logLines;
         }
 
         #region < Properties >
