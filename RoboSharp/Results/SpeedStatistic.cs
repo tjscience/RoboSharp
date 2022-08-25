@@ -29,8 +29,8 @@ namespace RoboSharp.Results
         /// </summary>
         public SpeedStatistic(ISpeedStatistic stat)
         {
-            BytesPerSec = stat.BytesPerSec;
-            MegaBytesPerMin = stat.MegaBytesPerMin;
+            BytesPerSec = stat?.BytesPerSec ?? 0;
+            MegaBytesPerMin = stat?.MegaBytesPerMin ?? 0;
         }
 
         #region < Private & Protected Members >
