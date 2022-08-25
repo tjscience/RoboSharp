@@ -149,13 +149,19 @@ namespace RoboSharp
         /// Includes only files for which any of the specified attributes are set.
         /// [/IA:attributes]
         /// </summary>
-        public virtual string IncludeAttributes { get; set; }
+        public virtual string IncludeAttributes { get => IncludedAttributesField; set { IncludedAttributesField = value; IncludedAttributesValue = GetIncludedAttributes(); } }
+        private string IncludedAttributesField;
+        internal FileAttributes? IncludedAttributesValue { get; private set; }
+
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to exclude (eg. AH; RASHCNETO).
         /// Excludes files for which any of the specified attributes are set.
         /// [/XA:attributes]
         /// </summary>
-        public virtual string ExcludeAttributes { get; set; }
+        public virtual string ExcludeAttributes { get => ExcludedAttributesField; set { ExcludedAttributesField = value; ExcludedAttributesValue = GetExcludedAttributes(); } }
+        private string ExcludedAttributesField;
+        internal FileAttributes? ExcludedAttributesValue { get; private set; }
+
         /// <summary>
         /// Files should be separated by spaces.
         /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
@@ -350,11 +356,11 @@ namespace RoboSharp
 
         /// <summary> Gets the <see cref="FileAttributes"/> representation of the <see cref="IncludeAttributes"/> string</summary>
         /// <inheritdoc cref="ConvertFileAttrStringToEnum"/>
-        public FileAttributes? GetIncludedAttributes() => ConvertFileAttrStringToEnum(this.IncludeAttributes);
+        public FileAttributes? GetIncludedAttributes() => IncludedAttributesValue; // ConvertFileAttrStringToEnum(this.IncludeAttributes);
 
         /// <summary> Gets the <see cref="FileAttributes"/> representation of the <see cref="ExcludeAttributes"/> string</summary>
         /// <inheritdoc cref="ConvertFileAttrStringToEnum"/>
-        public FileAttributes? GetExcludedAttributes() => ConvertFileAttrStringToEnum(this.ExcludeAttributes);
+        public FileAttributes? GetExcludedAttributes() => ExcludedAttributesValue;//ConvertFileAttrStringToEnum(this.ExcludeAttributes);
 
         /// <summary>
         /// Converts a <see cref="FileAttributes"/> enum to its RASHCNETO string.
@@ -393,7 +399,7 @@ namespace RoboSharp
         /// <returns>If the string is parsable, returns the enum. Otherwise returns null.</returns>
         public static FileAttributes? ConvertFileAttrStringToEnum(string attributes)
         {
-            if (attributes is null | attributes == string.Empty) return null;
+            if (string.IsNullOrWhiteSpace(attributes)) return null;
             attributes = attributes.ToUpper();
             if (!System.Text.RegularExpressions.Regex.IsMatch(attributes, @"^[RASHCNETO]{0,9}$", RegexOptions.Compiled | RegexOptions.IgnoreCase)) throw new Exception("Invalid RASHCNETO string!");
             FileAttributes? attr = null;
