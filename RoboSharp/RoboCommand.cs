@@ -180,7 +180,7 @@ namespace RoboSharp
         private bool isRunning;
         private bool isCancelled;
         private Results.ResultsBuilder resultsBuilder;
-        private Results.RoboCopyResults results;
+        protected Results.RoboCopyResults results;
         /// <summary> Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> </summary>
         private string LastDataReceived = "";
 
@@ -239,7 +239,7 @@ namespace RoboSharp
         /// <remarks>
         /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
         /// </remarks>
-        internal Results.ProgressEstimator ProgressEstimator { get; private set; }
+        protected internal Results.ProgressEstimator ProgressEstimator { get; protected set; }
 
         /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
         public IProgressEstimator IProgressEstimator => this.ProgressEstimator;
@@ -259,25 +259,57 @@ namespace RoboSharp
         /// <summary>Occurs each time a new item has started processing</summary>
         public event FileProcessedHandler OnFileProcessed;
 
+        /// <summary> Raises the OnFileProcessed event </summary>
+        protected virtual void RaiseOnFileProcessed(FileProcessedEventArgs e)
+        {
+            OnFileProcessed?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCommandError"/></summary>
         public delegate void CommandErrorHandler(IRoboCommand sender, CommandErrorEventArgs e);
         /// <summary>Occurs when an error occurs while generating the command that prevents the RoboCopy process from starting.</summary>
         public event CommandErrorHandler OnCommandError;
+
+        /// <summary> Raises the OnError event </summary>
+        protected virtual void RaiseOnCommandError(CommandErrorEventArgs e)
+        {
+            OnCommandError?.Invoke(this, e);
+        }
 
         /// <summary>Handles <see cref="OnError"/></summary>
         public delegate void ErrorHandler(IRoboCommand sender, ErrorEventArgs e);
         /// <summary>Occurs an error is detected by RoboCopy </summary>
         public event ErrorHandler OnError;
 
+        /// <summary> Raises the OnError event </summary>
+        protected virtual void RaiseOnError(ErrorEventArgs e)
+        {
+            OnError?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
         public delegate void CommandCompletedHandler(IRoboCommand sender, RoboCommandCompletedEventArgs e);
         /// <summary>Occurs when the RoboCopy process has finished executing and results are available.</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
+        /// <summary> Raises the OnCommandCompleted event </summary>
+        protected virtual void RaiseCommandCompleted(RoboCommandCompletedEventArgs e)
+        {
+            OnCommandCompleted?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
         public delegate void CopyProgressHandler(IRoboCommand sender, CopyProgressEventArgs e);
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
+
+
+        /// <summary> Raises the OnCopyProgressChanged event </summary>
+        protected virtual void RaiseCopyProgressChanged(CopyProgressEventArgs e)
+        {
+            OnCopyProgressChanged?.Invoke(this, e);
+        }
+
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
         public delegate void ProgressUpdaterCreatedHandler(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e);
@@ -287,10 +319,23 @@ namespace RoboSharp
         /// </summary>
         public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
+        /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        protected virtual void RaiseProgressEstimatorCreated(ProgressEstimatorCreatedEventArgs e)
+        {
+            OnProgressEstimatorCreated?.Invoke(this, e);
+        }
+
+
         /// <summary>
         /// Occurs if the RoboCommand task is stopped due to an unhandled exception. Occurs instead of <see cref="OnCommandCompleted"/>
         /// </summary>
         public event UnhandledExceptionEventHandler TaskFaulted;
+
+        /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        protected virtual void RaiseTaskFaulted(UnhandledExceptionEventArgs e)
+        {
+            TaskFaulted?.Invoke(this, e);
+        }
 
         #endregion
 

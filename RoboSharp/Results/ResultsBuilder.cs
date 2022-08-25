@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using RoboSharp.Interfaces;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,7 +16,11 @@ namespace RoboSharp.Results
     {
         private ResultsBuilder() { }
 
-        internal ResultsBuilder(RoboCommand roboCommand) {
+        /// <summary>
+        /// Generate a new ResultsBuilder object. This object will also instantiate a new <see cref="ProgressEstimator"/>
+        /// </summary>
+        /// <param name="roboCommand"></param>
+        public ResultsBuilder(IRoboCommand roboCommand) {
             RoboCommand = roboCommand;
             Estimator = new ProgressEstimator(roboCommand);
         }
@@ -23,7 +28,7 @@ namespace RoboSharp.Results
         #region < Private Members >
 
         ///<summary>Reference back to the RoboCommand that spawned this object</summary>
-        private readonly RoboCommand RoboCommand; 
+        private readonly IRoboCommand RoboCommand; 
 
         private readonly List<string> outputLines = new List<string>();
 

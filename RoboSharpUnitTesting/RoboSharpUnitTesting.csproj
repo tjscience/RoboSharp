@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EvaluatorTesting.cs" />
     <Compile Include="ExpectedResults.cs" />
     <Compile Include="ObservableListTester.cs" />
     <Compile Include="RoboCommandFactoryTests.cs" />
