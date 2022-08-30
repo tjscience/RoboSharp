@@ -46,11 +46,30 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
-        /// <inheritdoc cref="IDirectorySourceDestinationPairExtensions.GetFilePairs{T}(IDirectorySourceDestinationPair, Func{FileInfo, FileInfo, T})"/>
-        public FileSourceDestinationPair[] GetFilePairs() => this.GetFilePairs((s, d) => new FileSourceDestinationPair(s, d));
+        /// <inheritdoc cref="ISourceDestinationPairExtensions.GetFilePairs{T}(IDirectorySourceDestinationPair, Func{FileInfo, FileInfo, T})"/>
+        public FileSourceDestinationPair[] GetFilePairs()
+        {
+            return this.GetFilePairs((s, d) => new FileSourceDestinationPair(s, d));
+        }
 
-        /// <inheritdoc cref="IDirectorySourceDestinationPairExtensions.GetFilePairsEnumerable{T}(IDirectorySourceDestinationPair, Func{FileInfo, FileInfo, T})"/>
-        public IEnumerable<FileSourceDestinationPair> GetFilePairsEnumerable() => this.GetFilePairsEnumerable((s, d) => new FileSourceDestinationPair(s, d));
+        /// <inheritdoc cref="ISourceDestinationPairExtensions.GetFilePairsEnumerable{T}(IDirectorySourceDestinationPair, Func{FileInfo, FileInfo, T})"/>
+        public IEnumerable<FileSourceDestinationPair> GetFilePairsEnumerable()
+        {
+            return this.GetFilePairsEnumerable((s, d) => new FileSourceDestinationPair(s, d));
+        }
+
+
+        /// <inheritdoc cref="ISourceDestinationPairExtensions.GetDirectoryPairs{T}(IDirectorySourceDestinationPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public DirectorySourceDestinationPair[] GetDirectoryPairs()
+        {
+            return this.GetDirectoryPairs((s, d) => new DirectorySourceDestinationPair(s, d));
+        }
+
+        /// <inheritdoc cref="ISourceDestinationPairExtensions.GetDirectoryPairsEnumerable{T}(IDirectorySourceDestinationPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public IEnumerable<DirectorySourceDestinationPair> GetDirectoryPairsEnumerable()
+        {
+            return this.GetDirectoryPairsEnumerable((s, d) => new DirectorySourceDestinationPair(s, d));
+        }
 
     }
 
