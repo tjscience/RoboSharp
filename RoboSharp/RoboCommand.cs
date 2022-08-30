@@ -180,8 +180,15 @@ namespace RoboSharp
         private bool isRunning;
         private bool isCancelled;
         private Results.ResultsBuilder resultsBuilder;
+
+        /// <summary>
+        /// The last set of results that were created
+        /// </summary>
         protected Results.RoboCopyResults results;
-        /// <summary> Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> </summary>
+
+        /// <summary> 
+        /// Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> 
+        /// </summary>
         private string LastDataReceived = "";
 
         #endregion Private Vars
@@ -662,10 +669,10 @@ namespace RoboSharp
                 {
                     await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
                 }
-                catch(Exception Fault)
+                catch (Exception Fault)
                 {
                     cmd.Dispose();
-                    throw Fault;
+                    throw new Exception("Failed to save the job file, see inner exception", Fault);
                 }
                 cmd.Dispose();
                 return;
@@ -937,3 +944,4 @@ namespace RoboSharp
         #endregion IDisposable Implementation
     }
 }
+
