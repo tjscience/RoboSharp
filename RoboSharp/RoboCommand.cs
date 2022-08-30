@@ -852,6 +852,7 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("Generating parameters...");
             Debugger.Instance.DebugMessage(CopyOptions);
             var parsedCopyOptions = CopyOptions.Parse();
+            Debugger.Instance.DebugMessage("CopyOptions parsed.");
             var parsedSelectionOptions = SelectionOptions.Parse();
             Debugger.Instance.DebugMessage("SelectionOptions parsed.");
             var parsedRetryOptions = RetryOptions.Parse();
@@ -859,7 +860,7 @@ namespace RoboSharp
             var parsedLoggingOptions = LoggingOptions.Parse();
             Debugger.Instance.DebugMessage("LoggingOptions parsed.");
             var parsedJobOptions = JobOptions.Parse();
-            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+            Debugger.Instance.DebugMessage("JobOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
             return string.Format("{0}{1}{2}{3} /BYTES {4}", parsedCopyOptions, parsedSelectionOptions,

@@ -103,7 +103,7 @@ namespace RoboSharp.Extensions
 
 
         /// <inheritdoc/>
-        public abstract string CommandOptions { get; }
+        public virtual string CommandOptions { get => GenerateParameters(); }
 
         /// <inheritdoc/>
         public CopyOptions CopyOptions
@@ -400,5 +400,30 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc/>
         public abstract void Stop();
+
+
+        /// <summary>
+        /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
+        /// </summary>
+        /// <returns>the string of parameters that would normally be passed to a RoboCopy process</returns>
+        protected string GenerateParameters()
+        {
+            Debugger.Instance.DebugMessage("Generating parameters...");
+            Debugger.Instance.DebugMessage(CopyOptions);
+            var parsedCopyOptions = CopyOptions.Parse();
+            Debugger.Instance.DebugMessage("CopyOptions parsed.");
+            var parsedSelectionOptions = SelectionOptions.Parse();
+            Debugger.Instance.DebugMessage("SelectionOptions parsed.");
+            var parsedRetryOptions = RetryOptions.Parse();
+            Debugger.Instance.DebugMessage("RetryOptions parsed.");
+            var parsedLoggingOptions = LoggingOptions.Parse();
+            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+            //var parsedJobOptions = JobOptions.Parse();
+            //Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+            //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
+
+            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
+                parsedRetryOptions, parsedLoggingOptions);
+        }
     }
 }
