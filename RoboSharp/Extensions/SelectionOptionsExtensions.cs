@@ -146,12 +146,12 @@ namespace RoboSharp.Extensions
                     info.SetFileClass(FileClasses.NewFile, command.Configuration);
                     return !xjf && !command.SelectionOptions.ExcludeLonely;
                 }
-                else if (IsSourceNewer(pair))
+                else if (pair.IsSourceNewer())
                 {
                     info.SetFileClass(FileClasses.NewerFile, command.Configuration);
                     return !xjf && !command.SelectionOptions.ExcludeNewer;
                 }
-                else if (IsDestinationNewer(pair))
+                else if (pair.IsDestinationNewer())
                 {
                     info.SetFileClass(FileClasses.OlderFile, command.Configuration);
                     return !xjf && !command.SelectionOptions.ExcludeOlder;
@@ -171,13 +171,13 @@ namespace RoboSharp.Extensions
 
         /// <summary> </summary>
         /// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>
-        public static bool ShouldExcludeOlder(this SelectionOptions options, string source, string destination) => options.ExcludeOlder && IsDestinationNewer(source, destination);
+        public static bool ShouldExcludeOlder(this SelectionOptions options, string source, string destination) => options.ExcludeOlder && ISourceDestinationPairExtensions.IsDestinationNewer(source, destination);
         
         /// <inheritdoc cref="ShouldExcludeOlder(SelectionOptions, string, string)"/>
-        public static bool ShouldExcludeOlder(this SelectionOptions options, FileInfo source, FileInfo destination) => options.ExcludeOlder && IsDestinationNewer(source, destination);
+        public static bool ShouldExcludeOlder(this SelectionOptions options, FileInfo source, FileInfo destination) => options.ExcludeOlder && ISourceDestinationPairExtensions.IsDestinationNewer(source, destination);
 
         /// <inheritdoc cref="ShouldExcludeOlder(SelectionOptions, FileInfo, FileInfo)"/>
-        public static bool ShouldExcludeOlder(this SelectionOptions options, IFileSourceDestinationPair copier) => options.ExcludeOlder && IsDestinationNewer(copier.Source, copier.Destination);
+        public static bool ShouldExcludeOlder(this SelectionOptions options, IFileSourceDestinationPair pair) => options.ExcludeOlder && pair.IsDestinationNewer();
 
         #endregion
 
@@ -185,13 +185,13 @@ namespace RoboSharp.Extensions
 
         /// <summary> </summary>
         /// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>
-        public static bool ShouldExcludeNewer(this SelectionOptions options, string source, string destination) => options.ExcludeNewer && IsSourceNewer(source, destination);
+        public static bool ShouldExcludeNewer(this SelectionOptions options, string source, string destination) => options.ExcludeNewer && ISourceDestinationPairExtensions.IsSourceNewer(source, destination);
         
         /// <inheritdoc cref="ShouldExcludeNewer(SelectionOptions, string, string)"/>
-        public static bool ShouldExcludeNewer(this SelectionOptions options, FileInfo source, FileInfo destination) => options.ExcludeNewer && IsSourceNewer(source, destination);
+        public static bool ShouldExcludeNewer(this SelectionOptions options, FileInfo source, FileInfo destination) => options.ExcludeNewer && ISourceDestinationPairExtensions.IsSourceNewer(source, destination);
         
         /// <inheritdoc cref="ShouldExcludeNewer(SelectionOptions, FileInfo, FileInfo)"/>
-        public static bool ShouldExcludeNewer(this SelectionOptions options, IFileSourceDestinationPair copier) => options.ExcludeNewer && IsSourceNewer(copier.Source, copier.Destination);
+        public static bool ShouldExcludeNewer(this SelectionOptions options, IFileSourceDestinationPair pair) => options.ExcludeNewer && pair.IsSourceNewer();
 
         #endregion
 
