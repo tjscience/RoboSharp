@@ -319,7 +319,7 @@ namespace RoboSharp
         /// </summary>
         public virtual string MinLastAccessDate { get; set; }
         /// <summary>
-        /// Excludes junction points, which are normally included by default.
+        /// Excludes junction points and symbolic links, which are normally included by default.
         /// [/XJ]
         /// </summary>
         public virtual bool ExcludeJunctionPoints { get; set; }
@@ -334,12 +334,12 @@ namespace RoboSharp
         /// </summary>
         public virtual bool CompensateForDstDifference { get; set; }
         /// <summary>
-        /// Excludes junction points for directories.
+        /// Excludes junction points symbolic links for directories.
         /// [/XJD]
         /// </summary>
         public virtual bool ExcludeJunctionPointsForDirectories { get; set; }
         /// <summary>
-        /// Excludes junction points for files.
+        /// Excludes symbolic links for files.
         /// [/XJF]
         /// </summary>
         public virtual bool ExcludeJunctionPointsForFiles { get; set; }
