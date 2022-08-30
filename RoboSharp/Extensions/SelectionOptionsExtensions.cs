@@ -16,8 +16,6 @@ namespace RoboSharp.Extensions
     /// </summary>
     public static partial class SelectionOptionsExtensions
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool FileDoesntExist(string destination) => !File.Exists(destination);
 
         /// <summary>
         /// Translate the wildcard pattern to a regex pattern for a file name
@@ -168,60 +166,6 @@ namespace RoboSharp.Extensions
             return false; // File failed one of the checks, do not copy.
 
         }
-
-        #region < IsSourceNewer >
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source">This path is assumed to exist since it is the patht to copy from</param>
-        /// <param name="destination">the destination path - may or may not exist</param>
-        /// <returns>TRUE if the source is newer, or the destination does not exist. FALSE if the destination is newer.</returns>
-        public static bool IsSourceNewer(string source, string destination)
-        {
-            if (FileDoesntExist(destination)) return true;
-            return File.GetLastWriteTime(source) > File.GetLastWriteTime(destination);
-        }
-        /// <inheritdoc cref="IsSourceNewer(string, string)"/>
-        public static bool IsSourceNewer(FileInfo source, FileInfo destination)
-        {
-            if (!destination.Exists) return source.Exists;
-            return source.LastWriteTime > destination.LastWriteTime;
-        }
-        /// <inheritdoc cref="IsSourceNewer(string, string)"/>
-        public static bool IsSourceNewer(this IFileSourceDestinationPair copier)
-        {
-            return IsSourceNewer(copier.Source, copier.Destination);
-        }
-
-        #endregion
-
-        #region < IsDestinationNewer >
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source">This path is assumed to exist since it is the patht to copy from</param>
-        /// <param name="destination">the destination path - may or may not exist</param>
-        /// <returns>TRUE if the destination file is newer, otherwise false</returns>
-        public static bool IsDestinationNewer(string source, string destination)
-        {
-            if (FileDoesntExist(destination)) return false;
-            return File.GetLastWriteTime(source) < File.GetLastWriteTime(destination);
-        }
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsDestinationNewer(FileInfo source, FileInfo destination)
-        {
-            if (!destination.Exists) return false;
-            return source.LastWriteTime < destination.LastWriteTime;
-        }
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsDestinationNewer(this IFileSourceDestinationPair copier)
-        {
-            return IsDestinationNewer(copier.Source, copier.Destination);
-        }
-
-        #endregion
 
         #region < Should Exclude Newer >
 
