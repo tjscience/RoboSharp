@@ -551,6 +551,7 @@ namespace RoboSharp
                process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
                process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
+#pragma warning disable CA1416 // Call Site Unreachable on non-Windows Platforms - RoboCopy is only available on windows, so its moot.
                if (!string.IsNullOrEmpty(domain))
                {
                    Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
@@ -575,6 +576,7 @@ namespace RoboSharp
 
                    process.StartInfo.Password = ssPwd;
                }
+#pragma warning restore CA1416 
 
                Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
                process.StartInfo.UseShellExecute = false;
