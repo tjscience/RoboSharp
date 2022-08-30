@@ -11,6 +11,10 @@ namespace RoboSharp
     /// </summary>
     public enum DirectoryClasses
     {
+        /// <summary>
+        /// String.Empty
+        /// </summary>
+        None,
         /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_DirectoryExclusion"/>
         Exclusion,
         /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_ExistingDir"/>

@@ -12,6 +12,10 @@ namespace RoboSharp
     /// </summary>
     public enum FileClasses
     {
+        /// <summary>
+        /// String.Empty
+        /// </summary>
+        None,
         /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_AttribExclusion"/>
         AttribExclusion,
         /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_ChangedExclusion"/>

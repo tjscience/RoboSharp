@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using RoboSharp.ConsumerHelpers;
+using RoboSharp.Extensions;
 using RoboSharp.DefaultConfigurations;
 
 namespace RoboSharp
@@ -386,6 +386,7 @@ namespace RoboSharp
             if (config is null) throw new ArgumentNullException(nameof(config));
             return status switch
             {
+                DirectoryClasses.None => string.Empty,
                 DirectoryClasses.Exclusion => config.LogParsing_DirectoryExclusion,
                 DirectoryClasses.ExistingDir => config.LogParsing_ExistingDir,
                 DirectoryClasses.ExtraDir => config.LogParsing_ExtraDir,
@@ -403,6 +404,7 @@ namespace RoboSharp
             if (config is null) throw new ArgumentNullException(nameof(config));
             return status switch
             {
+                FileClasses.None => string.Empty,
                 FileClasses.AttribExclusion => config.LogParsing_AttribExclusion,
                 FileClasses.ChangedExclusion => config.LogParsing_ChangedExclusion,
                 FileClasses.ExtraFile => config.LogParsing_ExtraFile,
