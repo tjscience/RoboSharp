@@ -12,6 +12,9 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// Interface used for extension methods for RoboSharp custom implementations that has File Source/Destination info
     /// </summary>
+    /// <remarks>
+    /// This interface should only include the Source and Destination information, and not any methods to implement copying/moving
+    /// </remarks>
     public interface IDirectorySourceDestinationPair
     {
         /// <summary>
