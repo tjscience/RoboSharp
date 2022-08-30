@@ -33,6 +33,18 @@ namespace RoboSharp.Results
             MegaBytesPerMin = stat?.MegaBytesPerMin ?? 0;
         }
 
+        /// <summary>
+        /// Create a new SpeesdStatistic from a file length and a copy time
+        /// </summary>
+        public SpeedStatistic(long fileLength, TimeSpan copyTime)
+        {
+            if (fileLength < 0) throw new ArgumentException("File Length cannot be less than 0", nameof(fileLength));
+            if (copyTime.TotalSeconds <= 0) throw new ArgumentException("Copy Time cannot be less than or equal to 0", nameof(copyTime));
+
+            BytesPerSec = fileLength / (decimal)copyTime.TotalSeconds;
+            MegaBytesPerMin = (fileLength / 1024 / 1024) / (decimal)(copyTime.TotalSeconds / 60);
+        }
+
         #region < Private & Protected Members >
 
         private decimal BytesPerSecField = 0;
@@ -65,7 +77,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <inheritdoc cref="ISpeedStatistic.BytesPerSec"/>
+        /// <inheritdoc cref="ISpeedStatistic.MegaBytesPerMin"/>
         public virtual decimal MegaBytesPerMin
         {
             get => MegaBytesPerMinField;
