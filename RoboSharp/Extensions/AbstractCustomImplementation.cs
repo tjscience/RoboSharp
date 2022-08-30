@@ -31,6 +31,28 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
+        /// Instantiate all the robosharp options except JobOptions, then apply the provided parameters
+        /// </summary>
+        /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
+        protected AbstractCustomIRoboCommand(
+            string source, 
+            string destination, 
+            CopyOptions.CopyActionFlags copyActionFlags = CopyOptions.CopyActionFlags.Default, 
+            SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default)
+        {
+            this.CopyOptions = new CopyOptions();
+            this.LoggingOptions = new LoggingOptions();
+            this.RetryOptions = new RetryOptions();
+            this.SelectionOptions = new SelectionOptions();
+            this.Configuration = new RoboSharpConfiguration();
+
+            CopyOptions.Source = source ?? string.Empty;
+            CopyOptions.Destination = destination ?? string.Empty;
+            CopyOptions.ApplyActionFlags(copyActionFlags);
+            SelectionOptions.ApplySelectionFlags(selectionFlags);
+        }
+
+        /// <summary>
         /// Instantiate all the robosharp options except JobOptions <br/>
         /// If any of the parameters are supplied, this will use that parameter object. If left null, create a new object of that type.
         /// </summary>
