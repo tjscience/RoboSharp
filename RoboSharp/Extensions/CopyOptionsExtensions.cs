@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RoboSharp.ConsumerHelpers
+namespace RoboSharp.Extensions
 {
     /// <summary>
     /// Extension Methods for Copy options to assist with custom implementations

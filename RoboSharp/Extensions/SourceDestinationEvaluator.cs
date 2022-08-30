@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RoboSharp.ConsumerHelpers
+namespace RoboSharp.Extensions
 {
     /// <summary>
     /// Class that can be instantiated to cache the various values that get checked against when deciding to copy a file or folder.
@@ -69,10 +69,11 @@ namespace RoboSharp.ConsumerHelpers
         /// <param name="pair"></param>
         /// <param name="info"></param>
         /// <returns></returns>
-        public virtual bool ShouldCopyDir(IDirSourceDestinationPair pair, out ProcessedFileInfo info)
+        public virtual bool ShouldCopyDir(IDirectorySourceDestinationPair pair, out ProcessedFileInfo info)
         {
-            
-            bool shouldExclude = AssociatedCommand.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ref DirectoryNameRegexExclusions);
+
+            bool shouldExclude = AssociatedCommand.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
+            shouldExclude &= AssociatedCommand.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ref DirectoryNameRegexExclusions);
             if (!shouldExclude && pair.Source.Exists && pair.Destination.Exists)
             {
                 info = new ProcessedFileInfo(pair.Source, DirectoryClasses.ExistingDir, AssociatedCommand.Configuration);
