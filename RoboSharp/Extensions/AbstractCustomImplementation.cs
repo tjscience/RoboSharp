@@ -316,15 +316,61 @@ namespace RoboSharp.Extensions
         #endregion
         #endregion
 
+        /// <summary>
+        /// The last run's results
+        /// </summary>
+        protected RoboCopyResults RunResults;
+        /// <summary>
+        /// The last ListOnly run's results
+        /// </summary>
+        protected RoboCopyResults ListOnlyResults;
+
         /// <inheritdoc/>
         public abstract void Dispose();
 
         /// <inheritdoc/>
-        public abstract RoboCopyResults GetResults();
+        public virtual RoboCopyResults GetResults()
+        {
+            return RunResults;
+        }
+
+        /// <inheritdoc cref="IRoboCommand.GetResults"/>
+        public virtual RoboCopyResults GetListOnlyResults()
+        {
+            return ListOnlyResults;
+        }
+        
+        /// <summary>
+        /// Save the results object to either <see cref="ListOnlyResults"/> or <see cref="RunResults"/> based on <see cref="LoggingOptions.ListOnly"/>
+        /// <br/> If <see cref="RunResults"/> is null while saving to <see cref="ListOnlyResults"/>, RunResults will be updated as well.
+        /// </summary>
+        /// <remarks>
+        /// Meant to be called after results are available </remarks>
+        /// <param name="results">the results object to save</param>
+        protected virtual void SaveResults(RoboCopyResults results)
+        {
+            if (LoggingOptions.ListOnly)
+            {
+                ListOnlyResults = results;
+                RunResults ??= results;
+            }
+            else
+                RunResults = ListOnlyResults;
+        }
+
         /// <inheritdoc/>
-        public abstract void Pause();
+        public virtual void Pause()
+        {
+            if (IsRunning && !IsCancelled)
+                IsPaused = true;
+        }
+
         /// <inheritdoc/>
-        public abstract void Resume();
+        public virtual void Resume()
+        {
+            if (IsRunning && IsPaused)
+                IsPaused = false;
+        }
 
         /// <inheritdoc/>
         public abstract Task Start(string domain = "", string username = "", string password = "");
@@ -340,7 +386,7 @@ namespace RoboSharp.Extensions
         public virtual async Task<RoboCopyResults> StartAsync_ListOnly(string domain = "", string username = "", string password = "")
         {
             await StartAsync_ListOnly(domain, username, password);
-            return GetResults();
+            return GetListOnlyResults();
         }
 
         /// <inheritdoc/>
