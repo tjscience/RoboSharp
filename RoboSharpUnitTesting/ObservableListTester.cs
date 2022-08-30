@@ -5,7 +5,7 @@
 //using System.Collections.Generic;
 //using System.Collections.Specialized;
 
-//namespace RoboSharpUnitTesting
+//namespace RoboSharp.Tests
 //{
 //    /// <summary>
 //    /// Test <see cref="ObservableList{T}.CollectionChanged"/> event

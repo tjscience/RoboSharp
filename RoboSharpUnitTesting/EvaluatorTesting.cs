@@ -8,14 +8,14 @@ using RoboSharp;
 using RoboSharp.ConsumerHelpers;
 using RoboSharp.Results;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.Tests
 {
     public class CustomIRoboCommand : RoboSharp.RoboCommand
     {
         public CustomIRoboCommand()
         {
-            base.CopyOptions.Source = RoboSharpUnitTesting.Test_Setup.Source_Standard;
-            base.CopyOptions.Destination = RoboSharpUnitTesting.Test_Setup.TestDestination;
+            base.CopyOptions.Source = RoboSharp.Tests.Test_Setup.Source_Standard;
+            base.CopyOptions.Destination = RoboSharp.Tests.Test_Setup.TestDestination;
         }
 
         public RoboCopyResults Results => results;

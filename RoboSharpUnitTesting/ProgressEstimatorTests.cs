@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.Tests
 {
     [TestClass]
     public class ProgressEstimatorTests_ListOnly : ProgressEstimatorTests

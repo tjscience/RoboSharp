@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.Tests
 {
-    static class Test_Setup
+    public static class Test_Setup
     {
         public static string TestDestination { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_DESTINATION");
         public static string Source_LargerNewer { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
@@ -23,7 +23,7 @@ namespace RoboSharpUnitTesting
         /// <returns></returns>
         public static bool IsRunningOnAppVeyor()
         {
-            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
+            return TestDestination == @"C:\projects\robosharp\RoboSharp.Tests\bin\Debug\TEST_DESTINATION";
         }
 
         /// <summary>

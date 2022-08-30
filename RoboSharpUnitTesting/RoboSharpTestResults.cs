@@ -8,9 +8,9 @@ using RoboSharp.Results;
 using RoboSharp.Interfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.Tests
 {
-    class RoboSharpTestResults
+    public class RoboSharpTestResults
     {
         private RoboSharpTestResults() { }
         public RoboSharpTestResults(RoboCopyResults results, IProgressEstimator estimator)

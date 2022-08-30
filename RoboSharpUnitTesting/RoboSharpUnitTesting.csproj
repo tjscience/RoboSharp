@@ -8,7 +8,7 @@
     <ProjectGuid>{A62C4662-1861-4D57-B6ED-1BED42DE11F9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RoboSharpUnitTesting</RootNamespace>
+    <RootNamespace>RoboSharp.Tests</RootNamespace>
     <AssemblyName>RoboSharpUnitTesting</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

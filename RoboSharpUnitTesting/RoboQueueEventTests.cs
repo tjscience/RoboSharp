@@ -5,9 +5,9 @@ using RoboSharp;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.Tests
 {
-    [TestClass]
+    [TestClass()]
     public class RoboQueueEventTests
     {
         private static RoboQueue GenerateRQ(out RoboCommand cmd)
