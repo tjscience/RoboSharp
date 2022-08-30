@@ -13,6 +13,8 @@
     <TestProjectType>UnitTest</TestProjectType>
     <IsCodedUITest>False</IsCodedUITest>
     <RootNamespace>RFBCodeWorks.CachedRoboCopy.Tests</RootNamespace>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>

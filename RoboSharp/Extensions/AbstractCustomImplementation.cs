@@ -328,7 +328,7 @@ namespace RoboSharp.Extensions
         /// </summary>
         protected virtual void SetProperty<T>(ref T field, T value, string propertyName)
         {
-            if (!field.Equals(value))
+            if (field is null || !field.Equals(value))
             {
                 field = value;
                 OnPropertyChanged(propertyName);
@@ -400,14 +400,14 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public virtual async Task<RoboCopyResults> StartAsync(string domain = "", string username = "", string password = "")
         {
-            await StartAsync(domain, username, password);
+            await Start(domain, username, password);
             return GetResults();
         }
 
         /// <inheritdoc/>
         public virtual async Task<RoboCopyResults> StartAsync_ListOnly(string domain = "", string username = "", string password = "")
         {
-            await StartAsync_ListOnly(domain, username, password);
+            await Start_ListOnly(domain, username, password);
             return GetListOnlyResults();
         }
 

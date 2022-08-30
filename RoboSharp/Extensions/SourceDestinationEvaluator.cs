@@ -92,7 +92,7 @@ namespace RoboSharp.Extensions
                 info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.Exclusion);
             }
 
-            return shouldExclude;
+            return !shouldExclude;
         }
 
         #endregion

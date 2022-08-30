@@ -43,7 +43,7 @@ namespace RoboSharp.Tests
             return cmd;
         }
 
-        public static async Task<RoboSharpTestResults> RunTest(RoboCommand cmd)
+        public static async Task<RoboSharpTestResults> RunTest(IRoboCommand cmd)
         {
             IProgressEstimator prog = null;
             cmd.OnProgressEstimatorCreated += (o, e) => prog = e.ResultsEstimate;
