@@ -542,82 +542,82 @@ namespace RoboSharp
             isRunning = true;
             DateTime StartTime = DateTime.Now;
 
-            backupTask = Task.Run( async () =>
-           {
+            backupTask = Task.Run(async () =>
+          {
 
-               process = new Process();
+              process = new Process();
 
                //Declare Encoding
                process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
-               process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
+              process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
 #pragma warning disable CA1416 // Call Site Unreachable on non-Windows Platforms - RoboCopy is only available on windows, so its moot.
                if (!string.IsNullOrEmpty(domain))
-               {
-                   Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
-                   process.StartInfo.Domain = domain;
-               }
+              {
+                  Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
+                  process.StartInfo.Domain = domain;
+              }
 
-               if (!string.IsNullOrEmpty(username))
-               {
-                   Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
-                   process.StartInfo.UserName = username;
-               }
+              if (!string.IsNullOrEmpty(username))
+              {
+                  Debugger.Instance.DebugMessage(string.Format("RoboCommand running under username - {0}", username));
+                  process.StartInfo.UserName = username;
+              }
 
-               if (!string.IsNullOrEmpty(password))
-               {
-                   Debugger.Instance.DebugMessage("RoboCommand password entered.");
-                   var ssPwd = new System.Security.SecureString();
+              if (!string.IsNullOrEmpty(password))
+              {
+                  Debugger.Instance.DebugMessage("RoboCommand password entered.");
+                  var ssPwd = new System.Security.SecureString();
 
-                   for (int x = 0; x < password.Length; x++)
-                   {
-                       ssPwd.AppendChar(password[x]);
-                   }
+                  for (int x = 0; x < password.Length; x++)
+                  {
+                      ssPwd.AppendChar(password[x]);
+                  }
 
-                   process.StartInfo.Password = ssPwd;
-               }
-#pragma warning restore CA1416 
+                  process.StartInfo.Password = ssPwd;
+              }
+#pragma warning restore CA1416
 
                Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
-               process.StartInfo.UseShellExecute = false;
-               process.StartInfo.RedirectStandardOutput = true;
-               process.StartInfo.RedirectStandardError = true;
-               process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-               process.StartInfo.CreateNoWindow = true;
-               process.StartInfo.FileName = Configuration.RoboCopyExe;
-               if (resultsBuilder != null)
-               {
-                   resultsBuilder.Source = CopyOptions.Source;
-                   resultsBuilder.Destination = CopyOptions.Destination;
-                   resultsBuilder.CommandOptions = GenerateParameters();
-               }
-               process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
-               process.OutputDataReceived += process_OutputDataReceived;
-               process.ErrorDataReceived += process_ErrorDataReceived;
-               process.EnableRaisingEvents = true;
+              process.StartInfo.UseShellExecute = false;
+              process.StartInfo.RedirectStandardOutput = true;
+              process.StartInfo.RedirectStandardError = true;
+              process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+              process.StartInfo.CreateNoWindow = true;
+              process.StartInfo.FileName = Configuration.RoboCopyExe;
+              if (resultsBuilder != null)
+              {
+                  resultsBuilder.Source = CopyOptions.Source;
+                  resultsBuilder.Destination = CopyOptions.Destination;
+                  resultsBuilder.CommandOptions = GenerateParameters();
+              }
+              process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
+              process.OutputDataReceived += process_OutputDataReceived;
+              process.ErrorDataReceived += process_ErrorDataReceived;
+              process.EnableRaisingEvents = true;
 
                //Setup the WaitForExitAsync Task
                //hasExited = false;
                var ProcessExitedAsync = new TaskCompletionSource<object>();
-               process.Exited += (sender, args) =>
-               {
-                   process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
-                   //hasExited = true;
+              process.Exited += (sender, args) =>
+              {
+                  process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
+                                           //hasExited = true;
                    ProcessExitedAsync.TrySetResult(null);
-               };
+              };
 
                //Start the Task
                Debugger.Instance.DebugMessage("RoboCopy process started.");
-               process.Start();
-               process.BeginOutputReadLine();
-               process.BeginErrorReadLine();
-               _ = await ProcessExitedAsync.Task;   //This allows task to release the thread to perform other work
+              process.Start();
+              process.BeginOutputReadLine();
+              process.BeginErrorReadLine();
+              _ = await ProcessExitedAsync.Task;   //This allows task to release the thread to perform other work
                if (resultsBuilder != null)      // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
                {
-                   results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
-               }
-               Debugger.Instance.DebugMessage("RoboCopy process exited.");
-           }, CancellationToken.None);
+                  results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
+              }
+              Debugger.Instance.DebugMessage("RoboCopy process exited.");
+          }, CancellationToken.None);
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
