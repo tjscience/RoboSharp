@@ -51,8 +51,8 @@ namespace RoboSharp
         /// Create a new RoboCommand object with the provided settings.
         /// </summary>
         /// <inheritdoc cref="Init"/>
-        /// <inheritdoc cref="CopyOptions.CopyOptions(string, string, CopyOptions.CopyActionFlags)"/>
-        /// <inheritdoc cref="SelectionOptions.SelectionOptions(SelectionOptions.SelectionFlags)"/>
+        /// <inheritdoc cref="CopyOptions.ApplyActionFlags(CopyOptions.CopyActionFlags)"/>
+        /// <inheritdoc cref="SelectionOptions.ApplySelectionFlags(SelectionOptions.SelectionFlags)"/>
         public RoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default)
         {
             InitClassProperties();
