@@ -16,14 +16,14 @@ namespace RoboSharp
         }
 
         /// <summary><inheritdoc cref="CopyProgressEventArgs"/></summary>
-        /// <param name="progress"><inheritdoc cref="CurrentFileProgress"/></param>
-        /// <param name="currentFile"><inheritdoc cref="CurrentFile"/></param>
-        /// <param name="SourceDir"><inheritdoc cref="CurrentDirectory"/></param>
-        public CopyProgressEventArgs(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo SourceDir)
+        /// <param name="progress"><inheritdoc cref="CurrentFileProgress" path="*"/></param>
+        /// <param name="currentFile"><inheritdoc cref="CurrentFile" path="*"/></param>
+        /// <param name="dirInfo"><inheritdoc cref="CurrentDirectory" path="*"/></param>
+        public CopyProgressEventArgs(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo dirInfo)
         {
             CurrentFileProgress = progress;
             CurrentFile = currentFile;
-            CurrentDirectory = SourceDir;
+            CurrentDirectory = dirInfo;
         }
 
         /// <summary>
