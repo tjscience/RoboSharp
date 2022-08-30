@@ -329,7 +329,7 @@ namespace RoboSharp.Results
         /// <remarks>
         /// Standard Operation: Robocopy reports that it has determined what to do with a file, reports that determination, then starts reporting copy progress. <br/> <br/>
         /// Notes for Custom Implementations: ]
-        /// <br/> - <paramref name="currentFile"/> should be generated using the appropriate message from the <see cref="ProcessedFileInfo.ProcessedFileInfo(System.IO.FileInfo, FileClasses, RoboSharpConfiguration)"/> constructor
+        /// <br/> - <paramref name="currentFile"/> should be generated using the appropriate message from the <see cref="ProcessedFileInfo.ProcessedFileInfo(System.IO.FileInfo, RoboSharpConfiguration, FileClasses)"/> constructor
         /// <br/> - <see cref="SetCopyOpStarted"/> and <see cref="AddFileCopied(ProcessedFileInfo)"/> should be used if using this method.
         /// <br/> - Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
         /// </remarks>

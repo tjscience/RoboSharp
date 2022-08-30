@@ -25,7 +25,7 @@ namespace RoboSharp.Interfaces
         string ToString();
 
         /// <returns>new <see cref="SpeedStatistic"/> object </returns>
-        /// <inheritdoc cref="SpeedStatistic.SpeedStatistic(SpeedStatistic)"/>
+        /// <inheritdoc cref="SpeedStatistic.SpeedStatistic(ISpeedStatistic)"/>
         new SpeedStatistic Clone();
     }
 }
