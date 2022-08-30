@@ -83,9 +83,10 @@ namespace RoboSharp.Results
 
         #region < Private Members >
 
-        private IRoboCommand command { get; }
+        internal IRoboCommand command { get; }
         private bool SkippingFile { get; set; }
         private bool CopyOpStarted { get; set; }
+        private bool IsFinalized = false;
         internal bool FileFailed { get; set; }
 
         private RoboSharpConfiguration Config => command?.Configuration;
@@ -194,20 +195,11 @@ namespace RoboSharp.Results
         /// </summary>
         /// <remarks>
         /// Used by ResultsBuilder as starting point for the results. 
-        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
         /// </remarks>
         /// <returns></returns>
         public RoboCopyResults GetResults()
         {
-            //Stop the Update Task
-            UpdateTaskCancelSource?.Cancel();
-            UpdateTaskTrigger?.TrySetResult(null);
-           
-            // - if copy operation wasn't completed, register it as failed instead.
-            // - if file was to be marked as 'skipped', then register it as skipped.
-
-            ProcessPreviousFile();
-            PushUpdate(); // Perform Final calculation before generating the Results Object
+            FinalizeResults();
 
             // Package up
             return new RoboCopyResults()
@@ -217,6 +209,29 @@ namespace RoboSharp.Results
                 FilesStatistic = (Statistic)FilesStatistic,
                 SpeedStatistic = new SpeedStatistic(),
             };
+        }
+
+        /// <summary>
+        /// Tabulate the final results - should only be called when no more processed files will be added to the estimator
+        /// </summary>
+        /// <remarks>
+        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
+        /// </remarks>
+        public void FinalizeResults()
+        {
+            if (!IsFinalized)
+            {
+                //Stop the Update Task
+                UpdateTaskCancelSource?.Cancel();
+                UpdateTaskTrigger?.TrySetResult(null);
+
+                // - if copy operation wasn't completed, register it as failed instead.
+                // - if file was to be marked as 'skipped', then register it as skipped.
+
+                ProcessPreviousFile();
+                PushUpdate(); // Perform Final calculation before generating the Results Object
+                IsFinalized = true;
+            }
         }
 
         #endregion
@@ -322,7 +337,7 @@ namespace RoboSharp.Results
         /// <param name="CopyOperation">TRUE if this is a copy operation, FALSE is this is a List-Only operation</param>
         public void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
         {
-            if (currentFile.FileClassType == FileClassType.NewDir | currentFile.FileClassType == FileClassType.SystemMessage) return;
+            if (currentFile.FileClassType != FileClassType.File) return;
 
             ProcessPreviousFile();
 
