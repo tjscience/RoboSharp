@@ -76,20 +76,20 @@ namespace RoboSharp.Extensions
             shouldExclude &= AssociatedCommand.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ref DirectoryNameRegexExclusions);
             if (!shouldExclude && pair.Source.Exists && pair.Destination.Exists)
             {
-                info = new ProcessedFileInfo(pair.Source, DirectoryClasses.ExistingDir, AssociatedCommand.Configuration);
+                info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.ExistingDir);
             }
             else if (!shouldExclude && pair.Source.Exists)
             {
-                info = new ProcessedFileInfo(pair.Source, DirectoryClasses.NewDir, AssociatedCommand.Configuration);
+                info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.NewDir);
             }
             else if (pair.Destination.Exists)
             {
-                info = new ProcessedFileInfo(pair.Destination, DirectoryClasses.ExtraDir, AssociatedCommand.Configuration);
+                info = new ProcessedFileInfo(pair.Destination, AssociatedCommand.Configuration, DirectoryClasses.ExtraDir);
                 return false;
             }
             else
             {
-                info = new ProcessedFileInfo(pair.Source, DirectoryClasses.Exclusion, AssociatedCommand.Configuration);
+                info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.Exclusion);
             }
 
             return shouldExclude;
@@ -117,7 +117,6 @@ namespace RoboSharp.Extensions
 
         #endregion
 
-
         #region < Apply Attributes >
 
         /// <inheritdoc cref="CopyOptionsExtensions.SetFileAttributes(CopyOptions, FileInfo)"/>
@@ -134,8 +133,6 @@ namespace RoboSharp.Extensions
             => ApplyAttributes(pair.Destination);
 
         #endregion
-
-
 
     }
 }
