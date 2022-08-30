@@ -33,7 +33,7 @@ namespace RoboSharp.Interfaces
         /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
         IProgressEstimator IProgressEstimator { get; }
 
-        /// <inheritdoc cref="RoboCommand.IsPaused"/>
+        /// <inheritdoc cref="RoboCommand.CommandOptions"/>
         string CommandOptions { get; }
         
         /// <inheritdoc cref="RoboCommand.CopyOptions"/>
