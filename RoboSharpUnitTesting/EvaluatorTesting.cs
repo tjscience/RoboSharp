@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RoboSharp;
-using RoboSharp.ConsumerHelpers;
+using RoboSharp.Extensions;
 using RoboSharp.Results;
 
 namespace RoboSharp.Tests
@@ -22,7 +22,7 @@ namespace RoboSharp.Tests
 
         public override Task Start(string domain = "", string username = "", string password = "")
         {
-            var evaluator = new RoboSharp.ConsumerHelpers.SourceDestinationEvaluator(this);
+            var evaluator = new RoboSharp.Extensions.SourceDestinationEvaluator(this);
             var estimator = new ProgressEstimator(this);
             DirectoryInfo source = new DirectoryInfo(base.CopyOptions.Source);
             DirectoryInfo dest = new DirectoryInfo(base.CopyOptions.Destination);
