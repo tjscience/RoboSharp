@@ -817,11 +817,7 @@ namespace RoboSharp
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
                     if (errorCode.Key == null)
                     {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = "System Message";
-                        file.FileClassType = FileClassType.SystemMessage;
-                        file.Size = 0;
-                        file.Name = data;
+                        var file = new ProcessedFileInfo(data);
                         OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                     }
                 }

@@ -20,6 +20,11 @@ namespace RoboSharp
     public class ProcessedFileInfo
     {
         /// <summary>
+        /// String used to identify the 'FileClass' property of a System Message
+        /// </summary>
+        public const string SystemMessageFileClass = "System Message";
+
+        /// <summary>
         /// Default Constructor
         /// </summary>
         public ProcessedFileInfo() { }
@@ -31,7 +36,7 @@ namespace RoboSharp
         /// <param name="type"><inheritdoc cref="FileClassType" path="*" /></param>
         /// <param name="class"><inheritdoc cref="FileClass" path="*" /></param>
         /// <param name="size"><inheritdoc cref="Size" path="*" /></param>
-        public ProcessedFileInfo(string name, FileClassType type, string @class, long size)
+        public ProcessedFileInfo(string name, FileClassType type, string @class, long size = 0)
         {
             Name = name;
             FileClassType = type;
@@ -45,7 +50,7 @@ namespace RoboSharp
         /// <param name="file"></param>
         /// <param name="status">The status of the file to look up from the config</param>
         /// <param name="config">The config the get the status string from</param>
-        public ProcessedFileInfo(System.IO.FileInfo file, FileClasses status, RoboSharpConfiguration config)
+        public ProcessedFileInfo(System.IO.FileInfo file, RoboSharpConfiguration config, FileClasses status = FileClasses.None)
         {
             FileClassType = FileClassType.File;
             FileClass = config.GetFileClass(status);
@@ -60,7 +65,7 @@ namespace RoboSharp
         public ProcessedFileInfo(string systemMessage)
         {
             FileClassType = FileClassType.SystemMessage;
-            FileClass = "SystemMessage";
+            FileClass = SystemMessageFileClass;
             Name = systemMessage;
             Size = 0;
         }
@@ -72,7 +77,7 @@ namespace RoboSharp
         /// <param name="size">number of files/folders in the directory - If left at -1, then it will check check using the <paramref name="directory"/> length</param>
         /// <param name="status">The status of the file to look up from the config</param>
         /// <param name="config">The config the get the status string from</param>
-        public ProcessedFileInfo(System.IO.DirectoryInfo directory, DirectoryClasses status, RoboSharpConfiguration config, long size = -1)
+        public ProcessedFileInfo(System.IO.DirectoryInfo directory, RoboSharpConfiguration config, DirectoryClasses status = DirectoryClasses.None, long size = -1)
         {
             FileClassType = FileClassType.NewDir;
             FileClass = config.GetDirectoryClass(status);
@@ -95,6 +100,31 @@ namespace RoboSharp
 
         /// <summary>Folder or File Name / Message Text</summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Translates the object back to the log line.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            if (FileClassType == FileClassType.SystemMessage) return FileClass;
+            return string.Format(@"{0}\t{1}\t{2}", FileClass, Size, Name);
+        }
+
+        /// <summary>
+        /// Evaluate <see cref="LoggingOptions.NoFileClasses"/> and <see cref="LoggingOptions.NoFileSizes"/> to determine if those value should be included in the output string. <br/>
+        /// Name will always be included.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public string ToString(LoggingOptions options)
+        {
+            if (this.FileClassType == FileClassType.SystemMessage) return ToString();
+            return string.Format(@"{0}{1}{2}",
+                options.NoFileClasses ? string.Empty : FileClass + @"\t",
+                options.NoFileSizes ? string.Empty : Size + @"\t",
+                Name);
+        }
 
         /// <summary>
         /// Set the <see cref="FileClass"/> property <br/>

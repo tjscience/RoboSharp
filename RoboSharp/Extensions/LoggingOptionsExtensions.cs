@@ -94,5 +94,6 @@ namespace RoboSharp.Extensions
                     File.Delete(options.LogPath);
 
         }
+
     }
 }
