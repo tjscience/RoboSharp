@@ -198,17 +198,23 @@ namespace RoboSharp.Extensions
         #region < Extra >
 
         /// <summary>
-        /// EXTRA Files are files that exist in destination but not in source
+        /// EXTRA Files are files that exist in the destination but not in the source
         /// </summary>
         /// <param name="Source"></param>
         /// <param name="Destination"></param>
-        /// <returns>TRUE if exists in destination but not in source, otherwise false</returns>
+        /// <returns>TRUE if exists in the destination but not in the source, otherwise false</returns>
         public static bool IsExtra(string Source, string Destination) => File.Exists(Destination) && !File.Exists(Source);
         /// <inheritdoc cref="IsExtra(string, string)"/>
         public static bool IsExtra(FileInfo Source, FileInfo Destination) => Destination.Exists && !Source.Exists;
         /// <inheritdoc cref="IsExtra(string, string)"/>
         public static bool IsExtra(this IFileSourceDestinationPair pair) => IsExtra(pair.Source, pair.Destination);
 
+
+        /// <summary>
+        /// EXTRA directories are folders that exist in the destination but not in the source
+        /// </summary>
+        /// <returns>TRUE if exists in the destination but not in the source, otherwise false</returns>
+        public static bool IsExtra(this IDirectorySourceDestinationPair pair) => !pair.Source.Exists && pair.Destination.Exists;
 
         ///// <summary> </summary>
         ///// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>
@@ -235,6 +241,12 @@ namespace RoboSharp.Extensions
         public static bool IsLonely(FileInfo Source, FileInfo Destination) => Destination.Exists && !Source.Exists;
         /// <inheritdoc cref="IsLonely(string, string)"/>
         public static bool IsLonely(this IFileSourceDestinationPair pair) => IsLonely(pair.Source, pair.Destination);
+
+        /// <summary>
+        /// LONELY directories are folders that exist in the source but not in the destination 
+        /// </summary>
+        /// <returns>TRUE if exists in the source but not in the destination, otherwise false</returns>
+        public static bool IsLonely(this IDirectorySourceDestinationPair pair) => pair.Source.Exists && !pair.Destination.Exists;
 
         /// <summary> </summary>
         /// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>

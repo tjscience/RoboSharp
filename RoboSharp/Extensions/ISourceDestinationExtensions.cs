@@ -115,7 +115,6 @@ namespace RoboSharp.Extensions
 
         #endregion
 
-
         #region < Create Pair Functions >
 
         /// <summary>
@@ -217,7 +216,7 @@ namespace RoboSharp.Extensions
         /// </summary>
         /// <returns>cached Ienumerable of the FilePairs that were found in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
         /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
-        public static IEnumerable<T> GetFilePairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
+        public static CachedEnumerable<T> GetFilePairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
         {
             CachedEnumerable<T> sourceFiles = null;
             CachedEnumerable<T> destFiles = null;
@@ -234,7 +233,7 @@ namespace RoboSharp.Extensions
                 }
             }
             if (sourceFiles is null && destFiles is null)
-                return new T[] { };
+                return (new T[] { }).AsCachedEnumerable();
             else if (sourceFiles is null)
                 return destFiles;
             else if (destFiles is null)
@@ -273,7 +272,7 @@ namespace RoboSharp.Extensions
 
         /// <returns> IEnumerable{T} of of the Directory Pairs</returns>
         /// <inheritdoc cref="GetDirectoryPairs{T}(IDirectorySourceDestinationPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public static IEnumerable<T> GetDirectoryPairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
+        public static CachedEnumerable<T> GetDirectoryPairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
         {
             CachedEnumerable<T> sourceChildren = null;
             CachedEnumerable<T> destChildren = null;
@@ -292,7 +291,7 @@ namespace RoboSharp.Extensions
             }
 
             if (sourceChildren is null && destChildren is null)
-                return new T[] { };
+                return (new T[] { }).AsCachedEnumerable();
             else if (sourceChildren is null)
                 return destChildren;
             else if (destChildren is null)
