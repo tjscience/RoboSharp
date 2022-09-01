@@ -29,7 +29,10 @@ namespace RoboSharp
         /// <summary>
         /// Create new LoggingOptions with Default Settings
         /// </summary>
-        public LoggingOptions() { }
+        public LoggingOptions(LoggingActionFlags flags = LoggingActionFlags.RoboSharpDefault) 
+        {
+            ApplyLoggingFlags(flags &= LoggingActionFlags.RoboSharpDefault);
+        }
 
         /// <summary>
         /// Clone a LoggingOptions Object
@@ -87,6 +90,8 @@ namespace RoboSharp
         internal const string NO_JOB_HEADER = "/NJH ";
         internal const string NO_JOB_SUMMARY = "/NJS ";
         internal const string OUTPUT_AS_UNICODE = "/UNICODE ";
+        
+        #region < Properties >
 
         /// <summary>
         /// Do not copy, timestamp or delete any files.
@@ -102,6 +107,9 @@ namespace RoboSharp
         /// Produce verbose output, showing skipped files.
         /// [V]
         /// </summary>
+        /// <remarks>
+        /// If set false, RoboCommand ProgressEstimator will not be accurate due files not showing in the logs.
+        /// </remarks>
         public virtual bool VerboseOutput { get; set; } = true;
         /// <summary>
         /// Include source file time stamps in the output.
@@ -117,6 +125,9 @@ namespace RoboSharp
         /// Print sizes as bytes in the output.
         /// [/BYTES]
         /// </summary>
+        /// <remarks>
+        /// Automatically appended by the base RoboCommand object to allow results to work properly
+        /// </remarks>
         public virtual bool PrintSizesAsBytes { get; set; }
         /// <summary>
         /// Do not log file sizes.
@@ -190,6 +201,117 @@ namespace RoboSharp
         /// [/UNICODE]
         /// </summary>
         public virtual bool OutputAsUnicode { get; set; }
+        
+        #endregion
+
+        #region < Flags >
+
+        /// <summary>
+        /// Enum to define the logging actions to be taken by RoboCopy process.
+        /// </summary>
+        [Flags]
+        public enum LoggingActionFlags
+        {
+            /// <summary>
+            /// Default Functionality is to only copy the files within the source directory - does not copy any files within the subfolders.
+            /// </summary>
+            Default = 0,
+            /// <inheritdoc cref="LoggingOptions.IncludeFullPathNames"/>
+            IncludeFullPathNames = 1,
+            /// <inheritdoc cref="LoggingOptions.IncludeSourceTimeStamps"/>
+            IncludeSourceTimeStamps = 2,
+            /// <inheritdoc cref="LoggingOptions.ListOnly"/>
+            ListOnly = 4,
+            /// <inheritdoc cref="LoggingOptions.NoDirectoryList"/>
+            NoDirectoryList = 8,
+            /// <inheritdoc cref="LoggingOptions.NoFileClasses"/>
+            NoFileClasses = 16,
+            /// <inheritdoc cref="LoggingOptions.NoFileList"/>
+            NoFileList = 32,
+            /// <inheritdoc cref="LoggingOptions.NoFileSizes"/>
+            NoFileSizes = 64,
+            /// <inheritdoc cref="LoggingOptions.NoJobHeader"/>
+            NoJobHeader = 128,
+            /// <inheritdoc cref="LoggingOptions.NoJobSummary"/>
+            NoJobSummary = 256,
+            /// <inheritdoc cref="LoggingOptions.NoProgress"/>
+            NoProgress = 512,
+            /// <inheritdoc cref="LoggingOptions.OutputAsUnicode"/>
+            OutputAsUnicode = 1024,
+            /// <inheritdoc cref="LoggingOptions.OutputToRoboSharpAndLog"/>
+            OutputToRoboSharpAndLog = 2048,
+            /// <inheritdoc cref="LoggingOptions.PrintSizesAsBytes"/>
+            PrintSizesAsBytes = 4096,
+            /// <inheritdoc cref="LoggingOptions.ReportExtraFiles"/>
+            ReportExtraFiles = 8192,
+            /// <inheritdoc cref="LoggingOptions.ShowEstimatedTimeOfArrival"/>
+            ShowEstimatedTimeOfArrival = 16384,
+            /// <inheritdoc cref="LoggingOptions.VerboseOutput"/>
+            VerboseOutput = 32768,
+            /// <summary>
+            /// The flags that are automatically applied by RoboSharp to allow it to function properly. <br/>
+            /// The ApplyLoggingFlags method will not remove these flags, only apply them.
+            /// </summary>
+            RoboSharpDefault = OutputToRoboSharpAndLog | PrintSizesAsBytes | VerboseOutput
+        }
+
+        /// <summary>
+        /// Set the Logging Options using the <paramref name="flags"/> <br/>
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="LoggingActionFlags.RoboSharpDefault"/> is able to be applied, but will not be removed here to retain functionality with the library. <br/>
+        /// Removal of those options must be done explicitly vai the property
+        /// </remarks>
+        /// <param name="flags"></param>
+        public void ApplyLoggingFlags(LoggingActionFlags flags)
+        {
+            this.IncludeFullPathNames = flags.HasFlag(LoggingActionFlags.IncludeFullPathNames);
+            this.IncludeSourceTimeStamps = flags.HasFlag(LoggingActionFlags.IncludeSourceTimeStamps);
+            this.ListOnly = flags.HasFlag(LoggingActionFlags.ListOnly);
+            this.NoDirectoryList = flags.HasFlag(LoggingActionFlags.NoDirectoryList);
+            this.NoFileClasses = flags.HasFlag(LoggingActionFlags.NoFileClasses);
+            this.NoFileList = flags.HasFlag(LoggingActionFlags.NoFileList);
+            this.NoFileSizes = flags.HasFlag(LoggingActionFlags.NoFileSizes);
+            this.NoJobHeader = flags.HasFlag(LoggingActionFlags.NoJobHeader);
+            this.NoJobSummary = flags.HasFlag(LoggingActionFlags.NoJobSummary);
+            this.NoProgress = flags.HasFlag(LoggingActionFlags.NoProgress);
+            this.OutputAsUnicode = flags.HasFlag(LoggingActionFlags.OutputAsUnicode);
+            this.ReportExtraFiles = flags.HasFlag(LoggingActionFlags.ReportExtraFiles);
+            this.ShowEstimatedTimeOfArrival = flags.HasFlag(LoggingActionFlags.ShowEstimatedTimeOfArrival);
+
+            //RoboSharp Defaults
+            if (flags.HasFlag(LoggingActionFlags.VerboseOutput)) this.VerboseOutput = true;
+            if (flags.HasFlag(LoggingActionFlags.OutputToRoboSharpAndLog)) this.OutputToRoboSharpAndLog = true;
+            if (flags.HasFlag(LoggingActionFlags.PrintSizesAsBytes)) this.PrintSizesAsBytes = true;
+        }
+
+        /// <summary>
+        /// Converts the boolean values back into the <see cref="LoggingActionFlags"/> enum that represents the currently selected options
+        /// </summary>
+        /// <returns></returns>
+        public LoggingActionFlags GetLoggingActionFlags()
+        {
+            LoggingActionFlags flags = LoggingActionFlags.Default;
+            if(IncludeFullPathNames) flags &= LoggingActionFlags.IncludeFullPathNames;
+            if(IncludeSourceTimeStamps) flags &= LoggingActionFlags.IncludeSourceTimeStamps;
+            if(ListOnly) flags &= LoggingActionFlags.ListOnly;
+            if(NoDirectoryList) flags &= LoggingActionFlags.NoDirectoryList;
+            if(NoFileClasses) flags &= LoggingActionFlags.NoFileClasses;
+            if(NoFileList) flags &= LoggingActionFlags.NoFileList;
+            if(NoFileSizes) flags &= LoggingActionFlags.NoFileSizes;
+            if(NoJobHeader) flags &= LoggingActionFlags.NoJobHeader;
+            if(NoJobSummary) flags &= LoggingActionFlags.NoJobSummary;
+            if(NoProgress) flags &= LoggingActionFlags.NoProgress;
+            if(OutputAsUnicode) flags &= LoggingActionFlags.OutputAsUnicode;
+            if(ReportExtraFiles) flags &= LoggingActionFlags.ReportExtraFiles;
+            if(ShowEstimatedTimeOfArrival) flags &= LoggingActionFlags.ShowEstimatedTimeOfArrival;
+            if (PrintSizesAsBytes) flags &= LoggingActionFlags.PrintSizesAsBytes;
+            if (OutputToRoboSharpAndLog) flags &= LoggingActionFlags.OutputToRoboSharpAndLog;
+            if (VerboseOutput) flags &= LoggingActionFlags.VerboseOutput;
+            return flags;
+        }
+
+        #endregion
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
         internal string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
