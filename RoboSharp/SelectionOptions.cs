@@ -265,14 +265,20 @@ namespace RoboSharp
         /// </summary>
         public virtual bool ExcludeOlder { get; set; }
         /// <summary>
-        /// Excludes extra files and directories.
+        /// Excludes extra files and directories. (Where item exists in destination but not in source)
         /// [/XX]
         /// </summary>
+        /// <remarks>
+        /// Prevents purging extras and also prevents showing extras in the log
+        /// </remarks>
         public virtual bool ExcludeExtra { get; set; }
         /// <summary>
-        /// Excludes lonely files and directories.
+        /// Excludes lonely files and directories. (Where item exists in source but not in destination)
         /// [/XL]
         /// </summary>
+        /// <remarks>
+        /// If enabled, will only copy files from source to destination if an item of the same name already exists at the destination
+        /// </remarks>
         public virtual bool ExcludeLonely { get; set; }
         /// <summary>
         /// Includes the same files.
