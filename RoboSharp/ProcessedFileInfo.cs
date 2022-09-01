@@ -140,8 +140,9 @@ namespace RoboSharp
         /// </summary>
         private string DirInfoToString(bool includeSize)
         {
-            string fs = (includeSize ? Size.ToString() : "").PadLeft(20);
-            return string.Format("\t{0}\t{1}", fs, Name);
+            string fc = FileClass.PadRight(10);
+            string fs = (includeSize ? Size.ToString() : "").PadLeft(10);
+            return string.Format("\t{0}{1}\t{2}", fc, fs, Name);
         }
 
         /// <summary>
