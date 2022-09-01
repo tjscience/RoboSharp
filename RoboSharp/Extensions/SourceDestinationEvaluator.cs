@@ -114,13 +114,30 @@ namespace RoboSharp.Extensions
 
         #region < ShouldCopyFile >
 
-        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldCopyFile(IRoboCommand, IFileSourceDestinationPair, ref Regex[], ref Regex[], out ProcessedFileInfo)"/>
+        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldCopyFile(IRoboCommand, IFileSourceDestinationPair, ref Regex[], out ProcessedFileInfo)"/>
         public virtual bool ShouldCopyFile(IFileSourceDestinationPair pair, out ProcessedFileInfo info)
-            => AssociatedCommand.ShouldCopyFile(pair, ref IncludeFileNameRegexField, ref ExcludeFileNameRegexField, out info);
+            => AssociatedCommand.ShouldCopyFile(pair, ref ExcludeFileNameRegexField, out info);
 
-        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldCopyFile(IRoboCommand, IFileSourceDestinationPair, ref Regex[], ref Regex[], out ProcessedFileInfo)"/>
+        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldCopyFile(IRoboCommand, IFileSourceDestinationPair, ref Regex[], out ProcessedFileInfo)"/>
         public bool ShouldCopyFile(FileInfo source, FileInfo destination, out ProcessedFileInfo info)
             => ShouldCopyFile(new FileSourceDestinationPair(source,destination), out info);
+
+        /// <summary>
+        /// Filter the filenames according to the filters specified by <see cref="CopyOptions.FileFilter"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="collection"></param>
+        /// <returns></returns>
+        public CachedEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T: IFileSourceDestinationPair
+        {
+            var filters = AssociatedCommand.CopyOptions.FileFilter;
+            if (filters.Any() && filters.All(s => s != "*.*" && s != "*"))
+                return collection
+                .Where(P => AssociatedCommand.CopyOptions.ShouldIncludeFileName(P, ref IncludeFileNameRegexField))
+                .AsCachedEnumerable();
+            else
+                return collection is CachedEnumerable<T> enumerable ? enumerable : collection.AsCachedEnumerable();
+        }
 
         #endregion
 

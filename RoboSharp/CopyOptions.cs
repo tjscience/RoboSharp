@@ -407,26 +407,27 @@ namespace RoboSharp
         /// Parse the class properties and generate the command arguments
         /// </summary>
         /// <returns></returns>
-        /// <param name="includePaths">Include Source/Destination paths</param>
-        internal string Parse(bool includePaths = true)
+        /// <param name="ParseForHeader">Set True to produce the 'Options : ' text that appears in header</param>
+        internal string Parse(bool ParseForHeader = false)
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            if (includePaths)
+            if (!ParseForHeader)
             {
                 // Set Source and Destination
                 options.Append(WrapPath(Source));
                 options.Append(WrapPath(Destination));
+
+
+                // Set FileFilter
+                // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
+                var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
+                string fileFilter = String.Join(" ", fileFilterQuotedItems);
+                options.Append($"{fileFilter} ");
+
             }
-
-            // Set FileFilter
-            // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
-            var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
-            string fileFilter = String.Join(" ", fileFilterQuotedItems);
-            options.Append($"{fileFilter} ");
-
             Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options
