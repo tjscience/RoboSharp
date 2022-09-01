@@ -8,12 +8,32 @@ using System.Threading.Tasks;
 
 namespace RoboSharp.Extensions
 {
+
     /// <summary>
     /// Extension Methods for the <see cref="IDirectorySourceDestinationPair"/> interface
     /// </summary>
     public static class ISourceDestinationPairExtensions
     {
-        private static bool InverseAny<T>(this IEnumerable<T> collection, Func<T, bool> match) => !collection.Any(match);
+        /// <summary>
+        /// Check if any of the items in the collection is a <paramref name="match"/>
+        /// </summary>
+        /// <remarks>
+        /// Only Positive verification should be used here.
+        /// <br/>Arr = { 1, 2, 3, 4 }   
+        /// <br/> - Arr.None( x => x == 5) -- Returns TRUE since none equal 5 (checks all items)
+        /// <br/> - Arr.None( x => x == 3) -- Returns FALSE since 3 exists (Stops checking after the match is found)
+        /// <br/> - Arr.None( x => x != 3) -- Returns FALSE since 1 != 3 ( never checked if 3 exists, because 1 passed the check )
+        /// </remarks>
+        /// <returns>TRUE if no matches found, FALSE if any matches found</returns>
+        /// <inheritdoc cref="System.Linq.Enumerable.Any{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
+        public static bool None<T>(this IEnumerable<T> collection, Func<T, bool> match) => collection is null || !collection.Any(match);
+
+        /// <summary>
+        /// Check if the collection is empty
+        /// </summary>
+        /// <returns>TRUE if the collection is empty, otherwise false</returns>
+        /// <inheritdoc cref="System.Linq.Enumerable.Any{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
+        public static bool None<T>(this IEnumerable<T> collection) => collection is null || !collection.Any();
 
         #region < Eval Functions >
 
@@ -228,8 +248,12 @@ namespace RoboSharp.Extensions
                     destFiles = new CachedEnumerable<T>(parent.Destination.EnumerateFiles().Select(f => CreateDestinationChild(parent, f, ctor)));
                 else
                 {
-                    IEnumerable<FileInfo> destFilesInfos = Directory.EnumerateFiles(parent.Destination.FullName).Where((p) => sourceFiles.InverseAny(n => n.Destination.FullName != p)).Select(f => new FileInfo(f));
-                    destFiles = new CachedEnumerable<T>(destFilesInfos.Select(f => CreateDestinationChild(parent, f, ctor)));
+                    destFiles =
+                        Directory.EnumerateFiles(parent.Destination.FullName)
+                        .Where(destPath => sourceFiles.None(sourceChild => sourceChild.Destination.FullName == destPath))
+                        .Select(f => new FileInfo(f))
+                        .Select(f => CreateDestinationChild(parent, f, ctor))
+                        .AsCachedEnumerable();
                 }
             }
             if (sourceFiles is null && destFiles is null)
@@ -285,8 +309,11 @@ namespace RoboSharp.Extensions
                 else
                 {
                     // Enumerate the directory names that don't exist in the source children into new DirectoryInfo Objects
-                    IEnumerable<DirectoryInfo> destFilesInfos = Directory.EnumerateDirectories(parent.Destination.FullName).Where((p) => sourceChildren.InverseAny(n => n.Destination.FullName != p)).Select(f => new DirectoryInfo(f));
-                    destChildren = new CachedEnumerable<T>(destFilesInfos.Select(f => CreateDestinationChild(parent, f, ctor)));
+                    destChildren =
+                        Directory.EnumerateDirectories(parent.Destination.FullName)
+                        .Where(destName => sourceChildren.None(sourceChild => sourceChild.Destination.FullName == destName))
+                        .Select(d => CreateDestinationChild(parent, new DirectoryInfo(d), ctor))
+                        .AsCachedEnumerable();
                 }
             }
 

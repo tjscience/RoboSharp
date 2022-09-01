@@ -53,7 +53,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="ISourceDestinationPairExtensions.GetFilePairsEnumerable{T}(IDirectorySourceDestinationPair, Func{FileInfo, FileInfo, T})"/>
-        public IEnumerable<FileSourceDestinationPair> GetFilePairsEnumerable()
+        public CachedEnumerable<FileSourceDestinationPair> GetFilePairsEnumerable()
         {
             return this.GetFilePairsEnumerable((s, d) => new FileSourceDestinationPair(s, d));
         }
@@ -66,7 +66,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="ISourceDestinationPairExtensions.GetDirectoryPairsEnumerable{T}(IDirectorySourceDestinationPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public IEnumerable<DirectorySourceDestinationPair> GetDirectoryPairsEnumerable()
+        public CachedEnumerable<DirectorySourceDestinationPair> GetDirectoryPairsEnumerable()
         {
             return this.GetDirectoryPairsEnumerable((s, d) => new DirectorySourceDestinationPair(s, d));
         }
