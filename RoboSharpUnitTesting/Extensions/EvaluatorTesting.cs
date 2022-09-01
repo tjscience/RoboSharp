@@ -35,7 +35,7 @@ namespace RoboSharp.Tests
                 foreach (var pair in dirs.GetFilePairsEnumerable())
                 {
                     bool shouldCopy = evaluator.ShouldCopyFile(pair, out ProcessedFileInfo info);
-                    estimator.AddFile(info, true);
+                    estimator.AddFile(info);
                     if (shouldCopy)
                     {
                         dirs.Destination.Create();

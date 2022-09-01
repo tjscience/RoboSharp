@@ -334,8 +334,7 @@ namespace RoboSharp.Results
         /// <br/> - Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
         /// </remarks>
         /// <param name="currentFile">The file that was just added to the stack</param>
-        /// <param name="CopyOperation">TRUE if this is a copy operation, FALSE is this is a List-Only operation</param>
-        public void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
+        public void AddFile(ProcessedFileInfo currentFile)
         {
             if (currentFile.FileClassType != FileClassType.File) return;
 
@@ -347,7 +346,8 @@ namespace RoboSharp.Results
             FileFailed = false;
 
             // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
-            bool SpecialHandling = !CopyOperation || currentFile.Size == 0;
+            bool ListOperation = command.LoggingOptions.ListOnly;
+            bool SpecialHandling = ListOperation || currentFile.Size == 0;
             CurrentFile_SpecialHandling = SpecialHandling;
 
             // EXTRA FILES
@@ -369,7 +369,7 @@ namespace RoboSharp.Results
             //Files to be Copied/Skipped
             else
             {
-                SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
+                SkippingFile = !ListOperation;//Assume Skipped, adjusted when CopyProgress is updated
                 if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase)) // New File
                 {
                     //Special handling for 0kb files & ListOnly -> They won't get Progress update, but will be created
@@ -437,7 +437,7 @@ namespace RoboSharp.Results
         /// <summary>Catch start copy progress of large files ( Called when progress less than 100% )</summary>
         /// <remarks>
         /// For Custom Implementations: <br/>
-        /// - <see cref="AddFile(ProcessedFileInfo, bool)"/> should have been called prior to this being called. <br/>
+        /// - <see cref="AddFile(ProcessedFileInfo)"/> should have been called prior to this being called. <br/>
         /// - Should use <see cref="AddFileCopied(ProcessedFileInfo)"/> after progress reaches 100% <br/><br/>
         /// !! Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
         /// </remarks>
@@ -465,7 +465,7 @@ namespace RoboSharp.Results
         /// This method resets internal flags that other methods set to log how the current file should be handled. <br/>
         /// As such, if using this method for pushing updates to the estimator, no other methods that accept files should be used.
         /// </remarks>
-        public void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
+        private void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
         {
             if (file == null) return;
             if (file.FileClassType != FileClassType.File) return;
