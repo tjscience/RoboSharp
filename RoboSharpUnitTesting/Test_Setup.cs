@@ -23,7 +23,7 @@ namespace RoboSharp.Tests
         /// <returns></returns>
         public static bool IsRunningOnAppVeyor()
         {
-            return TestDestination == @"C:\projects\robosharp\RoboSharp.Tests\bin\Debug\TEST_DESTINATION";
+            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
         }
 
         /// <summary>
