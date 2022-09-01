@@ -74,8 +74,6 @@ namespace RoboSharp.Extensions
         /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
         public virtual bool ShouldCopyDir(IDirectorySourceDestinationPair pair, out ProcessedFileInfo info, out DirectoryClasses dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
         {
-
-            
             ExcludeDirectoryName = ShouldExcludeDirectoryName(pair);
             ExcludeJunctionDirectory = ShouldExcludeJunctionDirectory(pair);
             

@@ -47,7 +47,7 @@ namespace RoboSharp.Tests
                 //Get the directories in source and destination
                 foreach (var pair in dirs.GetDirectoryPairsEnumerable())
                 {
-                    bool shouldDig = evaluator.ShouldCopyDir(pair, out var info);
+                    bool shouldDig = evaluator.ShouldCopyDir(pair, out var info, out _, out _, out _);
                     estimator.AddDir(info);
                     if (shouldDig) Dig(pair);
                 }

@@ -60,7 +60,7 @@ namespace RoboSharp.Extensions
             info = new ProcessedFileInfo()
             {
                 FileClassType = FileClassType.File,
-                Name = pair.Source.Name,
+                Name = command.LoggingOptions.IncludeFullPathNames ? pair.Source.FullName : pair.Source.Name,
                 Size = pair.Source.Length,
             };
             var SO = command.SelectionOptions;
@@ -71,7 +71,7 @@ namespace RoboSharp.Extensions
             if (IsExtra(pair))// SO.ShouldExcludeExtra(pair))
             {
                 info.SetFileClass(FileClasses.ExtraFile, command.Configuration);
-                info.Name = pair.Destination.Name;
+                info.Name = command.LoggingOptions.IncludeFullPathNames ? pair.Destination.FullName : pair.Destination.Name;
                 info.Size = pair.Destination.Length;
                 return false;
             }
@@ -236,9 +236,11 @@ namespace RoboSharp.Extensions
         /// <param name="source"></param>
         /// <param name="destination"></param>
         /// <returns>TRUE if exists in both source and destination, otherwise false</returns>
-        public static bool IsLonely(string source, string destination) => !(File.Exists(source) && File.Exists(destination));
+        public static bool IsLonely(string source, string destination) => File.Exists(source) && !File.Exists(destination);
+        
         /// <inheritdoc cref="IsLonely(string, string)"/>
-        public static bool IsLonely(FileInfo Source, FileInfo Destination) => Destination.Exists && !Source.Exists;
+        public static bool IsLonely(FileInfo Source, FileInfo Destination) => Source.Exists && !Destination.Exists;
+        
         /// <inheritdoc cref="IsLonely(string, string)"/>
         public static bool IsLonely(this IFileSourceDestinationPair pair) => IsLonely(pair.Source, pair.Destination);
 
