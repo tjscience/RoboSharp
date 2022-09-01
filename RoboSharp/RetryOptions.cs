@@ -16,7 +16,7 @@ namespace RoboSharp
         /// <summary>
         /// Create new RetryOptions with Default Settings
         /// </summary>
-        public RetryOptions() { }
+        public RetryOptions() { RetryWaitTime = 30; }
 
         /// <summary>
         /// Clone a RetryOptions Object
@@ -44,6 +44,8 @@ namespace RoboSharp
 
         private int retryCount = 0;
         private int retryWaitTime = 30;
+        private TimeSpan RetryWaitTimeSpan;
+
 
         /// <summary>
         /// Specifies the number of retries N on failed copies (default is 0).
@@ -52,7 +54,7 @@ namespace RoboSharp
         public virtual int RetryCount
         {
             get { return retryCount; }
-            set { retryCount = value; }
+            set { retryCount = value < 0 ? 0 : value; }
         }
         /// <summary>
         /// Specifies the wait time N in seconds between retries (default is 30).
@@ -61,8 +63,12 @@ namespace RoboSharp
         public virtual int RetryWaitTime
         {
             get { return retryWaitTime; }
-            set { retryWaitTime = value; }
+            set { 
+                retryWaitTime = value < 0 ? 0 : value;
+                RetryWaitTimeSpan = new TimeSpan(hours: 0, minutes: 0, seconds: retryWaitTime);
+            }
         }
+
         /// <summary>
         /// Saves RetryCount and RetryWaitTime in the Registry as default settings.
         /// [/REG]
@@ -73,6 +79,15 @@ namespace RoboSharp
         /// [/TBD]
         /// </summary>
         public virtual bool WaitForSharenames { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="RetryWaitTime"/> as a TimeSpan
+        /// </summary>
+        /// <returns></returns>
+        public virtual TimeSpan GetWaitTime()
+        {
+            return RetryWaitTimeSpan;
+        }
 
         internal string Parse()
         {
