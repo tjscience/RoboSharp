@@ -66,34 +66,51 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Compare the Source/Destination directories, and decide if the directory should be copied down.
         /// </summary>
-        /// <param name="pair"></param>
-        /// <param name="info"></param>
-        /// <returns></returns>
-        public virtual bool ShouldCopyDir(IDirectorySourceDestinationPair pair, out ProcessedFileInfo info)
+        /// <param name="pair">the pair to evaluate</param>
+        /// <param name="info">the generated ProcessedFileInfo</param>
+        /// <param name="dirClass">The dirClass applied to the <paramref name="info"/></param>
+        /// <param name="ExcludeDirectoryName">Result of <see cref="ShouldExcludeDirectoryName(IDirectorySourceDestinationPair)"/></param>
+        /// <param name="ExcludeJunctionDirectory">Result of <see cref="ShouldExcludeJunctionDirectory(IDirectorySourceDestinationPair)"/></param>
+        /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
+        public virtual bool ShouldCopyDir(IDirectorySourceDestinationPair pair, out ProcessedFileInfo info, out DirectoryClasses dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
         {
 
-            bool shouldExclude = AssociatedCommand.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
-            shouldExclude &= AssociatedCommand.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ref DirectoryNameRegexExclusions);
+            
+            ExcludeDirectoryName = ShouldExcludeDirectoryName(pair);
+            ExcludeJunctionDirectory = ShouldExcludeJunctionDirectory(pair);
+            
+            bool shouldExclude = ExcludeJunctionDirectory | ExcludeDirectoryName;
             if (!shouldExclude && pair.Source.Exists && pair.Destination.Exists)
             {
+                dirClass = DirectoryClasses.ExistingDir;
                 info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.ExistingDir);
             }
-            else if (!shouldExclude && pair.Source.Exists)
+            else if (!shouldExclude && pair.Source.Exists && !AssociatedCommand.SelectionOptions.ExcludeLonely)
             {
+                dirClass = DirectoryClasses.NewDir;
                 info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.NewDir);
             }
-            else if (pair.Destination.Exists)
+            else if (pair.Destination.Exists && !AssociatedCommand.SelectionOptions.ExcludeExtra)
             {
+                dirClass = DirectoryClasses.ExtraDir;
                 info = new ProcessedFileInfo(pair.Destination, AssociatedCommand.Configuration, DirectoryClasses.ExtraDir);
                 return false;
             }
             else
             {
+                dirClass = DirectoryClasses.Exclusion;
                 info = new ProcessedFileInfo(pair.Source, AssociatedCommand.Configuration, DirectoryClasses.Exclusion);
             }
 
             return !shouldExclude;
         }
+
+
+        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeJunctionDirectory(SelectionOptions, IDirectorySourceDestinationPair)"/>
+        public bool ShouldExcludeJunctionDirectory(IDirectorySourceDestinationPair pair) => AssociatedCommand.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
+
+        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeDirectoryName(SelectionOptions, IDirectorySourceDestinationPair, ref Tuple{bool, Regex}[])"/>
+        public bool ShouldExcludeDirectoryName(IDirectorySourceDestinationPair pair) => AssociatedCommand.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ref DirectoryNameRegexExclusions);
 
         #endregion
 
