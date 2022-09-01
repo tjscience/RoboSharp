@@ -149,6 +149,15 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
+        }
+
+        /// <summary>
         /// Adds the 'NAME' and other properties into the JobFile
         /// </summary>
         internal void RunPostProcessing(RoboCommand cmd)

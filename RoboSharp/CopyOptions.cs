@@ -511,6 +511,15 @@ namespace RoboSharp
             return parsedOptions;
         }
 
+        /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
+        }
+
         #endregion
 
         #region < RunHours (Public) >
