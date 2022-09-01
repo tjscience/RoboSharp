@@ -1,4 +1,5 @@
 ﻿using RoboSharp.Interfaces;
+using System;
 using System.IO;
 
 namespace RoboSharp
@@ -50,11 +51,12 @@ namespace RoboSharp
         /// <param name="file"></param>
         /// <param name="status">The status of the file to look up from the config</param>
         /// <param name="config">The config the get the status string from</param>
-        public ProcessedFileInfo(System.IO.FileInfo file, RoboSharpConfiguration config, FileClasses status = FileClasses.None)
+        /// <param name="includeFullName">If TRUE, uses the full path. If FALSE, only uses the directory name.</param>
+        public ProcessedFileInfo(System.IO.FileInfo file, RoboSharpConfiguration config, FileClasses status = FileClasses.None, bool includeFullName = false)
         {
             FileClassType = FileClassType.File;
             FileClass = config.GetFileClass(status);
-            Name = file.Name;
+            Name = includeFullName ? file.FullName : file.Name;
             Size = file.Length;
         }
 
@@ -81,7 +83,7 @@ namespace RoboSharp
         {
             FileClassType = FileClassType.NewDir;
             FileClass = config.GetDirectoryClass(status);
-            Name = directory.Name;
+            Name = directory.FullName;
             Size = size != -1 ? size : Directory.GetFiles(directory.FullName).Length;
         }
 
@@ -107,8 +109,13 @@ namespace RoboSharp
         /// <returns></returns>
         public override string ToString()
         {
-            if (FileClassType == FileClassType.SystemMessage) return FileClass;
-            return string.Format(@"{0}\t{1}\t{2}", FileClass, Size, Name);
+            switch (FileClassType)
+            {
+                case FileClassType.SystemMessage: return Name;
+                case FileClassType.NewDir: return DirInfoToString(true);
+                case FileClassType.File: return FileInfoToString(true, true);
+                default: throw new NotImplementedException("Unknown FileClassType");
+            }
         }
 
         /// <summary>
@@ -119,11 +126,32 @@ namespace RoboSharp
         /// <returns></returns>
         public string ToString(LoggingOptions options)
         {
-            if (this.FileClassType == FileClassType.SystemMessage) return ToString();
-            return string.Format(@"{0}{1}{2}",
-                options.NoFileClasses ? string.Empty : FileClass + @"\t",
-                options.NoFileSizes ? string.Empty : Size + @"\t",
-                Name);
+            switch(FileClassType)
+            {
+                case FileClassType.SystemMessage: return Name;
+                case FileClassType.NewDir: return DirInfoToString(true);
+                case FileClassType.File: return FileInfoToString(!options.NoFileClasses, !options.NoFileSizes);
+                default: throw new NotImplementedException("Unknown FileClassType");
+            }
+        }
+
+        /// <summary>
+        /// "\t                   [FileCount]\t[DirectoryPath]"
+        /// </summary>
+        private string DirInfoToString(bool includeSize)
+        {
+            string fs = (includeSize ? Size.ToString() : "").PadLeft(20);
+            return string.Format("\t{0}\t{1}", fs, Name);
+        }
+
+        /// <summary>
+        /// "\t    [FileClass]  \t\t    [FileSize]\t[FileName]"
+        /// </summary>
+        private string FileInfoToString(bool includeClass, bool includeSize)
+        {
+            string fc = (includeClass ? FileClass : "").PadLeft(10);
+            string fs = (includeSize? Size.ToString() : "").PadLeft(10);
+            return string.Format("\t   {0}  \t\t{1}\t{2}", fc, fs, Name);
         }
 
         /// <summary>
