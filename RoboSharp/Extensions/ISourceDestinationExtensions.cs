@@ -96,7 +96,7 @@ namespace RoboSharp.Extensions
         {
             if (FileDoesntExist(source)) return false;
             if (FileDoesntExist(destination)) return false;
-            return File.GetLastWriteTime(source) < File.GetLastWriteTime(destination);
+            return File.GetLastWriteTime(source) == File.GetLastWriteTime(destination);
         }
 
         /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
@@ -110,7 +110,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
         public static bool IsSameDate(this IFileSourceDestinationPair copier)
         {
-            return IsDestinationNewer(copier.Source, copier.Destination);
+            return IsSameDate(copier.Source, copier.Destination);
         }
 
         #endregion

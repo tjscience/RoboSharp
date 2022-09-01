@@ -407,15 +407,19 @@ namespace RoboSharp
         /// Parse the class properties and generate the command arguments
         /// </summary>
         /// <returns></returns>
-        internal string Parse()
+        /// <param name="includePaths">Include Source/Destination paths</param>
+        internal string Parse(bool includePaths = true)
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            // Set Source and Destination
-            options.Append(WrapPath(Source));
-            options.Append(WrapPath(Destination));
+            if (includePaths)
+            {
+                // Set Source and Destination
+                options.Append(WrapPath(Source));
+                options.Append(WrapPath(Destination));
+            }
 
             // Set FileFilter
             // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.

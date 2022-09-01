@@ -433,7 +433,7 @@ namespace RoboSharp.Extensions
         {
             Debugger.Instance.DebugMessage("Generating parameters...");
             Debugger.Instance.DebugMessage(CopyOptions);
-            var parsedCopyOptions = CopyOptions.Parse();
+            var parsedCopyOptions = CopyOptions.Parse(false);
             Debugger.Instance.DebugMessage("CopyOptions parsed.");
             var parsedSelectionOptions = SelectionOptions.Parse();
             Debugger.Instance.DebugMessage("SelectionOptions parsed.");
