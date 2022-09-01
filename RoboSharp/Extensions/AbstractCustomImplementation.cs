@@ -38,7 +38,8 @@ namespace RoboSharp.Extensions
             string source, 
             string destination, 
             CopyOptions.CopyActionFlags copyActionFlags = CopyOptions.CopyActionFlags.Default, 
-            SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default)
+            SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default,
+            LoggingOptions.LoggingActionFlags loggingFlags = LoggingOptions.LoggingActionFlags.RoboSharpDefault)
         {
             this.CopyOptions = new CopyOptions();
             this.LoggingOptions = new LoggingOptions();
