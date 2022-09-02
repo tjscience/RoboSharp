@@ -36,6 +36,8 @@ namespace RoboSharp.Results
         /// <summary>
         /// Create a new SpeesdStatistic from a file length and a copy time
         /// </summary>
+        /// <param name="fileLength">The file length in Bytes</param>
+        /// <param name="copyTime">How long the file took top copy</param>
         public SpeedStatistic(long fileLength, TimeSpan copyTime)
         {
             if (fileLength < 0) throw new ArgumentException("File Length cannot be less than 0", nameof(fileLength));
