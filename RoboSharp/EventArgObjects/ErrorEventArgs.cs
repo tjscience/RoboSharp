@@ -11,12 +11,12 @@ namespace RoboSharp
     public class ErrorEventArgs : EventArgs
     {
         /// <summary>
-        /// Error Code
+        /// The full text of the error code
         /// </summary>
         public string Error { get; }
 
         /// <summary>
-        /// Error Description
+        /// Error Description provided by RoboSharp (based on the Error Code)
         /// </summary>
         public string ErrorDescription { get; }
         
@@ -41,6 +41,11 @@ namespace RoboSharp
         public DateTime DateTime { get; }
 
         /// <summary>
+        /// Exception Data - Can only be used by custom implementations. RoboCommand will not provide exception data.
+        /// </summary>
+        public Exception Exception { get; }
+
+        /// <summary>
         /// Concatenate the <see cref="Error"/> and <see cref="ErrorDescription"/> into a string seperated by an <see cref="Environment.NewLine"/>
         /// </summary>
         /// <returns></returns>
@@ -50,6 +55,42 @@ namespace RoboSharp
                 return Error;
             else
                 return String.Format("{0}{1}{2}", Error, Environment.NewLine, ErrorDescription);
+        }
+
+        /// <summary>
+        /// Generate a new set of ErrorEventArgs
+        /// </summary>
+        /// <param name="errorMessage"><inheritdoc cref="Error" path="*"/></param>
+        /// <param name="errorDescrip"><inheritdoc cref="ErrorDescription" path="*"/></param>
+        /// <param name="errorCode"><inheritdoc cref="ErrorCode" path="*"/></param>
+        /// <param name="signedErrorCode"><inheritdoc cref="SignedErrorCode" path="*"/></param>
+        /// <param name="errorPath"><inheritdoc cref="ErrorPath" path="*"/></param>
+        /// <param name="time"><inheritdoc cref="DateTime" path="*"/></param>
+        public ErrorEventArgs(string errorMessage, string errorDescrip, int errorCode, string signedErrorCode, string errorPath, DateTime time)
+        {
+            Error = errorMessage;
+            ErrorDescription = errorDescrip;
+            ErrorCode = errorCode;
+            SignedErrorCode = signedErrorCode;
+            ErrorPath = errorPath;
+            DateTime = time;
+        }
+
+        /// <summary>
+        /// Generate a new set of ErrorEventArgs.
+        /// </summary>
+        /// <param name="exception">The exception that occurred</param>
+        /// <param name="errorPath"><inheritdoc cref="ErrorPath" path="*"/></param>
+        /// <param name="time"><inheritdoc cref="DateTime" path="*"/></param>
+        public ErrorEventArgs(Exception exception, string errorPath, DateTime time)
+        {
+            Error = exception.Message;
+            ErrorDescription = exception.StackTrace;
+            ErrorCode = exception.HResult;
+            SignedErrorCode = exception.HResult.ToString();
+            ErrorPath = errorPath;
+            DateTime = time;
+            Exception = exception;
         }
 
         /// <summary>
