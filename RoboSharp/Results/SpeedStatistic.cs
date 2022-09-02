@@ -103,6 +103,18 @@ namespace RoboSharp.Results
             return $"Speed: {BytesPerSec} Bytes/sec{Environment.NewLine}Speed: {MegaBytesPerMin} MegaBytes/min";
         }
 
+        /// <summary>
+        /// Gets the BytesPerSec as a string
+        /// </summary>
+        /// <returns>$"{BytesPerSec} Bytes/sec"</returns>
+        public string GetBytesPerSecond() => $"{BytesPerSec} Bytes/sec";
+
+        /// <summary>
+        /// Gets the MegaBytesPerMin as a string
+        /// </summary>
+        /// <returns>$"{MegaBytesPerMin} MegaBytes/min"</returns>
+        public string GetMegaBytesPerMin() => $"{MegaBytesPerMin} MegaBytes/min";
+
         /// <inheritdoc cref="ISpeedStatistic.Clone"/>
         public virtual SpeedStatistic Clone() => new SpeedStatistic(this);
 
