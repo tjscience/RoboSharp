@@ -29,23 +29,23 @@ namespace RoboSharp.Extensions
             return this.GetFilePairs((s, d) => new FilePair(s, d));
         }
 
-        /// <inheritdoc cref="DirectoryPairExtensions.GetFilePairsEnumerable{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
-        public CachedEnumerable<FilePair> GetFilePairsEnumerable()
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        public CachedEnumerable<FilePair> EnumerateFilePairs()
         {
-            return this.GetFilePairsEnumerable((s, d) => new FilePair(s, d));
+            return this.EnumerateFilePairs((s, d) => new FilePair(s, d));
         }
 
 
-        /// <inheritdoc cref="DirectoryPairExtensions.GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public DirectoryPair[] GetDirectoryPairs()
         {
             return this.GetDirectoryPairs((s, d) => new DirectoryPair(s, d));
         }
 
-        /// <inheritdoc cref="DirectoryPairExtensions.GetDirectoryPairsEnumerable{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public CachedEnumerable<DirectoryPair> GetDirectoryPairsEnumerable()
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public CachedEnumerable<DirectoryPair> EnumerateDirectoryPairs()
         {
-            return this.GetDirectoryPairsEnumerable((s, d) => new DirectoryPair(s, d));
+            return this.EnumerateDirectoryPairs((s, d) => new DirectoryPair(s, d));
         }
 
     }

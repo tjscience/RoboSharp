@@ -95,7 +95,7 @@ namespace RoboSharp.Extensions.Tests
         [TestMethod()]
         public void GetFilePairsEnumerableTest()
         {
-            Assert.AreEqual(4, DirPair.GetFilePairsEnumerable().Count());
+            Assert.AreEqual(4, DirPair.EnumerateFilePairs().Count());
         }
 
         [TestMethod()]
@@ -103,15 +103,15 @@ namespace RoboSharp.Extensions.Tests
         {
             Assert.AreEqual(2, DirPair.GetDirectoryPairs().Count());
             Assert.AreEqual(2, SameDir.GetDirectoryPairs().Count());
-            Assert.IsTrue(SameDir.GetDirectoryPairsEnumerable().Distinct(new PairEqualityComparer()).Count() == 2);
+            Assert.IsTrue(SameDir.EnumerateDirectoryPairs().Distinct(new PairEqualityComparer()).Count() == 2);
         }
 
 
         [TestMethod()]
         public void GetDirectoryPairsEnumerableTest()
         {
-            Assert.AreEqual(2, DirPair.GetDirectoryPairsEnumerable().Count());
-            Assert.AreEqual(2, SameDir.GetDirectoryPairsEnumerable().Count());
+            Assert.AreEqual(2, DirPair.EnumerateDirectoryPairs().Count());
+            Assert.AreEqual(2, SameDir.EnumerateDirectoryPairs().Count());
         }
 
         [TestMethod()]
@@ -122,7 +122,7 @@ namespace RoboSharp.Extensions.Tests
             Assert.AreEqual(4, SubDirs);
             async Task Dig(DirectoryPair dir)
             {
-                foreach (var d in dir.GetDirectoryPairsEnumerable())
+                foreach (var d in dir.EnumerateDirectoryPairs())
                 {
                     SubDirs++;
                     await Dig(d);
@@ -145,7 +145,7 @@ namespace RoboSharp.Extensions.Tests
 
             //Validate that all file pairs have source and destinations with valid parents
             var FilePairs = DirPair.GetFilePairs();
-            var FileEnum = DirPair.GetFilePairsEnumerable();
+            var FileEnum = DirPair.EnumerateFilePairs();
             Assert.IsTrue(FilePairs.None(o => o.Source.Directory.FullName != DirPair.Source.FullName));
             Assert.IsTrue(FilePairs.None(o => o.Destination.Directory.FullName != DirPair.Destination.FullName));
             Assert.IsTrue(FileEnum.None(o => o.Source.Directory.FullName != DirPair.Source.FullName));
@@ -153,7 +153,7 @@ namespace RoboSharp.Extensions.Tests
 
             //Validate that all directory pairs have source and destinations with valid parents
             var DirPairs = DirPair.GetDirectoryPairs();
-            var DirEnum = DirPair.GetDirectoryPairsEnumerable();
+            var DirEnum = DirPair.EnumerateDirectoryPairs();
             Assert.IsTrue(DirPairs.None(o => o.Source.Parent.FullName != DirPair.Source.FullName));
             Assert.IsTrue(DirPairs.None(o => o.Destination.Parent.FullName != DirPair.Destination.FullName));
             Assert.IsTrue(DirEnum.None(o => o.Source.Parent.FullName != DirPair.Source.FullName));
