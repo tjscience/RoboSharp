@@ -145,21 +145,42 @@ namespace RoboSharp.Extensions
             return files.ToArray();
         }
 
+
+        /// <summary>
+        /// Enumerates only the <see cref="IFilePair"/> objects from the Source
+        /// </summary>
+        /// <returns></returns>
+        /// <inheritdoc cref="EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        public static CachedEnumerable<T> EnumerateSourceFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
+        {
+            return new CachedEnumerable<T>(parent.Source.EnumerateFiles().Select((f) => CreateSourceChild(parent, f, ctor)));
+        }
+
+        /// <summary>
+        /// Enumerates only the <see cref="IFilePair"/> objects from the Destination
+        /// </summary>
+        /// <returns></returns>
+        /// <inheritdoc cref="EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        public static CachedEnumerable<T> EnumerateDestinationFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
+        {
+            return new CachedEnumerable<T>(parent.Destination.EnumerateFiles().Select((f) => CreateDestinationChild(parent, f, ctor)));
+        }
+
         /// <summary>
         /// Gets all the File Pairs from the <see cref="IDirectoryPair"/>
         /// </summary>
         /// <returns>cached Ienumerable of the FilePairs that were found in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
         /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
-        public static CachedEnumerable<T> GetFilePairsEnumerable<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
+        public static CachedEnumerable<T> EnumerateFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
             CachedEnumerable<T> sourceFiles = null;
             CachedEnumerable<T> destFiles = null;
             if (parent.Source.Exists)
-                sourceFiles = new CachedEnumerable<T>(parent.Source.EnumerateFiles().Select((f) => CreateSourceChild(parent, f, ctor)));
+                sourceFiles = parent.EnumerateSourceFilePairs(ctor);
             if (parent.Destination.Exists)
             {
                 if (sourceFiles is null)
-                    destFiles = new CachedEnumerable<T>(parent.Destination.EnumerateFiles().Select(f => CreateDestinationChild(parent, f, ctor)));
+                    destFiles = parent.EnumerateDestinationFilePairs(ctor);
                 else
                 {
                     destFiles =
@@ -208,18 +229,39 @@ namespace RoboSharp.Extensions
             return dirs.ToArray();
         }
 
+
+        /// <summary>
+        /// Enumerates only the <see cref="IDirectoryPair"/> objects from the Source
+        /// </summary>
+        /// <returns></returns>
+        /// <inheritdoc cref="EnumerateDirectoryPairs"/>
+        public static CachedEnumerable<T> EnumerateSourceDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
+        {
+            return new CachedEnumerable<T>(parent.Source.EnumerateDirectories().Select((f) => CreateSourceChild(parent, f, ctor)));
+        }
+
+        /// <summary>
+        /// Enumerates only the <see cref="IDirectoryPair"/> objects from the Destination
+        /// </summary>
+        /// <returns></returns>
+        /// <inheritdoc cref="EnumerateDirectoryPairs"/>
+        public static CachedEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
+        {
+            return new CachedEnumerable<T>(parent.Destination.EnumerateDirectories().Select((f) => CreateDestinationChild(parent, f, ctor)));
+        }
+
         /// <returns> IEnumerable{T} of of the Directory Pairs</returns>
         /// <inheritdoc cref="GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public static CachedEnumerable<T> GetDirectoryPairsEnumerable<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
+        public static CachedEnumerable<T> EnumerateDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
             CachedEnumerable<T> sourceChildren = null;
             CachedEnumerable<T> destChildren = null;
             if (parent.Source.Exists)
-                sourceChildren = new CachedEnumerable<T>(parent.Source.EnumerateDirectories().Select((f) => CreateSourceChild(parent, f, ctor)));
+                sourceChildren = parent.EnumerateSourceDirectoryPairs(ctor);
             if (parent.Destination.Exists)
             {
                 if (sourceChildren is null)
-                    destChildren = new CachedEnumerable<T>(parent.Destination.EnumerateDirectories().Select(f => CreateDestinationChild(parent, f, ctor)));
+                    destChildren = parent.EnumerateDestinationDirectoryPairs(ctor);
                 else
                 {
                     // Enumerate the directory names that don't exist in the source children into new DirectoryInfo Objects
