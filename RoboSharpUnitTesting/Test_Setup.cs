@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,14 +18,18 @@ namespace RoboSharp.Tests
         public static string Source_LargerNewer { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
         public static string Source_Standard { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
 
+        public static Regex IsAppVeyorPath { get; } = new Regex(@"(?<Root>C:\\projects\\robosharp\\).*", RegexOptions.Compiled);
+
         /// <summary>
         /// Check if running on AppVeyor -> Certain tests will always fail due to appveyor's setup -> this allows them to pass the checks on appveyor by just not running them
         /// </summary>
         /// <returns></returns>
         public static bool IsRunningOnAppVeyor()
         {
-            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
+            return IsAppVeyorPath.IsMatch(TestDestination);
         }
+
+        
 
         /// <summary>
         /// Generate the Starter Options and Test Objects to compare

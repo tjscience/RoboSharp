@@ -10,9 +10,9 @@ namespace RoboSharp.Extensions
 {
 
     /// <summary>
-    /// Extension Methods for the <see cref="IDirectorySourceDestinationPair"/> interface
+    /// Extension Methods for the <see cref="IDirectoryPair"/> interface
     /// </summary>
-    public static class ISourceDestinationPairExtensions
+    public static class DirectoryPairExtensions
     {
         /// <summary>
         /// Check if any of the items in the collection is a <paramref name="match"/>
@@ -39,99 +39,13 @@ namespace RoboSharp.Extensions
 
         /// <summary> Evaluate the roots of the Source and Destination </summary>
         /// <returns>True if the Source and Destination have the same root, otherwise false.</returns>
-        public static bool IsLocatedOnSameDrive(this IDirectorySourceDestinationPair pair) => Path.GetPathRoot(pair.Source.FullName) == Path.GetPathRoot(pair.Destination.FullName);
+        public static bool IsLocatedOnSameDrive(this IDirectoryPair pair) => Path.GetPathRoot(pair.Source.FullName) == Path.GetPathRoot(pair.Destination.FullName);
 
-        /// <summary> Evaluate the roots of the Source and Destination </summary>
-        /// <returns>True if the Source and Destination have the same root, otherwise false.</returns>
-        public static bool IsLocatedOnSameDrive(this IFileSourceDestinationPair pair) => Path.GetPathRoot(pair.Source.FullName) == Path.GetPathRoot(pair.Destination.FullName);
+        /// <inheritdoc cref="SelectionOptionsExtensions.IsExtra(DirectoryInfo, DirectoryInfo)"/>
+        public static bool IsExtra(this IDirectoryPair pair) => SelectionOptionsExtensions.IsExtra(pair.Source, pair.Destination);
 
-        #endregion
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static bool FileDoesntExist(string destination) => !File.Exists(destination);
-
-        #region < IsSourceNewer >
-
-        /// <summary>
-        /// Check if the Source file is newer than the Destination File
-        /// </summary>
-        /// <param name="source">This path is assumed to exist since it is the patht to copy from</param>
-        /// <param name="destination">the destination path - may or may not exist</param>
-        /// <returns>TRUE if the source is newer, or the destination does not exist. FALSE if the destination is newer.</returns>
-        public static bool IsSourceNewer(string source, string destination)
-        {
-            if (FileDoesntExist(destination)) return true;
-            return File.GetLastWriteTime(source) > File.GetLastWriteTime(destination);
-        }
-        /// <inheritdoc cref="IsSourceNewer(string, string)"/>
-        public static bool IsSourceNewer(FileInfo source, FileInfo destination)
-        {
-            if (!destination.Exists) return source.Exists;
-            return source.LastWriteTime > destination.LastWriteTime;
-        }
-        /// <inheritdoc cref="IsSourceNewer(string, string)"/>
-        public static bool IsSourceNewer(this IFileSourceDestinationPair copier)
-        {
-            return IsSourceNewer(copier.Source, copier.Destination);
-        }
-
-        #endregion
-
-        #region < IsDestinationNewer >
-
-        /// <summary>
-        /// Check if the Destination file is newer than the Source file
-        /// </summary>
-        /// <param name="source">This path is assumed to exist since it is the patht to copy from</param>
-        /// <param name="destination">the destination path - may or may not exist</param>
-        /// <returns>TRUE if the destination file is newer, otherwise false</returns>
-        public static bool IsDestinationNewer(string source, string destination)
-        {
-            if (FileDoesntExist(destination)) return false;
-            return File.GetLastWriteTime(source) < File.GetLastWriteTime(destination);
-        }
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsDestinationNewer(FileInfo source, FileInfo destination)
-        {
-            if (!destination.Exists) return false;
-            return source.LastWriteTime < destination.LastWriteTime;
-        }
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsDestinationNewer(this IFileSourceDestinationPair copier)
-        {
-            return IsDestinationNewer(copier.Source, copier.Destination);
-        }
-
-        #endregion
-
-        #region < IsSameDate >
-
-        /// <summary>
-        /// Check if the Source and Destination files have the same LastWriteTime
-        /// </summary>
-        /// <param name="source">This path is assumed to exist since it is the patht to copy from</param>
-        /// <param name="destination">the destination path - may or may not exist</param>
-        /// <returns>TRUE if both files exist, and their LastWriteTime is identical</returns>
-        public static bool IsSameDate(string source, string destination)
-        {
-            if (FileDoesntExist(source)) return false;
-            if (FileDoesntExist(destination)) return false;
-            return File.GetLastWriteTime(source) == File.GetLastWriteTime(destination);
-        }
-
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsSameDate(FileInfo source, FileInfo destination)
-        {
-            if (!source.Exists) return false;
-            if (!destination.Exists) return false;
-            return source.LastWriteTime == destination.LastWriteTime;
-        }
-
-        /// <inheritdoc cref="IsDestinationNewer(string, string)"/>
-        public static bool IsSameDate(this IFileSourceDestinationPair copier)
-        {
-            return IsSameDate(copier.Source, copier.Destination);
-        }
+        /// <inheritdoc cref="SelectionOptionsExtensions.IsLonely(DirectoryInfo, DirectoryInfo)"/>
+        public static bool IsLonely(this IDirectoryPair pair) => SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
 
         #endregion
 
@@ -144,11 +58,11 @@ namespace RoboSharp.Extensions
         /// <param name="dir">the file that is a child of either the Source or Destination</param>
         /// <param name="parent">the parent pair</param>
         /// <param name="ctor">the method used to generate the new object</param>
-        /// <returns>new <see cref="IDirectorySourceDestinationPair"/> object</returns>
-        public static T CreateSourceChild<T>(this IDirectorySourceDestinationPair parent, DirectoryInfo dir, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
+        /// <returns>new <see cref="IDirectoryPair"/> object</returns>
+        public static T CreateSourceChild<T>(this IDirectoryPair parent, DirectoryInfo dir, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
             if (!dir.FullName.StartsWith(parent.Source.FullName))
-                throw new ArgumentException("Unable to create DirectorySourceDestinationPair - Directory provided is not a child of the parent Source");
+                throw new ArgumentException("Unable to create DirectoryPair - Directory provided is not a child of the parent Source");
             return ctor(
                 dir,
                 new DirectoryInfo(dir.FullName.Replace(parent.Source.FullName, parent.Destination.FullName))
@@ -159,12 +73,12 @@ namespace RoboSharp.Extensions
         /// Create a new DirPair object using a child of the Destination directory
         /// </summary>
         /// <param name="dir">the file that is a child of the Destination</param>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, DirectoryInfo, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, Func{DirectoryInfo, DirectoryInfo, T})"/>
         /// <param name="ctor"/><param name="parent"/><typeparam name="T"/>
-        public static T CreateDestinationChild<T>(this IDirectorySourceDestinationPair parent, DirectoryInfo dir, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
+        public static T CreateDestinationChild<T>(this IDirectoryPair parent, DirectoryInfo dir, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
             if (!dir.FullName.StartsWith(parent.Destination.FullName))
-                throw new ArgumentException("Unable to create DirectorySourceDestinationPair - Directory provided is not a child of the parent Destination");
+                throw new ArgumentException("Unable to create DirectoryPair - Directory provided is not a child of the parent Destination");
             return ctor(
                 new DirectoryInfo(dir.FullName.Replace(parent.Source.FullName, parent.Destination.FullName)),
                 dir);
@@ -177,11 +91,11 @@ namespace RoboSharp.Extensions
         /// <param name="file">the file that is a child of either the Source or Destination</param>
         /// <param name="parent">the parent pair</param>
         /// <param name="ctor">the method used to generate the new object</param>
-        /// <returns>new <see cref="IDirectorySourceDestinationPair"/> object</returns>
-        public static T CreateSourceChild<T>(this IDirectorySourceDestinationPair parent, FileInfo file, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
+        /// <returns>new <see cref="IDirectoryPair"/> object</returns>
+        public static T CreateSourceChild<T>(this IDirectoryPair parent, FileInfo file, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
             if (!file.FullName.StartsWith(parent.Source.FullName))
-                throw new ArgumentException("Unable to create DirectorySourceDestinationPair - Directory provided is not a child of the parent Source");
+                throw new ArgumentException("Unable to create DirectoryPair - Directory provided is not a child of the parent Source");
             return ctor(
                 file,
                 new FileInfo(file.FullName.Replace(parent.Source.FullName, parent.Destination.FullName))
@@ -192,12 +106,12 @@ namespace RoboSharp.Extensions
         /// Create a new FilePair object using a child of the Destination directory
         /// </summary>
         /// <param name="file">the file that is a child of the Destination</param>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
         /// <param name="ctor"/><param name="parent"/><typeparam name="T"/>
-        public static T CreateDestinationChild<T>(this IDirectorySourceDestinationPair parent, FileInfo file, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
+        public static T CreateDestinationChild<T>(this IDirectoryPair parent, FileInfo file, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
             if (!file.FullName.StartsWith(parent.Destination.FullName))
-                throw new ArgumentException("Unable to create DirectorySourceDestinationPair - Directory provided is not a child of the parent Destination");
+                throw new ArgumentException("Unable to create DirectoryPair - Directory provided is not a child of the parent Destination");
             return ctor(
                 new FileInfo(file.FullName.Replace(parent.Source.FullName, parent.Destination.FullName)),
                 file);
@@ -208,11 +122,11 @@ namespace RoboSharp.Extensions
         #region < Get File Pairs >
 
         /// <summary>
-        /// Gets all the File Pairs from the <see cref="IDirectorySourceDestinationPair"/>
+        /// Gets all the File Pairs from the <see cref="IDirectoryPair"/>
         /// </summary>
         /// <returns>Array of the FilePairs that were foudn in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
-        public static T[] GetFilePairs<T>(this IDirectorySourceDestinationPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
+        public static T[] GetFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
             List<T> files = new List<T>();
             if (parent.Source.Exists)
@@ -232,11 +146,11 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Gets all the File Pairs from the <see cref="IDirectorySourceDestinationPair"/>
+        /// Gets all the File Pairs from the <see cref="IDirectoryPair"/>
         /// </summary>
         /// <returns>cached Ienumerable of the FilePairs that were found in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
-        public static CachedEnumerable<T> GetFilePairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFileSourceDestinationPair
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
+        public static CachedEnumerable<T> GetFilePairsEnumerable<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
             CachedEnumerable<T> sourceFiles = null;
             CachedEnumerable<T> destFiles = null;
@@ -271,11 +185,11 @@ namespace RoboSharp.Extensions
         #region < Get Directory Pairs >
 
         /// <summary>
-        /// Gets all the Directory Pairs from the <see cref="IDirectorySourceDestinationPair"/>
+        /// Gets all the Directory Pairs from the <see cref="IDirectoryPair"/>
         /// </summary>
         /// <returns>Array of the DirectoryPairs that were foudn in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectorySourceDestinationPair, DirectoryInfo, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public static T[] GetDirectoryPairs<T>(this IDirectorySourceDestinationPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public static T[] GetDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
             List<T> dirs = new List<T>();
             if (parent.Source.Exists)
@@ -295,8 +209,8 @@ namespace RoboSharp.Extensions
         }
 
         /// <returns> IEnumerable{T} of of the Directory Pairs</returns>
-        /// <inheritdoc cref="GetDirectoryPairs{T}(IDirectorySourceDestinationPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public static CachedEnumerable<T> GetDirectoryPairsEnumerable<T>(this IDirectorySourceDestinationPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectorySourceDestinationPair
+        /// <inheritdoc cref="GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public static CachedEnumerable<T> GetDirectoryPairsEnumerable<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
             CachedEnumerable<T> sourceChildren = null;
             CachedEnumerable<T> destChildren = null;

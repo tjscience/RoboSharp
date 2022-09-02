@@ -21,7 +21,7 @@ namespace RoboSharp.Extensions
         /// <param name="command"></param>
         /// <param name="pair"></param>
         /// <returns>TRUE if destination file should be deleted, otherwise false.</returns>
-        public static bool ShouldPurge(this IRoboCommand command, IFileSourceDestinationPair pair)
+        public static bool ShouldPurge(this IRoboCommand command, IFilePair pair)
         {
             bool destExists = pair.Destination.Exists;
             bool sourceExists = pair.Source.Exists;
@@ -62,7 +62,7 @@ namespace RoboSharp.Extensions
         public static bool ShouldIncludeFileName(this CopyOptions options, FileInfo Source, ref Regex[] inclusionCollection) => ShouldIncludeFileName(options, Source.Name, ref inclusionCollection);
 
         /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, ref Regex[])"/>
-        public static bool ShouldIncludeFileName(this CopyOptions options, IFileSourceDestinationPair comparer, ref Regex[] inclusionCollection) => ShouldIncludeFileName(options, comparer.Source.Name, ref inclusionCollection);
+        public static bool ShouldIncludeFileName(this CopyOptions options, IFilePair comparer, ref Regex[] inclusionCollection) => ShouldIncludeFileName(options, comparer.Source.Name, ref inclusionCollection);
 
         #endregion
 
@@ -90,7 +90,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="SetFileAttributes(CopyOptions, FileInfo)"/>
-        public static void SetFileAttributes(this CopyOptions options, IFileSourceDestinationPair comparer)
+        public static void SetFileAttributes(this CopyOptions options, IFilePair comparer)
         {
             SetFileAttributes(options, comparer.Destination);
             
@@ -119,7 +119,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="AddFileAttributes(CopyOptions, FileInfo)"/>
-        public static void AddFileAttributes(this CopyOptions options, IFileSourceDestinationPair comparer)
+        public static void AddFileAttributes(this CopyOptions options, IFilePair comparer)
         {
             AddFileAttributes(options, comparer.Destination);
         }
@@ -147,7 +147,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="RemoveFileAttributes(CopyOptions, FileInfo)"/>
-        public static void RemoveFileAttributes(this CopyOptions options, IFileSourceDestinationPair comparer)
+        public static void RemoveFileAttributes(this CopyOptions options, IFilePair comparer)
         {
             RemoveFileAttributes(options, comparer.Destination);
         }

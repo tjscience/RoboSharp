@@ -9,6 +9,14 @@ namespace RoboSharp.Tests
     [TestClass]
     public class RoboCommandEventTests
     {
+        public virtual IRoboCommand GetRoboCommand(bool useLargerFileSet, bool ListOnlyMode) => Test_Setup.GenerateCommand(useLargerFileSet, ListOnlyMode);
+
+        /// <summary>
+        /// Check to abort the test if running on github, since some pass locally but fail github due to file permissions
+        /// </summary>
+        /// <returns>TRUE to abort, FALSE to run</returns>
+        public virtual bool IsRunningOnGitHub() => Test_Setup.IsRunningOnAppVeyor();
+
         private void RunTestThenAssert(IRoboCommand cmd, ref bool EventBool)
         {
             var results = cmd.StartAsync().Result;
@@ -19,7 +27,7 @@ namespace RoboSharp.Tests
         [TestMethod]
         public void RoboCommand_OnCommandCompleted()
         {
-            var cmd = Test_Setup.GenerateCommand(false, true);
+            var cmd = GetRoboCommand(false, true);
             bool TestPassed = false;
             cmd.OnCommandCompleted += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);
@@ -28,7 +36,7 @@ namespace RoboSharp.Tests
         [TestMethod]
         public void RoboCommand_OnCommandError()
         {
-            var cmd = Test_Setup.GenerateCommand(false, true);
+            var cmd = GetRoboCommand(false, true);
             cmd.CopyOptions.Source += "FolderDoesNotExist";
             bool TestPassed = false;
             cmd.OnCommandError += (o, e) => TestPassed = true;
@@ -39,7 +47,7 @@ namespace RoboSharp.Tests
         public void RoboCommand_OnCopyProgressChanged()
         {
             Test_Setup.ClearOutTestDestination();
-            var cmd = Test_Setup.GenerateCommand(false, false);
+            var cmd = GetRoboCommand(false, false);
             bool TestPassed = false;
             cmd.OnCopyProgressChanged += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);
@@ -48,10 +56,10 @@ namespace RoboSharp.Tests
         [TestMethod]
         public void RoboCommand_OnError()
         {
-            if (Test_Setup.IsRunningOnAppVeyor()) return;
+            if (IsRunningOnGitHub()) return;
 
             //Create a file in the destination that would normally be copied, then lock it to force an error being generated.
-            var cmd = Test_Setup.GenerateCommand(false, false);
+            var cmd = GetRoboCommand(false, false);
             bool TestPassed = false;
             cmd.OnError += (o, e) => TestPassed = true;
             Test_Setup.ClearOutTestDestination();
@@ -68,7 +76,7 @@ namespace RoboSharp.Tests
         public void RoboCommand_OnFileProcessed()
         {
             Test_Setup.ClearOutTestDestination();
-            var cmd = Test_Setup.GenerateCommand(false, true);
+            var cmd = GetRoboCommand(false, true);
             bool TestPassed = false;
             cmd.OnFileProcessed += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);
@@ -77,7 +85,7 @@ namespace RoboSharp.Tests
         [TestMethod]
         public void RoboCommand_ProgressEstimatorCreated()
         {
-            var cmd = Test_Setup.GenerateCommand(false, true);
+            var cmd = GetRoboCommand(false, true);
             bool TestPassed = false;
             cmd.OnProgressEstimatorCreated += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);
@@ -86,7 +94,7 @@ namespace RoboSharp.Tests
         //[TestMethod] //TODO: Unsure how to force the TaskFaulted Unit test, as it should never actually occurr.....
         public void RoboCommand_TaskFaulted()
         {
-            var cmd = Test_Setup.GenerateCommand(false, true);
+            var cmd = GetRoboCommand(false, true);
             bool TestPassed = false;
             cmd.TaskFaulted += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);

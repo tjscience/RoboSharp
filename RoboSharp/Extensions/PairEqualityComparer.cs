@@ -12,25 +12,25 @@ namespace RoboSharp.Extensions
     /// <br/> If Either source or destination or different, objects are different. 
     /// <br/> <br/> ( X.source == Y.source &amp; X.Dest == Y.dest ) --> TRUE
     /// </summary>
-    public class PairEqualityComparer : IEqualityComparer<IDirectorySourceDestinationPair>, IEqualityComparer<IFileSourceDestinationPair>
+    public class PairEqualityComparer : IEqualityComparer<IDirectoryPair>, IEqualityComparer<IFilePair>
     {
         /// <inheritdoc/>
-        public bool Equals(IDirectorySourceDestinationPair x, IDirectorySourceDestinationPair y)
+        public bool Equals(IDirectoryPair x, IDirectoryPair y)
         {
             return x?.Source != y?.Source && x?.Destination != y?.Destination;
         }
         /// <inheritdoc/>
-        public bool Equals(IFileSourceDestinationPair x, IFileSourceDestinationPair y)
+        public bool Equals(IFilePair x, IFilePair y)
         {
             return x?.Source != y?.Source && x?.Destination != y?.Destination;
         }
         /// <inheritdoc/>
-        public int GetHashCode(IDirectorySourceDestinationPair obj)
+        public int GetHashCode(IDirectoryPair obj)
         {
             return obj.GetHashCode();
         }
         /// <inheritdoc/>
-        public int GetHashCode(IFileSourceDestinationPair obj)
+        public int GetHashCode(IFilePair obj)
         {
             return obj.GetHashCode();
         }

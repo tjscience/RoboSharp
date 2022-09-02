@@ -6,21 +6,20 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SO = RoboSharp.Extensions.ISourceDestinationPairExtensions;
 
 namespace RoboSharp.Extensions.Tests
 {
     [TestClass()]
     public class ISourceDestinationPairExtensionsTests
     {
-        public static DirectorySourceDestinationPair DirPair = new DirectorySourceDestinationPair(new DirectoryInfo(RoboSharp.Tests.Test_Setup.Source_Standard), new DirectoryInfo(RoboSharp.Tests.Test_Setup.TestDestination));
-        public static FileSourceDestinationPair FilePair = new FileSourceDestinationPair(new FileInfo(RoboSharp.Tests.Test_Setup.Source_Standard + @"\1024_Bytes.txt"), new FileInfo(RoboSharp.Tests.Test_Setup.TestDestination + @"\1024_Bytes.txt"));
+        public static DirectoryPair DirPair = new DirectoryPair(new DirectoryInfo(RoboSharp.Tests.Test_Setup.Source_Standard), new DirectoryInfo(RoboSharp.Tests.Test_Setup.TestDestination));
+        public static FilePair FilePair = new FilePair(new FileInfo(RoboSharp.Tests.Test_Setup.Source_Standard + @"\1024_Bytes.txt"), new FileInfo(RoboSharp.Tests.Test_Setup.TestDestination + @"\1024_Bytes.txt"));
 
-        public static DirectorySourceDestinationPair DiffDriveDirPair = new DirectorySourceDestinationPair(new DirectoryInfo(RoboSharp.Tests.Test_Setup.Source_Standard), new DirectoryInfo(@"D:\"));
-        public static FileSourceDestinationPair DiffDriveFilePair = new FileSourceDestinationPair(new FileInfo(RoboSharp.Tests.Test_Setup.Source_Standard + @"\1024_Bytes.txt"), new FileInfo(@"D:\1024_Bytes.txt"));
+        public static DirectoryPair DiffDriveDirPair = new DirectoryPair(new DirectoryInfo(RoboSharp.Tests.Test_Setup.Source_Standard), new DirectoryInfo(@"D:\"));
+        public static FilePair DiffDriveFilePair = new FilePair(new FileInfo(RoboSharp.Tests.Test_Setup.Source_Standard + @"\1024_Bytes.txt"), new FileInfo(@"D:\1024_Bytes.txt"));
 
-        public static FileSourceDestinationPair SameFile = new FileSourceDestinationPair(FilePair.Source, FilePair.Source);
-        public static DirectorySourceDestinationPair SameDir = new DirectorySourceDestinationPair(DirPair.Source, DirPair.Source);
+        public static FilePair SameFile = new FilePair(FilePair.Source, FilePair.Source);
+        public static DirectoryPair SameDir = new DirectoryPair(DirPair.Source, DirPair.Source);
 
         [TestInitialize]
         public void TestPrep()
@@ -54,7 +53,7 @@ namespace RoboSharp.Extensions.Tests
         {
             Assert.IsFalse(FilePair.IsDestinationNewer());
             Assert.IsFalse(SameFile.IsDestinationNewer());
-            Assert.IsTrue(new FileSourceDestinationPair(FilePair.Destination, FilePair.Source).IsDestinationNewer());
+            Assert.IsTrue(new FilePair(FilePair.Destination, FilePair.Source).IsDestinationNewer());
         }
 
         [TestMethod()]
@@ -66,25 +65,25 @@ namespace RoboSharp.Extensions.Tests
         [TestMethod()]
         public void CreateSourceChildTest()
         {
-            Assert.IsNotNull(DirPair.CreateSourceChild(new DirectoryInfo(Path.Combine(DirPair.Source.FullName, "Test")), (O, E) => new DirectorySourceDestinationPair(O, E)));
+            Assert.IsNotNull(DirPair.CreateSourceChild(new DirectoryInfo(Path.Combine(DirPair.Source.FullName, "Test")), (O, E) => new DirectoryPair(O, E)));
         }
 
         [TestMethod()]
         public void CreateDestinationChildTest()
         {
-            Assert.IsNotNull(DirPair.CreateDestinationChild(new DirectoryInfo(Path.Combine(DirPair.Destination.FullName, "Test")), (O, E) => new DirectorySourceDestinationPair(O, E)));
+            Assert.IsNotNull(DirPair.CreateDestinationChild(new DirectoryInfo(Path.Combine(DirPair.Destination.FullName, "Test")), (O, E) => new DirectoryPair(O, E)));
         }
 
         [TestMethod()]
         public void CreateSourceChildTest1()
         {
-            Assert.IsNotNull(DirPair.CreateSourceChild(new FileInfo(Path.Combine(DirPair.Source.FullName, "Test.TXT")), (O, E) => new FileSourceDestinationPair(O, E)));
+            Assert.IsNotNull(DirPair.CreateSourceChild(new FileInfo(Path.Combine(DirPair.Source.FullName, "Test.TXT")), (O, E) => new FilePair(O, E)));
         }
 
         [TestMethod()]
         public void CreateDestinationChildTest1()
         {
-            Assert.IsNotNull(DirPair.CreateDestinationChild(new FileInfo(Path.Combine(DirPair.Destination.FullName, "Test.TXT")), (O, E) => new FileSourceDestinationPair(O, E)));
+            Assert.IsNotNull(DirPair.CreateDestinationChild(new FileInfo(Path.Combine(DirPair.Destination.FullName, "Test.TXT")), (O, E) => new FilePair(O, E)));
         }
 
         [TestMethod()]
@@ -121,7 +120,7 @@ namespace RoboSharp.Extensions.Tests
             int SubDirs = 0;
             Dig(DirPair).Wait();
             Assert.AreEqual(4, SubDirs);
-            async Task Dig(DirectorySourceDestinationPair dir)
+            async Task Dig(DirectoryPair dir)
             {
                 foreach (var d in dir.GetDirectoryPairsEnumerable())
                 {
