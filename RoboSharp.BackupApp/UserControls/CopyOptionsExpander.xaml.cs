@@ -60,6 +60,7 @@ namespace RoboSharp.BackupApp.UserControls
             copy.CopyOptions.CreateDirectoryAndFileTree = CreateDirectoryAndFileTree.IsChecked ?? false;
             copy.CopyOptions.FatFiles = FatFiles.IsChecked ?? false;
             copy.CopyOptions.TurnLongPathSupportOff = TurnLongPathSupportOff.IsChecked ?? false;
+            copy.CopyOptions.MultiThreadedCopiesCount = int.Parse(this.MultiThreadedCount.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceChangesLimit.Text))
                 copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
             if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
@@ -107,7 +108,7 @@ namespace RoboSharp.BackupApp.UserControls
             CreateDirectoryAndFileTree.IsChecked = copy.CopyOptions.CreateDirectoryAndFileTree;
             FatFiles.IsChecked = copy.CopyOptions.FatFiles;
             TurnLongPathSupportOff.IsChecked = copy.CopyOptions.TurnLongPathSupportOff;
-
+            MultiThreadedCount.Text = copy.CopyOptions.MultiThreadedCopiesCount.ToString();
             MonitorSourceChangesLimit.Text = copy.CopyOptions.MonitorSourceChangesLimit.ToString();
             MonitorSourceTimeLimit.Text = copy.CopyOptions.MonitorSourceTimeLimit.ToString();
 

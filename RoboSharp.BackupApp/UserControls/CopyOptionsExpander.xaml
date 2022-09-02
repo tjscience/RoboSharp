@@ -9,36 +9,37 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -73,6 +74,7 @@
         <TextBlock Grid.Row="24" Grid.Column="0" Text="Monitor Source Changes Limit (/MON:N)" />
         <TextBlock Grid.Row="25" Grid.Column="0" Text="Monitor Source Time Limit (/MOT:N)" />
         <TextBlock Grid.Row="26" Grid.Column="0" Text="RunHours (/RH:hhmm-hhmm)" />
+        <TextBlock Grid.Row="27" Grid.Column="0" Text="MultiThreaded Copy Count" />
 
         <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
 
@@ -102,8 +104,11 @@
         <CheckBox Grid.Row="23" Grid.Column="2" x:Name="TurnLongPathSupportOff" Margin="10,0,0,0" />
         <TextBox Grid.Row="24" Grid.Column="2" x:Name="MonitorSourceChangesLimit" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
         <TextBox Grid.Row="25" Grid.Column="2" x:Name="MonitorSourceTimeLimit" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-        <TextBox Grid.Row="26" Grid.Column="2" x:Name="RunHoursStartTime" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-        <TextBlock Grid.Row="26" Grid.Column="2" Text="-" Margin="62,2,0,0" />
-        <TextBox Grid.Row="26" Grid.Column="2" x:Name="RunHoursEndTime" Margin="70,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
+        <StackPanel Orientation="Horizontal" Grid.Row="26" Grid.Column="2" VerticalAlignment="Center">
+            <TextBox  x:Name="RunHoursStartTime" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
+            <TextBlock Text=" - "  VerticalAlignment="Top"/>
+            <TextBox x:Name="RunHoursEndTime" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
+        </StackPanel>
+        <TextBox  Grid.Row="27" Grid.Column="2" x:Name="MultiThreadedCount" Margin="10,0,0,0" Text="1" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
     </Grid>
 </Expander>
