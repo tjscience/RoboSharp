@@ -1,0 +1,31 @@
+﻿<Expander x:Class="RoboSharp.BackupApp.UserControls.RetryOptionsExpander"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RoboSharp.BackupApp.UserControls"
+             mc:Ignorable="d" 
+          Background="PaleGoldenrod" Header="Retry Options"   
+          d:DesignHeight="450" d:DesignWidth="800">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Retry Count (/R:N)" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Retry Wait Time (/W:N)" />
+
+        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
+
+        <TextBox Grid.Row="0" Grid.Column="2" x:Name="RetryCount" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
+        <TextBox Grid.Row="1" Grid.Column="2" x:Name="RetryWaitTime" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
+
+    </Grid>
+</Expander>

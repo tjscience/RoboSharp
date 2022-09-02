@@ -1,0 +1,50 @@
+﻿<Expander x:Class="RoboSharp.BackupApp.UserControls.SelectionOptionsExpander"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RoboSharp.BackupApp.UserControls"
+             mc:Ignorable="d" 
+          Background="LightGreen" Header="Select Options"   
+          d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Only Copy Archive Files (/A)" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Only Copy Archive Files And Reset Archive Flag (/M)" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Include Attributes (/IA:attributes)" />
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Exclude Attributes (/XA:attributes)" />
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Exclude Files (/XF File File ...)" />
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Exclude Directories (/XD Dir Dir ...)" />
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Exclude Older (/XO)" />
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Exclude NEWER (/XN)" />
+        <TextBlock Grid.Row="8" Grid.Column="0" Text="Exclude Junction Points (/XJ)" />
+
+        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
+
+        <CheckBox Grid.Row="0" Grid.Column="2" x:Name="OnlyCopyArchiveFiles" Margin="10,0,0,0" />
+        <CheckBox Grid.Row="1" Grid.Column="2" x:Name="OnlyCopyArchiveFilesAndResetArchiveFlag" Margin="10,0,0,0" />
+        <TextBox Grid.Row="2" Grid.Column="2" x:Name="IncludeAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
+        <TextBox Grid.Row="3" Grid.Column="2" x:Name="ExcludeAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
+        <TextBox Grid.Row="4" Grid.Column="2" x:Name="ExcludeFiles" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
+        <TextBox Grid.Row="5" Grid.Column="2" x:Name="ExcludeDirectories" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
+        <CheckBox Grid.Row="6" Grid.Column="2" x:Name="ExcludeOlder" Margin="10,0,0,0" />
+        <CheckBox Grid.Row="7" Grid.Column="2" x:Name="ExcludeNewer" Margin="10,0,0,0" />
+        <CheckBox Grid.Row="8" Grid.Column="2" x:Name="ExcludeJunctionPoints" Margin="10,0,0,0" />
+    </Grid>
+</Expander>

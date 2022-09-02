@@ -4,9 +4,10 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:RoboSharp.BackupApp"
+          xmlns:Converters="clr-namespace:CustomControls.WPF.ValueConverters"
              mc:Ignorable="d" 
              d:DesignHeight="435" d:DesignWidth="550"
-          Name="Expander" 
+          x:Name="ThisControl" 
           Background="PaleGoldenrod" 
           Header="Job History"
           RenderTransformOrigin="0.5,0.5"
@@ -23,7 +24,7 @@
         </Grid.ColumnDefinitions>
         <!-- Header Label, ListBox, RemoveBtn -->
         <Label Name="DescriptionLbl" Content="This contains a list of the results from all previous runs during this session." Grid.Row="0" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="669"/>
-        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282">
+        <ListBox x:Name="ListBox_JobResults" Grid.Row="1" Grid.Column="0" Grid.RowSpan="2" HorizontalAlignment="Left" Height="320" Margin="10,0,0,0" VerticalAlignment="Top" Width="282" SelectedItem="{Binding ElementName=ThisControl, Path=SelectedResults}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid Height="20">
@@ -45,7 +46,14 @@
             <StackPanel>
                 <!-- Selected Results -->
                 <GroupBox Name="GroupBox_SelectedJob"  Header="Selected Job Results" MaxHeight="350">
-                    <local:SingleJobStats x:Name="SelectedJobStats" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <ScrollViewer>
+                        <StackPanel>
+                            <local:SingleJobStats x:Name="SelectedJobStats" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Top" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                            <Expander Header="Log Lines" Background="LightGray">
+                                <TextBox Text="{Binding  ElementName=ThisControl, Path=SelectedResults.LogLines, Mode=OneWay, Converter={x:Static Converters:StringConverters.StringArrayToString}}" IsReadOnly="True" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Auto"/>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
                 </GroupBox>
                 <!-- Overall Results -->
                 <GroupBox Header="Overall Results" MaxHeight="350" >

@@ -1,8 +1,10 @@
 ﻿<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    x:Class="RoboSharp.BackupApp.MainWindow"    
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:RoboSharp.BackupApp" mc:Ignorable="av" x:Class="RoboSharp.BackupApp.MainWindow"
-        Title="Backup App" Height="700" Width="750" ResizeMode="CanResizeWithGrip" MinWidth="750" MaxWidth="750" MinHeight="650" >
+        xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:RoboSharp.BackupApp" mc:Ignorable="av" 
+    xmlns:UserControls="clr-namespace:RoboSharp.BackupApp.UserControls"    
+    Title="Backup App" Height="700" Width="750" ResizeMode="CanResizeWithGrip" MinWidth="750" MaxWidth="750" MinHeight="650" >
     <Grid IsSharedSizeScope="True">
         <TabControl>
             <TabItem Header="Options" x:Name="OptionsTab">
@@ -35,201 +37,10 @@
                             <TextBox x:Name="JobName"  Grid.Row="3" HorizontalAlignment="Left" Height="23" Margin="159,5,0,5" TextWrapping="Wrap" VerticalAlignment="Center" Width="175" Grid.ColumnSpan="2"/>
                             <!-- Job Options -->
                             <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="34,10,20,10">
-                                <Expander Background="LightBlue" Header="Copy Options">
-                                    <Grid Margin="10">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="5" />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="File Filter" />
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Copy Subdirectories (/S)" />
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Copy Subdirectories Including Empty (/E)" />
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Depth (/LEV:N)" />
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Enable Restart Mode (/Z)" />
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Enable Backup Mode (/B)" />
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Enable Restart Mode With Backup Fallback (/ZB)" />
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Use Unbuffered I/O (/J)" />
-                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Enable EFS Raw Mode (/EFSRAW)" />
-                                        <TextBlock Grid.Row="9" Grid.Column="0" Text="Copy Flags (/COPY:copyflags)" />
-                                        <TextBlock Grid.Row="10" Grid.Column="0" Text="Copy Files With Security (/SEC)" />
-                                        <TextBlock Grid.Row="11" Grid.Column="0" Text="Copy All (/COPYALL)" />
-                                        <TextBlock Grid.Row="12" Grid.Column="0" Text="Remove File Information (/NOCOPY)" />
-                                        <TextBlock Grid.Row="13" Grid.Column="0" Text="Fix File Security On All Files (/SECFIX)" />
-                                        <TextBlock Grid.Row="14" Grid.Column="0" Text="Fix File Times On All Files (/TIMFIX)" />
-                                        <TextBlock Grid.Row="15" Grid.Column="0" Text="Purge (/PURGE)" />
-                                        <TextBlock Grid.Row="16" Grid.Column="0" Text="Mirror (/MIR)" />
-                                        <TextBlock Grid.Row="17" Grid.Column="0" Text="Move Files (/MOV)" />
-                                        <TextBlock Grid.Row="18" Grid.Column="0" Text="Move Files and Directories (/MOVE)" />
-                                        <TextBlock Grid.Row="19" Grid.Column="0" Text="Add Attributes (/A+:attributes)" />
-                                        <TextBlock Grid.Row="20" Grid.Column="0" Text="Remove Attributes (/A-:attributes)" />
-                                        <TextBlock Grid.Row="21" Grid.Column="0" Text="Create Directory and File Tree (/CREATE)" />
-                                        <TextBlock Grid.Row="22" Grid.Column="0" Text="Fat Files (/FAT)" />
-                                        <TextBlock Grid.Row="23" Grid.Column="0" Text="Turn Long Path Support Off (/256)" />
-                                        <TextBlock Grid.Row="24" Grid.Column="0" Text="Monitor Source Changes Limit (/MON:N)" />
-                                        <TextBlock Grid.Row="25" Grid.Column="0" Text="Monitor Source Time Limit (/MOT:N)" />
-                                        <TextBlock Grid.Row="26" Grid.Column="0" Text="RunHours (/RH:hhmm-hhmm)" />
-
-                                        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
-
-                                        <TextBox Grid.Row="0" Grid.Column="2" x:Name="FileFilter" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="1" Grid.Column="2" x:Name="CopySubDirectories" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="2" Grid.Column="2" x:Name="CopySubdirectoriesIncludingEmpty" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="3" Grid.Column="2" x:Name="Depth" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                        <CheckBox Grid.Row="4" Grid.Column="2" x:Name="EnableRestartMode" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="5" Grid.Column="2" x:Name="EnableBackupMode" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="6" Grid.Column="2" x:Name="EnableRestartModeWithBackupFallback" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="7" Grid.Column="2" x:Name="UseUnbufferedIo" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="8" Grid.Column="2" x:Name="EnableEfsRawMode" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="9" Grid.Column="2" x:Name="CopyFlags" Margin="10,0,0,0" PreviewTextInput="IsCopyFlag_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
-                                        <CheckBox Grid.Row="10" Grid.Column="2" x:Name="CopyFilesWithSecurity" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="11" Grid.Column="2" x:Name="CopyAll" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="12" Grid.Column="2" x:Name="RemoveFileInformation" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="13" Grid.Column="2" x:Name="FixFileSecurityOnAllFiles" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="14" Grid.Column="2" x:Name="FixFileTimesOnAllFiles" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="15" Grid.Column="2" x:Name="Purge" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="16" Grid.Column="2" x:Name="Mirror" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="17" Grid.Column="2" x:Name="MoveFiles" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="18" Grid.Column="2" x:Name="MoveFilesAndDirectories" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="19" Grid.Column="2" x:Name="AddAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="20" Grid.Column="2" x:Name="RemoveAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
-                                        <CheckBox Grid.Row="21" Grid.Column="2" x:Name="CreateDirectoryAndFileTree" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="22" Grid.Column="2" x:Name="FatFiles" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="23" Grid.Column="2" x:Name="TurnLongPathSupportOff" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="24" Grid.Column="2" x:Name="MonitorSourceChangesLimit" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="25" Grid.Column="2" x:Name="MonitorSourceTimeLimit" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="26" Grid.Column="2" x:Name="RunHoursStartTime" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                        <TextBlock Grid.Row="26" Grid.Column="2" Text="-" Margin="62,2,0,0" />
-                                        <TextBox Grid.Row="26" Grid.Column="2" x:Name="RunHoursEndTime" Margin="70,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                    </Grid>
-                                </Expander>
-                                <Expander Background="LightGreen" Header="Select Options">
-                                    <Grid Margin="10">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="5" />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Only Copy Archive Files (/A)" />
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Only Copy Archive Files And Reset Archive Flag (/M)" />
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Include Attributes (/IA:attributes)" />
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Exclude Attributes (/XA:attributes)" />
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Exclude Files (/XF File File ...)" />
-                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Exclude Directories (/XD Dir Dir ...)" />
-                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Exclude Older (/XO)" />
-                                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Exclude NEWER (/XN)" />
-                                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Exclude Junction Points (/XJ)" />
-
-                                        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
-
-                                        <CheckBox Grid.Row="0" Grid.Column="2" x:Name="OnlyCopyArchiveFiles" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="1" Grid.Column="2" x:Name="OnlyCopyArchiveFilesAndResetArchiveFlag" Margin="10,0,0,0" />
-                                        <TextBox Grid.Row="2" Grid.Column="2" x:Name="IncludeAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="3" Grid.Column="2" x:Name="ExcludeAttributes" Margin="10,0,0,0" PreviewTextInput="IsAttribute_PreviewTextInput" Width="100" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="4" Grid.Column="2" x:Name="ExcludeFiles" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
-                                        <TextBox Grid.Row="5" Grid.Column="2" x:Name="ExcludeDirectories" Margin="10,0,0,0" ToolTip="Separate entries with space or comma&#x0a;If filename or path contains spaces then enclose in quotes&#x0a;e.g. &quot;my file.txt&quot;,file1.txt file2.txt"/>
-                                        <CheckBox Grid.Row="6" Grid.Column="2" x:Name="ExcludeOlder" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="7" Grid.Column="2" x:Name="ExcludeNewer" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="8" Grid.Column="2" x:Name="ExcludeJunctionPoints" Margin="10,0,0,0" />
-
-                                    </Grid>
-                                </Expander>
-                                <Expander Background="PaleGoldenrod" Header="Retry Options">
-                                    <Grid Margin="10">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="5" />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Retry Count (/R:N)" />
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Retry Wait Time (/W:N)" />
-
-                                        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
-
-                                        <TextBox Grid.Row="0" Grid.Column="2" x:Name="RetryCount" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-                                        <TextBox Grid.Row="1" Grid.Column="2" x:Name="RetryWaitTime" Margin="10,0,0,0" PreviewTextInput="IsNumeric_PreviewTextInput" Width="50" HorizontalAlignment="Left" />
-
-                                    </Grid>
-
-                                </Expander>
-                                <Expander Background="LightGray" Header="Logging Options">
-                                    <Grid Margin="10">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                            <RowDefinition />
-                                        </Grid.RowDefinitions>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="5" />
-                                            <ColumnDefinition />
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Verbose Output (/V)" />
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="No File Size (/NS)" />
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="No Progress (/NP)" />
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="List Only (/L)" />
-
-                                        <GridSplitter Width="5" Grid.Row="0" Grid.RowSpan="100" Grid.Column="1" ResizeBehavior="PreviousAndNext" ResizeDirection="Columns" />
-
-                                        <CheckBox Grid.Row="0" Grid.Column="2" x:Name="VerboseOutput" Margin="10,0,0,0" IsChecked="True" />
-                                        <CheckBox Grid.Row="1" Grid.Column="2" x:Name="NoFileSizes" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="2" Grid.Column="2" x:Name="NoProgress" Margin="10,0,0,0" />
-                                        <CheckBox Grid.Row="3" Grid.Column="2" x:Name="ChkListOnly" Margin="10,0,0,0" />
-
-                                    </Grid>
-                                </Expander>
+                                <UserControls:CopyOptionsExpander x:Name="CopyOptionsExpander"/>
+                                <UserControls:SelectionOptionsExpander x:Name="SelectionOptionsExpander" HorizontalAlignment="Right" Margin="0,0,-0.132,0" Width="683"/>
+                                <UserControls:RetryOptionsExpander x:Name="RetryOptionsExpander"/>
+                                <UserControls:LoggingOptionsExpander x:Name="LoggingOptionsExpander"/>
                             </StackPanel>
                             <!-- Single Job GroupBox -->
                             <GroupBox Header="Single Job ( RoboCommand )"  Grid.Row="5" Margin="34,0,0,5" Height="60" Width="Auto"  HorizontalAlignment="Left" VerticalAlignment="Top"  Grid.ColumnSpan="2">

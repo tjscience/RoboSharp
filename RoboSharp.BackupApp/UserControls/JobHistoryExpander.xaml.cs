@@ -69,6 +69,18 @@ namespace RoboSharp.BackupApp
 
 
 
+        public RoboSharp.Results.RoboCopyResults SelectedResults
+        {
+            get { return (RoboSharp.Results.RoboCopyResults)GetValue(SelectedResultsProperty); }
+            set { SetValue(SelectedResultsProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for SelectedResults.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SelectedResultsProperty =
+            DependencyProperty.Register("SelectedResults", typeof(RoboSharp.Results.RoboCopyResults), typeof(JobHistoryExpander), new PropertyMetadata(null));
+
+
+
         #region < Buttons >
 
         private void Remove_Selected_Click(object sender, RoutedEventArgs e)

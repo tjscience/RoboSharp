@@ -60,17 +60,19 @@ namespace RoboSharp
 
         private static string GetOsVersion()
         {
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
-            using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
-
+            try
             {
-                var win32OperatingSystemCimInstance = session.QueryInstances("root\\cimv2", "WQL", "SELECT Version FROM  Win32_OperatingSystem").FirstOrDefault();
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+                using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
-                if (win32OperatingSystemCimInstance?.CimInstanceProperties["Version"] != null)
                 {
-                    return win32OperatingSystemCimInstance.CimInstanceProperties["Version"].Value.ToString();
+                    var win32OperatingSystemCimInstance = session.QueryInstances("root\\cimv2", "WQL", "SELECT Version FROM  Win32_OperatingSystem").FirstOrDefault();
+
+                    if (win32OperatingSystemCimInstance?.CimInstanceProperties["Version"] != null)
+                    {
+                        return win32OperatingSystemCimInstance.CimInstanceProperties["Version"].Value.ToString();
+                    }
                 }
-            }
 #endif
 #if NET40_OR_GREATER
             using (System.Management.ManagementObjectSearcher objMOS = new System.Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
@@ -86,7 +88,8 @@ namespace RoboSharp
                 }
             }
 #endif
-
+            }
+            catch { }
             return Environment.OSVersion.Version.ToString();
         }
 

@@ -208,6 +208,7 @@ namespace RoboSharp.Results
                 DirectoriesStatistic = (Statistic)DirectoriesStatistic,
                 FilesStatistic = (Statistic)FilesStatistic,
                 SpeedStatistic = new SpeedStatistic(),
+                Status = new RoboCopyExitStatus(GetExitCode())
             };
         }
 

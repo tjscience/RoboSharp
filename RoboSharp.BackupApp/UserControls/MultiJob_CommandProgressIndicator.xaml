@@ -11,7 +11,7 @@
           Header="Progress" 
           RenderTransformOrigin="0.5,0.5"
           >
-    <Grid Name="ProgressGrid" IsEnabled="true" Margin="10">
+    <Grid Name="ProgressGrid" IsEnabled="true" Margin="10" x:FieldModifier="public" >
         <Grid.RowDefinitions>
             <!-- 0 -->
             <RowDefinition MinHeight="30"/>

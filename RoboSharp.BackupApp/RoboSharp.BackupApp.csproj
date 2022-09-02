@@ -64,7 +64,23 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="JobHistoryExpander.xaml">
+    <Compile Include="Converters\BaseConverter.cs" />
+    <Compile Include="Converters\BooleanConverters.cs" />
+    <Compile Include="Converters\StringConverters.cs" />
+    <Compile Include="Helpers.cs" />
+    <Compile Include="UserControls\CopyOptionsExpander.xaml.cs">
+      <DependentUpon>CopyOptionsExpander.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\LoggingOptionsExpander.xaml.cs">
+      <DependentUpon>LoggingOptionsExpander.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RetryOptionsExpander.xaml.cs">
+      <DependentUpon>RetryOptionsExpander.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\SelectionOptionsExpander.xaml.cs">
+      <DependentUpon>SelectionOptionsExpander.xaml</DependentUpon>
+    </Compile>
+    <Page Include="UserControls\JobHistoryExpander.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -76,27 +92,43 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="JobHistoryExpander.xaml.cs">
+    <Compile Include="UserControls\JobHistoryExpander.xaml.cs">
       <DependentUpon>JobHistoryExpander.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="JobHistoryExpander_SingleJob.xaml">
+    <Page Include="UserControls\JobHistoryExpander_SingleJob.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MultiJob_CommandProgressIndicator.xaml">
+    <Page Include="UserControls\MultiJob_CommandProgressIndicator.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UserControls\CopyOptionsExpander.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\LoggingOptionsExpander.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\RetryOptionsExpander.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\SelectionOptionsExpander.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="JobHistoryExpander_SingleJob.xaml.cs">
+    <Compile Include="UserControls\JobHistoryExpander_SingleJob.xaml.cs">
       <DependentUpon>JobHistoryExpander_SingleJob.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MultiJob_CommandProgressIndicator.xaml.cs">
+    <Compile Include="UserControls\MultiJob_CommandProgressIndicator.xaml.cs">
       <DependentUpon>MultiJob_CommandProgressIndicator.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">

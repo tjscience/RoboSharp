@@ -107,83 +107,29 @@ namespace RoboSharp.BackupApp
                 copy.OnError += copy_OnError;
                 copy.OnCommandCompleted += copy_OnCommandCompleted;
             }
-            // copy options
-            copy.CopyOptions.Source = Source.Text;
-            copy.CopyOptions.Destination = Destination.Text;
-
-            copy.Name = JobName.Text;
-
-            // split user input by whitespace, mantaining those enclosed by quotes
-            var fileFilterItems = Regex.Matches(FileFilter.Text, @"[\""].+?[\""]|[^ ]+")
-                .Cast<Match>()
-                .Select(m => m.Value);
-
-            copy.CopyOptions.FileFilter = fileFilterItems;
-            copy.CopyOptions.CopySubdirectories = CopySubDirectories.IsChecked ?? false;
-            copy.CopyOptions.CopySubdirectoriesIncludingEmpty = CopySubdirectoriesIncludingEmpty.IsChecked ?? false;
-            if (!string.IsNullOrWhiteSpace(Depth.Text))
-                copy.CopyOptions.Depth = Convert.ToInt32(Depth.Text);
-            copy.CopyOptions.EnableRestartMode = EnableRestartMode.IsChecked ?? false;
-            copy.CopyOptions.EnableBackupMode = EnableBackupMode.IsChecked ?? false;
-            copy.CopyOptions.EnableRestartModeWithBackupFallback = EnableRestartModeWithBackupFallback.IsChecked ?? false;
-            copy.CopyOptions.UseUnbufferedIo = UseUnbufferedIo.IsChecked ?? false;
-            copy.CopyOptions.EnableEfsRawMode = EnableEfsRawMode.IsChecked ?? false;
-            copy.CopyOptions.CopyFlags = CopyFlags.Text;
-            copy.CopyOptions.CopyFilesWithSecurity = CopyFilesWithSecurity.IsChecked ?? false;
-            copy.CopyOptions.CopyAll = CopyAll.IsChecked ?? false;
-            copy.CopyOptions.RemoveFileInformation = RemoveFileInformation.IsChecked ?? false;
-            copy.CopyOptions.FixFileSecurityOnAllFiles = FixFileSecurityOnAllFiles.IsChecked ?? false;
-            copy.CopyOptions.FixFileTimesOnAllFiles = FixFileTimesOnAllFiles.IsChecked ?? false;
-            copy.CopyOptions.Purge = Purge.IsChecked ?? false;
-            copy.CopyOptions.Mirror = Mirror.IsChecked ?? false;
-            copy.CopyOptions.MoveFiles = MoveFiles.IsChecked ?? false;
-            copy.CopyOptions.MoveFilesAndDirectories = MoveFilesAndDirectories.IsChecked ?? false;
-            copy.CopyOptions.AddAttributes = AddAttributes.Text;
-            copy.CopyOptions.RemoveAttributes = RemoveAttributes.Text;
-            copy.CopyOptions.CreateDirectoryAndFileTree = CreateDirectoryAndFileTree.IsChecked ?? false;
-            copy.CopyOptions.FatFiles = FatFiles.IsChecked ?? false;
-            copy.CopyOptions.TurnLongPathSupportOff = TurnLongPathSupportOff.IsChecked ?? false;
-            if (!string.IsNullOrWhiteSpace(MonitorSourceChangesLimit.Text))
-                copy.CopyOptions.MonitorSourceChangesLimit = Convert.ToInt32(MonitorSourceChangesLimit.Text);
-            if (!string.IsNullOrWhiteSpace(MonitorSourceTimeLimit.Text))
-                copy.CopyOptions.MonitorSourceTimeLimit = Convert.ToInt32(MonitorSourceTimeLimit.Text);
-            if (!string.IsNullOrWhiteSpace(RunHoursStartTime.Text) && !string.IsNullOrWhiteSpace(RunHoursEndTime.Text))
+            try
             {
-                var s = $"{RunHoursStartTime.Text}-{RunHoursEndTime.Text}";
-                if (copy.CopyOptions.CheckRunHoursString(s))
-                    copy.CopyOptions.RunHours = s;
-                else
-                {
-                    MessageBox.Show("Invalid RunHours Format");
-                    return null;
-                }
+                // copy options
+                copy.Name = JobName.Text;
+                copy.CopyOptions.Source = Source.Text;
+                copy.CopyOptions.Destination = Destination.Text;
+                
+                CopyOptionsExpander.ApplyToIRoboCommand(copy);
+                
+                // select options
+                SelectionOptionsExpander.ApplyToIRoboCommand(copy);
+
+                // retry options
+                RetryOptionsExpander.ApplyToIRoboCommand(copy);
+
+                // logging options
+                LoggingOptionsExpander.ApplyToIRoboCommand(copy);
+
+                copy.StopIfDisposing = true;
+            }catch
+            {
+                copy = null;
             }
-
-            // select options
-            copy.SelectionOptions.OnlyCopyArchiveFiles = OnlyCopyArchiveFiles.IsChecked ?? false;
-            copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag = OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked ?? false;
-            copy.SelectionOptions.IncludeAttributes = IncludeAttributes.Text;
-            copy.SelectionOptions.ExcludeAttributes = ExcludeAttributes.Text;
-#pragma warning disable CS0618 // These are marked as obsolete, but remain here for testing purposes. Properties were marked as obsolete due to backend change, but functionality should remain the same.
-            copy.SelectionOptions.ExcludeFiles = ExcludeFiles.Text;
-            copy.SelectionOptions.ExcludeDirectories = ExcludeDirectories.Text;
-#pragma warning restore CS0618 
-            copy.SelectionOptions.ExcludeOlder = ExcludeOlder.IsChecked ?? false;
-            copy.SelectionOptions.ExcludeJunctionPoints = ExcludeJunctionPoints.IsChecked ?? false;
-            copy.SelectionOptions.ExcludeNewer = ExcludeNewer.IsChecked ?? false;
-
-            // retry options
-            if (!string.IsNullOrWhiteSpace(RetryCount.Text))
-                copy.RetryOptions.RetryCount = Convert.ToInt32(RetryCount.Text);
-            if (!string.IsNullOrWhiteSpace(RetryWaitTime.Text))
-                copy.RetryOptions.RetryWaitTime = Convert.ToInt32(RetryWaitTime.Text);
-
-            // logging options
-            copy.LoggingOptions.VerboseOutput = VerboseOutput.IsChecked ?? false;
-            copy.LoggingOptions.NoFileSizes = NoFileSizes.IsChecked ?? false;
-            copy.LoggingOptions.NoProgress = NoProgress.IsChecked ?? false;
-            copy.LoggingOptions.ListOnly = ChkListOnly.IsChecked ?? false;
-            copy.StopIfDisposing = true;
             return copy;
         }
 
@@ -196,73 +142,23 @@ namespace RoboSharp.BackupApp
             Destination.Text = copy.CopyOptions.Destination;
 
             // 
-            string fileFilterItems = "";
-            foreach (string s in copy.CopyOptions.FileFilter)
-                fileFilterItems += s;
-            FileFilter.Text = fileFilterItems;
-
-            CopySubDirectories.IsChecked = copy.CopyOptions.CopySubdirectories;
-            CopySubdirectoriesIncludingEmpty.IsChecked = copy.CopyOptions.CopySubdirectoriesIncludingEmpty;
-            Depth.Text = copy.CopyOptions.Depth.ToString();
-            EnableRestartMode.IsChecked = copy.CopyOptions.EnableRestartMode;
-            EnableBackupMode.IsChecked = copy.CopyOptions.EnableBackupMode;
-            EnableRestartModeWithBackupFallback.IsChecked = copy.CopyOptions.EnableRestartModeWithBackupFallback;
-            UseUnbufferedIo.IsChecked = copy.CopyOptions.UseUnbufferedIo;
-            EnableEfsRawMode.IsChecked = copy.CopyOptions.EnableEfsRawMode;
-            CopyFlags.Text = copy.CopyOptions.CopyFlags;
-            CopyFilesWithSecurity.IsChecked = copy.CopyOptions.CopyFilesWithSecurity;
-            CopyAll.IsChecked = copy.CopyOptions.CopyAll;
-            RemoveFileInformation.IsChecked = copy.CopyOptions.RemoveFileInformation;
-            FixFileSecurityOnAllFiles.IsChecked = copy.CopyOptions.FixFileSecurityOnAllFiles;
-            FixFileTimesOnAllFiles.IsChecked = copy.CopyOptions.FixFileTimesOnAllFiles;
-            Purge.IsChecked = copy.CopyOptions.Purge;
-            Mirror.IsChecked = copy.CopyOptions.Mirror;
-            MoveFiles.IsChecked = copy.CopyOptions.MoveFiles;
-            MoveFilesAndDirectories.IsChecked = copy.CopyOptions.MoveFilesAndDirectories;
-            AddAttributes.Text = copy.CopyOptions.AddAttributes;
-            RemoveAttributes.Text = copy.CopyOptions.RemoveAttributes;
-            CreateDirectoryAndFileTree.IsChecked = copy.CopyOptions.CreateDirectoryAndFileTree;
-            FatFiles.IsChecked = copy.CopyOptions.FatFiles;
-            TurnLongPathSupportOff.IsChecked = copy.CopyOptions.TurnLongPathSupportOff;
-
-            MonitorSourceChangesLimit.Text = copy.CopyOptions.MonitorSourceChangesLimit.ToString();
-            MonitorSourceTimeLimit.Text = copy.CopyOptions.MonitorSourceTimeLimit.ToString();
-
+            CopyOptionsExpander.LoadFromIRoboCommand(copy);
+            
             // select options
-            OnlyCopyArchiveFiles.IsChecked = copy.SelectionOptions.OnlyCopyArchiveFiles;
-            OnlyCopyArchiveFilesAndResetArchiveFlag.IsChecked = copy.SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag;
-            IncludeAttributes.Text = copy.SelectionOptions.IncludeAttributes;
-            ExcludeAttributes.Text = copy.SelectionOptions.ExcludeAttributes;
-#pragma warning disable CS0618 // These are marked as obsolete, but remain here for testing purposes. Properties were marked as obsolete due to backend change, but functionality should remain the same.
-            ExcludeFiles.Text = copy.SelectionOptions.ExcludeFiles;
-            ExcludeDirectories.Text = copy.SelectionOptions.ExcludeDirectories;
-#pragma warning restore CS0618
-            ExcludeOlder.IsChecked = copy.SelectionOptions.ExcludeOlder;
-            ExcludeJunctionPoints.IsChecked = copy.SelectionOptions.ExcludeJunctionPoints;
-            ExcludeNewer.IsChecked = copy.SelectionOptions.ExcludeNewer;
+            SelectionOptionsExpander.LoadFromIRoboCommand(copy);
 
 
             // retry options
-            RetryCount.Text = copy.RetryOptions.RetryCount.ToString();
-            RetryWaitTime.Text = copy.RetryOptions.RetryWaitTime.ToString();
-
+            RetryOptionsExpander.LoadFromIRoboCommand(copy);
+            
             // logging options
-            VerboseOutput.IsChecked = copy.LoggingOptions.VerboseOutput;
-            NoFileSizes.IsChecked = copy.LoggingOptions.NoFileSizes;
-            NoProgress.IsChecked = copy.LoggingOptions.NoProgress;
-            ChkListOnly.IsChecked = copy.LoggingOptions.ListOnly;
+            LoggingOptionsExpander.LoadFromIRoboCommand(copy);
         }
 
         [DebuggerHidden()]
         void DebugMessage(object sender, Debugger.DebugMessageArgs e)
         {
             Console.WriteLine(e.Message);
-        }
-
-        public static bool IsInt(string text)
-        {
-            Regex regex = new Regex("[^0-9]+$", RegexOptions.Compiled);
-            return !regex.IsMatch(text);
         }
 
         #endregion
@@ -675,28 +571,9 @@ namespace RoboSharp.BackupApp
 
         private void IsNumeric_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !IsInt(e.Text);
+            e.Handled = !Helpers.IsInt(e.Text);
         }
 
-        private void IsAttribute_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
-                e.Handled = true;
-            if ("bdfgijklmopquvwxyzBDFGIJKLMOPQUVWXYZ".Contains(e.Text))
-                e.Handled = true;
-            if (((TextBox)sender).Text.Contains(e.Text))
-                e.Handled = true;
-        }
-
-        private void IsCopyFlag_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            if (!Regex.IsMatch(e.Text, @"^[a-zA-Z]+$", RegexOptions.Compiled))
-                e.Handled = true;
-            if ("bcefghijklmnpqrvwxyzBCEFGHIJKLMNPQRVWXYZ".Contains(e.Text))
-                e.Handled = true;
-            if (((TextBox)sender).Text.Contains(e.Text))
-                e.Handled = true;
-        }
 
         #endregion
     }
