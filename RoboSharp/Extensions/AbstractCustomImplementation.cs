@@ -375,10 +375,10 @@ namespace RoboSharp.Extensions
             if (LoggingOptions.ListOnly)
             {
                 ListOnlyResults = results;
-                RunResults ??= results;
+                RunResults = results;
             }
             else
-                RunResults = ListOnlyResults;
+                RunResults = results;
         }
 
         /// <inheritdoc/>
