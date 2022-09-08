@@ -84,10 +84,10 @@ namespace RoboSharp
         /// <param name="time"><inheritdoc cref="DateTime" path="*"/></param>
         public ErrorEventArgs(Exception exception, string errorPath, DateTime time)
         {
-            Error = exception.Message;
-            ErrorDescription = exception.StackTrace;
-            ErrorCode = exception.HResult;
-            SignedErrorCode = exception.HResult.ToString();
+            Error = exception?.Message;
+            ErrorDescription = exception?.StackTrace;
+            ErrorCode = exception?.HResult ?? 0;
+            SignedErrorCode = (exception?.HResult ?? 0).ToString() ;
             ErrorPath = errorPath;
             DateTime = time;
             Exception = exception;
