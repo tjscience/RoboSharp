@@ -88,6 +88,7 @@ namespace RoboSharp.Results
         private bool CopyOpStarted { get; set; }
         private bool IsFinalized { get; set; } = false;
         internal bool FileFailed { get; set; }
+        private bool DirMarkedAsCopied { get; set; }
 
         private RoboSharpConfiguration Config => command?.Configuration;
 
@@ -253,6 +254,7 @@ namespace RoboSharp.Results
         public void AddDir(ProcessedFileInfo currentDir)
         {
             if (currentDir.FileClassType != FileClassType.NewDir) return;
+            if (currentDir == CurrentDir) return;
 
             WhereToAdd? whereTo = null;
             bool SetCurrentDir = false;
@@ -277,13 +279,20 @@ namespace RoboSharp.Results
                 SetCurrentDir = false;
             }
             //Store CurrentDir under various conditions
-            if (SetCurrentDir) CurrentDir = currentDir;
+            if (SetCurrentDir)
+            {
+                lock (CurrentDirLock)
+                {
+                    CurrentDir = currentDir;
+                    DirMarkedAsCopied = whereTo == WhereToAdd.Copied;
+                }
+            }
 
             lock (DirLock)
             {
                 switch (whereTo)
                 {
-                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++;break;
+                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++; break;
                     case WhereToAdd.Extra: tmpDir.Extras++; break;  //Extras do not count towards total
                     case WhereToAdd.Failed: tmpDir.Total++; tmpDir.Failed++; break;
                     case WhereToAdd.MisMatch: tmpDir.Total++; tmpDir.Mismatch++; break;
@@ -299,6 +308,30 @@ namespace RoboSharp.Results
                     UpdateTaskTrigger?.TrySetResult(null);
                 Monitor.Exit(UpdateLock);
             }
+            return;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="CurrentDir"/> and adds 1 to the directories Copied stat
+        /// </summary>
+        /// <param name="dir"></param>
+        public void AddDirCopied(ProcessedFileInfo dir)
+        {
+            lock (CurrentDirLock)
+                lock (DirLock)
+                {
+                    if (dir != CurrentDir)
+                    {
+                        tmpDir.Total++;
+                        CurrentDir = dir;
+                        DirMarkedAsCopied = false;
+                    }
+                    if (!DirMarkedAsCopied)
+                    {
+                        this.tmpDir.Copied++;
+                        DirMarkedAsCopied = true;
+                    }
+                }
         }
 
         #endregion
@@ -351,7 +384,8 @@ namespace RoboSharp.Results
         public void AddFile(ProcessedFileInfo currentFile)
         {
             if (currentFile.FileClassType != FileClassType.File) return;
-
+            
+            Monitor.Enter(CurrentFileLock);
             ProcessPreviousFile();
 
             CurrentFile = currentFile;
@@ -363,6 +397,7 @@ namespace RoboSharp.Results
             bool ListOperation = command.LoggingOptions.ListOnly;
             bool SpecialHandling = ListOperation || currentFile.Size == 0;
             CurrentFile_SpecialHandling = SpecialHandling;
+            Monitor.Exit(CurrentFileLock);
 
             // EXTRA FILES
             if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
@@ -458,8 +493,11 @@ namespace RoboSharp.Results
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void SetCopyOpStarted()
         {
-            SkippingFile = false;
-            CopyOpStarted = true;
+            lock (CurrentFileLock)
+            {
+                SkippingFile = false;
+                CopyOpStarted = true;
+            }
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
@@ -480,13 +518,15 @@ namespace RoboSharp.Results
         {
             if (file == null) return;
             if (file.FileClassType != FileClassType.File) return;
-            
+
             //Reset Flags
-            SkippingFile = false;
-            CopyOpStarted = false;
-            FileFailed = false;
-            CurrentFile = null;
-            CurrentFile_SpecialHandling = false;
+            Monitor.Enter(CurrentFileLock);
+                SkippingFile = false;
+                CopyOpStarted = false;
+                FileFailed = false;
+                CurrentFile = null;
+                CurrentFile_SpecialHandling = false;
+            Monitor.Exit(CurrentFileLock);
 
             //Perform Math
             lock (FileLock)
