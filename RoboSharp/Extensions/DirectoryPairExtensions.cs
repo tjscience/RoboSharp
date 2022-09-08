@@ -14,26 +14,6 @@ namespace RoboSharp.Extensions
     /// </summary>
     public static class DirectoryPairExtensions
     {
-        /// <summary>
-        /// Check if any of the items in the collection is a <paramref name="match"/>
-        /// </summary>
-        /// <remarks>
-        /// Only Positive verification should be used here.
-        /// <br/>Arr = { 1, 2, 3, 4 }   
-        /// <br/> - Arr.None( x => x == 5) -- Returns TRUE since none equal 5 (checks all items)
-        /// <br/> - Arr.None( x => x == 3) -- Returns FALSE since 3 exists (Stops checking after the match is found)
-        /// <br/> - Arr.None( x => x != 3) -- Returns FALSE since 1 != 3 ( never checked if 3 exists, because 1 passed the check )
-        /// </remarks>
-        /// <returns>TRUE if no matches found, FALSE if any matches found</returns>
-        /// <inheritdoc cref="System.Linq.Enumerable.Any{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
-        public static bool None<T>(this IEnumerable<T> collection, Func<T, bool> match) => collection is null || !collection.Any(match);
-
-        /// <summary>
-        /// Check if the collection is empty
-        /// </summary>
-        /// <returns>TRUE if the collection is empty, otherwise false</returns>
-        /// <inheritdoc cref="System.Linq.Enumerable.Any{TSource}(IEnumerable{TSource}, Func{TSource, bool})"/>
-        public static bool None<T>(this IEnumerable<T> collection) => collection is null || !collection.Any();
 
         #region < Eval Functions >
 
