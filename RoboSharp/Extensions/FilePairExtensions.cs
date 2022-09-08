@@ -26,6 +26,17 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="SelectionOptionsExtensions.IsLonely(FileInfo, FileInfo)"/>
         public static bool IsLonely(this IFilePair pair) => SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
 
+        /// <summary>
+        /// Gets the file length from the pair, prioritizing the source file over the destination file.
+        /// </summary>
+        /// <param name="pair">the file pair</param>
+        /// <returns>
+        /// If the source file exists, return the source file's length in bytes. <br/>
+        /// If the destination file exists, return the destination file's length in bytes. <br/>
+        /// If neither exist, return 0;
+        /// </returns>
+        public static long GetFileLength(this IFilePair pair) => pair.Source.Exists ? pair.Source.Length : pair.Destination.Exists ? pair.Destination.Length : 0;
+
         #region < IsSourceNewer >
 
         /// <summary>
