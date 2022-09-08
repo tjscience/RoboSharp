@@ -2,7 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+      <TargetFrameworks>
+          netstandard2.0;
+          netstandard2.1;
+          netcoreapp3.1;
+          net45;
+          net5.0-windows
+      </TargetFrameworks>
     <AssemblyName>RoboSharpUnitTesting</AssemblyName>
     <RootNamespace>RoboSharp.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
