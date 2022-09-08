@@ -507,6 +507,40 @@ namespace RoboSharp.Results
             PerformByteCalc(currentFile, WhereToAdd.Copied);
         }
 
+        /// <summary>Increment <see cref="FileStatsField"/>.Failed </summary>
+        /// <param name="currentFile"/>
+        /// <param name="DecrementCopied">Set this TRUE if you also wish to decrease the <see cref="Statistic.Copied"/> values accordingly </param>
+        public void AddFileFailed(ProcessedFileInfo currentFile, bool DecrementCopied = false)
+        {
+            if (DecrementCopied)
+            {
+                lock(FileLock)
+                {
+                    tmpFile.Copied--;
+                    tmpByte.Copied -= currentFile.Size;
+                }
+            }
+            PerformByteCalc(currentFile, WhereToAdd.Failed);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.Skipped</summary>
+        public void AddFileSkipped(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.Skipped);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.MisMatch</summary>
+        public void AddFileMisMatch(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.MisMatch);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.Extra</summary>
+        public void AddFileExtra(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.Extra);
+        }
+
         /// <summary>
         /// Adds the file statistics to the <see cref="BytesStatistic"/> and the <see cref="FilesStatistic"/> internal counters.
         /// </summary>
