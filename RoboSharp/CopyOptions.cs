@@ -362,7 +362,17 @@ namespace RoboSharp
         /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
         /// [/MT:N]
         /// </summary>
-        public virtual int MultiThreadedCopiesCount { get; set; }
+        /// <remarks>
+        /// Settings this value to anything other than 0 causes RoboCopy to force the following options: 
+        /// <br/> - <see cref="LoggingOptions.NoDirectoryList"/>
+        /// <br/> - <see cref="LoggingOptions.IncludeFullPathNames"/>
+        /// </remarks>
+        public virtual int MultiThreadedCopiesCount { 
+            get => MultiThreadedCopiesCountField; 
+            set { if (value >= 0 && value <= 128) MultiThreadedCopiesCountField = value; } 
+        }
+        private int MultiThreadedCopiesCountField = 0;
+
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).

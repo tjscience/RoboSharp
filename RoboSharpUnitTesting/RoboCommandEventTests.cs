@@ -41,6 +41,7 @@ namespace RoboSharp.Tests
             bool TestPassed = false;
             cmd.OnCommandError += (o, e) => TestPassed = true;
             RunTestThenAssert(cmd, ref TestPassed);
+            Console.WriteLine("(Null results object is OK)");
         }
 
         [TestMethod]

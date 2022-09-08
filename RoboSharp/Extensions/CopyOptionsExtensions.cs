@@ -34,19 +34,28 @@ namespace RoboSharp.Extensions
         #region < IncludedFiles >
 
         /// <summary>
-        /// Determine if the file should be rejected based on its filename by checking against the FileFilter
+        /// Determine if the file should be rejected based on its filename by checking against the FileFilter 
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="options">Evaluates <see cref="CopyOptions.FileFilter"/> and generates a regex collection based on the wildcard pattern.</param>
         /// <param name="fileName">filename to compare</param>
         /// <param name="inclusionCollection">
         /// The collection of regex objects to compare against - If this is null, a new array will be generated from <see cref="CopyOptions.FileFilter"/>. <br/>
         /// ref is used for optimization during the course of the run, to avoid creating regex for every file check.
         /// </param>
-        /// <returns></returns>
+        /// <returns>
+        /// If <see cref="CopyOptions.FileFilter"/> has no values, or only contains <see cref="CopyOptions.DefaultFileFilter"/>, this method will always return true.
+        /// </returns>
         public static bool ShouldIncludeFileName(this CopyOptions options, string fileName, ref Regex[] inclusionCollection)
         {
             if (inclusionCollection is null)
             {
+                //Check if any filters exist, or if the single filter is equivalent to the default filter
+                if (options.FileFilter.None() || !options.FileFilter.HasMultiple() && options.FileFilter.Single() == CopyOptions.DefaultFileFilter)
+                {
+                    inclusionCollection = new Regex[] { };
+                    return true;
+                } 
+                //Non-Default filters have been specified - convert into regex
                 List<Regex> reg = new List<Regex>();
                 foreach (string s in options.FileFilter)
                 {
@@ -54,7 +63,7 @@ namespace RoboSharp.Extensions
                 }
                 inclusionCollection = reg.ToArray();
             }
-            if (inclusionCollection.Length == 0) return false;
+            if (inclusionCollection.Length == 0) return true;
             return inclusionCollection.Any(r => r.IsMatch(fileName));
         }
 

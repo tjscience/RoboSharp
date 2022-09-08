@@ -65,6 +65,7 @@ namespace RoboSharp.Tests
         public static List<string> CompareIResults(IResults RCResults, IResults PEResults)
         {
             var Errors = new List<string>();
+            Assert.IsNotNull(PEResults, "Custom IRoboCommand Results object is null");
             CompareStatistics(RCResults.DirectoriesStatistic, PEResults.DirectoriesStatistic, ref Errors);
             CompareStatistics(RCResults.FilesStatistic, PEResults.FilesStatistic, ref Errors);
             CompareStatistics(RCResults.BytesStatistic, PEResults.BytesStatistic, ref Errors);
