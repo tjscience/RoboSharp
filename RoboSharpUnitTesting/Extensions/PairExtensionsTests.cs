@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace RoboSharp.Extensions.Tests
 {
     [TestClass()]
-    public class ISourceDestinationPairExtensionsTests
+    public class PairExtensionTests
     {
         public static DirectoryPair DirPair = new DirectoryPair(new DirectoryInfo(RoboSharp.Tests.Test_Setup.Source_Standard), new DirectoryInfo(RoboSharp.Tests.Test_Setup.TestDestination));
         public static FilePair FilePair = new FilePair(new FileInfo(RoboSharp.Tests.Test_Setup.Source_Standard + @"\1024_Bytes.txt"), new FileInfo(RoboSharp.Tests.Test_Setup.TestDestination + @"\1024_Bytes.txt"));
@@ -63,27 +63,39 @@ namespace RoboSharp.Extensions.Tests
         }
 
         [TestMethod()]
-        public void CreateSourceChildTest()
+        public void CreateSourceChildTest_Directory()
         {
-            Assert.IsNotNull(DirPair.CreateSourceChild(new DirectoryInfo(Path.Combine(DirPair.Source.FullName, "Test")), (O, E) => new DirectoryPair(O, E)));
+            var child = DirPair.CreateSourceChild(new DirectoryInfo(Path.Combine(DirPair.Source.FullName, "Test")), (O, E) => new DirectoryPair(O, E));
+            Assert.IsNotNull(child);
+            Assert.IsTrue(child.Source.FullName.StartsWith(DirPair.Source.FullName));
+            Assert.IsTrue(child.Destination.FullName.StartsWith(DirPair.Destination.FullName));
         }
 
         [TestMethod()]
-        public void CreateDestinationChildTest()
+        public void CreateDestinationChildTest_Directory()
         {
-            Assert.IsNotNull(DirPair.CreateDestinationChild(new DirectoryInfo(Path.Combine(DirPair.Destination.FullName, "Test")), (O, E) => new DirectoryPair(O, E)));
+            var child = DirPair.CreateDestinationChild(new DirectoryInfo(Path.Combine(DirPair.Destination.FullName, "Test")), (O, E) => new DirectoryPair(O, E));
+            Assert.IsNotNull(child);
+            Assert.IsTrue(child.Source.FullName.StartsWith(DirPair.Source.FullName));
+            Assert.IsTrue(child.Destination.FullName.StartsWith(DirPair.Destination.FullName));
         }
 
         [TestMethod()]
-        public void CreateSourceChildTest1()
+        public void CreateSourceChildTest_File()
         {
-            Assert.IsNotNull(DirPair.CreateSourceChild(new FileInfo(Path.Combine(DirPair.Source.FullName, "Test.TXT")), (O, E) => new FilePair(O, E)));
+            var child = DirPair.CreateSourceChild(new FileInfo(Path.Combine(DirPair.Source.FullName, "Test.TXT")), (O, E) => new FilePair(O, E));
+            Assert.IsNotNull(child);
+            Assert.IsTrue(child.Source.FullName.StartsWith(DirPair.Source.FullName));
+            Assert.IsTrue(child.Destination.FullName.StartsWith(DirPair.Destination.FullName));
         }
 
         [TestMethod()]
-        public void CreateDestinationChildTest1()
+        public void CreateDestinationChild_File()
         {
-            Assert.IsNotNull(DirPair.CreateDestinationChild(new FileInfo(Path.Combine(DirPair.Destination.FullName, "Test.TXT")), (O, E) => new FilePair(O, E)));
+            var child = DirPair.CreateDestinationChild(new FileInfo(Path.Combine(DirPair.Destination.FullName, "Test.TXT")), (O, E) => new FilePair(O, E));
+            Assert.IsNotNull(child);
+            Assert.IsTrue(child.Source.FullName.StartsWith(DirPair.Source.FullName));
+            Assert.IsTrue(child.Destination.FullName.StartsWith(DirPair.Destination.FullName));
         }
 
         [TestMethod()]
