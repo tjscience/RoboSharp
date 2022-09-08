@@ -109,14 +109,24 @@ namespace RoboSharp.Results
         readonly Statistic tmpFile = new Statistic(type: Statistic.StatType.Files);
         readonly Statistic tmpByte = new Statistic(type: Statistic.StatType.Bytes);
 
-        //UpdatePeriod
-        private const int UpdatePeriod = 150; // Update Period in milliseconds to push Updates to a UI or RoboQueueProgressEstimator
-        private readonly object DirLock = new object();     //Thread Lock for tmpDir
-        private readonly object FileLock = new object();    //Thread Lock for tmpFile and tmpByte
-        private readonly object UpdateLock = new object();  //Thread Lock for NextUpdatePush and UpdateTaskTrgger
+        ///<summary> Update Period in milliseconds to push Updates to a UI or RoboQueueProgressEstimator </summary>
+        private const int UpdatePeriod = 150; 
+        ///<summary>Thread Lock for CurrentFile</summary>
+        private readonly object CurrentFileLock = new object();     
+        ///<summary>Thread Lock for CurrentDir</summary>
+        private readonly object CurrentDirLock = new object();     
+        /// <summary>Thread Lock for tmpDir</summary>
+        private readonly object DirLock = new object();     
+        /// <summary>Thread Lock for tmpFile and tmpByte</summary>
+        private readonly object FileLock = new object();
+        /// <summary>Thread Lock for NextUpdatePush and UpdateTaskTrgger</summary>
+        private readonly object UpdateLock = new object();
+        /// <summary>Time the next update will be pushed to the UI </summary>
         private DateTime NextUpdatePush = DateTime.Now.AddMilliseconds(UpdatePeriod);
-        private TaskCompletionSource<object> UpdateTaskTrigger; // TCS that the UpdateTask awaits on
-        private CancellationTokenSource UpdateTaskCancelSource; // While !Cancelled, UpdateTask continues looping
+        /// <summary>TCS that the UpdateTask awaits on </summary>
+        private TaskCompletionSource<object> UpdateTaskTrigger;
+        /// <summary>While !Cancelled, UpdateTask continues looping </summary>
+        private CancellationTokenSource UpdateTaskCancelSource;
 
         #endregion
 
@@ -296,9 +306,12 @@ namespace RoboSharp.Results
         #region < Calculate Files (Internal) >
 
         /// <summary>
-        /// Performs final processing of the previous file if needed
+        /// Performs final processing of the previously added file if needed.
         /// </summary>
-        private void ProcessPreviousFile()
+        /// <remarks>
+        /// This is already called inside of <see cref="AddFile(ProcessedFileInfo)"/>, but is not called by any method with a WhereTo suffix, such as <see cref="AddFileCopied(ProcessedFileInfo)"/>
+        /// </remarks>
+        public void ProcessPreviousFile()
         {
             if (CurrentFile != null)
             {
@@ -450,9 +463,6 @@ namespace RoboSharp.Results
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
-        /// <remarks>
-        /// For Custom Implementations: Safe to use with <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/>
-        /// </remarks>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void AddFileCopied(ProcessedFileInfo currentFile)
         {
