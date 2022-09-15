@@ -244,9 +244,11 @@ namespace RoboSharp.Tests
             {
                 while (ContinueRunning)
                 {
+                    var LastList = List.ReadOnlyList;
                     int beforeCount = List.Count;
                     List.Add(DateTime.Now.Second);
                     int afterCount = List.Count;
+                    Assert.AreNotSame(LastList, List.ReadOnlyList);
                     await Task.Delay(11);
                 }
             });
@@ -282,6 +284,9 @@ namespace RoboSharp.Tests
                  }
              });
             Task.WhenAll(AddTask, RemoveTask, EvalTask).Wait();
+            if (AddTask.IsFaulted)
+                throw AddTask.Exception;
+            
             if (EvalTask.IsFaulted)
                 throw EvalTask.Exception;
         }
