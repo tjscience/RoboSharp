@@ -96,7 +96,7 @@ namespace RoboSharp
 
         #region < Fields >
 
-        private readonly ObservableList<IRoboCommand> CommandList = new ObservableList<IRoboCommand>();
+        private readonly ConcurrentList<IRoboCommand> CommandList = new ConcurrentList<IRoboCommand>();
         private RoboQueueProgressEstimator Estimator;
         private bool disposedValue;
         private CancellationTokenSource TaskCancelSource;
