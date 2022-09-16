@@ -142,13 +142,13 @@ namespace RoboSharp
         #region Public Properties
 
         /// <summary>
-        /// The source file path where the RoboCommand is copying files from.
+        /// The source folder path where the RoboCommand is copying files from.
         /// </summary>
         public virtual string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         private string _source;
 
         /// <summary> 
-        /// The destination file path where the RoboCommand is copying files to. 
+        /// The destination folder path where the RoboCommand is copying files to. 
         /// </summary>
         public virtual string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         private string _destination;
