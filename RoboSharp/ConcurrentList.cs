@@ -70,16 +70,31 @@ namespace RoboSharp
                 if (InternalListField != value)
                 {
                     InternalListField = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReadOnlyList)));
+                    //Raise notifications to update the UI in a deferred manny
+                    if (PropertyChanged != null)
+                        if (UpdateUITask?.IsCompleted ?? true) UpdateUITask = UpdateUI();
                 }
             }
         } 
         private ImmutableList<T> InternalListField = ImmutableList<T>.Empty;
 
         /// <summary>
-        /// Provides a ReadOnly list that can be bound to with WPF, notifications via PropertyChanged
+        /// Provides a ReadOnly list that can be safely bound to to provide UI updates. 
         /// </summary>
+        /// <remarks>
+        /// <br/> - This points directly at the underlying ImmutableList{<typeparamref name="T"/>}, object, so this represents the list value as soon as the its updated. 
+        /// <br/> - Updating the list will start an async task that raises INotifyPropertyChanged to update the UI 100ms after the first change, 
+        /// so any changes within that time-frame will all be pushed at once, instead of multiple notifications hitting the dispatcher.
+        /// </remarks>
         public IReadOnlyList<T> ReadOnlyList => InternalList;
+
+        private System.Threading.Tasks.Task UpdateUITask;
+        private async System.Threading.Tasks.Task UpdateUI()
+        {
+            await System.Threading.Tasks.Task.Delay(100);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReadOnlyList)));
+        }
+
 
         /// <summary>
         /// set TRUE to only enable <see cref="NotifyCollectionChangedAction.Reset"/> notifications, as opposed to full notifications. (WPF Compatibility)
