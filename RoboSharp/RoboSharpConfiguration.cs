@@ -332,12 +332,27 @@ namespace RoboSharp
 
         /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardOutputEncoding" path="/summary"/>
-        public System.Text.Encoding StandardOutputEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+        public System.Text.Encoding StandardOutputEncoding { get; set; } = GetEncoding();
 
         /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardErrorEncoding" path="/summary"/>
-        public System.Text.Encoding StandardErrorEncoding { get; set; } = System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+        public System.Text.Encoding StandardErrorEncoding { get; set; } = GetEncoding();
 
+        static System.Text.Encoding GetEncoding()
+        {
+            try
+            {
+                return System.Text.Encoding.GetEncoding(System.Globalization.CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
+            }
+            catch (ArgumentException)
+            {
+                return System.Text.Encoding.GetEncoding(437);
+            }
+            catch (NotSupportedException)
+            {
+                return System.Text.Encoding.GetEncoding(437);
+            }
+        }
 
         private RoboSharpConfiguration defaultConfig = null;
         private RoboSharpConfiguration GetDefaultConfiguration()
