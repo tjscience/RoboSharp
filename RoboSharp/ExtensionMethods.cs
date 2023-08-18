@@ -66,7 +66,7 @@ namespace RoboSharp
         public static string CleanDirectoryPath(this string path)
         {
             // Get rid of leading/trailing for single and double quotes
-            path = path.Trim('\'', '\"');
+            path = path?.Trim('\'', '\"');
 
             //Validate against null / empty strings. 
             if (string.IsNullOrWhiteSpace(path)) return string.Empty;
