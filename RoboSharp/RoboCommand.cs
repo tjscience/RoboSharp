@@ -382,6 +382,11 @@ namespace RoboSharp
         public virtual Task Start(string domain = "", string username = "", string password = "")
         {
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
+
+#if !NET40_OR_GREATER && !NET6_0_OR_GREATER
+            if (!username.IsNullOrWhiteSpace()) throw new PlatformNotSupportedException("Authentication is only supported in .Net Framework >= 4.0 and .Net >= 6.0.");
+#endif
+            
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
             isCancelled = false;
@@ -397,51 +402,19 @@ namespace RoboSharp
             // Authenticate on Target Server -- Create user if username is provided, else null
             ImpersonatedUser impersonation = username.IsNullOrWhiteSpace() ? null : impersonation = new ImpersonatedUser(username, domain, password);
 #endif
-            // make sure source path is valid
-            if (!Directory.Exists(CopyOptions.Source))
-            {
-                Debugger.Instance.DebugMessage("The Source directory does not exist.");
-                hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
-                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-            }
 
-            #region Create Destination Directory
-
-            //Check that the Destination Drive is accessible insteead [fixes #106]
-            try
+#if NET6_0_OR_GREATER
+            if (username.IsNullOrWhiteSpace())
             {
-                //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
-                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
-                if (!dInfo.Exists)
-                {
-                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
-                    hasError = true;
-                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
-                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                }
-                //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
-                if (!LoggingOptions.ListOnly & !hasError)
-                {
-                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
-                    if (!dInfo.Exists)
-                    {
-                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
-                        hasError = true;
-                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
-                        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
-                    }
-                }
+                this.CheckSourceAndDestinationDirectories();
             }
-            catch (Exception ex)
+            else
             {
-                Debugger.Instance.DebugMessage(ex.Message);
-                hasError = true;
-                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
-                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                ImpersonatedRun.Execute(domain, username, password, this.CheckSourceAndDestinationDirectories);
             }
-
-            #endregion
+#else
+            this.CheckSourceAndDestinationDirectories();
+#endif
 
 #if NET40_OR_GREATER
             //Dispose Authentification
@@ -462,6 +435,60 @@ namespace RoboSharp
                 OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
                 return GetRoboCopyTask(resultsBuilder, domain, username, password);
             }
+        }
+
+        private void CheckSourceAndDestinationDirectories()
+        {
+            // make sure source path is valid
+            if (!Directory.Exists(this.CopyOptions.Source))
+            {
+                Debugger.Instance.DebugMessage("The Source directory does not exist.");
+                this.hasError = true;
+                this.OnCommandError?.Invoke(this,
+                    new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+            }
+
+            #region Create Destination Directory
+
+            //Check that the Destination Drive is accessible insteead [fixes #106]
+            try
+            {
+                //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
+                DirectoryInfo dInfo = new DirectoryInfo(this.CopyOptions.Destination).Root;
+                if (!dInfo.Exists)
+                {
+                    Debugger.Instance.DebugMessage("The destination drive does not exist.");
+                    this.hasError = true;
+                    this.OnCommandError?.Invoke(this,
+                        new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
+                    Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                }
+
+                //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
+                if (!this.LoggingOptions.ListOnly & !this.hasError)
+                {
+                    dInfo = Directory.CreateDirectory(this.CopyOptions.Destination);
+                    if (!dInfo.Exists)
+                    {
+                        Debugger.Instance.DebugMessage("The destination directory does not exist.");
+                        this.hasError = true;
+                        this.OnCommandError?.Invoke(this,
+                            new CommandErrorEventArgs(
+                                new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debugger.Instance.DebugMessage(ex.Message);
+                this.hasError = true;
+                this.OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
+                Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
+            }
+
+            #endregion
         }
 
         /// <summary>
