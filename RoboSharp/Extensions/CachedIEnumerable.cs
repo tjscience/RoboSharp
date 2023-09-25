@@ -97,6 +97,20 @@ namespace RoboSharp.Extensions
         private IEnumerator<T> _enumerator;
         private bool _enumerated = false;
 
+        static CachedEnumerable()
+        {
+#if NET45
+            Empty= new CachedEnumerable<T>(new T[]{});
+#else
+            Empty = new CachedEnumerable<T>(Array.Empty<T>());
+#endif
+        }
+
+        /// <summary>
+        /// Gets an Empty Array
+        /// </summary>
+        public static CachedEnumerable<T> Empty { get; }
+        
         /// <summary>
         /// Create a new Cached IEnumerable
         /// </summary>

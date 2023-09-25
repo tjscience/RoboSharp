@@ -33,6 +33,12 @@ namespace RoboSharp.Extensions
 
         #region < IncludedFiles >
 
+#if NET45
+        private static readonly Regex[] EmptyRegArr = new Regex[]{};
+#else
+        private static readonly Regex[] EmptyRegArr = Array.Empty<Regex>();
+#endif
+
         /// <summary>
         /// Determine if the file should be rejected based on its filename by checking against the FileFilter 
         /// </summary>
@@ -52,9 +58,9 @@ namespace RoboSharp.Extensions
                 //Check if any filters exist, or if the single filter is equivalent to the default filter
                 if (options.FileFilter.None() || !options.FileFilter.HasMultiple() && options.FileFilter.Single() == CopyOptions.DefaultFileFilter)
                 {
-                    inclusionCollection = new Regex[] { };
+                    inclusionCollection = EmptyRegArr;
                     return true;
-                } 
+                }
                 //Non-Default filters have been specified - convert into regex
                 List<Regex> reg = new List<Regex>();
                 foreach (string s in options.FileFilter)
@@ -67,15 +73,17 @@ namespace RoboSharp.Extensions
             return inclusionCollection.Any(r => r.IsMatch(fileName));
         }
 
+        
+
         /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, ref Regex[])"/>
         public static bool ShouldIncludeFileName(this CopyOptions options, FileInfo Source, ref Regex[] inclusionCollection) => ShouldIncludeFileName(options, Source.Name, ref inclusionCollection);
 
         /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, ref Regex[])"/>
         public static bool ShouldIncludeFileName(this CopyOptions options, IFilePair comparer, ref Regex[] inclusionCollection) => ShouldIncludeFileName(options, comparer.Source.Name, ref inclusionCollection);
 
-        #endregion
+#endregion
 
-        #region < SetAttributes >
+#region < SetAttributes >
 
         /// <summary>
         /// Parses <see cref="CopyOptions.AddAttributes"/> and <see cref="CopyOptions.RemoveAttributes"/> and applies them to the destination. <br/> Any attribute addition comes before attribute removal.
@@ -105,9 +113,9 @@ namespace RoboSharp.Extensions
             
         }
 
-        #endregion
+#endregion
 
-        #region < AddAttributes >
+#region < AddAttributes >
 
         /// <summary>
         /// Add the attributes to the destination
@@ -133,9 +141,9 @@ namespace RoboSharp.Extensions
             AddFileAttributes(options, comparer.Destination);
         }
 
-        #endregion
+#endregion
 
-        #region < RemoveAttributes >
+#region < RemoveAttributes >
 
         /// <summary>
         /// Removes the attributes from the destination
@@ -161,7 +169,7 @@ namespace RoboSharp.Extensions
             RemoveFileAttributes(options, comparer.Destination);
         }
 
-        #endregion
+#endregion
 
     }
 }

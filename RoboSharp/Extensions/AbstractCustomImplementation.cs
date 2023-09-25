@@ -51,6 +51,7 @@ namespace RoboSharp.Extensions
             CopyOptions.Destination = destination ?? string.Empty;
             CopyOptions.ApplyActionFlags(copyActionFlags);
             SelectionOptions.ApplySelectionFlags(selectionFlags);
+            LoggingOptions.ApplyLoggingFlags(loggingFlags);
         }
 
         /// <summary>
@@ -327,13 +328,16 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Set the <paramref name="field"/> to the <paramref name="value"/> then raise <see cref="PropertyChanged"/>
         /// </summary>
-        protected virtual void SetProperty<T>(ref T field, T value, string propertyName)
+        /// <returns>TRUE if the property was updated, otherwise false.</returns>
+        protected virtual bool SetProperty<T>(ref T field, T value, string propertyName)
         {
             if (field is null || !field.Equals(value))
             {
                 field = value;
                 OnPropertyChanged(propertyName);
+                return true;
             }
+            return false;
         }
 
         #endregion
@@ -418,7 +422,7 @@ namespace RoboSharp.Extensions
             bool original = LoggingOptions.ListOnly;
             LoggingOptions.ListOnly = true;
             await Start(domain, username, password);
-            LoggingOptions.ListOnly = original;
+            this.LoggingOptions.ListOnly = original;
         }
 
         /// <inheritdoc/>
