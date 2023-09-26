@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Interfaces;
 using RoboSharp.EventArgObjects;
+using System.Text;
 
 namespace RoboSharp
 {
@@ -37,14 +38,15 @@ namespace RoboSharp
         /// Create a new RoboCommand object with the provided settings.
         /// </summary>
         /// <inheritdoc cref="Init"/>
-        /// <inheritdoc cref="CopyOptions.CopyOptions(string, string, CopyOptions.CopyActionFlags)"/>
-        /// <inheritdoc cref="SelectionOptions.SelectionOptions(SelectionOptions.SelectionFlags)"/>
-        public RoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags = SelectionOptions.SelectionFlags.Default)
+        /// <inheritdoc cref="CopyOptions.ApplyActionFlags(CopyActionFlags)"/>
+        /// <inheritdoc cref="SelectionOptions.ApplySelectionFlags(SelectionFlags)"/>
+        public RoboCommand(string source, string destination, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags = SelectionFlags.Default, LoggingFlags loggingFlags = LoggingFlags.RoboSharpDefault)
         {
             InitClassProperties();
             Init("", true, source, destination);
             this.copyOptions.ApplyActionFlags(copyActionFlags);
             this.selectionOptions.ApplySelectionFlags(selectionFlags);
+            this.LoggingOptions.ApplyLoggingFlags(loggingFlags);
         }
 
         /// <inheritdoc cref="Init"/>
@@ -166,8 +168,15 @@ namespace RoboSharp
         private bool isRunning;
         private bool isCancelled;
         private Results.ResultsBuilder resultsBuilder;
-        private Results.RoboCopyResults results;
-        /// <summary> Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> </summary>
+
+        /// <summary>
+        /// The last set of results that were created
+        /// </summary>
+        protected Results.RoboCopyResults results;
+
+        /// <summary> 
+        /// Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> 
+        /// </summary>
         private string LastDataReceived = "";
 
         #endregion Private Vars
@@ -225,7 +234,7 @@ namespace RoboSharp
         /// <remarks>
         /// A new <see cref="Results.ProgressEstimator"/> object is created every time the <see cref="Start"/> method is called, but will not be created until called for the first time. 
         /// </remarks>
-        internal Results.ProgressEstimator ProgressEstimator { get; private set; }
+        protected internal Results.ProgressEstimator ProgressEstimator { get; protected set; }
 
         /// <inheritdoc cref="RoboCommand.ProgressEstimator"/>
         public IProgressEstimator IProgressEstimator => this.ProgressEstimator;
@@ -245,25 +254,57 @@ namespace RoboSharp
         /// <summary>Occurs each time a new item has started processing</summary>
         public event FileProcessedHandler OnFileProcessed;
 
+        /// <summary> Raises the OnFileProcessed event </summary>
+        protected virtual void RaiseOnFileProcessed(FileProcessedEventArgs e)
+        {
+            OnFileProcessed?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCommandError"/></summary>
         public delegate void CommandErrorHandler(IRoboCommand sender, CommandErrorEventArgs e);
         /// <summary>Occurs when an error occurs while generating the command that prevents the RoboCopy process from starting.</summary>
         public event CommandErrorHandler OnCommandError;
+
+        /// <summary> Raises the OnError event </summary>
+        protected virtual void RaiseOnCommandError(CommandErrorEventArgs e)
+        {
+            OnCommandError?.Invoke(this, e);
+        }
 
         /// <summary>Handles <see cref="OnError"/></summary>
         public delegate void ErrorHandler(IRoboCommand sender, ErrorEventArgs e);
         /// <summary>Occurs an error is detected by RoboCopy </summary>
         public event ErrorHandler OnError;
 
+        /// <summary> Raises the OnError event </summary>
+        protected virtual void RaiseOnError(ErrorEventArgs e)
+        {
+            OnError?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCommandCompleted"/></summary>
         public delegate void CommandCompletedHandler(IRoboCommand sender, RoboCommandCompletedEventArgs e);
         /// <summary>Occurs when the RoboCopy process has finished executing and results are available.</summary>
         public event CommandCompletedHandler OnCommandCompleted;
 
+        /// <summary> Raises the OnCommandCompleted event </summary>
+        protected virtual void RaiseCommandCompleted(RoboCommandCompletedEventArgs e)
+        {
+            OnCommandCompleted?.Invoke(this, e);
+        }
+
         /// <summary>Handles <see cref="OnCopyProgressChanged"/></summary>
         public delegate void CopyProgressHandler(IRoboCommand sender, CopyProgressEventArgs e);
         /// <summary>Occurs each time the current item's progress is updated</summary>
         public event CopyProgressHandler OnCopyProgressChanged;
+
+
+        /// <summary> Raises the OnCopyProgressChanged event </summary>
+        protected virtual void RaiseCopyProgressChanged(CopyProgressEventArgs e)
+        {
+            OnCopyProgressChanged?.Invoke(this, e);
+        }
+
 
         /// <summary>Handles <see cref="OnProgressEstimatorCreated"/></summary>
         public delegate void ProgressUpdaterCreatedHandler(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e);
@@ -273,10 +314,23 @@ namespace RoboSharp
         /// </summary>
         public event ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
+        /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        protected virtual void RaiseProgressEstimatorCreated(ProgressEstimatorCreatedEventArgs e)
+        {
+            OnProgressEstimatorCreated?.Invoke(this, e);
+        }
+
+
         /// <summary>
         /// Occurs if the RoboCommand task is stopped due to an unhandled exception. Occurs instead of <see cref="OnCommandCompleted"/>
         /// </summary>
         public event UnhandledExceptionEventHandler TaskFaulted;
+
+        /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        protected virtual void RaiseTaskFaulted(UnhandledExceptionEventArgs e)
+        {
+            TaskFaulted?.Invoke(this, e);
+        }
 
         #endregion
 
@@ -386,7 +440,7 @@ namespace RoboSharp
 #if !NET40_OR_GREATER && !NET6_0_OR_GREATER
             if (!username.IsNullOrWhiteSpace()) throw new PlatformNotSupportedException("Authentication is only supported in .Net Framework >= 4.0 and .Net >= 6.0.");
 #endif
-            
+
             Debugger.Instance.DebugMessage("RoboCommand started execution.");
             hasError = false;
             isCancelled = false;
@@ -440,12 +494,11 @@ namespace RoboSharp
         private void CheckSourceAndDestinationDirectories()
         {
             // make sure source path is valid
-            if (!Directory.Exists(this.CopyOptions.Source))
+            if (!Directory.Exists(CopyOptions.Source))
             {
                 Debugger.Instance.DebugMessage("The Source directory does not exist.");
-                this.hasError = true;
-                this.OnCommandError?.Invoke(this,
-                    new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
+                hasError = true;
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Source directory does not exist.")));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
             }
 
@@ -455,27 +508,23 @@ namespace RoboSharp
             try
             {
                 //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
-                DirectoryInfo dInfo = new DirectoryInfo(this.CopyOptions.Destination).Root;
+                DirectoryInfo dInfo = new DirectoryInfo(CopyOptions.Destination).Root;
                 if (!dInfo.Exists)
                 {
                     Debugger.Instance.DebugMessage("The destination drive does not exist.");
-                    this.hasError = true;
-                    this.OnCommandError?.Invoke(this,
-                        new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
+                    hasError = true;
+                    OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("The Destination Drive is invalid.")));
                     Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                 }
-
                 //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
-                if (!this.LoggingOptions.ListOnly & !this.hasError)
+                if (!LoggingOptions.ListOnly & !hasError)
                 {
-                    dInfo = Directory.CreateDirectory(this.CopyOptions.Destination);
+                    dInfo = Directory.CreateDirectory(CopyOptions.Destination);
                     if (!dInfo.Exists)
                     {
                         Debugger.Instance.DebugMessage("The destination directory does not exist.");
-                        this.hasError = true;
-                        this.OnCommandError?.Invoke(this,
-                            new CommandErrorEventArgs(
-                                new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
+                        hasError = true;
+                        OnCommandError?.Invoke(this, new CommandErrorEventArgs(new DirectoryNotFoundException("Unable to create Destination Folder. Check Write Access.")));
                         Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
                     }
                 }
@@ -483,8 +532,8 @@ namespace RoboSharp
             catch (Exception ex)
             {
                 Debugger.Instance.DebugMessage(ex.Message);
-                this.hasError = true;
-                this.OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
+                hasError = true;
+                OnCommandError?.Invoke(this, new CommandErrorEventArgs("The Destination directory is invalid.", ex));
                 Debugger.Instance.DebugMessage("RoboCommand execution stopped due to error.");
             }
 
@@ -630,10 +679,10 @@ namespace RoboSharp
                 {
                     await cmd.SaveAsJobFile(path, IncludeSource, IncludeDestination, domain, username, password);
                 }
-                catch(Exception Fault)
+                catch (Exception Fault)
                 {
                     cmd.Dispose();
-                    throw Fault;
+                    throw new Exception("Failed to save the job file, see inner exception", Fault);
                 }
                 cmd.Dispose();
                 return;
@@ -702,7 +751,7 @@ namespace RoboSharp
                 var currentDir = resultsBuilder?.Estimator?.CurrentDir;
 
                 //Increment ProgressEstimator
-                if (data == "100%")
+                if (data.StartsWith("100%"))
                     resultsBuilder?.Estimator?.AddFileCopied(currentFile);
                 else
                     resultsBuilder?.Estimator?.SetCopyOpStarted();
@@ -710,7 +759,7 @@ namespace RoboSharp
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
                     new CopyProgressEventArgs(
-                        Convert.ToDouble(data.Replace("%", ""), CultureInfo.InvariantCulture),
+                        Convert.ToDouble(data.Substring(0, data.IndexOf('%')), CultureInfo.InvariantCulture),
                         currentFile, currentDir
                     ));
 
@@ -785,11 +834,7 @@ namespace RoboSharp
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
                     if (errorCode.Key == null)
                     {
-                        var file = new ProcessedFileInfo();
-                        file.FileClass = "System Message";
-                        file.FileClassType = FileClassType.SystemMessage;
-                        file.Size = 0;
-                        file.Name = data;
+                        var file = new ProcessedFileInfo(systemMessage: data);
                         OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                     }
                 }
@@ -824,6 +869,7 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("Generating parameters...");
             Debugger.Instance.DebugMessage(CopyOptions);
             var parsedCopyOptions = CopyOptions.Parse();
+            Debugger.Instance.DebugMessage("CopyOptions parsed.");
             var parsedSelectionOptions = SelectionOptions.Parse();
             Debugger.Instance.DebugMessage("SelectionOptions parsed.");
             var parsedRetryOptions = RetryOptions.Parse();
@@ -831,7 +877,7 @@ namespace RoboSharp
             var parsedLoggingOptions = LoggingOptions.Parse();
             Debugger.Instance.DebugMessage("LoggingOptions parsed.");
             var parsedJobOptions = JobOptions.Parse();
-            Debugger.Instance.DebugMessage("LoggingOptions parsed.");
+            Debugger.Instance.DebugMessage("JobOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
             return string.Format("{0}{1}{2}{3} /BYTES {4}", parsedCopyOptions, parsedSelectionOptions,
@@ -908,3 +954,4 @@ namespace RoboSharp
         #endregion IDisposable Implementation
     }
 }
+
