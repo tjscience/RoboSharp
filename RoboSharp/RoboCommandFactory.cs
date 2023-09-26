@@ -50,7 +50,7 @@ namespace RoboSharp
         /// <param name="selectionFlags">The options to apply to the generated <see cref="IRoboCommand"/> object </param>
         /// <inheritdoc cref="GetRoboCommand(string, string)"/>]
         /// <param name="destination"/><param name="source"/>
-        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags, SelectionOptions.SelectionFlags selectionFlags)
+        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags)
         {
             var cmd = GetRoboCommand(source, destination);
             cmd.CopyOptions.ApplyActionFlags(copyActionFlags);
@@ -58,10 +58,10 @@ namespace RoboSharp
             return cmd;
         }
 
-        /// <inheritdoc cref="GetRoboCommand(string, string, CopyOptions.CopyActionFlags, SelectionOptions.SelectionFlags)"/>
-        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyOptions.CopyActionFlags copyActionFlags)
+        /// <inheritdoc cref="GetRoboCommand(string, string, CopyActionFlags, SelectionFlags)"/>
+        public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags)
         {
-            return GetRoboCommand(source, destination, copyActionFlags, SelectionOptions.SelectionFlags.Default);
+            return GetRoboCommand(source, destination, copyActionFlags, SelectionFlags.Default);
         }
     }
 }
