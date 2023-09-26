@@ -27,10 +27,24 @@ namespace RoboSharp.Results
         /// <summary>
         /// Clone a SpeedStatistic
         /// </summary>
-        public SpeedStatistic(SpeedStatistic stat)
+        public SpeedStatistic(ISpeedStatistic stat)
         {
-            BytesPerSec = stat.BytesPerSec;
-            MegaBytesPerMin = stat.MegaBytesPerMin;
+            BytesPerSec = stat?.BytesPerSec ?? 0;
+            MegaBytesPerMin = stat?.MegaBytesPerMin ?? 0;
+        }
+
+        /// <summary>
+        /// Create a new SpeesdStatistic from a file length and a copy time
+        /// </summary>
+        /// <param name="fileLength">The file length in Bytes</param>
+        /// <param name="copyTime">How long the file took top copy</param>
+        public SpeedStatistic(long fileLength, TimeSpan copyTime)
+        {
+            if (fileLength < 0) throw new ArgumentException("File Length cannot be less than 0", nameof(fileLength));
+            if (copyTime.TotalSeconds <= 0) throw new ArgumentException("Copy Time cannot be less than or equal to 0", nameof(copyTime));
+
+            BytesPerSec = fileLength / (decimal)copyTime.TotalSeconds;
+            MegaBytesPerMin = (fileLength / 1024 / 1024) / (decimal)(copyTime.TotalSeconds / 60);
         }
 
         #region < Private & Protected Members >
@@ -65,7 +79,7 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <inheritdoc cref="ISpeedStatistic.BytesPerSec"/>
+        /// <inheritdoc cref="ISpeedStatistic.MegaBytesPerMin"/>
         public virtual decimal MegaBytesPerMin
         {
             get => MegaBytesPerMinField;
@@ -90,6 +104,18 @@ namespace RoboSharp.Results
         {
             return $"Speed: {BytesPerSec} Bytes/sec{Environment.NewLine}Speed: {MegaBytesPerMin} MegaBytes/min";
         }
+
+        /// <summary>
+        /// Gets the BytesPerSec as a string
+        /// </summary>
+        /// <returns>$"{BytesPerSec} Bytes/sec"</returns>
+        public string GetBytesPerSecond() => $"{BytesPerSec} Bytes/sec";
+
+        /// <summary>
+        /// Gets the MegaBytesPerMin as a string
+        /// </summary>
+        /// <returns>$"{MegaBytesPerMin} MegaBytes/min"</returns>
+        public string GetMegaBytesPerMin() => $"{MegaBytesPerMin} MegaBytes/min";
 
         /// <inheritdoc cref="ISpeedStatistic.Clone"/>
         public virtual SpeedStatistic Clone() => new SpeedStatistic(this);
