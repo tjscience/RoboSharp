@@ -29,7 +29,10 @@ namespace RoboSharp
         /// <summary>
         /// Create new LoggingOptions with Default Settings
         /// </summary>
-        public LoggingOptions() { }
+        public LoggingOptions(LoggingFlags flags = LoggingFlags.RoboSharpDefault) 
+        {
+            ApplyLoggingFlags(flags &= LoggingFlags.RoboSharpDefault);
+        }
 
         /// <summary>
         /// Clone a LoggingOptions Object
@@ -87,6 +90,8 @@ namespace RoboSharp
         internal const string NO_JOB_HEADER = "/NJH ";
         internal const string NO_JOB_SUMMARY = "/NJS ";
         internal const string OUTPUT_AS_UNICODE = "/UNICODE ";
+        
+        #region < Properties >
 
         /// <summary>
         /// Do not copy, timestamp or delete any files.
@@ -102,6 +107,9 @@ namespace RoboSharp
         /// Produce verbose output, showing skipped files.
         /// [V]
         /// </summary>
+        /// <remarks>
+        /// If set false, RoboCommand ProgressEstimator will not be accurate due files not showing in the logs.
+        /// </remarks>
         public virtual bool VerboseOutput { get; set; } = true;
         /// <summary>
         /// Include source file time stamps in the output.
@@ -117,6 +125,9 @@ namespace RoboSharp
         /// Print sizes as bytes in the output.
         /// [/BYTES]
         /// </summary>
+        /// <remarks>
+        /// Automatically appended by the base RoboCommand object to allow results to work properly
+        /// </remarks>
         public virtual bool PrintSizesAsBytes { get; set; }
         /// <summary>
         /// Do not log file sizes.
@@ -190,6 +201,70 @@ namespace RoboSharp
         /// [/UNICODE]
         /// </summary>
         public virtual bool OutputAsUnicode { get; set; }
+        
+        #endregion
+
+        #region < Flags >
+
+        
+
+        /// <summary>
+        /// Set the Logging Options using the <paramref name="flags"/> <br/>
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="LoggingFlags.RoboSharpDefault"/> is able to be applied, but will not be removed here to retain functionality with the library. <br/>
+        /// Removal of those options must be done explicitly vai the property
+        /// </remarks>
+        /// <param name="flags"></param>
+        public void ApplyLoggingFlags(LoggingFlags flags)
+        {
+            this.IncludeFullPathNames = flags.HasFlag(LoggingFlags.IncludeFullPathNames);
+            this.IncludeSourceTimeStamps = flags.HasFlag(LoggingFlags.IncludeSourceTimeStamps);
+            this.ListOnly = flags.HasFlag(LoggingFlags.ListOnly);
+            this.NoDirectoryList = flags.HasFlag(LoggingFlags.NoDirectoryList);
+            this.NoFileClasses = flags.HasFlag(LoggingFlags.NoFileClasses);
+            this.NoFileList = flags.HasFlag(LoggingFlags.NoFileList);
+            this.NoFileSizes = flags.HasFlag(LoggingFlags.NoFileSizes);
+            this.NoJobHeader = flags.HasFlag(LoggingFlags.NoJobHeader);
+            this.NoJobSummary = flags.HasFlag(LoggingFlags.NoJobSummary);
+            this.NoProgress = flags.HasFlag(LoggingFlags.NoProgress);
+            this.OutputAsUnicode = flags.HasFlag(LoggingFlags.OutputAsUnicode);
+            this.ReportExtraFiles = flags.HasFlag(LoggingFlags.ReportExtraFiles);
+            this.ShowEstimatedTimeOfArrival = flags.HasFlag(LoggingFlags.ShowEstimatedTimeOfArrival);
+
+            //RoboSharp Defaults
+            if (flags.HasFlag(LoggingFlags.VerboseOutput)) this.VerboseOutput = true;
+            if (flags.HasFlag(LoggingFlags.OutputToRoboSharpAndLog)) this.OutputToRoboSharpAndLog = true;
+            if (flags.HasFlag(LoggingFlags.PrintSizesAsBytes)) this.PrintSizesAsBytes = true;
+        }
+
+        /// <summary>
+        /// Converts the boolean values back into the <see cref="LoggingFlags"/> enum that represents the currently selected options
+        /// </summary>
+        /// <returns></returns>
+        public LoggingFlags GetLoggingActionFlags()
+        {
+            LoggingFlags flags = LoggingFlags.None;
+            if(IncludeFullPathNames) flags |= LoggingFlags.IncludeFullPathNames;
+            if(IncludeSourceTimeStamps) flags |= LoggingFlags.IncludeSourceTimeStamps;
+            if(ListOnly) flags |= LoggingFlags.ListOnly;
+            if(NoDirectoryList) flags |= LoggingFlags.NoDirectoryList;
+            if(NoFileClasses) flags |= LoggingFlags.NoFileClasses;
+            if(NoFileList) flags |= LoggingFlags.NoFileList;
+            if(NoFileSizes) flags |= LoggingFlags.NoFileSizes;
+            if(NoJobHeader) flags |= LoggingFlags.NoJobHeader;
+            if(NoJobSummary) flags |= LoggingFlags.NoJobSummary;
+            if(NoProgress) flags |= LoggingFlags.NoProgress;
+            if(OutputAsUnicode) flags |= LoggingFlags.OutputAsUnicode;
+            if(ReportExtraFiles) flags |= LoggingFlags.ReportExtraFiles;
+            if(ShowEstimatedTimeOfArrival) flags |= LoggingFlags.ShowEstimatedTimeOfArrival;
+            if (PrintSizesAsBytes) flags |= LoggingFlags.PrintSizesAsBytes;
+            if (OutputToRoboSharpAndLog) flags |= LoggingFlags.OutputToRoboSharpAndLog;
+            if (VerboseOutput) flags |= LoggingFlags.VerboseOutput;
+            return flags;
+        }
+
+        #endregion
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
         internal string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
@@ -240,6 +315,15 @@ namespace RoboSharp
                 options.Append(OUTPUT_AS_UNICODE);
 
             return options.ToString();
+        }
+
+        /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
         }
 
         /// <summary>
