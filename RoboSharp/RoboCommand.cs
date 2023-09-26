@@ -796,7 +796,7 @@ namespace RoboSharp
                         file.Name = splitData[1];
                     }
 
-                    resultsBuilder?.Estimator?.AddDir(file, !this.LoggingOptions.ListOnly);
+                    resultsBuilder?.Estimator?.AddDir(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File
@@ -808,7 +808,7 @@ namespace RoboSharp
                     long.TryParse(splitData[1].Trim(), out size);
                     file.Size = size;
                     file.Name = splitData[2];
-                    resultsBuilder?.Estimator?.AddFile(file, !LoggingOptions.ListOnly);
+                    resultsBuilder?.Estimator?.AddFile(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message - Mark the current file as FAILED immediately - Don't raise OnError event until error description comes in though

@@ -31,11 +31,16 @@ namespace RoboSharp.Results
     /// </remarks>
     public class ProgressEstimator : IProgressEstimator, IResults
     {
+
         #region < Constructors >
 
         private ProgressEstimator() { }
 
-        internal ProgressEstimator(RoboCommand cmd)
+        /// <summary>
+        /// Create a new ProgressEstimator object
+        /// </summary>
+        /// <param name="cmd"></param>
+        public ProgressEstimator(IRoboCommand cmd)
         {
             command = cmd;
             DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
@@ -52,10 +57,12 @@ namespace RoboSharp.Results
 
         #region < Private Members >
 
-        private readonly RoboCommand command;
+        internal IRoboCommand command { get; }
         private bool SkippingFile { get; set; }
         private bool CopyOpStarted { get; set; }
+        private bool IsFinalized { get; set; } = false;
         internal bool FileFailed { get; set; }
+        private bool DirMarkedAsCopied { get; set; }
 
         private RoboSharpConfiguration Config => command?.Configuration;
 
@@ -79,14 +86,24 @@ namespace RoboSharp.Results
         readonly Statistic tmpFile = new Statistic(type: Statistic.StatType.Files);
         readonly Statistic tmpByte = new Statistic(type: Statistic.StatType.Bytes);
 
-        //UpdatePeriod
-        private const int UpdatePeriod = 150; // Update Period in milliseconds to push Updates to a UI or RoboQueueProgressEstimator
-        private readonly object DirLock = new object();     //Thread Lock for tmpDir
-        private readonly object FileLock = new object();    //Thread Lock for tmpFile and tmpByte
-        private readonly object UpdateLock = new object();  //Thread Lock for NextUpdatePush and UpdateTaskTrgger
+        ///<summary> Update Period in milliseconds to push Updates to a UI or RoboQueueProgressEstimator </summary>
+        private const int UpdatePeriod = 150; 
+        ///<summary>Thread Lock for CurrentFile</summary>
+        private readonly object CurrentFileLock = new object();     
+        ///<summary>Thread Lock for CurrentDir</summary>
+        private readonly object CurrentDirLock = new object();     
+        /// <summary>Thread Lock for tmpDir</summary>
+        private readonly object DirLock = new object();     
+        /// <summary>Thread Lock for tmpFile and tmpByte</summary>
+        private readonly object FileLock = new object();
+        /// <summary>Thread Lock for NextUpdatePush and UpdateTaskTrgger</summary>
+        private readonly object UpdateLock = new object();
+        /// <summary>Time the next update will be pushed to the UI </summary>
         private DateTime NextUpdatePush = DateTime.Now.AddMilliseconds(UpdatePeriod);
-        private TaskCompletionSource<object> UpdateTaskTrigger; // TCS that the UpdateTask awaits on
-        private CancellationTokenSource UpdateTaskCancelSource; // While !Cancelled, UpdateTask continues looping
+        /// <summary>TCS that the UpdateTask awaits on </summary>
+        private TaskCompletionSource<object> UpdateTaskTrigger;
+        /// <summary>While !Cancelled, UpdateTask continues looping </summary>
+        private CancellationTokenSource UpdateTaskCancelSource;
 
         #endregion
 
@@ -126,24 +143,30 @@ namespace RoboSharp.Results
         /// Parse this object's stats into a <see cref="RoboCopyExitCodes"/> enum.
         /// </summary>
         /// <returns></returns>
-        public RoboCopyExitCodes GetExitCode()
+        public RoboCopyExitCodes GetExitCode() => GetExitCode(FileStatsField, DirStatField);
+
+        /// <summary>
+        /// Parse the Statistics into a <see cref="RoboCopyExitCodes"/> enum.
+        /// </summary>
+        /// <returns></returns>
+        public static RoboCopyExitCodes GetExitCode(IStatistic files, IStatistic dirs)
         {
             Results.RoboCopyExitCodes code = 0;
 
             //Files Copied
-            if (FileStatsField.Copied > 0)
+            if (files.Copied > 0)
                 code |= Results.RoboCopyExitCodes.FilesCopiedSuccessful;
 
             //Extra
-            if (DirStatField.Extras > 0 | FileStatsField.Extras > 0)
+            if (dirs.Extras > 0 | files.Extras > 0)
                 code |= Results.RoboCopyExitCodes.ExtraFilesOrDirectoriesDetected;
 
             //MisMatch
-            if (DirStatField.Mismatch > 0 | FileStatsField.Mismatch > 0)
+            if (dirs.Mismatch > 0 | files.Mismatch > 0)
                 code |= Results.RoboCopyExitCodes.MismatchedDirectoriesDetected;
 
             //Failed
-            if (DirStatField.Failed > 0 | FileStatsField.Failed > 0)
+            if (dirs.Failed > 0 | files.Failed > 0)
                 code |= Results.RoboCopyExitCodes.SomeFilesOrDirectoriesCouldNotBeCopied;
 
             return code;
@@ -159,20 +182,11 @@ namespace RoboSharp.Results
         /// </summary>
         /// <remarks>
         /// Used by ResultsBuilder as starting point for the results. 
-        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
         /// </remarks>
         /// <returns></returns>
-        internal RoboCopyResults GetResults()
+        public RoboCopyResults GetResults()
         {
-            //Stop the Update Task
-            UpdateTaskCancelSource?.Cancel();
-            UpdateTaskTrigger?.TrySetResult(null);
-           
-            // - if copy operation wasn't completed, register it as failed instead.
-            // - if file was to be marked as 'skipped', then register it as skipped.
-
-            ProcessPreviousFile();
-            PushUpdate(); // Perform Final calculation before generating the Results Object
+            FinalizeResults();
 
             // Package up
             return new RoboCopyResults()
@@ -181,17 +195,43 @@ namespace RoboSharp.Results
                 DirectoriesStatistic = (Statistic)DirectoriesStatistic,
                 FilesStatistic = (Statistic)FilesStatistic,
                 SpeedStatistic = new SpeedStatistic(),
+                Status = new RoboCopyExitStatus(GetExitCode())
             };
+        }
+
+        /// <summary>
+        /// Tabulate the final results - should only be called when no more processed files will be added to the estimator
+        /// </summary>
+        /// <remarks>
+        /// Should not be used anywhere else, as it kills the worker thread that calculates the Statistics objects.
+        /// </remarks>
+        public void FinalizeResults()
+        {
+            if (!IsFinalized)
+            {
+                //Stop the Update Task
+                UpdateTaskCancelSource?.Cancel();
+                UpdateTaskTrigger?.TrySetResult(null);
+
+                // - if copy operation wasn't completed, register it as failed instead.
+                // - if file was to be marked as 'skipped', then register it as skipped.
+
+                ProcessPreviousFile();
+                PushUpdate(); // Perform Final calculation before generating the Results Object
+                IsFinalized = true;
+            }
         }
 
         #endregion
 
         #region < Calculate Dirs (Internal) >
 
-        /// <summary>Increment <see cref="DirStatField"/></summary>
-        internal void AddDir(ProcessedFileInfo currentDir, bool CopyOperation)
+        /// <summary>Increment <see cref="DirectoriesStatistic"/></summary>
+        public void AddDir(ProcessedFileInfo currentDir)
         {
-            
+            if (currentDir.FileClassType != FileClassType.NewDir) return;
+            if (currentDir == CurrentDir) return;
+
             WhereToAdd? whereTo = null;
             bool SetCurrentDir = false;
             if (currentDir.FileClass.Equals(Config.LogParsing_ExistingDir, StringComparison.CurrentCultureIgnoreCase))  // Existing Dir
@@ -215,13 +255,20 @@ namespace RoboSharp.Results
                 SetCurrentDir = false;
             }
             //Store CurrentDir under various conditions
-            if (SetCurrentDir) CurrentDir = currentDir;
+            if (SetCurrentDir)
+            {
+                lock (CurrentDirLock)
+                {
+                    CurrentDir = currentDir;
+                    DirMarkedAsCopied = whereTo == WhereToAdd.Copied;
+                }
+            }
 
             lock (DirLock)
             {
                 switch (whereTo)
                 {
-                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++;break;
+                    case WhereToAdd.Copied: tmpDir.Total++; tmpDir.Copied++; break;
                     case WhereToAdd.Extra: tmpDir.Extras++; break;  //Extras do not count towards total
                     case WhereToAdd.Failed: tmpDir.Total++; tmpDir.Failed++; break;
                     case WhereToAdd.MisMatch: tmpDir.Total++; tmpDir.Mismatch++; break;
@@ -237,6 +284,30 @@ namespace RoboSharp.Results
                     UpdateTaskTrigger?.TrySetResult(null);
                 Monitor.Exit(UpdateLock);
             }
+            return;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="CurrentDir"/> and adds 1 to the directories Copied stat
+        /// </summary>
+        /// <param name="dir"></param>
+        public void AddDirCopied(ProcessedFileInfo dir)
+        {
+            lock (CurrentDirLock)
+                lock (DirLock)
+                {
+                    if (dir != CurrentDir)
+                    {
+                        tmpDir.Total++;
+                        CurrentDir = dir;
+                        DirMarkedAsCopied = false;
+                    }
+                    if (!DirMarkedAsCopied)
+                    {
+                        this.tmpDir.Copied++;
+                        DirMarkedAsCopied = true;
+                    }
+                }
         }
 
         #endregion
@@ -244,9 +315,12 @@ namespace RoboSharp.Results
         #region < Calculate Files (Internal) >
 
         /// <summary>
-        /// Performs final processing of the previous file if needed
+        /// Performs final processing of the previously added file if needed.
         /// </summary>
-        private void ProcessPreviousFile()
+        /// <remarks>
+        /// This is already called inside of <see cref="AddFile(ProcessedFileInfo)"/>, but is not called by any method with a WhereTo suffix, such as <see cref="AddFileCopied(ProcessedFileInfo)"/>
+        /// </remarks>
+        public void ProcessPreviousFile()
         {
             if (CurrentFile != null)
             {
@@ -270,9 +344,24 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary>Increment <see cref="FileStatsField"/></summary>
-        internal void AddFile(ProcessedFileInfo currentFile, bool CopyOperation)
+        /// <summary>
+        /// Call this method after determining what to do with a file, but before starting to copy it.<br/>
+        /// Compares the <see cref="ProcessedFileInfo.FileClass"/> against the configuration strings to identify how to process the file. <br/>
+        /// Also compares against the current <see cref="SelectionOptions"/> and <see cref="CopyOptions"/> to determine if the file should be copied or skipped.
+        /// </summary>
+        /// <remarks>
+        /// Standard Operation: Robocopy reports that it has determined what to do with a file, reports that determination, then starts reporting copy progress. <br/> <br/>
+        /// Notes for Custom Implementations: ]
+        /// <br/> - <paramref name="currentFile"/> should be generated using the appropriate message from the <see cref="ProcessedFileInfo.ProcessedFileInfo(System.IO.FileInfo, RoboSharpConfiguration, FileClasses, bool)"/> constructor
+        /// <br/> - <see cref="SetCopyOpStarted"/> and <see cref="AddFileCopied(ProcessedFileInfo)"/> should be used if using this method.
+        /// <br/> - Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
+        /// </remarks>
+        /// <param name="currentFile">The file that was just added to the stack</param>
+        public void AddFile(ProcessedFileInfo currentFile)
         {
+            if (currentFile.FileClassType != FileClassType.File) return;
+            
+            Monitor.Enter(CurrentFileLock);
             ProcessPreviousFile();
 
             CurrentFile = currentFile;
@@ -281,8 +370,10 @@ namespace RoboSharp.Results
             FileFailed = false;
 
             // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
-            bool SpecialHandling = !CopyOperation || currentFile.Size == 0;
+            bool ListOperation = command.LoggingOptions.ListOnly;
+            bool SpecialHandling = ListOperation || currentFile.Size == 0;
             CurrentFile_SpecialHandling = SpecialHandling;
+            Monitor.Exit(CurrentFileLock);
 
             // EXTRA FILES
             if (currentFile.FileClass.Equals(Config.LogParsing_ExtraFile, StringComparison.CurrentCultureIgnoreCase))
@@ -303,7 +394,7 @@ namespace RoboSharp.Results
             //Files to be Copied/Skipped
             else
             {
-                SkippingFile = CopyOperation;//Assume Skipped, adjusted when CopyProgress is updated
+                SkippingFile = !ListOperation;//Assume Skipped, adjusted when CopyProgress is updated
                 if (currentFile.FileClass.Equals(Config.LogParsing_NewFile, StringComparison.CurrentCultureIgnoreCase)) // New File
                 {
                     //Special handling for 0kb files & ListOnly -> They won't get Progress update, but will be created
@@ -368,34 +459,84 @@ namespace RoboSharp.Results
             }
         }
 
-        /// <summary>Catch start copy progress of large files</summary>
+        /// <summary>Catch start copy progress of large files ( Called when progress less than 100% )</summary>
+        /// <remarks>
+        /// For Custom Implementations: <br/>
+        /// - <see cref="AddFile(ProcessedFileInfo)"/> should have been called prior to this being called. <br/>
+        /// - Should use <see cref="AddFileCopied(ProcessedFileInfo)"/> after progress reaches 100% <br/><br/>
+        /// !! Should not be used if <see cref="PerformByteCalc(ProcessedFileInfo, WhereToAdd)"/> is used.
+        /// </remarks>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal void SetCopyOpStarted()
+        public void SetCopyOpStarted()
         {
-            SkippingFile = false;
-            CopyOpStarted = true;
+            lock (CurrentFileLock)
+            {
+                SkippingFile = false;
+                CopyOpStarted = true;
+            }
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
-        internal void AddFileCopied(ProcessedFileInfo currentFile)
+        public void AddFileCopied(ProcessedFileInfo currentFile)
         {
             PerformByteCalc(currentFile, WhereToAdd.Copied);
         }
 
+        /// <summary>Increment <see cref="FileStatsField"/>.Failed </summary>
+        /// <param name="currentFile"/>
+        /// <param name="DecrementCopied">Set this TRUE if you also wish to decrease the <see cref="Statistic.Copied"/> values accordingly </param>
+        public void AddFileFailed(ProcessedFileInfo currentFile, bool DecrementCopied = false)
+        {
+            if (DecrementCopied)
+            {
+                lock(FileLock)
+                {
+                    tmpFile.Copied--;
+                    tmpByte.Copied -= currentFile.Size;
+                }
+            }
+            PerformByteCalc(currentFile, WhereToAdd.Failed);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.Skipped</summary>
+        public void AddFileSkipped(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.Skipped);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.MisMatch</summary>
+        public void AddFileMisMatch(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.MisMatch);
+        }
+
+        /// <summary>Increment <see cref="FileStatsField"/>.Extra</summary>
+        public void AddFileExtra(ProcessedFileInfo currentFile)
+        {
+            PerformByteCalc(currentFile, WhereToAdd.Extra);
+        }
+
         /// <summary>
-        /// Perform the calculation for the ByteStatistic
+        /// Adds the file statistics to the <see cref="BytesStatistic"/> and the <see cref="FilesStatistic"/> internal counters.
         /// </summary>
+        /// <remarks>
+        /// This method resets internal flags that other methods set to log how the current file should be handled. <br/>
+        /// As such, if using this method for pushing updates to the estimator, no other methods that accept files should be used.
+        /// </remarks>
         private void PerformByteCalc(ProcessedFileInfo file, WhereToAdd where)
         {
             if (file == null) return;
-            
+            if (file.FileClassType != FileClassType.File) return;
+
             //Reset Flags
-            SkippingFile = false;
-            CopyOpStarted = false;
-            FileFailed = false;
-            CurrentFile = null;
-            CurrentFile_SpecialHandling = false;
+            Monitor.Enter(CurrentFileLock);
+                SkippingFile = false;
+                CopyOpStarted = false;
+                FileFailed = false;
+                CurrentFile = null;
+                CurrentFile_SpecialHandling = false;
+            Monitor.Exit(CurrentFileLock);
 
             //Perform Math
             lock (FileLock)
