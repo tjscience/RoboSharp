@@ -31,7 +31,7 @@ namespace RoboSharp
         /// </summary>
         public LoggingOptions(LoggingFlags flags = LoggingFlags.RoboSharpDefault) 
         {
-            ApplyLoggingFlags(flags &= LoggingFlags.RoboSharpDefault);
+            ApplyLoggingFlags(flags |= LoggingFlags.RoboSharpDefault);
         }
 
         /// <summary>
