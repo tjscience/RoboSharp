@@ -39,7 +39,7 @@ namespace RoboSharp.Results
         public Statistic(StatType type, string name) { Type = type; Name = name; }
 
         /// <summary> Clone an existing Statistic object</summary>
-        public Statistic(Statistic stat)
+        public Statistic(IStatistic stat)
         {
             Type = stat.Type;
             NameField = stat.Name;
