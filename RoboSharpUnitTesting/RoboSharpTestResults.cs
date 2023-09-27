@@ -46,7 +46,7 @@ namespace RoboSharpUnitTesting
                 Assert.IsFalse(Results.LogLines.Any(s => s.Contains("Invalid Parameter")));
             }catch (Exception e )
             {
-                throw new AssertFailedException("INVALID Parameter! -- See LogLines");
+                throw new AssertFailedException("INVALID Parameter! -- See LogLines", e);
             }
         }
 
