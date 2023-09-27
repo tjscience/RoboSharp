@@ -99,7 +99,7 @@ namespace RoboSharp.Results
         private Lazy<Statistic> Total_FileStatsField;
         private Lazy<AverageSpeedStatistic> Average_SpeedStatsField;
         private Lazy<RoboCopyCombinedExitStatus> ExitStatusSummaryField;
-        private readonly ConcurrentList<RoboCopyResults> ResultsList = new ConcurrentList<RoboCopyResults>();
+        private readonly ObservableList<RoboCopyResults> ResultsList = new ObservableList<RoboCopyResults>();
 
         #endregion
 

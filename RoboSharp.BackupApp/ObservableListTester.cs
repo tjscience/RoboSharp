@@ -194,20 +194,22 @@ namespace RoboSharp.BackupApp
         {
             NotifyCollectionChangedAction ResetAction = NotifyCollectionChangedAction.Reset;
 
-            SetMoveExpectation(OList.Count, 0);
+            SetMoveExpectation(OList.Count - 1, 0);     //  Middle item doesn't move!
             OList.Reverse();                            //  -> 7 items moved
             ThrowIfCountUnexpected("ReverseTest");
 
             SetExpectations(ResetAction, 1, 0);
-            OList.Sort(false);                          //  -> 7 items moved -> 1 event (Reset)
+            OList.ResetNotificationsOnly = true;
+            OList.Sort();                          //  -> 7 items moved -> 1 event (Reset)
             ThrowIfCountUnexpected("SortTest_1");
 
             SetExpectations(ResetAction, 1, 0);
-            OList.Reverse(false);                            //  -> 7 items moved
+            OList.Reverse();                            //  -> 7 items moved
             ThrowIfCountUnexpected("ReverseTest_2");
 
-            SetMoveExpectation(OList.Count, 0);
-            OList.Sort(true);             
+            SetMoveExpectation(OList.Count -1, 0);
+            OList.ResetNotificationsOnly = false;
+            OList.Sort();             
             ThrowIfCountUnexpected("SortTest_2");
         }
 
