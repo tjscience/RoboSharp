@@ -75,11 +75,7 @@ namespace RoboSharp
             path = path.Trim();
 
             // Get rid of trailing Directory Seperator Chars
-            // Length greater than 3 because E:\ is the shortest valid path
-            while (path.Length > 3 && path.EndsWithDirectorySeperator())
-            {
-                path = path.Substring(0, path.Length - 1);
-            }
+            path = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             //Sanitize invalid paths -- Convert E: to E:\
             if (path.Length <= 2)
