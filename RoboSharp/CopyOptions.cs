@@ -411,7 +411,7 @@ namespace RoboSharp
                 if (value >= 0 && value <= 128)
                     MultiThreadedCopiesCountField = value;
                 else
-                    throw new ArgumentOutOfRangeException("Value must be a value between 0-128");
+                    throw new ArgumentOutOfRangeException(message: "Value must be a value between 0-128", null);
             } 
         }
         private int MultiThreadedCopiesCountField = 0;
