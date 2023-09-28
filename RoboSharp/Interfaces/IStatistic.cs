@@ -106,7 +106,7 @@ namespace RoboSharp.Interfaces
         #endregion
 
         /// <returns>new <see cref="Statistic"/> object </returns>
-        /// <inheritdoc cref="Statistic.Statistic(Statistic)"/>
+        /// <inheritdoc cref="Statistic.Statistic(IStatistic)"/>
         new Statistic Clone();
     }
 }
