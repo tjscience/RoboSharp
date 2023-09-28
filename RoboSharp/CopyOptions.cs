@@ -411,7 +411,7 @@ namespace RoboSharp
                 if (value >= 0 && value <= 128)
                     MultiThreadedCopiesCountField = value;
                 else
-                    throw new ArgumentOutOfRangeException(nameof(MultiThreadedCopiesCount) + " must be a value between 0-128");
+                    throw new ArgumentOutOfRangeException("Value must be a value between 0-128");
             } 
         }
         private int MultiThreadedCopiesCountField = 0;
@@ -448,7 +448,7 @@ namespace RoboSharp
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Each return string includes a space at the end of the string to seperate it from the next option variable.</returns>
-        private string WrapPath(string path)
+        private static string WrapPath(string path)
         {
             if (!path.Contains(" ")) return $"{path} "; //No spaces, just return the path
             //Below this line, the path contains a space, so it must be wrapped in quotes.
