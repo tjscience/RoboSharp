@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace RoboSharp
 {
@@ -298,14 +299,24 @@ namespace RoboSharp
         /// Adds the specified attributes to copied files.
         /// [/A+:attributes]
         /// </summary>
-        public string AddAttributes { get; set; }
+        public string AddAttributes
+        {
+            get => SelectionOptions.ConvertFileAttrToString(AddAttributesValue);
+            set => SetAddAttributes(SelectionOptions.ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? AddAttributesValue { get; set; }
 
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
         /// Removes the specified attributes from copied files.
         /// [/A-:attributes]
         /// </summary>
-        public string RemoveAttributes { get; set; }
+        public string RemoveAttributes
+        {
+            get => SelectionOptions.ConvertFileAttrToString(RemoveAttributesValue);
+            set => SetRemoveAttributes(SelectionOptions.ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? RemoveAttributesValue { get; set; }
 
         /// <summary>
         /// Creates a directory tree and zero-length files only.
@@ -642,6 +653,44 @@ namespace RoboSharp
         #endregion
 
         #region < Other Public Methods >
+
+        private const FileAttributes AcceptedAttributes =
+            FileAttributes.ReadOnly |
+            FileAttributes.Archive |
+            FileAttributes.System |
+            FileAttributes.Hidden |
+            FileAttributes.Compressed |
+            FileAttributes.NotContentIndexed |
+            FileAttributes.Encrypted |
+            FileAttributes.Temporary;
+
+        /// <summary>Set the <see cref="AddAttributes"/> property </summary>
+        /// <param name="AttributesToAdd"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)"/></param>
+        public void SetAddAttributes(FileAttributes? AttributesToAdd)
+        {
+            if (AttributesToAdd is null)
+                AddAttributesValue = AttributesToAdd;
+            else
+                AddAttributesValue = AttributesToAdd &= AcceptedAttributes;
+        }
+
+        /// <summary>Set the <see cref="RemoveAttributes"/> property </summary>
+        /// <param name="AttributesToRemove"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)"/></param>
+        public void SetRemoveAttributes(FileAttributes? AttributesToRemove)
+        {
+            if (AttributesToRemove is null)
+                RemoveAttributesValue = AttributesToRemove;
+            else
+                RemoveAttributesValue = AttributesToRemove &= AcceptedAttributes;
+        }
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.IncludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetAddAttributes() => this.AddAttributesValue;
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.ExcludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetRemoveAttributes() => this.RemoveAttributesValue;
 
         /// <summary>
         /// Combine this object with another CopyOptions object. <br/>
