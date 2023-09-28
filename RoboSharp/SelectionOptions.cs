@@ -102,16 +102,13 @@ namespace RoboSharp
 
         #region < ExcludedDirs and ExcludedFiles >
 
-        private readonly List<string> excludedDirs = new List<string>();
-        private readonly List<string> excludedFiles = new List<string>();
-
         /// <summary>
         /// This regex is used when the { <see cref="ExcludeFiles"/> } and { <see cref="ExcludeDirectories"/> } properties are set in order to split the input string to a List{string}
         /// </summary>
         /// <remarks>
         /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string.
         /// </remarks>
-        public static Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public static readonly Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Use { <see cref="FileFolderNameRegexSplitter"/> } to split the <paramref name="inputString"/>, then add the matches to the suppplied <paramref name="list"/>.
@@ -189,7 +186,7 @@ namespace RoboSharp
             get
             {
                 string RetString = "";
-                foreach (string s in excludedFiles)
+                foreach (string s in ExcludedFiles)
                 {
                     RetString += s.WrapPath() + " ";
                 }
@@ -197,9 +194,9 @@ namespace RoboSharp
             }
             set
             {
-                excludedFiles.Clear();
+                ExcludedFiles.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
-                ParseAndAddToList(value, excludedFiles);
+                ParseAndAddToList(value, ExcludedFiles);
             }
         }
 
@@ -207,14 +204,8 @@ namespace RoboSharp
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
-        public List<string> ExcludedFiles
-        {
-            get
-            {
-                return excludedFiles;
-            }
-        }
-        
+        public List<string> ExcludedFiles { get; } = new List<string>();
+
         /// <summary>
         /// Directories should be separated by spaces.
         /// Excludes directories that match the specified names or paths.
@@ -234,7 +225,7 @@ namespace RoboSharp
             get
             {
                 string RetString = "";
-                foreach (string s in excludedDirs)
+                foreach (string s in ExcludedDirectories)
                 {
                     RetString += s.WrapPath() + " ";
                 }
@@ -242,23 +233,17 @@ namespace RoboSharp
             }
             set
             {
-                excludedDirs.Clear();
+                ExcludedDirectories.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
-                ParseAndAddToList(value, excludedDirs);
+                ParseAndAddToList(value, ExcludedDirectories);
             }
         }
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
-        public List<string> ExcludedDirectories
-        {
-            get
-            {
-                return excludedDirs;
-            }
-        }
-        
+        public List<string> ExcludedDirectories { get; } = new List<string>();
+
         /// <summary>
         /// Excludes changed files.
         /// [/XC]
