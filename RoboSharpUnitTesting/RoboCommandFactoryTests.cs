@@ -35,7 +35,7 @@ namespace RoboSharp.Tests
         {
             string source = @"C:\TestSource";
             string dest = @"C:\TestDest";
-            var cmd = RoboCommand.Factory.GetRoboCommand(source, dest, CopyOptions.CopyActionFlags.Mirror, SelectionOptions.SelectionFlags.ExcludeNewer);
+            var cmd = RoboCommand.Factory.GetRoboCommand(source, dest, CopyActionFlags.Mirror, SelectionFlags.ExcludeNewer);
             Assert.IsNotNull(cmd);
             Assert.AreEqual(source, cmd.CopyOptions.Source);
             Assert.AreEqual(dest, cmd.CopyOptions.Destination);

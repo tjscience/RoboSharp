@@ -41,7 +41,7 @@ namespace RoboSharp
                 {
                     break;
                 }
-                SuspendThread(pOpenThread);
+                _ = SuspendThread(pOpenThread);
             }
             return true;
         }
@@ -55,7 +55,7 @@ namespace RoboSharp
                 {
                     break;
                 }
-                ResumeThread(pOpenThread);
+                _ = ResumeThread(pOpenThread);
             }
             return true;
         }

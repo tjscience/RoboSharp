@@ -75,6 +75,17 @@ namespace RoboSharp
             Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
         }
 
+        /// <summary>
+        /// Initialize a new <see cref="RoboQueue"/> object that contains the supplied <see cref="IRoboCommand"/> collection.
+        /// </summary>
+        /// <param name="roboCommands">IRoboCommand(s) to populate the list with.</param>
+        public RoboQueue(params IRoboCommand[] roboCommands)
+        {
+            CommandList.AddRange(roboCommands);
+            Init();
+            Commands = new ReadOnlyCollection<IRoboCommand>(CommandList);
+        }
+
         private void Init(string name = "", int maxConcurrentJobs = 1)
         {
             NameField = name;
@@ -149,7 +160,7 @@ namespace RoboSharp
                 if (value != NameField)
                 {
                     NameField = value;
-                    OnPropertyChanged("Name");
+                    OnPropertyChanged(nameof(Name));
                 }
             }
         }
@@ -183,7 +194,7 @@ namespace RoboSharp
                 if (value != IsPausedField)
                 {
                     IsPausedField = value;
-                    OnPropertyChanged("IsPaused");
+                    OnPropertyChanged(nameof(IsPaused));
                 }
             }
         }
@@ -199,7 +210,7 @@ namespace RoboSharp
                 if (value != WasCancelledField)
                 {
                     WasCancelledField = value;
-                    OnPropertyChanged("WasCancelled");
+                    OnPropertyChanged(nameof(WasCancelled));
                 }
             }
         }
@@ -214,8 +225,8 @@ namespace RoboSharp
                 {
                     bool running = IsRunning;
                     IsCopyOperationRunningField = value;
-                    OnPropertyChanged("IsCopyOperationRunning");
-                    if (IsRunning != running) OnPropertyChanged("IsRunning");
+                    OnPropertyChanged(nameof(IsCopyOperationRunning));
+                    if (IsRunning != running) OnPropertyChanged(nameof(IsRunning));
                 }
             }
         }
@@ -230,8 +241,8 @@ namespace RoboSharp
                 {
                     bool running = IsRunning;
                     IsListOperationRunningField = value;
-                    OnPropertyChanged("IsListOnlyRunning");
-                    if (IsRunning != running) OnPropertyChanged("IsRunning");
+                    OnPropertyChanged(nameof(IsListOnlyRunning));
+                    if (IsRunning != running) OnPropertyChanged(nameof(IsRunning));
                 }
             }
         }
@@ -245,7 +256,7 @@ namespace RoboSharp
                 if (value != ListOnlyCompletedField)
                 {
                     ListOnlyCompletedField = value;
-                    OnPropertyChanged("ListOnlyCompleted");
+                    OnPropertyChanged(nameof(ListOnlyCompleted));
                 }
             }
         }
@@ -259,7 +270,7 @@ namespace RoboSharp
                 if (value != CopyOpCompletedField)
                 {
                     CopyOpCompletedField = value;
-                    OnPropertyChanged("CopyOperationCompleted");
+                    OnPropertyChanged(nameof(CopyOperationCompleted));
                 }
             }
         }
@@ -278,7 +289,7 @@ namespace RoboSharp
                 if (newVal != MaxConcurrentJobsField)
                 {
                     MaxConcurrentJobsField = newVal;
-                    OnPropertyChanged("MaxConcurrentJobs");
+                    OnPropertyChanged(nameof(MaxConcurrentJobs));
                 }
             }
         }
@@ -295,7 +306,7 @@ namespace RoboSharp
                 if (value != JobsCompleteField)
                 {
                     JobsCompleteField = value;
-                    OnPropertyChanged("JobsComplete");
+                    OnPropertyChanged(nameof(JobsComplete));
                 }
             }
         }
@@ -312,7 +323,7 @@ namespace RoboSharp
                 if (value != JobsCompletedSuccessfullyField)
                 {
                     JobsCompletedSuccessfullyField = value;
-                    OnPropertyChanged("JobsCompletedSuccessfully");
+                    OnPropertyChanged(nameof(JobsCompletedSuccessfully));
                 }
             }
         }
@@ -329,7 +340,7 @@ namespace RoboSharp
                 if (value != JobsStartedField)
                 {
                     JobsStartedField = value;
-                    OnPropertyChanged("JobsStarted");
+                    OnPropertyChanged(nameof(JobsStarted));
                 }
             }
         }
@@ -598,9 +609,12 @@ namespace RoboSharp
             //Create a Task to Start all the RoboCommands
             Task StartAll = Task.Factory.StartNew(async () =>
            {
+               CommandList.RemoveAll((c) => c is null); // Remove all null references
+               
                //Reset results of all commands in the list
                foreach (RoboCommand cmd in CommandList)
-                   cmd.ResetResults();
+                   cmd?.ResetResults();
+
 
                Estimator = new RoboQueueProgressEstimator();
                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(Estimator));
@@ -611,7 +625,7 @@ namespace RoboSharp
                    if (cancellationToken.IsCancellationRequested) break;
 
                    //Assign the events
-                   RoboCommand.CommandCompletedHandler handler = (o, e) => RaiseCommandCompleted(o, e, ListOnlyMode);
+                   void handler(IRoboCommand o, RoboCommandCompletedEventArgs e) => RaiseCommandCompleted(o, e, ListOnlyMode);
                    cmd.OnCommandCompleted += handler;
                    cmd.OnCommandError += this.OnCommandError;
                    cmd.OnCopyProgressChanged += this.OnCopyProgressChanged;
@@ -636,9 +650,9 @@ namespace RoboSharp
                    TaskList.Add(T);                    //Add the continuation task to the list.
 
                    //Raise Events
-                   JobsStarted++; OnPropertyChanged("JobsStarted");
+                   JobsStarted++; OnPropertyChanged(nameof(JobsStarted));
                    if (cmd.IsRunning) OnCommandStarted?.Invoke(this, new RoboQueueCommandStartedEventArgs(cmd)); //Declare that a new command in the queue has started.
-                   OnPropertyChanged("JobsCurrentlyRunning");  //Notify the Property Changes
+                   OnPropertyChanged(nameof(JobsCurrentlyRunning));  //Notify the Property Changes
 
                    //Check if more jobs are allowed to run
                    if (IsPaused) cmd.Pause(); //Ensure job that just started gets paused if Pausing was requested
@@ -730,7 +744,7 @@ namespace RoboSharp
                 JobsCompletedSuccessfully++;
             }
             JobsComplete++;
-            OnPropertyChanged("JobsCurrentlyRunning");
+            OnPropertyChanged(nameof(JobsCurrentlyRunning));
             OnCommandCompleted?.Invoke(sender, e);
         }
 
@@ -828,8 +842,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Add(item);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
 
         }
 
@@ -839,8 +853,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Insert(index, item);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
@@ -849,8 +863,18 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.AddRange(collection);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
+        }
+
+        /// <inheritdoc cref="List{T}.AddRange(IEnumerable{T})"/>
+        /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
+        public void AddCommand(params IRoboCommand[] collection)
+        {
+            if (IsRunning) throw new ListAccessDeniedException();
+            CommandList.AddRange(collection);
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         #endregion
@@ -863,8 +887,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Remove(item);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <inheritdoc cref="List{T}.RemoveAt(int)"/>
@@ -873,8 +897,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveAt(index);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <inheritdoc cref="List{T}.RemoveRange(int, int)"/>
@@ -883,8 +907,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveRange(index, count);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
@@ -893,8 +917,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveAll(match);
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <inheritdoc cref="List{T}.Clear"/>
@@ -903,8 +927,8 @@ namespace RoboSharp
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.Clear();
-            OnPropertyChanged("ListCount");
-            OnPropertyChanged("Commands");
+            OnPropertyChanged(nameof(ListCount));
+            OnPropertyChanged(nameof(Commands));
         }
 
         /// <summary>Performs <see cref="RemoveCommand(int)"/> then <see cref="AddCommand(int, IRoboCommand)"/></summary>

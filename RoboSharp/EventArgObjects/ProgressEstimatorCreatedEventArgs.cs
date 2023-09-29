@@ -14,7 +14,11 @@ namespace RoboSharp.EventArgObjects
     {
         private ProgressEstimatorCreatedEventArgs() : base() { }
 
-        internal ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
+        /// <summary>
+        /// Create new event args for when an <see cref="IRoboCommand"/> generates a new <see cref="IProgressEstimator"/>
+        /// </summary>
+        /// <param name="estimator"></param>
+        public ProgressEstimatorCreatedEventArgs(IProgressEstimator estimator) : base()
         {
             ResultsEstimate = estimator;
         }

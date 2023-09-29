@@ -16,7 +16,7 @@ namespace RoboSharp
         /// <summary>
         /// Create new RetryOptions with Default Settings
         /// </summary>
-        public RetryOptions() { }
+        public RetryOptions() { RetryWaitTime = 30; }
 
         /// <summary>
         /// Clone a RetryOptions Object
@@ -52,8 +52,15 @@ namespace RoboSharp
         public virtual int RetryCount
         {
             get { return retryCount; }
-            set { retryCount = value; }
+            set
+            {
+                if (value >= 0)
+                    retryCount = value;
+                else
+                    throw new ArgumentOutOfRangeException(nameof(RetryCount), value, "Must be greater or equal to 0");
+            }
         }
+
         /// <summary>
         /// Specifies the wait time N in seconds between retries (default is 30).
         /// [/W:N]
@@ -63,11 +70,13 @@ namespace RoboSharp
             get { return retryWaitTime; }
             set { retryWaitTime = value; }
         }
+
         /// <summary>
         /// Saves RetryCount and RetryWaitTime in the Registry as default settings.
         /// [/REG]
         /// </summary>
         public virtual bool SaveToRegistry { get; set; }
+
         /// <summary>
         /// Wait for sharenames to be defined.
         /// [/TBD]
@@ -87,6 +96,15 @@ namespace RoboSharp
                 options.Append(WAIT_FOR_SHARENAMES);
 
             return options.ToString();
+        }
+
+        /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
         }
 
         /// <summary>

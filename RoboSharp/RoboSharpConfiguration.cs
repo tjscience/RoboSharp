@@ -382,5 +382,85 @@ namespace RoboSharp
             // no match, fallback to en
             return defaultConfig ?? defaultConfigurations["en"];
         }
+
+        #region < Helpers >
+
+        /// <inheritdoc cref="GetDirectoryClass(ProcessedDirectoryFlag, RoboSharpConfiguration)"/>
+        public string GetDirectoryClass(ProcessedDirectoryFlag status) => GetDirectoryClass(status, this);
+
+        /// <inheritdoc cref="GetFileClass(ProcessedFileFlag, RoboSharpConfiguration)"/>
+        public string GetFileClass(ProcessedFileFlag status) => GetFileClass(status, this);
+
+        /// <summary> Get the string representing the enum from the configuration </summary>
+        /// <param name="config">The configuration file to pull the log parsing string from</param>
+        /// <param name="status">The status to look up from the configuration</param>
+        /// <returns>The string from the config that is associated with this enum value</returns>
+        public static string GetDirectoryClass(ProcessedDirectoryFlag status, RoboSharpConfiguration config)
+        {
+            if (config is null) throw new ArgumentNullException(nameof(config));
+            switch (status)
+            {
+                case ProcessedDirectoryFlag.None:
+                    return string.Empty;
+                case ProcessedDirectoryFlag.Exclusion:
+                    return config.LogParsing_DirectoryExclusion;
+                case ProcessedDirectoryFlag.ExistingDir:
+                    return config.LogParsing_ExistingDir;
+                case ProcessedDirectoryFlag.ExtraDir:
+                    return config.LogParsing_ExtraDir;
+                case ProcessedDirectoryFlag.NewDir:
+                    return config.LogParsing_NewDir;
+                default:
+                    throw new NotImplementedException(string.Format("{0} '{1}' Not Implemented!", nameof(ProcessedDirectoryFlag), status));
+            }
+    }
+
+    /// <summary> Get the string representing the enum from the configuration </summary>
+    /// <param name="config">The configuration file to pull the log parsing string from</param>
+    /// <param name="status">The status to look up from the configuration</param>
+    /// <returns>The string from the config that is associated with this enum value</returns>
+    public static string GetFileClass(ProcessedFileFlag status, RoboSharpConfiguration config)
+        {
+            if (config is null) throw new ArgumentNullException(nameof(config));
+            switch (status)
+            {
+                case ProcessedFileFlag.None:
+                    return string.Empty;
+                case ProcessedFileFlag.AttribExclusion:
+                    return config.LogParsing_AttribExclusion;
+                case ProcessedFileFlag.ChangedExclusion:
+                    return config.LogParsing_ChangedExclusion;
+                case ProcessedFileFlag.ExtraFile:
+                    return config.LogParsing_ExtraFile;
+                case ProcessedFileFlag.Failed:
+                    return config.LogParsing_FailedFile;
+                case ProcessedFileFlag.FileExclusion:
+                    return config.LogParsing_FileExclusion;
+                case ProcessedFileFlag.MaxAgeSizeExclusion:
+                    return config.LogParsing_MaxAgeOrAccessExclusion;
+                case ProcessedFileFlag.MaxFileSizeExclusion:
+                    return config.LogParsing_MaxFileSizeExclusion;
+                case ProcessedFileFlag.MinAgeSizeExclusion:
+                    return config.LogParsing_MinAgeOrAccessExclusion;
+                case ProcessedFileFlag.MinFileSizeExclusion:
+                    return config.LogParsing_MinFileSizeExclusion;
+                case ProcessedFileFlag.MisMatch:
+                    return config.LogParsing_MismatchFile;
+                case ProcessedFileFlag.NewerFile:
+                    return config.LogParsing_NewerFile;
+                case ProcessedFileFlag.NewFile:
+                    return config.LogParsing_NewFile;
+                case ProcessedFileFlag.OlderFile:
+                    return config.LogParsing_OlderFile;
+                case ProcessedFileFlag.SameFile:
+                    return config.LogParsing_SameFile;
+                case ProcessedFileFlag.TweakedInclusion:
+                    return config.LogParsing_TweakedInclusion;
+                default:
+                    throw new NotImplementedException(string.Format("{0} '{1}' Not Implemented!", nameof(ProcessedFileFlag), status));
+            }
+        }
+
+        #endregion
     }
 }

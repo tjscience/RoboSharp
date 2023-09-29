@@ -102,16 +102,13 @@ namespace RoboSharp
 
         #region < ExcludedDirs and ExcludedFiles >
 
-        private readonly List<string> excludedDirs = new List<string>();
-        private readonly List<string> excludedFiles = new List<string>();
-
         /// <summary>
         /// This regex is used when the { <see cref="ExcludeFiles"/> } and { <see cref="ExcludeDirectories"/> } properties are set in order to split the input string to a List{string}
         /// </summary>
         /// <remarks>
         /// Regex Tester to use with <see cref="Regex.Matches(string)"/> to get all the matches from a string.
         /// </remarks>
-        public static Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        public static readonly Regex FileFolderNameRegexSplitter = new Regex("(?<VALUE>\".+?\"|[^\\s\\,\"\\|]+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Use { <see cref="FileFolderNameRegexSplitter"/> } to split the <paramref name="inputString"/>, then add the matches to the suppplied <paramref name="list"/>.
@@ -139,23 +136,37 @@ namespace RoboSharp
         /// [/A]
         /// </summary>
         public virtual bool OnlyCopyArchiveFiles { get; set; }
+        
         /// <summary>
         /// Copies only files for which the Archive attribute is set, and resets the Archive attribute.
         /// [/M]
         /// </summary>
         public virtual bool OnlyCopyArchiveFilesAndResetArchiveFlag { get; set; }
+        
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to include (eg. AH; RASHCNETO).
         /// Includes only files for which any of the specified attributes are set.
         /// [/IA:attributes]
         /// </summary>
-        public virtual string IncludeAttributes { get; set; }
+        public virtual string IncludeAttributes
+        {
+            get => ConvertFileAttrToString(IncludedAttributesValue);
+            set => SetIncludedAttributes(ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? IncludedAttributesValue { get; set; }
+        
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to exclude (eg. AH; RASHCNETO).
         /// Excludes files for which any of the specified attributes are set.
         /// [/XA:attributes]
         /// </summary>
-        public virtual string ExcludeAttributes { get; set; }
+        public virtual string ExcludeAttributes
+        {
+            get => ConvertFileAttrToString(ExcludedAttributesValue);
+            set => SetExcludedAttributes(ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? ExcludedAttributesValue { get; set; }
+
         /// <summary>
         /// Files should be separated by spaces.
         /// Excludes files that match the specified names or paths. Note that FileName can include wildcard characters (* and ?).
@@ -175,7 +186,7 @@ namespace RoboSharp
             get
             {
                 string RetString = "";
-                foreach (string s in excludedFiles)
+                foreach (string s in ExcludedFiles)
                 {
                     RetString += s.WrapPath() + " ";
                 }
@@ -183,9 +194,9 @@ namespace RoboSharp
             }
             set
             {
-                excludedFiles.Clear();
+                ExcludedFiles.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
-                ParseAndAddToList(value, excludedFiles);
+                ParseAndAddToList(value, ExcludedFiles);
             }
         }
 
@@ -193,13 +204,8 @@ namespace RoboSharp
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
-        public List<string> ExcludedFiles
-        {
-            get
-            {
-                return excludedFiles;
-            }
-        }
+        public List<string> ExcludedFiles { get; } = new List<string>();
+
         /// <summary>
         /// Directories should be separated by spaces.
         /// Excludes directories that match the specified names or paths.
@@ -219,7 +225,7 @@ namespace RoboSharp
             get
             {
                 string RetString = "";
-                foreach (string s in excludedDirs)
+                foreach (string s in ExcludedDirectories)
                 {
                     RetString += s.WrapPath() + " ";
                 }
@@ -227,84 +233,91 @@ namespace RoboSharp
             }
             set
             {
-                excludedDirs.Clear();
+                ExcludedDirectories.Clear();
                 if (value.IsNullOrWhiteSpace()) return;
-                ParseAndAddToList(value, excludedDirs);
+                ParseAndAddToList(value, ExcludedDirectories);
             }
         }
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
         /// JobOptions file saves these into the /IF (Include Files) section
         /// </summary>
-        public List<string> ExcludedDirectories
-        {
-            get
-            {
-                return excludedDirs;
-            }
-        }
+        public List<string> ExcludedDirectories { get; } = new List<string>();
+
         /// <summary>
         /// Excludes changed files.
         /// [/XC]
         /// </summary>
         public virtual bool ExcludeChanged { get; set; }
+        
         /// <summary>
         /// Excludes newer files.
         /// [/XN]
         /// </summary>
         public virtual bool ExcludeNewer { get; set; }
+        
         /// <summary>
         /// Excludes older files.
         /// [/XO]
         /// </summary>
         public virtual bool ExcludeOlder { get; set; }
+        
         /// <summary>
         /// Excludes extra files and directories.
         /// [/XX]
         /// </summary>
         public virtual bool ExcludeExtra { get; set; }
+        
         /// <summary>
         /// Excludes lonely files and directories.
         /// [/XL]
         /// </summary>
         public virtual bool ExcludeLonely { get; set; }
+        
         /// <summary>
         /// Includes the same files.
         /// [/IS]
         /// </summary>
         public virtual bool IncludeSame { get; set; }
+        
         /// <summary>
         /// Includes tweaked files.
         /// [/IT]
         /// </summary>
         public virtual bool IncludeTweaked { get; set; }
+        
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the maximum file size (to exclude files bigger than N bytes).
         /// [/MAX:N]
         /// </summary>
         public virtual long MaxFileSize { get; set; }
+        
         /// <summary>
         /// Zero indicates that this feature is turned off.
         /// Specifies the minimum file size (to exclude files smaller than N bytes).
         /// [/MIN:N]
         /// </summary>
         public virtual long MinFileSize { get; set; }
+        
         /// <summary>
         /// Specifies the maximum file age (to exclude files older than N days or date).
         /// [/MAXAGE:N OR YYYYMMDD]
         /// </summary>
         public virtual string MaxFileAge { get; set; }
+        
         /// <summary>
         /// Specifies the minimum file age (exclude files newer than N days or date).
         /// [/MINAGE:N OR YYYYMMDD]
         /// </summary>
         public virtual string MinFileAge { get; set; }
+        
         /// <summary>
         /// Specifies the maximum last access date (excludes files unused since Date).
         /// [/MAXLAD:YYYYMMDD]
         /// </summary>
         public virtual string MaxLastAccessDate { get; set; }
+        
         /// <summary>
         /// Specifies the minimum last access date (excludes files used since N) If N is less 
         /// than 1900, N specifies the number of days. Otherwise, N specifies a date 
@@ -312,6 +325,7 @@ namespace RoboSharp
         /// [/MINLAD:N or YYYYMMDD]
         /// </summary>
         public virtual string MinLastAccessDate { get; set; }
+        
         /// <summary>
         /// Excludes junction points, which are normally included by default.
         /// [/XJ]
@@ -322,16 +336,19 @@ namespace RoboSharp
         /// [/FFT]
         /// </summary>
         public virtual bool UseFatFileTimes { get; set; }
+        
         /// <summary>
         /// Compensates for one-hour DST time differences.
         /// [/DST]
         /// </summary>
         public virtual bool CompensateForDstDifference { get; set; }
+        
         /// <summary>
         /// Excludes junction points for directories.
         /// [/XJD]
         /// </summary>
         public virtual bool ExcludeJunctionPointsForDirectories { get; set; }
+        
         /// <summary>
         /// Excludes junction points for files.
         /// [/XJF]
@@ -340,13 +357,44 @@ namespace RoboSharp
 
         #endregion Public Properties
 
-        /// <param name="AttributesToInclude"><inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/></param>
-        /// <inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/>
-        public void SetIncludedAttributes(FileAttributes? AttributesToInclude) => this.IncludeAttributes = ConvertFileAttrToString(AttributesToInclude);
+        private const FileAttributes AcceptedAttributes =
+            FileAttributes.ReadOnly |
+            FileAttributes.Archive |
+            FileAttributes.System |
+            FileAttributes.Hidden |
+            FileAttributes.Compressed |
+            FileAttributes.NotContentIndexed |
+            FileAttributes.Encrypted |
+            FileAttributes.Temporary |
+            FileAttributes.Offline;
 
+        /// <summary>Set the <see cref="IncludeAttributes"/> property </summary>
+        /// <param name="AttributesToInclude"><inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/></param>
+        public void SetIncludedAttributes(FileAttributes? AttributesToInclude)
+        {
+            if (AttributesToInclude is null)
+                IncludedAttributesValue = AttributesToInclude;
+            else
+                IncludedAttributesValue = AttributesToInclude &= AcceptedAttributes;
+        }
+
+        /// <summary>Set the <see cref="ExcludeAttributes"/> property </summary>
         /// <param name="AttributesToExclude"><inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/></param>
-        /// <inheritdoc cref="ConvertFileAttrToString(FileAttributes?)"/>
-        public void SetExcludedAttributes(FileAttributes? AttributesToExclude) => this.ExcludeAttributes = ConvertFileAttrToString(AttributesToExclude);
+        public void SetExcludedAttributes(FileAttributes? AttributesToExclude)
+        {
+            if (AttributesToExclude is null)
+                ExcludedAttributesValue = AttributesToExclude;
+            else
+                ExcludedAttributesValue = AttributesToExclude &= AcceptedAttributes;
+        }
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.IncludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetIncludedAttributes() => this.IncludedAttributesValue;
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.ExcludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetExcludedAttributes() => this.ExcludedAttributesValue;
 
         /// <summary>
         /// Converts a <see cref="FileAttributes"/> enum to its RASHCNETO string.
@@ -372,6 +420,33 @@ namespace RoboSharp
             if (Attr.HasFlag(FileAttributes.Temporary)) s += "T";
             if (Attr.HasFlag(FileAttributes.Offline)) s += "O";
             return s;
+        }
+
+        /// <summary>
+        /// Converts a RASHCNETO string to its <see cref="FileAttributes"/> enum.
+        /// </summary>
+        /// <param name="attributes">
+        /// Accepts: ReadOnly, Archive, System, Hidden, Compressed, NotContentIndexed, Encrypted, Temporary, Offline <br/>
+        /// Ignores: All Other Attributes <br/>
+        /// Pass in NULL value to return empty string.
+        /// </param>
+        /// <returns>If the string is parsable, returns the enum. Otherwise returns null.</returns>
+        public static FileAttributes? ConvertFileAttrStringToEnum(string attributes)
+        {
+            if (string.IsNullOrWhiteSpace(attributes)) return null;
+            attributes = attributes.ToUpper();
+            if (!System.Text.RegularExpressions.Regex.IsMatch(attributes, @"^[RASHCNETO]{0,9}$", RegexOptions.Compiled)) throw new ArgumentException("Invalid RASHCNETO string!");
+            FileAttributes? attr = null;
+            if (attributes.Contains('R')) attr = attr.HasValue ? attr |= FileAttributes.ReadOnly : FileAttributes.ReadOnly;
+            if (attributes.Contains('A')) attr = attr.HasValue ? attr |= FileAttributes.Archive : FileAttributes.Archive;
+            if (attributes.Contains('S')) attr = attr.HasValue ? attr |= FileAttributes.System : FileAttributes.System;
+            if (attributes.Contains('H')) attr = attr.HasValue ? attr |= FileAttributes.Hidden : FileAttributes.Hidden;
+            if (attributes.Contains('C')) attr = attr.HasValue ? attr |= FileAttributes.Compressed : FileAttributes.Compressed;
+            if (attributes.Contains('N')) attr = attr.HasValue ? attr |= FileAttributes.NotContentIndexed : FileAttributes.NotContentIndexed;
+            if (attributes.Contains('E')) attr = attr.HasValue ? attr |= FileAttributes.Encrypted : FileAttributes.Encrypted;
+            if (attributes.Contains('T')) attr = attr.HasValue ? attr |= FileAttributes.Temporary : FileAttributes.Temporary;
+            if (attributes.Contains('O')) attr = attr.HasValue ? attr |= FileAttributes.Offline : FileAttributes.Offline;
+            return attr;
         }
 
         internal string Parse()
@@ -437,6 +512,15 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
+        }
+
+        /// <summary>
         /// Combine this object with another RetryOptions object. <br/>
         /// Any properties marked as true take priority. IEnumerable items are combined. <br/>
         /// String\Long Values will only be replaced if the primary object has a null/empty value for that property.
@@ -477,44 +561,8 @@ namespace RoboSharp
             ExcludeJunctionPointsForDirectories |= options.ExcludeJunctionPointsForDirectories;
 
             UseFatFileTimes |= options.UseFatFileTimes;
-            CompensateForDstDifference |= options.CompensateForDstDifference; ;
-            
-        }
+            CompensateForDstDifference |= options.CompensateForDstDifference;
 
-        /// <summary>
-        /// Enum to define various selection options that can be toggled for the RoboCopy process.
-        /// </summary>
-        [Flags]
-        public enum SelectionFlags
-        {
-            /// <summary>
-            /// Set RoboCopy options to their defaults
-            /// </summary>
-            Default = 0,
-            /// <inheritdoc cref="SelectionOptions.ExcludeChanged"/>
-            ExcludeChanged = 1,
-            /// <inheritdoc cref="SelectionOptions.ExcludeExtra"/>
-            ExcludeExtra = 2,
-            /// <inheritdoc cref="SelectionOptions.ExcludeLonely"/>
-            ExcludeLonely = 4,
-            /// <inheritdoc cref="SelectionOptions.ExcludeNewer"/>
-            ExcludeNewer = 8,
-            /// <inheritdoc cref="SelectionOptions.ExcludeOlder"/>
-            ExcludeOlder = 16,
-            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPoints"/>
-            ExcludeJunctionPoints = 32,
-            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForDirectories"/>
-            ExcludeJunctionPointsForDirectories = 64,
-            /// <inheritdoc cref="SelectionOptions.ExcludeJunctionPointsForFiles"/>
-            ExcludeJunctionPointsForFiles = 128,
-            /// <inheritdoc cref="SelectionOptions.IncludeSame"/>
-            IncludeSame = 256,
-            /// <inheritdoc cref="SelectionOptions.IncludeTweaked"/>
-            IncludeTweaked = 512,
-            /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFiles"/>
-            OnlyCopyArchiveFiles = 1024,
-            /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag"/>
-            OnlyCopyArchiveFilesAndResetArchiveFlag = 2048,
         }
 
         /// <summary>
@@ -557,7 +605,7 @@ namespace RoboSharp
             if (this.IncludeTweaked) flags |= SelectionFlags.IncludeTweaked;
             if (this.OnlyCopyArchiveFiles) flags |= SelectionFlags.OnlyCopyArchiveFiles;
             if (this.OnlyCopyArchiveFilesAndResetArchiveFlag) flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag;
-            
+
             return flags;
         }
     }

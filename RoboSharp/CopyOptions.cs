@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
+using System.IO;
 
 namespace RoboSharp
 {
@@ -142,13 +143,13 @@ namespace RoboSharp
         #region Public Properties
 
         /// <summary>
-        /// The source file path where the RoboCommand is copying files from.
+        /// The source folder path where the RoboCommand is copying files from.
         /// </summary>
         public virtual string Source { get { return _source; } set { _source = value.CleanDirectoryPath(); } }
         private string _source;
 
         /// <summary> 
-        /// The destination file path where the RoboCommand is copying files to. 
+        /// The destination folder path where the RoboCommand is copying files to. 
         /// </summary>
         public virtual string Destination { get { return _destination; } set { _destination = value.CleanDirectoryPath(); } }
         private string _destination;
@@ -168,47 +169,56 @@ namespace RoboSharp
                 fileFilter = value;
             }
         }
+
         /// <summary>
         /// Copies subdirectories. Note that this option excludes empty directories.
         /// [/S]
         /// </summary>
         public virtual bool CopySubdirectories { get; set; }
+
         /// <summary>
         /// Copies subdirectories. Note that this option includes empty directories.
         /// [/E]
         /// </summary>
         public virtual bool CopySubdirectoriesIncludingEmpty { get; set; }
+
         /// <summary>
         /// Copies only the top N levels of the source directory tree. The default is
         /// zero which does not limit the depth.
         /// [/LEV:N]
         /// </summary>
         public virtual int Depth { get; set; }
+
         /// <summary>
         /// Copies files in Restart mode.
         /// [/Z]
         /// </summary>
         public virtual bool EnableRestartMode { get; set; }
+
         /// <summary>
         /// Copies files in Backup mode.
         /// [/B]
         /// </summary>
         public virtual bool EnableBackupMode { get; set; }
+
         /// <summary>
         /// Uses Restart mode. If access is denied, this option uses Backup mode.
         /// [/ZB]
         /// </summary>
         public virtual bool EnableRestartModeWithBackupFallback { get; set; }
+
         /// <summary>
         /// Copy using unbuffered I/O (recommended for large files).
         /// [/J]
         /// </summary>
         public virtual bool UseUnbufferedIo { get; set; }
+
         /// <summary>
         /// Copies all encrypted files in EFS RAW mode.
         /// [/EFSRAW]
         /// </summary>
         public virtual bool EnableEfsRawMode { get; set; }
+
         /// <summary>
         /// This property should be set to a string consisting of all the flags to include (eg. DAT; DATSOU)
         /// Specifies the file properties to be copied. The following are the valid values for this option:
@@ -229,90 +239,117 @@ namespace RoboSharp
             }
             set => copyFlags = value;
         }
+
         /// <summary>
         /// Copies files with security (equivalent to /copy:DAT).
         /// [/SEC]
         /// </summary>
         public virtual bool CopyFilesWithSecurity { get; set; }
+
         /// <summary>
         /// Copies all file information (equivalent to /copy:DATSOU).
         /// [/COPYALL]
         /// </summary>
         public virtual bool CopyAll { get; set; }
+
         /// <summary>
         /// Copies no file information (useful with Purge option).
         /// [/NOCOPY]
         /// </summary>
         public virtual bool RemoveFileInformation { get; set; }
+
         /// <summary>
         /// Fixes file security on all files, even skipped ones.
         /// [/SECFIX]
         /// </summary>
         public virtual bool FixFileSecurityOnAllFiles { get; set; }
+
         /// <summary>
         /// Fixes file times on all files, even skipped ones.
         /// [/TIMFIX]
         /// </summary>
         public virtual bool FixFileTimesOnAllFiles { get; set; }
+
         /// <summary>
         /// Deletes destination files and directories that no longer exist in the source.
         /// [/PURGE]
         /// </summary>
         public virtual bool Purge { get; set; }
+
         /// <summary>
         /// Mirrors a directory tree (equivalent to CopySubdirectoriesIncludingEmpty plus Purge).
         /// [/MIR]
         /// </summary>
         public virtual bool Mirror { get; set; }
+
         /// <summary>
         /// Moves files, and deletes them from the source after they are copied.
         /// [/MOV]
         /// </summary>
         public virtual bool MoveFiles { get; set; }
+
         /// <summary>
         /// Moves files and directories, and deletes them from the source after they are copied.
         /// [/MOVE]
         /// </summary>
         public virtual bool MoveFilesAndDirectories { get; set; }
+
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to add (eg. AH; RASHCNET).
         /// Adds the specified attributes to copied files.
         /// [/A+:attributes]
         /// </summary>
-        public string AddAttributes { get; set; }
+        public string AddAttributes
+        {
+            get => SelectionOptions.ConvertFileAttrToString(AddAttributesValue);
+            set => SetAddAttributes(SelectionOptions.ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? AddAttributesValue { get; set; }
+
         /// <summary>
         /// This property should be set to a string consisting of all the attributes to remove (eg. AH; RASHCNET).
         /// Removes the specified attributes from copied files.
         /// [/A-:attributes]
         /// </summary>
-        public string RemoveAttributes { get; set; }
+        public string RemoveAttributes
+        {
+            get => SelectionOptions.ConvertFileAttrToString(RemoveAttributesValue);
+            set => SetRemoveAttributes(SelectionOptions.ConvertFileAttrStringToEnum(value));
+        }
+        private FileAttributes? RemoveAttributesValue { get; set; }
+
         /// <summary>
         /// Creates a directory tree and zero-length files only.
         /// [/CREATE]
         /// </summary>
         public virtual bool CreateDirectoryAndFileTree { get; set; }
+
         /// <summary>
         /// Creates destination files by using 8.3 character-length FAT file names only.
         /// [/FAT]
         /// </summary>
         public virtual bool FatFiles { get; set; }
+
         /// <summary>
         /// Turns off support for very long paths (longer than 256 characters).
         /// [/256]
         /// </summary>
         public virtual bool TurnLongPathSupportOff { get; set; }
+
         /// <summary>
         /// The default value of zero indicates that you do not wish to monitor for changes.
         /// Monitors the source, and runs again when more than N changes are detected.
         /// [/MON:N]
         /// </summary>
         public virtual int MonitorSourceChangesLimit { get; set; }
+
         /// <summary>
         /// The default value of zero indicates that you do not wish to monitor for changes.
         /// Monitors source, and runs again in M minutes if changes are detected.
         /// [/MOT:M]
         /// </summary>
         public virtual int MonitorSourceTimeLimit { get; set; }
+
         /// <summary>
         /// Specifies run times when new copies may be started. ( Copy Operation is scheduled to only operate within specified timeframe )
         /// [/rh:hhmm-hhmm] <br/>
@@ -350,6 +387,7 @@ namespace RoboSharp
         /// [/IPG:N]
         /// </summary>
         public virtual int InterPacketGap { get; set; }
+
         /// <summary>
         /// Copies the symbolic link instead of the target.
         /// [/SL]
@@ -362,7 +400,22 @@ namespace RoboSharp
         /// The MultiThreadedCopiesCount parameter cannot be used with the /IPG and EnableEfsRawMode parameters.
         /// [/MT:N]
         /// </summary>
-        public virtual int MultiThreadedCopiesCount { get; set; }
+        /// <remarks>
+        /// Settings this value to anything other than 0 causes RoboCopy to force the following options: 
+        /// <br/> - <see cref="LoggingOptions.NoDirectoryList"/>
+        /// <br/> - <see cref="LoggingOptions.IncludeFullPathNames"/>
+        /// </remarks>
+        public virtual int MultiThreadedCopiesCount { 
+            get => MultiThreadedCopiesCountField; 
+            set {
+                if (value >= 0 && value <= 128)
+                    MultiThreadedCopiesCountField = value;
+                else
+                    throw new ArgumentOutOfRangeException(message: "Value must be a value between 0-128", null);
+            } 
+        }
+        private int MultiThreadedCopiesCountField = 0;
+
         /// <summary>
         /// What to copy for directories (default is DA).
         /// (copyflags: D=Data, A=Attributes, T=Timestamps).
@@ -395,7 +448,7 @@ namespace RoboSharp
         /// </summary>
         /// <param name="path"></param>
         /// <returns>Each return string includes a space at the end of the string to seperate it from the next option variable.</returns>
-        private string WrapPath(string path)
+        private static string WrapPath(string path)
         {
             if (!path.Contains(" ")) return $"{path} "; //No spaces, just return the path
             //Below this line, the path contains a space, so it must be wrapped in quotes.
@@ -511,13 +564,22 @@ namespace RoboSharp
             return parsedOptions;
         }
 
+        /// <summary>
+        /// Returns the Parsed Options as it would be applied to RoboCopy
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return Parse();
+        }
+
         #endregion
 
         #region < RunHours (Public) >
 
-        private static Regex RunHours_OverallRegex = new Regex("^(?<StartTime>[0-2][0-9][0-5][0-9])-(?<EndTime>[0-2][0-9][0-5][0-9])$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
-        private static Regex RunHours_Check1 = new Regex("^[0-1][0-9][0-5][0-9]$", RegexOptions.Compiled);  // Checks 0000 - 1959
-        private static Regex RunHours_Check2 = new Regex("^[2][0-3][0-5][0-9]$", RegexOptions.Compiled);    // Checks 2000 - 2359
+        private static readonly Regex RunHours_OverallRegex = new Regex("^(?<StartTime>[0-2][0-9][0-5][0-9])-(?<EndTime>[0-2][0-9][0-5][0-9])$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        private static readonly Regex RunHours_Check1 = new Regex("^[0-1][0-9][0-5][0-9]$", RegexOptions.Compiled);  // Checks 0000 - 1959
+        private static readonly Regex RunHours_Check2 = new Regex("^[2][0-3][0-5][0-9]$", RegexOptions.Compiled);    // Checks 2000 - 2359
         private GroupCollection RunHoursGroups => RunHours_OverallRegex.Match(RunHours).Groups;
 
         /// <summary>
@@ -545,7 +607,7 @@ namespace RoboSharp
         /// </summary>
         /// <param name="runHours"></param>
         /// <returns>True if correct format, otherwise false</returns>
-        public bool CheckRunHoursString(string runHours)
+        public static bool IsRunHoursStringValid(string runHours)
         {
             if (string.IsNullOrWhiteSpace(runHours)) return true;
             if (!RunHours_OverallRegex.IsMatch(runHours.Trim())) return false;
@@ -555,35 +617,12 @@ namespace RoboSharp
             return StartMatch && EndMatch;
         }
 
+        /// <inheritdoc cref="IsRunHoursStringValid(string)"/>
+        public bool CheckRunHoursString(string runHours) => IsRunHoursStringValid(runHours);
+
         #endregion
 
         #region < Flags >
-
-        /// <summary>
-        /// Enum to define the high-level copy action to be taken by RoboCopy process.
-        /// </summary>
-        [Flags]
-        public enum CopyActionFlags
-        {
-            /// <summary>
-            /// Default Functionality is to only copy the files within the source directory - does not copy any files within the subfolders.
-            /// </summary>
-            Default = 0,
-            /// <inheritdoc cref="CopyOptions.CopySubdirectories"/>
-            CopySubdirectories = 1,
-            /// <inheritdoc cref="CopyOptions.CopySubdirectoriesIncludingEmpty"/>
-            CopySubdirectoriesIncludingEmpty = 2,
-            /// <inheritdoc cref="CopyOptions.Purge"/>
-            Purge = 4,
-            /// <inheritdoc cref="CopyOptions.CreateDirectoryAndFileTree"/>
-            CreateDirectoryAndFileTree = 8,
-            /// <inheritdoc cref="CopyOptions.MoveFiles"/>
-            MoveFiles = 16,
-            /// <inheritdoc cref="CopyOptions.MoveFilesAndDirectories"/>
-            MoveFilesAndDirectories = 32,
-            /// <inheritdoc cref="CopyOptions.Mirror"/>
-            Mirror = CopySubdirectoriesIncludingEmpty | Purge, //6
-        }
 
         /// <summary>
         /// Apply the <see cref="CopyActionFlags"/> to the command
@@ -597,6 +636,7 @@ namespace RoboSharp
             this.Mirror = flags.HasFlag(CopyActionFlags.Mirror);
             this.MoveFiles = flags.HasFlag(CopyActionFlags.MoveFiles);
             this.MoveFilesAndDirectories = flags.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+            this.CreateDirectoryAndFileTree = flags.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree);
         }
 
         /// <summary>
@@ -611,12 +651,51 @@ namespace RoboSharp
             if (this.Mirror) flags |=CopyActionFlags.Mirror;
             if (this.MoveFiles) flags |=CopyActionFlags.MoveFiles;
             if (this.MoveFilesAndDirectories) flags |=CopyActionFlags.MoveFilesAndDirectories;
+            if (this.CreateDirectoryAndFileTree) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
             return flags;
         }
 
         #endregion
 
         #region < Other Public Methods >
+
+        private const FileAttributes AcceptedAttributes =
+            FileAttributes.ReadOnly |
+            FileAttributes.Archive |
+            FileAttributes.System |
+            FileAttributes.Hidden |
+            FileAttributes.Compressed |
+            FileAttributes.NotContentIndexed |
+            FileAttributes.Encrypted |
+            FileAttributes.Temporary;
+
+        /// <summary>Set the <see cref="AddAttributes"/> property </summary>
+        /// <param name="AttributesToAdd"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)"/></param>
+        public void SetAddAttributes(FileAttributes? AttributesToAdd)
+        {
+            if (AttributesToAdd is null)
+                AddAttributesValue = AttributesToAdd;
+            else
+                AddAttributesValue = AttributesToAdd &= AcceptedAttributes;
+        }
+
+        /// <summary>Set the <see cref="RemoveAttributes"/> property </summary>
+        /// <param name="AttributesToRemove"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)"/></param>
+        public void SetRemoveAttributes(FileAttributes? AttributesToRemove)
+        {
+            if (AttributesToRemove is null)
+                RemoveAttributesValue = AttributesToRemove;
+            else
+                RemoveAttributesValue = AttributesToRemove &= AcceptedAttributes;
+        }
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.IncludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetAddAttributes() => this.AddAttributesValue;
+
+        /// <summary> Get the FileAttributes enum representation of <see cref="SelectionOptions.ExcludeAttributes"/></summary>
+        /// <returns>If not specified, return null. Otherwise return the file attributes to include.</returns>
+        public FileAttributes? GetRemoveAttributes() => this.RemoveAttributesValue;
 
         /// <summary>
         /// Combine this object with another CopyOptions object. <br/>
