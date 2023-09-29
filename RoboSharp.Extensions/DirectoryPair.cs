@@ -31,6 +31,30 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
+        /// <inheritdoc cref="IDirectoryPairExtensions.GetFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        public FilePair[] GetFilePairs()
+        {
+            return this.GetFilePairs(FilePair.CreatePair);
+        }
+
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        public CachedEnumerable<FilePair> EnumerateFilePairs()
+        {
+            return this.EnumerateFilePairs(FilePair.CreatePair);
+        }
+
+
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public DirectoryPair[] GetDirectoryPairs()
+        {
+            return this.GetDirectoryPairs(CreatePair);
+        }
+
+        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public CachedEnumerable<DirectoryPair> EnumerateDirectoryPairs()
+        {
+            return this.EnumerateDirectoryPairs(CreatePair);
+        }
 
     }
 }
