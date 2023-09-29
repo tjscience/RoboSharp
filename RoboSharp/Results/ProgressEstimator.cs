@@ -42,7 +42,7 @@ namespace RoboSharp.Results
         /// <param name="cmd"></param>
         public ProgressEstimator(IRoboCommand cmd)
         {
-            _Command = cmd;
+            Command = cmd;
             DirStatField = new Statistic(Statistic.StatType.Directories, "Directory Stats Estimate");
             FileStatsField = new Statistic(Statistic.StatType.Files, "File Stats Estimate");
             ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
@@ -57,14 +57,14 @@ namespace RoboSharp.Results
 
         #region < Private Members >
 
-        internal IRoboCommand _Command { get; }
+        internal IRoboCommand Command { get; }
         private bool SkippingFile { get; set; }
         private bool CopyOpStarted { get; set; }
         private bool IsFinalized { get; set; } = false;
         internal bool FileFailed { get; set; }
         private bool DirMarkedAsCopied { get; set; }
 
-        private RoboSharpConfiguration Config => _Command?.Configuration;
+        private RoboSharpConfiguration Config => Command?.Configuration;
 
         // Stat Objects that will be publicly visible
         private readonly Statistic DirStatField;
@@ -369,7 +369,7 @@ namespace RoboSharp.Results
             FileFailed = false;
 
             // Flag to perform checks during a ListOnly operation OR for 0kb files (They won't get Progress update, but will be created)
-            bool ListOperation = _Command.LoggingOptions.ListOnly;
+            bool ListOperation = Command.LoggingOptions.ListOnly;
             bool SpecialHandling = ListOperation || currentFile.Size == 0;
             CurrentFile_SpecialHandling = SpecialHandling;
             Monitor.Exit(CurrentFileLock);
@@ -404,7 +404,7 @@ namespace RoboSharp.Results
                 }
                 else if (currentFile.FileClass.Equals(Config.LogParsing_SameFile, StringComparison.CurrentCultureIgnoreCase))    //Identical Files
                 {
-                    if (_Command.SelectionOptions.IncludeSame)
+                    if (Command.SelectionOptions.IncludeSame)
                     {
                         if (SpecialHandling) SetCopyOpStarted();   // Only add to Copied if ListOnly / 0-bytes
                     }
@@ -418,16 +418,16 @@ namespace RoboSharp.Results
                     {
                         //Skipped Or Copied Conditions
                         case true when currentFile.FileClass.Equals(Config.LogParsing_NewerFile, StringComparison.CurrentCultureIgnoreCase):    // ExcludeNewer
-                            SkippedOrCopied(currentFile, _Command.SelectionOptions.ExcludeNewer);
+                            SkippedOrCopied(currentFile, Command.SelectionOptions.ExcludeNewer);
                             break;
                         case true when currentFile.FileClass.Equals(Config.LogParsing_OlderFile, StringComparison.CurrentCultureIgnoreCase):    // ExcludeOlder
-                            SkippedOrCopied(currentFile, _Command.SelectionOptions.ExcludeOlder);
+                            SkippedOrCopied(currentFile, Command.SelectionOptions.ExcludeOlder);
                             break;
                         case true when currentFile.FileClass.Equals(Config.LogParsing_ChangedExclusion, StringComparison.CurrentCultureIgnoreCase):  //ExcludeChanged
-                            SkippedOrCopied(currentFile, _Command.SelectionOptions.ExcludeChanged);
+                            SkippedOrCopied(currentFile, Command.SelectionOptions.ExcludeChanged);
                             break;
                         case true when currentFile.FileClass.Equals(Config.LogParsing_TweakedInclusion, StringComparison.CurrentCultureIgnoreCase):  //IncludeTweaked
-                            SkippedOrCopied(currentFile, !_Command.SelectionOptions.IncludeTweaked);
+                            SkippedOrCopied(currentFile, !Command.SelectionOptions.IncludeTweaked);
                             break;
 
                         //Mark As Skip Conditions

@@ -699,14 +699,9 @@ namespace RoboSharp
             JobOptions.NoSourceDirectory = !IncludeSource;
             JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
-            Exception e = null;
             try
             {
                 await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
-            }
-            catch (Exception Fault)
-            {
-                e = Fault;
             }
             finally
             {
@@ -715,8 +710,6 @@ namespace RoboSharp
                 JobOptions.NoSourceDirectory = _NOSD;
                 JobOptions.NoDestinationDirectory = _NODD;
                 JobOptions.PreventCopyOperation = _QUIT;
-                //If an exception occured, rethrow it.
-                if (e != null) throw e;
             }
         }
 
@@ -836,7 +829,7 @@ namespace RoboSharp
                     var errorCode = ApplicationConstants.ErrorCodes.FirstOrDefault(x => data == x.Value);
                     if (errorCode.Key == null)
                     {
-                        var file = new ProcessedFileInfo(systemMessage: data);
+                        var file = new ProcessedFileInfo(data);
                         OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                     }
                 }

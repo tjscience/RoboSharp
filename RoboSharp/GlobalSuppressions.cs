@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "Required by .NetStandard Target")]
+[assembly: SuppressMessage("Style", "IDE0066:Use 'switch expression(...)'", Justification = "Not compatible with C# 7.3 - NetStandard")]
