@@ -110,12 +110,12 @@ namespace RoboSharp
             Name = command.Name;
             StopIfDisposing = command.StopIfDisposing;
 
-            configuration = LinkConfiguration ? command.configuration : command.configuration.Clone();
+            configuration = LinkConfiguration ? command.Configuration : command.Configuration.Clone();
             copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
-            JobOptions = LinkJobOptions ? command.jobOptions : command.jobOptions.Clone();
-            loggingOptions = LinkLoggingOptions ? command.loggingOptions : command.loggingOptions.Clone();
-            retryOptions = LinkRetryOptions ? command.retryOptions : command.retryOptions.Clone();
-            selectionOptions = LinkSelectionOptions ? command.selectionOptions : command.SelectionOptions.Clone();
+            JobOptions = LinkJobOptions ? command.JobOptions : command.JobOptions.Clone();
+            loggingOptions = LinkLoggingOptions ? command.LoggingOptions : command.LoggingOptions.Clone();
+            retryOptions = LinkRetryOptions ? command.RetryOptions : command.RetryOptions.Clone();
+            selectionOptions = LinkSelectionOptions ? command.SelectionOptions : command.SelectionOptions.Clone();
         }
 
         /// <summary>Create a new RoboCommand object</summary>
@@ -668,9 +668,8 @@ namespace RoboSharp
         /// <param name="IncludeSource">Save <see cref="CopyOptions.Source"/> into the RCJ file.</param>
         /// <param name="IncludeDestination">Save <see cref="CopyOptions.Destination"/> into the RCJ file.</param>
         /// <inheritdoc cref = "Start(string, string, string)" />
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+        /// <param name="domain"/><param name="password"/><param name="username"/>
         public async Task SaveAsJobFile(string path, bool IncludeSource = false, bool IncludeDestination = false, string domain = "", string username = "", string password = "")
-#pragma warning restore CS1573
         {
             //If currently running and this is called, clone the command, then run the save method against the clone.
             if (process != null)
@@ -712,7 +711,6 @@ namespace RoboSharp
                 JobOptions.PreventCopyOperation = _QUIT;
             }
         }
-
 
         #endregion
 
