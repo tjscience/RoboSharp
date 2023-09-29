@@ -435,17 +435,17 @@ namespace RoboSharp
         {
             if (string.IsNullOrWhiteSpace(attributes)) return null;
             attributes = attributes.ToUpper();
-            if (!System.Text.RegularExpressions.Regex.IsMatch(attributes, @"^[RASHCNETO]{0,9}$", RegexOptions.Compiled)) throw new Exception("Invalid RASHCNETO string!");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(attributes, @"^[RASHCNETO]{0,9}$", RegexOptions.Compiled)) throw new ArgumentException("Invalid RASHCNETO string!");
             FileAttributes? attr = null;
-            if (attributes.Contains('R')) attr |= FileAttributes.ReadOnly;
-            if (attributes.Contains('A')) attr |= FileAttributes.Archive;
-            if (attributes.Contains('S')) attr |= FileAttributes.System;
-            if (attributes.Contains('H')) attr |= FileAttributes.Hidden;
-            if (attributes.Contains('C')) attr |= FileAttributes.Compressed;
-            if (attributes.Contains('N')) attr |= FileAttributes.NotContentIndexed;
-            if (attributes.Contains('E')) attr |= FileAttributes.Encrypted;
-            if (attributes.Contains('T')) attr |= FileAttributes.Temporary;
-            if (attributes.Contains('O')) attr |= FileAttributes.Offline;
+            if (attributes.Contains('R')) attr = attr.HasValue ? attr |= FileAttributes.ReadOnly : FileAttributes.ReadOnly;
+            if (attributes.Contains('A')) attr = attr.HasValue ? attr |= FileAttributes.Archive : FileAttributes.Archive;
+            if (attributes.Contains('S')) attr = attr.HasValue ? attr |= FileAttributes.System : FileAttributes.System;
+            if (attributes.Contains('H')) attr = attr.HasValue ? attr |= FileAttributes.Hidden : FileAttributes.Hidden;
+            if (attributes.Contains('C')) attr = attr.HasValue ? attr |= FileAttributes.Compressed : FileAttributes.Compressed;
+            if (attributes.Contains('N')) attr = attr.HasValue ? attr |= FileAttributes.NotContentIndexed : FileAttributes.NotContentIndexed;
+            if (attributes.Contains('E')) attr = attr.HasValue ? attr |= FileAttributes.Encrypted : FileAttributes.Encrypted;
+            if (attributes.Contains('T')) attr = attr.HasValue ? attr |= FileAttributes.Temporary : FileAttributes.Temporary;
+            if (attributes.Contains('O')) attr = attr.HasValue ? attr |= FileAttributes.Offline : FileAttributes.Offline;
             return attr;
         }
 

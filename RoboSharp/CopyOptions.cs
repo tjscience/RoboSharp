@@ -636,6 +636,7 @@ namespace RoboSharp
             this.Mirror = flags.HasFlag(CopyActionFlags.Mirror);
             this.MoveFiles = flags.HasFlag(CopyActionFlags.MoveFiles);
             this.MoveFilesAndDirectories = flags.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+            this.CreateDirectoryAndFileTree = flags.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree);
         }
 
         /// <summary>
@@ -650,6 +651,7 @@ namespace RoboSharp
             if (this.Mirror) flags |=CopyActionFlags.Mirror;
             if (this.MoveFiles) flags |=CopyActionFlags.MoveFiles;
             if (this.MoveFilesAndDirectories) flags |=CopyActionFlags.MoveFilesAndDirectories;
+            if (this.CreateDirectoryAndFileTree) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
             return flags;
         }
 

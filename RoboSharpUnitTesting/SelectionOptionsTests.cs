@@ -14,35 +14,38 @@ namespace RoboSharpUnitTesting
         const FileAttributes RA = R | FileAttributes.Archive;
         const FileAttributes RAS = RA | FileAttributes.System;
         const FileAttributes RASH = RAS | FileAttributes.Hidden;
-        const FileAttributes RASHN = RASH | FileAttributes.NotContentIndexed;
-        const FileAttributes RASHNE = RASHN | FileAttributes.Encrypted;
-        const FileAttributes RASHNET = RASHNE | FileAttributes.Temporary;
-        const FileAttributes RASHNETO = RASHNET | FileAttributes.Offline;
-        const FileAttributes UNUSED_VALUES = ~RASHNETO;
+        const FileAttributes RASHC = RASH | FileAttributes.Compressed;
+        const FileAttributes RASHCN = RASHC | FileAttributes.NotContentIndexed;
+        const FileAttributes RASHCNE = RASHCN | FileAttributes.Encrypted;
+        const FileAttributes RASHCNET = RASHCNE | FileAttributes.Temporary;
+        const FileAttributes RASHCNETO = RASHCNET | FileAttributes.Offline;
+        const FileAttributes UNUSED_VALUES = ~RASHCNETO;
 
         [DataRow(R, FileAttributes.ReadOnly)]
         [DataRow(RA, FileAttributes.ReadOnly | FileAttributes.Archive)]
         [DataRow(RAS, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System)]
         [DataRow(RASH, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden)]
-        [DataRow(RASHN, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed)]
-        [DataRow(RASHNE, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed | FileAttributes.Encrypted)]
-        [DataRow(RASHNET, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary)]
-        [DataRow(RASHNETO, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary | FileAttributes.Offline)]
+        [DataRow(RASHC, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed)]
+        [DataRow(RASHCN, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed)]
+        [DataRow(RASHCNE, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed | FileAttributes.Encrypted)]
+        [DataRow(RASHCNET, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary)]
+        [DataRow(RASHCNETO, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary | FileAttributes.Offline)]
         [TestMethod] // Verify the constants supplied to the other tests are value
         public void Test_Constants(FileAttributes value, FileAttributes expected)
         {
             Assert.AreEqual(expected, value);
         }
-                
+
         [DataRow("", null)]
         [DataRow("R", R)]
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_ConvertFileAttrStringToEnum(string input, FileAttributes? value)
         {
@@ -54,10 +57,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_ConvertFileAttrToString(string output, FileAttributes? input)
         {
@@ -75,10 +79,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_IncludedAttributes(string value, FileAttributes? expected)
         {
@@ -93,10 +98,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_ExcludedAttributes(string value, FileAttributes? expected)
         {
@@ -112,10 +118,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_SetExcludedAttributes(string value, FileAttributes? input)
         {
@@ -130,11 +137,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNETO)]
-        [DataRow("RASHNETO", RASHNETO)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNETO)]
         [TestMethod]
         public void Test_SetIncludedAttributes(string value, FileAttributes? input)
         {
@@ -143,20 +150,6 @@ namespace RoboSharpUnitTesting
             Assert.AreEqual(value, options.IncludeAttributes);
         }
 
-
-        //[DataRow(SelectionFlags.Default)]
-        //[DataRow(SelectionFlags.ExcludeChanged)]
-        //[DataRow(SelectionFlags.ExcludeExtra)]
-        //[DataRow(SelectionFlags.ExcludeJunctionPoints)]
-        //[DataRow(SelectionFlags.ExcludeJunctionPointsForDirectories)]
-        //[DataRow(SelectionFlags.ExcludeJunctionPointsForFiles)]
-        //[DataRow(SelectionFlags.ExcludeLonely)]
-        //[DataRow(SelectionFlags.ExcludeNewer)]
-        //[DataRow(SelectionFlags.ExcludeOlder)]
-        //[DataRow(SelectionFlags.IncludeSame)]
-        //[DataRow(SelectionFlags.IncludeTweaked)]
-        //[DataRow(SelectionFlags.OnlyCopyArchiveFiles)]
-        //[DataRow(SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag)]
         [TestMethod]
         public void Test_ApplySelectionFlags()
         {

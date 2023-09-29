@@ -14,18 +14,20 @@ namespace RoboSharpUnitTesting
         const FileAttributes RA = R | FileAttributes.Archive;
         const FileAttributes RAS = RA | FileAttributes.System;
         const FileAttributes RASH = RAS | FileAttributes.Hidden;
-        const FileAttributes RASHN = RASH | FileAttributes.NotContentIndexed;
-        const FileAttributes RASHNE = RASHN | FileAttributes.Encrypted;
-        const FileAttributes RASHNET = RASHNE | FileAttributes.Temporary;
-        const FileAttributes UNUSED_VALUES = ~RASHNET;
+        const FileAttributes RASHC = RASH | FileAttributes.Compressed;
+        const FileAttributes RASHCN = RASHC | FileAttributes.NotContentIndexed;
+        const FileAttributes RASHCNE = RASHCN | FileAttributes.Encrypted;
+        const FileAttributes RASHCNET = RASHCNE | FileAttributes.Temporary;
+        const FileAttributes UNUSED_VALUES = ~RASHCNET;
 
         [DataRow(R, FileAttributes.ReadOnly)]
         [DataRow(RA, FileAttributes.ReadOnly | FileAttributes.Archive)]
         [DataRow(RAS, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System)]
         [DataRow(RASH, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden)]
-        [DataRow(RASHN, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed)]
-        [DataRow(RASHNE, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed | FileAttributes.Encrypted)]
-        [DataRow(RASHNET, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary)]
+        [DataRow(RASHC, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed)]
+        [DataRow(RASHCN, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed)]
+        [DataRow(RASHCNE, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed | FileAttributes.Encrypted)]
+        [DataRow(RASHCNET, FileAttributes.ReadOnly | FileAttributes.Archive | FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.NotContentIndexed | FileAttributes.Encrypted | FileAttributes.Temporary)]
         [TestMethod] // Verify the constants supplied to the other tests are value
         public void Test_Constants(FileAttributes value, FileAttributes expected)
         {
@@ -37,17 +39,18 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNET)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNET, "RASHCNET")]
         [TestMethod]
-        public void Test_AddAttributes(string input, FileAttributes? expected)
+        public void Test_AddAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
             var options = new CopyOptions();
             options.AddAttributes = input;
             Assert.AreEqual(expected, options.GetAddAttributes());
-            Assert.AreEqual(options.AddAttributes, input);
+            Assert.AreEqual(expectedstring ?? input,options.AddAttributes);
         }
 
         [DataRow("", null)]
@@ -55,17 +58,18 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNETO", RASHNET)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNETO", RASHCNET, "RASHCNET")]
         [TestMethod]
-        public void Test_RemoveAttributes(string input, FileAttributes? expected)
+        public void Test_RemoveAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
             var options = new CopyOptions();
             options.RemoveAttributes = input;
             Assert.AreEqual(expected, options.GetRemoveAttributes());
-            Assert.AreEqual(input, options.RemoveAttributes);
+            Assert.AreEqual(expectedstring ?? input, options.RemoveAttributes);
         }
 
         [DataRow("", null)]
@@ -74,10 +78,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNET", RASHNET | FileAttributes.Offline)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNET", RASHCNET | FileAttributes.Offline)]
         [TestMethod]
         public void Test_SetAddAttributes(string expected, FileAttributes? input)
         {
@@ -92,10 +97,11 @@ namespace RoboSharpUnitTesting
         [DataRow("RA", RA)]
         [DataRow("RAS", RAS)]
         [DataRow("RASH", RASH)]
-        [DataRow("RASHN", RASHN)]
-        [DataRow("RASHNE", RASHNE)]
-        [DataRow("RASHNET", RASHNET)]
-        [DataRow("RASHNET", RASHNET | FileAttributes.Offline)]
+        [DataRow("RASHC", RASHC)]
+        [DataRow("RASHCN", RASHCN)]
+        [DataRow("RASHCNE", RASHCNE)]
+        [DataRow("RASHCNET", RASHCNET)]
+        [DataRow("RASHCNET", RASHCNET | FileAttributes.Offline)]
         [TestMethod]
         public void Test_SetRemoveAttributes(string expected, FileAttributes? input)
         {
