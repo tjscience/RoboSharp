@@ -34,29 +34,31 @@ namespace RoboSharp
         /// Generate a new object by explicitly defining the values
         /// </summary>
         /// <param name="name"><inheritdoc cref="Name" path="*" /></param>
-        /// <param name="type"><inheritdoc cref="FileClassType" path="*" /></param>
-        /// <param name="description"><inheritdoc cref="FileClass" path="*" /></param>
+        /// <param name="fileClassType"><inheritdoc cref="FileClassType" path="*" /></param>
+        /// <param name="fileClass"><inheritdoc cref="FileClass" path="*" /></param>
         /// <param name="size"><inheritdoc cref="Size" path="*" /></param>
-        public ProcessedFileInfo(string name, FileClassType type, string description, long size = 0)
+        public ProcessedFileInfo(string name, FileClassType fileClassType, string fileClass, long size = 0)
         {
             Name = name;
-            FileClassType = type;
-            FileClass = description;
+            FileClassType = fileClassType;
+            FileClass = fileClass;
             Size = size;
         }
 
         /// <summary>
         /// Create a new ProcessedFileInfo object that represents some file
+        /// <br/> The <see cref="Name"/> will depend on <see cref="LoggingOptions.IncludeFullPathNames"/>
         /// </summary>
-        /// <param name="file"></param>
+        /// <param name="file">the FileInfo object that was evaluated</param>
         /// <param name="status">The status of the file to look up from the config</param>
-        /// <param name="config">The config the get the status string from</param>
-        /// <param name="includeFullName">If TRUE, uses the full path. If FALSE, only uses the directory name.</param>
-        public ProcessedFileInfo(System.IO.FileInfo file, RoboSharpConfiguration config, ProcessedFileFlag status = ProcessedFileFlag.None, bool includeFullName = false)
+        /// <param name="command">The command that provides the <see cref="RoboSharpConfiguration"/> and <see cref="LoggingOptions"/> objects that will be evaluated</param>
+        public ProcessedFileInfo(FileInfo file, IRoboCommand command, ProcessedFileFlag status = ProcessedFileFlag.None)
         {
+            if (file is null) throw new ArgumentNullException(nameof(file));
+            if (command is null) throw new ArgumentNullException(nameof(command));
             FileClassType = FileClassType.File;
-            FileClass = config.GetFileClass(status);
-            Name = includeFullName ? file.FullName : file.Name;
+            FileClass = command.Configuration.GetFileClass(status);
+            Name = command.LoggingOptions.IncludeFullPathNames ? file.FullName : file.Name;
             Size = file.Length;
         }
 
@@ -73,17 +75,21 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Create a new ProcessedFileInfo object that represents some directory
+        /// Create a new ProcessedFileInfo object that represents some directory.
+        /// <br/> The <see cref="Name"/> will depend on <see cref="LoggingOptions.IncludeFullPathNames"/>
         /// </summary>
         /// <param name="directory">the Directory</param>
         /// <param name="size">number of files/folders in the directory - If left at -1, then it will check check using the <paramref name="directory"/> length</param>
         /// <param name="status">The status of the file to look up from the config</param>
-        /// <param name="config">The config the get the status string from</param>
-        public ProcessedFileInfo(System.IO.DirectoryInfo directory, RoboSharpConfiguration config, ProcessedDirectoryFlag status = ProcessedDirectoryFlag.None, long size = -1)
+        /// <param name="command">The command that provides the <see cref="RoboSharpConfiguration"/> and <see cref="LoggingOptions"/> objects that will be evaluated</param>
+        /// <exception cref="ArgumentNullException"/>
+        public ProcessedFileInfo(DirectoryInfo directory, IRoboCommand command, ProcessedDirectoryFlag status = ProcessedDirectoryFlag.None, long size = -1)
         {
+            if (directory is null) throw new ArgumentNullException(nameof(directory));
+            if (command is null) throw new ArgumentNullException(nameof(command));
             FileClassType = FileClassType.NewDir;
-            FileClass = config.GetDirectoryClass(status);
-            Name = directory.FullName;
+            FileClass = command.Configuration.GetDirectoryClass(status);
+            Name = command.LoggingOptions.IncludeFullPathNames ? directory.FullName : directory.Name;
             Size = size != -1 ? size : Directory.GetFiles(directory.FullName).Length;
         }
 
@@ -126,7 +132,7 @@ namespace RoboSharp
         /// <returns></returns>
         public string ToString(LoggingOptions options)
         {
-            switch(FileClassType)
+            switch (FileClassType)
             {
                 case FileClassType.SystemMessage: return Name;
                 case FileClassType.NewDir: return DirInfoToString(true);
