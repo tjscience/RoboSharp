@@ -88,6 +88,7 @@ namespace RoboSharp
             }
             else
             {
+                result = null;
                 void Eval() { result = auth(command); }
                 ImpersonatedRun.Execute(domain, username, password, Eval);
             }
@@ -99,7 +100,7 @@ namespace RoboSharp
             //Dispose Authentification
             impersonation?.Dispose();
 #endif
-            return result;
+            return result ?? throw new NullReferenceException("Authentication Method Failed - Please report to the github RoboSharp project page.");
         }
 
         /// <remarks>
