@@ -50,6 +50,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExpectedResults.cs" />
+    <Compile Include="SelectionOptionsTests.cs" />
+    <Compile Include="CopyOptionsTests.cs" />
     <Compile Include="RoboCommandFactoryTests.cs" />
     <Compile Include="RoboQueueEventTests.cs" />
     <Compile Include="Test_Setup.cs" />

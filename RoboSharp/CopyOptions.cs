@@ -607,7 +607,7 @@ namespace RoboSharp
         /// </summary>
         /// <param name="runHours"></param>
         /// <returns>True if correct format, otherwise false</returns>
-        public bool CheckRunHoursString(string runHours)
+        public static bool IsRunHoursStringValid(string runHours)
         {
             if (string.IsNullOrWhiteSpace(runHours)) return true;
             if (!RunHours_OverallRegex.IsMatch(runHours.Trim())) return false;
@@ -616,6 +616,9 @@ namespace RoboSharp
             bool EndMatch = RunHours_Check1.IsMatch(times.Groups["EndTime"].Value) || RunHours_Check2.IsMatch(times.Groups["EndTime"].Value);
             return StartMatch && EndMatch;
         }
+
+        /// <inheritdoc cref="IsRunHoursStringValid(string)"/>
+        public bool CheckRunHoursString(string runHours) => IsRunHoursStringValid(runHours);
 
         #endregion
 
