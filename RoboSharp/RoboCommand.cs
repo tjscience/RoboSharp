@@ -61,8 +61,8 @@ namespace RoboSharp
         {
             InitClassProperties();
             Init("", stopIfDisposing, source, destination);
-
         }
+
         /// <inheritdoc cref="Init"/>
         public RoboCommand(string source, string destination, string name, bool stopIfDisposing = true)
         {
@@ -105,7 +105,7 @@ namespace RoboSharp
         /// <param name="LinkRetryOptions">Link the <see cref="RetryOptions"/> of the two commands ( True Default )</param>
         /// <param name="LinkSelectionOptions">Link the <see cref="SelectionOptions"/> of the two commands</param>
         /// <param name="LinkJobOptions">Link the <see cref="SelectionOptions"/> of the two commands</param>
-        public RoboCommand(RoboCommand command, string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false, bool LinkJobOptions = false)
+        public RoboCommand(IRoboCommand command, string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false, bool LinkJobOptions = false)
         {
             Name = command.Name;
             StopIfDisposing = command.StopIfDisposing;
@@ -141,7 +141,7 @@ namespace RoboSharp
             jobOptions = new JobOptions();
         }
 
-        /// <inheritdoc cref="RoboCommand.RoboCommand(RoboCommand, string, string, bool, bool, bool, bool, bool)"/>
+        /// <inheritdoc cref="RoboCommand.RoboCommand(IRoboCommand, string, string, bool, bool, bool, bool, bool)"/>
         public RoboCommand Clone(string NewSource = null, string NewDestination = null, bool LinkConfiguration = true, bool LinkRetryOptions = true, bool LinkSelectionOptions = false, bool LinkLoggingOptions = false, bool LinkJobOptions = false)
             => new RoboCommand(this, NewSource, NewDestination, LinkConfiguration, LinkRetryOptions, LinkSelectionOptions, LinkLoggingOptions, LinkJobOptions);
 
