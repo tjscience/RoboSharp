@@ -102,6 +102,13 @@ namespace RoboSharp
         public virtual string FilePath { get; set; } = "";
 
         /// <summary>
+        /// When set, RoboCopy will load the job options from the specified <see cref="FilePath"/>. <br/>
+        ///  /JOB:{FilePath}
+        /// <br/> Note that any options read using this method will not be see by the other Options objects, unless loaded in via <see cref="JobFile.ParseJobFile(string)"/>
+        /// </summary>
+        public virtual string LoadJobFilePath { get; set; }
+
+        /// <summary>
         /// RoboCopy will validate the command, then exit before performing any Move/Copy/List operations. <br/>
         /// /QUIT
         /// </summary>
@@ -143,6 +150,10 @@ namespace RoboSharp
                 options += $"{JOB_SAVE}{FilePath.WrapPath()}";
                 if (NoSourceDirectory) options += JOB_NoSourceDirectory;
                 if (NoDestinationDirectory) options += JOB_NoDestinationDirectory;
+            }
+            if (!LoadJobFilePath.IsNullOrWhiteSpace())
+            {
+                options += $"{JOB_LOADNAME}{LoadJobFilePath.WrapPath()}";
             }
             if (PreventCopyOperation) options += JOB_QUIT;
             return options;
