@@ -20,7 +20,11 @@ namespace RoboSharp.Extensions
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
+            RefreshSourcePairs();
         }
+
+        private Lazy<CachedEnumerable<DirectoryPair>> lazySourceDirs;
+        private Lazy<CachedEnumerable<FilePair>> lazySourceFiles;
 
         /// <inheritdoc cref="DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
         public static DirectoryPair CreatePair(DirectoryInfo source, DirectoryInfo destination) => new DirectoryPair(source, destination);
@@ -31,8 +35,21 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
+        public CachedEnumerable<FilePair> SourceFiles => lazySourceFiles.Value;
+
+        public CachedEnumerable<DirectoryPair> SourceDirectories => lazySourceDirs.Value;
+
         /// <inheritdoc/>
         public ProcessedFileInfo ProcessResult { get; set; }
+
+        /// <summary>
+        /// Refreshes the <see cref="SourceFiles"/> and <see cref="SourceDirectories"/> cached enumerables
+        /// </summary>
+        public void RefreshSourcePairs()
+        {
+            lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(() => this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair));
+            lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(() => this.EnumerateSourceFilePairs(FilePair.CreatePair));
+        }
 
         /// <inheritdoc cref="IDirectoryPairExtensions.GetFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
         public FilePair[] GetFilePairs()
@@ -40,20 +57,20 @@ namespace RoboSharp.Extensions
             return this.GetFilePairs(FilePair.CreatePair);
         }
 
-        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
+        /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
         public CachedEnumerable<FilePair> EnumerateFilePairs()
         {
             return this.EnumerateFilePairs(FilePair.CreatePair);
         }
 
 
-        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        /// <inheritdoc cref="IDirectoryPairExtensions.GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public DirectoryPair[] GetDirectoryPairs()
         {
             return this.GetDirectoryPairs(CreatePair);
         }
 
-        /// <inheritdoc cref="DirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public CachedEnumerable<DirectoryPair> EnumerateDirectoryPairs()
         {
             return this.EnumerateDirectoryPairs(CreatePair);
