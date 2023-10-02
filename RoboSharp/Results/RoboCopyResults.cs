@@ -62,10 +62,15 @@ namespace RoboSharp.Results
                 StartTime = builder.StartTime,
                 EndTime = builder.EndTime,
                 JobName = builder.JobName,
-                LogLines = builder.LogLines?.ToArray() ?? Array.Empty<string>(),
                 Status = builder.ExitStatus,
                 SpeedStatistic = builder.SpeedStatistic.Clone(),
+#if NET452
+                LogLines = builder.LogLines?.ToArray() ?? new string[] {},
+                RoboCopyErrors = builder.CommandErrors?.ToArray() ?? new ErrorEventArgs[] { },
+#else
+                LogLines = builder.LogLines?.ToArray() ?? Array.Empty<string>(),
                 RoboCopyErrors = builder.CommandErrors?.ToArray() ?? Array.Empty<ErrorEventArgs>(),
+#endif
                 TimeSpan = builder.EndTime.Subtract(builder.StartTime)
             };
         }
