@@ -186,12 +186,13 @@ namespace RoboSharp.Extensions
             // Move the files
             resultsBuilder = new ResultsBuilder(this);
             base.IProgressEstimator = resultsBuilder.ProgressEstimator;
-            runningTask = ProcessDirectory(new DirectoryPair(source, dest));
+            RaiseOnProgressEstimatorCreated(resultsBuilder.ProgressEstimator);
+            runningTask = ProcessDirectory(new DirectoryPair(source, dest), 1);
             await runningTask;
             return resultsBuilder.GetResults();
         }
 
-        private async Task ProcessDirectory(DirectoryPair directoryPair)
+        private async Task ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
             var filePairs = directoryPair.EnumerateFilePairs(FilePair.CreatePair);
 
@@ -239,36 +240,40 @@ namespace RoboSharp.Extensions
             }
 
             // Iterate through dirs
-            foreach (var dir in directoryPair.GetDirectoryPairs(DirectoryPair.CreatePair))
+            if (!CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
             {
-                if (cancelRequest.IsCancellationRequested) break;
-                bool processDir = Evaluator.ShouldCopyDir(dir);
-                bool shouldPurge = Evaluator.ShouldPurge(dir);
+                foreach (var dir in directoryPair.GetDirectoryPairs(DirectoryPair.CreatePair))
+                {
+                    if (cancelRequest.IsCancellationRequested) break;
+                    if (!CopyOptions.IsRecursive()) break;
+                    bool processDir = Evaluator.ShouldCopyDir(dir);
+                    bool shouldPurge = Evaluator.ShouldPurge(dir);
 
-                dir.ProcessResult.Size = shouldPurge ? dir.Destination.GetFileSystemInfos().Length : dir.Source.GetFileSystemInfos().Length;
-                resultsBuilder.AddDir(dir.ProcessResult);
-                RaiseOnFileProcessed(dir.ProcessResult);
-                if (shouldPurge)
-                {
-                    PurgeDirectory(dir);
-                }
-                else if (processDir)
-                {
-                    bool isMoved = false;
-                    if (RoboMoverOptions.QuickMove && !dir.Destination.Exists)
+                    dir.ProcessResult.Size = shouldPurge ? dir.Destination.GetFileSystemInfos().Length : dir.Source.GetFileSystemInfos().Length;
+                    resultsBuilder.AddDir(dir.ProcessResult);
+                    RaiseOnFileProcessed(dir.ProcessResult);
+                    if (shouldPurge)
                     {
-                        try
-                        {
-                            dir.Source.MoveTo(dir.Destination.FullName);
-                            dir.Source.Refresh();
-                            isMoved = !dir.Source.Exists;
-                        }
-                        catch (Exception e)
-                        {
-                            RaiseOnCommandError("Unable to perform QuickMove on path: " + dir.Source.FullName, e);
-                        }
+                        PurgeDirectory(dir);
                     }
-                    if (!isMoved) await ProcessDirectory(dir);
+                    else if (processDir)
+                    {
+                        bool isMoved = false;
+                        if (RoboMoverOptions.QuickMove && !dir.Destination.Exists)
+                        {
+                            try
+                            {
+                                dir.Source.MoveTo(dir.Destination.FullName);
+                                dir.Source.Refresh();
+                                isMoved = !dir.Source.Exists;
+                            }
+                            catch (Exception e)
+                            {
+                                RaiseOnCommandError("Unable to perform QuickMove on path: " + dir.Source.FullName, e);
+                            }
+                        }
+                        if (!isMoved) await ProcessDirectory(dir, currentDepth + 1);
+                    }
                 }
             }
 
