@@ -187,15 +187,18 @@ namespace RoboSharp.Extensions
             resultsBuilder = new ResultsBuilder(this);
             base.IProgressEstimator = resultsBuilder.ProgressEstimator;
             RaiseOnProgressEstimatorCreated(resultsBuilder.ProgressEstimator);
-            runningTask = ProcessDirectory(new DirectoryPair(source, dest), 1);
+            var sourcePair = new DirectoryPair(source, dest);
+            runningTask = ProcessDirectory(sourcePair, 1);
             await runningTask;
             return resultsBuilder.GetResults();
         }
 
         private async Task ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
-            var filePairs = directoryPair.EnumerateFilePairs(FilePair.CreatePair);
-
+            CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs(FilePair.CreatePair);
+            directoryPair.ProcessResult.Size = filePairs.Count();
+            resultsBuilder.AddDir(directoryPair.ProcessResult);
+            
             // Files
             foreach (var file in filePairs)
             {
@@ -242,7 +245,8 @@ namespace RoboSharp.Extensions
             // Iterate through dirs
             if (!CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
             {
-                foreach (var dir in directoryPair.GetDirectoryPairs(DirectoryPair.CreatePair))
+                CachedEnumerable<DirectoryPair> childDirs = SelectionOptions.ExcludeExtra ? directoryPair.SourceDirectories : directoryPair.EnumerateDirectoryPairs();
+                foreach (var dir in childDirs)
                 {
                     if (cancelRequest.IsCancellationRequested) break;
                     if (!CopyOptions.IsRecursive()) break;
@@ -250,11 +254,12 @@ namespace RoboSharp.Extensions
                     bool shouldPurge = Evaluator.ShouldPurge(dir);
 
                     dir.ProcessResult.Size = shouldPurge ? dir.Destination.GetFileSystemInfos().Length : dir.Source.GetFileSystemInfos().Length;
-                    resultsBuilder.AddDir(dir.ProcessResult);
                     RaiseOnFileProcessed(dir.ProcessResult);
                     if (shouldPurge)
                     {
+                        resultsBuilder.AddDir(dir.ProcessResult);
                         PurgeDirectory(dir);
+
                     }
                     else if (processDir)
                     {
@@ -273,6 +278,10 @@ namespace RoboSharp.Extensions
                             }
                         }
                         if (!isMoved) await ProcessDirectory(dir, currentDepth + 1);
+                    }
+                    else
+                    {
+                        resultsBuilder.AddDir(dir.ProcessResult);
                     }
                 }
             }
