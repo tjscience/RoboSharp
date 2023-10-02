@@ -16,6 +16,77 @@ namespace RoboSharp.Extensions
     {
 
         /// <summary>
+        /// Evaluates the <paramref name="flag"/> to check if any of the MOV options are enabled
+        /// </summary>
+        public static bool IsMovingFiles(this CopyActionFlags flag) =>
+            flag.HasFlag(CopyActionFlags.MoveFiles) |
+            flag.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+
+        /// <summary>
+        /// Returns <see langword="true"/> if either <see cref="CopyOptions.MoveFiles"/> | <see cref="CopyOptions.MoveFilesAndDirectories"/> are enabled.
+        /// </summary>
+        public static bool IsMovingFiles(this CopyOptions options) =>
+            options.MoveFiles ||
+            options.MoveFilesAndDirectories;
+
+        /// <summary>
+        /// Evaluates the <paramref name="flag"/> to check if any of the options requiring recursion into subdirectories are enabled
+        /// </summary>
+        public static bool IsRecursive(this CopyActionFlags flag) =>
+            flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
+            flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
+            flag.HasFlag(CopyActionFlags.Mirror) ||
+            flag.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+
+        /// <summary>
+        /// Evaluates the <paramref name="options"/> to check if any of the options the recurse through subdirectories are enabled
+        /// </summary>
+        public static bool IsRecursive(this CopyOptions options) =>
+            options.CopySubdirectories ||
+            options.CopySubdirectories ||
+            options.Mirror ||
+            options.MoveFilesAndDirectories;
+
+        /// <summary>
+        /// Evaluates the <paramref name="flag"/> to check if any of the PURGE options are enabled
+        /// </summary>
+        public static bool IsPurging(this CopyActionFlags flag) =>
+            flag.HasFlag(CopyActionFlags.Purge) ||
+            flag.HasFlag(CopyActionFlags.Mirror);
+
+        /// <summary>
+        /// Evaluates the <paramref name="options"/> to check if any of the PURGE options are enabled
+        /// </summary>
+        public static bool IsPurging(this CopyOptions options) =>
+            options.Purge ||
+            options.Mirror;
+
+        /// <summary>
+        /// Compare the current depth against the maximum allowed depth, and determine if directory recursion can continue.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <param name="depth"> The depth of the recursion. </param>
+        /// <returns>
+        /// <see langword="true"/> if the tested <paramref name="depth"/> will exceed the maximum depth specified in the <paramref name="options"/>. <br/>
+        /// <see langword="false"/> if recursion into the directory tree can continue. <br/>
+        /// <see langword="false"/> if <see cref="CopyOptions.Depth"/> &lt;= 0 ( No Limit )
+        /// </returns>
+        /// <remarks>
+        /// This was written to easily break out for For{} loops during recursion in directories. If (CopyOptions.ExceedsAllowedDepth(depth)) break;
+        /// <br/><br/>
+        /// The first directory in the tree must be considered depth = 1.
+        /// <br/>MyDocuments/ -- Depth = 1
+        /// <br/>MyDocuments/Taxes/ -- Depth = 2
+        /// <br/>MyDocuments/School/ -- Depth = 2
+        /// <br/>MyDocuments/School/C#/ -- Depth = 3
+        /// </remarks>
+        public static bool ExceedsAllowedDepth(this CopyOptions options, int depth)
+        {
+            if (options.Depth <= 0) return false;
+            return depth > options.Depth;
+        }
+
+        /// <summary>
         /// Evaluate the pair and determine if it the file at the destination should be purged or not
         /// </summary>
         /// <param name="command"></param>
@@ -25,7 +96,7 @@ namespace RoboSharp.Extensions
         {
             if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
             {
-                return !command.SelectionOptions.ExcludeExtra && pair.Destination.Exists && !pair.Source.Exists; 
+                return !command.SelectionOptions.ExcludeExtra && pair.Destination.Exists && !pair.Source.Exists;
             }
             return false;
         }
