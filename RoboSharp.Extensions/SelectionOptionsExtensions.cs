@@ -100,7 +100,7 @@ namespace RoboSharp.Extensions
         /// EXTRA directories are folders that exist in the destination but not in the source
         /// </summary>
         /// <returns>TRUE if exists in the destination but not in the source, otherwise false</returns>
-        public static bool IsExtra(DirectoryInfo Source, DirectoryInfo Destination) => !Source.Exists && Destination.Exists;
+        public static bool IsExtra(DirectoryInfo Source, DirectoryInfo Destination) => Destination.Exists && !Source.Exists;
 
         /// <inheritdoc cref="IsExtra(DirectoryInfo, DirectoryInfo)"/>
         public static bool IsExtra(this IDirectoryPair pair)

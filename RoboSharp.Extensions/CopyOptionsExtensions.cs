@@ -30,6 +30,15 @@ namespace RoboSharp.Extensions
             return false;
         }
 
+        public static bool ShouldPurge(this IRoboCommand command, IDirectoryPair pair)
+        {
+            if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
+            {
+                return !command.SelectionOptions.ExcludeExtra && pair.IsExtra();
+            }
+            return false;
+        }
+
         #region < IncludedFiles >
 
         /// <summary>

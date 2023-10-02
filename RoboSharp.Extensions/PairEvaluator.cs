@@ -297,8 +297,10 @@ namespace RoboSharp.Extensions
         #region < Purge >
 
         /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IFilePair)"/>
-        public bool ShouldPurge(IFilePair pair)
-            => Command.ShouldPurge(pair);
+        public bool ShouldPurge(IFilePair pair) => Command.ShouldPurge(pair);
+
+        /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IDirectoryPair)"/>
+        public bool ShouldPurge(IDirectoryPair pair) => Command.ShouldPurge(pair);
 
         #endregion
 
