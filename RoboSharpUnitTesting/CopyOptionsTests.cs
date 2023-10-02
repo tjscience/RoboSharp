@@ -143,6 +143,7 @@ namespace RoboSharp.UnitTests
                 {
                     options.ApplyActionFlags(flag);
                     Assert.AreEqual(flag, options.GetCopyActionFlags());
+                    Assert.AreEqual(flag.HasFlag(CopyActionFlags.Compress), options.Compress);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CopySubdirectories), options.CopySubdirectories);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CopySubdirectoriesIncludingEmpty), options.CopySubdirectoriesIncludingEmpty);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree), options.CreateDirectoryAndFileTree);

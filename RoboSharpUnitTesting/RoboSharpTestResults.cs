@@ -62,12 +62,14 @@ namespace RoboSharp.UnitTests
             }
         }
 
-        public static List<string> CompareIResults(IResults RCResults, IResults PEResults)
+        public static List<string> CompareIResults(IResults commandResults, IResults estimatorResults)
         {
+            if (commandResults is null) throw new ArgumentNullException(nameof(commandResults));
+            if (estimatorResults is null) throw new ArgumentNullException(nameof(estimatorResults));
             var Errors = new List<string>();
-            CompareStatistics(RCResults.DirectoriesStatistic, PEResults.DirectoriesStatistic, ref Errors);
-            CompareStatistics(RCResults.FilesStatistic, PEResults.FilesStatistic, ref Errors);
-            CompareStatistics(RCResults.BytesStatistic, PEResults.BytesStatistic, ref Errors);
+            CompareStatistics(commandResults.DirectoriesStatistic, estimatorResults.DirectoriesStatistic, ref Errors);
+            CompareStatistics(commandResults.FilesStatistic, estimatorResults.FilesStatistic, ref Errors);
+            CompareStatistics(commandResults.BytesStatistic, estimatorResults.BytesStatistic, ref Errors);
             return Errors;
         }
 

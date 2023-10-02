@@ -124,11 +124,12 @@ namespace RoboSharp
         internal const string DIRECTORY_COPY_FLAGS = "/DCOPY:{0} ";
         internal const string DO_NOT_COPY_DIRECTORY_INFO = "/NODCOPY ";
         internal const string DO_NOT_USE_WINDOWS_COPY_OFFLOAD = "/NOOFFLOAD ";
+        internal const string NETWORK_COMPRESSION = "/COMPRESS ";
 
         #endregion Option Constants
 
         #region Option Defaults
-        
+
         /// <summary>
         /// The Default File Filter used that will allow copying of all files
         /// </summary>
@@ -220,6 +221,12 @@ namespace RoboSharp
         public virtual bool EnableEfsRawMode { get; set; }
 
         /// <summary>
+        /// Requests network compression during file transfer, if applicable.
+        /// [/COMPRESS]
+        /// </summary>
+        public virtual bool Compress { get; set; }
+
+        /// <summary>
         /// This property should be set to a string consisting of all the flags to include (eg. DAT; DATSOU)
         /// Specifies the file properties to be copied. The following are the valid values for this option:
         ///D Data
@@ -274,12 +281,16 @@ namespace RoboSharp
         /// Deletes destination files and directories that no longer exist in the source.
         /// [/PURGE]
         /// </summary>
+        /// <remarks>
+        /// Using this option with the <see cref="CopySubdirectoriesIncludingEmpty"/> option allows the destination directory security settings to not be overwritten.
+        /// </remarks>
         public virtual bool Purge { get; set; }
 
         /// <summary>
         /// Mirrors a directory tree (equivalent to CopySubdirectoriesIncludingEmpty plus Purge).
         /// [/MIR]
         /// </summary>
+        /// <remarks>Using this option with the <see cref="CopySubdirectoriesIncludingEmpty"/> overwrites the destination directory security settings.</remarks>
         public virtual bool Mirror { get; set; }
 
         /// <summary>
@@ -557,6 +568,8 @@ namespace RoboSharp
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
             if (DoNotUseWindowsCopyOffload && version >= 6.2)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
+            if (Compress)
+                options.Append(NETWORK_COMPRESSION);
             #endregion Set Options
 
             var parsedOptions = options.ToString();
@@ -637,6 +650,7 @@ namespace RoboSharp
             this.MoveFiles = flags.HasFlag(CopyActionFlags.MoveFiles);
             this.MoveFilesAndDirectories = flags.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
             this.CreateDirectoryAndFileTree = flags.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree);
+            this.Compress = flags.HasFlag(CopyActionFlags.Compress);
         }
 
         /// <summary>
@@ -652,6 +666,7 @@ namespace RoboSharp
             if (this.MoveFiles) flags |=CopyActionFlags.MoveFiles;
             if (this.MoveFilesAndDirectories) flags |=CopyActionFlags.MoveFilesAndDirectories;
             if (this.CreateDirectoryAndFileTree) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
+            if (this.Compress) flags |= CopyActionFlags.Compress;
             return flags;
         }
 
@@ -733,6 +748,7 @@ namespace RoboSharp
 
             //Bool
             CheckPerFile |= copyOptions.CheckPerFile;
+            Compress |= copyOptions.Compress;
             CopyAll |= copyOptions.CopyAll;
             CopyFilesWithSecurity |= copyOptions.CopyFilesWithSecurity;
             CopySubdirectories |= copyOptions.CopySubdirectories;
