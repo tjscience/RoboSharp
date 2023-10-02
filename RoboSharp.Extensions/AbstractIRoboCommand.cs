@@ -176,7 +176,7 @@ namespace RoboSharp.Extensions
 
 
         /// <inheritdoc/>
-        public virtual JobOptions JobOptions => throw new NotImplementedException("Custom IRoboCommand does not implement JobOptions");
+        public virtual JobOptions JobOptions => throw new NotImplementedException(string.Format("IRoboCommand of type '{0}' does not implement JobOptions",this.GetType().ToString()));
 
         /// <inheritdoc/>
         public RoboSharpConfiguration Configuration { get; protected set; }
@@ -290,13 +290,6 @@ namespace RoboSharp.Extensions
         protected virtual void RaiseOnProgressEstimatorCreated(IProgressEstimator estimator)
         {
             OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(estimator));
-        }
-        /// <summary> Raises the OnProgressEstimatorCreated event by creating creating a new ProgressEstimator object</summary>
-        protected virtual ProgressEstimator RaiseOnProgressEstimatorCreated()
-        {
-            var estimator = new ProgressEstimator(this);
-            OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(estimator));
-            return estimator;
         }
 
         #endregion
@@ -445,24 +438,13 @@ namespace RoboSharp.Extensions
         /// Generate the Parameters and Switches to execute RoboCopy with based on the configured settings
         /// </summary>
         /// <returns>the string of parameters that would normally be passed to a RoboCopy process</returns>
-        protected string GenerateParameters()
+        protected virtual string GenerateParameters()
         {
-            //Debugger.Instance.DebugMessage("Generating parameters...");
-            //Debugger.Instance.DebugMessage(CopyOptions);
             string parsedCopyOptions = CopyOptions.ToString();
-            //Debugger.Instance.DebugMessage("CopyOptions parsed.");
             string parsedSelectionOptions = SelectionOptions.ToString();
-            //Debugger.Instance.DebugMessage("SelectionOptions parsed.");
             string parsedRetryOptions = RetryOptions.ToString();
-            //Debugger.Instance.DebugMessage("RetryOptions parsed.");
             string parsedLoggingOptions = LoggingOptions.ToString();
-            //Debugger.Instance.DebugMessage("LoggingOptions parsed.");
-            //var parsedJobOptions = JobOptions.Parse();
-            //Debugger.Instance.DebugMessage("LoggingOptions parsed.");
-            //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
-
-            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions,
-                parsedRetryOptions, parsedLoggingOptions);
+            return string.Format("{0}{1}{2}{3} /BYTES", parsedCopyOptions, parsedSelectionOptions, parsedRetryOptions, parsedLoggingOptions);
         }
     }
 }
