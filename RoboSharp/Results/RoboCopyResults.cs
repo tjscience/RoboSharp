@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using RoboSharp.Interfaces;
 
 namespace RoboSharp.Results
@@ -40,6 +41,33 @@ namespace RoboSharp.Results
             TimeSpan = EndTime - StartTime;
             Status = status ?? new RoboCopyExitStatus(ProgressEstimator.GetExitCode(files, directories));
             LogLines = logLines;
+        }
+
+        /// <summary>
+        /// Create a new set of RoboCopyResults via the <see cref="IResultsBuilder"/> interface
+        /// </summary>
+        /// <param name="builder">the object that will provide the results values via the IResultsBuilder interface</param>
+        /// <returns>A new RoboCopyResults object</returns>
+        public static RoboCopyResults FromResultsBuilder(Results.IResultsBuilder builder)
+        {
+            if (builder is null) throw new ArgumentNullException(nameof(builder));
+            return new RoboCopyResults()
+            {
+                Source = builder.Source,
+                Destination = builder.Destination,
+                BytesStatistic = builder.BytesStatistic.Clone(),
+                FilesStatistic = builder.FilesStatistic.Clone(),
+                DirectoriesStatistic = builder.DirectoriesStatistic.Clone(),
+                CommandOptions = builder.CommandOptions,
+                StartTime = builder.StartTime,
+                EndTime = builder.EndTime,
+                JobName = builder.JobName,
+                LogLines = builder.LogLines?.ToArray() ?? Array.Empty<string>(),
+                Status = builder.ExitStatus,
+                SpeedStatistic = builder.SpeedStatistic.Clone(),
+                RoboCopyErrors = builder.CommandErrors?.ToArray() ?? Array.Empty<ErrorEventArgs>(),
+                TimeSpan = builder.EndTime.Subtract(builder.StartTime)
+            };
         }
 
         #region < Properties >

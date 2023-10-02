@@ -15,7 +15,7 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// ResultsBuilder object for custom IRoboCommand implementations
     /// </summary>
-    public class ResultsBuilder
+    public class ResultsBuilder : IResultsBuilder
     {
         #region < Constructor >
 
@@ -31,6 +31,7 @@ namespace RoboSharp.Extensions
             ProgressEstimator = calculator ?? throw new ArgumentNullException(nameof(calculator)); ;
             StartTime = startTime ?? DateTime.Now;
             CreateHeader();
+            Command.OnError += Command_OnError;
         }
 
         /// <inheritdoc cref="ResultsBuilder.ResultsBuilder(ProgressEstimator, IRoboCommand, DateTime?)"/>
@@ -49,6 +50,8 @@ namespace RoboSharp.Extensions
         /// The private collection of log lines
         /// </summary>
         protected List<string> LogLines { get; } = new List<string>();
+
+        protected List<ErrorEventArgs> CommandErrors { get; } = new List<ErrorEventArgs>();
 
         /// <summary>
         /// Gets an array of all the log lines currently logged
@@ -80,7 +83,34 @@ namespace RoboSharp.Extensions
         /// </summary>
         public ProgressEstimator ProgressEstimator { get; }
 
+        string IResultsBuilder.Source => Command.CopyOptions.Source;
+
+        string IResultsBuilder.Destination => Command.CopyOptions.Destination;
+
+        string IResultsBuilder.JobName => Command.Name;
+
+        string IResultsBuilder.CommandOptions => Command.CommandOptions;
+
+        IEnumerable<string> IResultsBuilder.LogLines => LogLines;
+
+        IStatistic IResultsBuilder.BytesStatistic => ProgressEstimator.BytesStatistic;
+
+        IStatistic IResultsBuilder.FilesStatistic => ProgressEstimator.FilesStatistic;
+
+        IStatistic IResultsBuilder.DirectoriesStatistic => ProgressEstimator.DirectoriesStatistic;
+
+        ISpeedStatistic IResultsBuilder.SpeedStatistic => AverageSpeed;
+
+        RoboCopyExitStatus IResultsBuilder.ExitStatus => new RoboCopyExitStatus(ProgressEstimator.GetExitCode());
+
+        IEnumerable<ErrorEventArgs> IResultsBuilder.CommandErrors => CommandErrors;
+
         #endregion
+
+        private void Command_OnError(IRoboCommand sender, ErrorEventArgs e)
+        {
+            CommandErrors.Add(e);
+        }
 
         #region < Add Files >
 
@@ -331,7 +361,7 @@ namespace RoboSharp.Extensions
         public virtual RoboCopyResults GetResults()
         {
             CreateSummary();
-            return ProgressEstimator.GetResults(StartTime, EndTime < StartTime ? DateTime.Now :EndTime, AverageSpeed, LogLines.ToArray());
+            return RoboCopyResults.FromResultsBuilder(this);
         }
 
         #endregion
