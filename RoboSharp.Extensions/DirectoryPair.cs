@@ -31,6 +31,9 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
+        /// <inheritdoc/>
+        public ProcessedFileInfo ProcessResult { get; set; }
+
         /// <inheritdoc cref="IDirectoryPairExtensions.GetFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
         public FilePair[] GetFilePairs()
         {

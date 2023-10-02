@@ -30,5 +30,7 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc/>
         public FileInfo Destination { get; }
+
+        public ProcessedFileInfo ProcessResult { get; set; }
     }
 }

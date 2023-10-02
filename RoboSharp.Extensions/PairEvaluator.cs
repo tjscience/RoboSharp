@@ -84,7 +84,7 @@ namespace RoboSharp.Extensions
         /// <param name="ExcludeDirectoryName">Result of <see cref="ShouldExcludeDirectoryName(IDirectoryPair)"/></param>
         /// <param name="ExcludeJunctionDirectory">Result of <see cref="ShouldExcludeJunctionDirectory(IDirectoryPair)"/></param>
         /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
-        public virtual bool ShouldCopyDir(IDirectoryPair pair, out ProcessedFileInfo info, out ProcessedDirectoryFlag dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
+        public virtual bool ShouldCopyDir(IDirectoryPair pair, out ProcessedDirectoryFlag dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
         {
             ExcludeDirectoryName = ShouldExcludeDirectoryName(pair);
             ExcludeJunctionDirectory = ShouldExcludeJunctionDirectory(pair);
@@ -93,28 +93,29 @@ namespace RoboSharp.Extensions
             if (!shouldExclude && pair.Source.Exists && pair.Destination.Exists)
             {
                 dirClass = ProcessedDirectoryFlag.ExistingDir;
-                info = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.ExistingDir);
+                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.ExistingDir, 0);
             }
             else if (!shouldExclude && pair.Source.Exists && !Command.SelectionOptions.ExcludeLonely)
             {
                 dirClass = ProcessedDirectoryFlag.NewDir;
-                info = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.NewDir);
+                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.NewDir, 0);
             }
             else if (pair.Destination.Exists && !Command.SelectionOptions.ExcludeExtra)
             {
                 dirClass = ProcessedDirectoryFlag.ExtraDir;
-                info = new ProcessedFileInfo(pair.Destination, Command, ProcessedDirectoryFlag.ExtraDir);
+                pair.ProcessResult = new ProcessedFileInfo(pair.Destination, Command, ProcessedDirectoryFlag.ExtraDir, 0);
                 return false;
             }
             else
             {
                 dirClass = ProcessedDirectoryFlag.Exclusion;
-                info = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.Exclusion);
+                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.Exclusion, 0);
             }
-
             return !shouldExclude;
         }
 
+        /// <inheritdoc cref="ShouldCopyDir(IDirectoryPair, out ProcessedDirectoryFlag, out bool, out bool)"/>
+        public bool ShouldCopyDir(IDirectoryPair pair) => ShouldCopyDir(pair, out _, out _, out _);
 
         /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeJunctionDirectory(SelectionOptions, IDirectoryPair)"/>
         public bool ShouldExcludeJunctionDirectory(IDirectoryPair pair) => Command.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
@@ -127,7 +128,7 @@ namespace RoboSharp.Extensions
         #region < ShouldCopyFile >
 
         /// <summary>
-        /// Evaluate RoboCopy Options of the command, the source, and destination and compute a ProcessedFileInfo object <br/>
+        /// Evaluate RoboCopy Options of the command, the source, and destination and compute a ProcessedFileInfo object, which is then assigned to the <paramref name="pair"/> <br/>
         /// Ignores <see cref="LoggingOptions.ListOnly"/>
         /// </summary>
         /// <param name="info">a ProcessedFileInfo object generated that reflects the output of this method</param>
@@ -137,19 +138,20 @@ namespace RoboSharp.Extensions
         /// Note: Does not evaluate the FileName inclusions from CopyOptions, since RoboCopy appears to use those to filter prior to performing these evaluations. <br/>
         /// Use <see cref="ShouldIncludeFileName(IFilePair)"/> as a pre-filter for this.
         /// </remarks>
-        public virtual bool ShouldCopyFile(IFilePair pair, out ProcessedFileInfo info)
+        public virtual bool ShouldCopyFile(IFilePair pair)
         {
             bool SourceExists = pair.Source.Exists;
             bool DestExists = pair.Destination.Exists;
             string Name = Command.LoggingOptions.IncludeFullPathNames ?
                 (DestExists & !SourceExists ? pair.Destination.FullName : pair.Source.FullName) :
                 (DestExists & !SourceExists ? pair.Destination.Name : pair.Source.Name);
-            info = new ProcessedFileInfo()
+            pair.ProcessResult = new ProcessedFileInfo()
             {
                 FileClassType = FileClassType.File,
                 Name = Name,
                 Size = SourceExists ? pair.Source.Length : DestExists? pair.Destination.Length : 0,
             };
+            var info = pair.ProcessResult;
             var SO = Command.SelectionOptions;
 
             // Order of the following checks was done to allow what are likely the fastest checks to go first. More complex checks (such as DateTime parsing) are towards the bottom.
