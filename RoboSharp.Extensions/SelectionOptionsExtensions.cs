@@ -16,6 +16,14 @@ namespace RoboSharp.Extensions
     /// </summary>
     public static partial class SelectionOptionsExtensions
     {
+        internal static string Format(this string input, params object[] args) => String.Format(input, args);
+        internal static string PadCenter(this string paddedString, string otherString) => PadCenter(paddedString, otherString.Length);
+        internal static string PadCenter(this string paddedString, int length) 
+        {
+            if (paddedString.Length >= length) return paddedString;
+            int i = length - paddedString.Length;
+            return paddedString.PadLeft(paddedString.Length + i / 2);
+        }
 
         /// <summary>
         /// Translate the wildcard pattern to a regex pattern for a file name/path

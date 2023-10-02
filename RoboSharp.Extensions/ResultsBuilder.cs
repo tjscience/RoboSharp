@@ -207,9 +207,11 @@ namespace RoboSharp.Extensions
             Command.LoggingOptions.DeleteLogFiles();
             if (!Command.LoggingOptions.NoJobHeader)
             {
-                
                 WriteToLogs(Divider);
-                WriteToLogs("   RoboSharp.Extensions.ResultsBuilder   ");
+                WriteToLogs("");
+                WriteToLogs("IRoboCommand '{0}' Operation".Format(Command.GetType()).PadCenter(Divider));
+                WriteToLogs("Results Builder : '{0}'".Format(this.GetType()).PadCenter(Divider));
+                WriteToLogs("");
                 WriteToLogs(Divider);
                 WriteToLogs("");
                 WriteToLogs($"{PadHeader("Started")} : {StartTime.ToLongDateString()} {StartTime.ToLongTimeString()}");
