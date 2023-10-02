@@ -65,6 +65,8 @@ namespace RoboSharp.Extensions
 
         public RoboMoverOptions RoboMoverOptions { get; set; } = new RoboMoverOptions();
 
+        public override JobOptions JobOptions { get; } = new JobOptions();
+
         /// <inheritdoc/>
         public override async Task Start(string domain = "", string username = "", string password = "")
         {
@@ -78,15 +80,32 @@ namespace RoboSharp.Extensions
                 bool onSameDrive = Path.GetPathRoot(CopyOptions.Source).Equals(Path.GetPathRoot(CopyOptions.Destination), StringComparison.InvariantCultureIgnoreCase);
                 bool isMoving = CopyOptions.MoveFiles | CopyOptions.MoveFilesAndDirectories;
 
-                if (!isMoving | !onSameDrive)
+                if (!isMoving | !onSameDrive | JobOptions.PreventCopyOperation)
                 {
                     results = await RunAsRoboCopy(domain, username, password);
                     success = true;
                 }
                 else
                 {
+                    // Load the job file
+                    if (File.Exists(JobOptions.LoadJobFilePath))
+                    {
+                        var jobfile = JobFile.ParseJobFile(JobOptions.LoadJobFilePath);
+                        CopyOptions.Merge(jobfile.CopyOptions);
+                        LoggingOptions.Merge(jobfile.LoggingOptions);
+                        RetryOptions.Merge(jobfile.RetryOptions);
+                        SelectionOptions.Merge(jobfile.SelectionOptions);
+                        if (String.IsNullOrWhiteSpace(Name)) Name = jobfile.Job_Name;
+                    }
+                    // Save the job file needed
+                    if (Path.IsPathRooted(JobOptions.FilePath))
+                    {
+                        var jobFile = new JobFile(this, JobOptions.FilePath);
+                        await jobFile.Save();
+                    }
+                    // Run
                     results = await RunAsRoboMover(domain, username, password);
-                    success = results != null;
+                    success = results != null; 
                 }
                 
             }
@@ -101,9 +120,10 @@ namespace RoboSharp.Extensions
                 {
                     RaiseOnCommandCompleted(results);
                     if (LoggingOptions.ListOnly)
+                    {
                         ListOnlyResults = results;
-                    else
-                        RunResults = results;
+                    }
+                    RunResults = results;
                 }
                 standardCommand = null;
                 runningTask = null;
@@ -115,7 +135,7 @@ namespace RoboSharp.Extensions
         /// <summary> Run the RoboCommand - used when the source and destination are on separate drives </summary>
         private async Task<RoboCopyResults> RunAsRoboCopy(string domain, string username, string password)
         {
-            standardCommand = new RoboCommand(command: this, LinkConfiguration:true, LinkRetryOptions:true, LinkSelectionOptions:true, LinkLoggingOptions:true);
+            standardCommand = new RoboCommand(command: this, LinkConfiguration:true, LinkRetryOptions:true, LinkSelectionOptions:true, LinkLoggingOptions:true, LinkJobOptions: false);
             standardCommand.OnCommandCompleted += StandardCommand_OnCommandCompleted;
             standardCommand.OnCommandError += StandardCommand_OnCommandError;
             standardCommand.OnCopyProgressChanged += StandardCommand_OnCopyProgressChanged;
@@ -333,7 +353,7 @@ namespace RoboSharp.Extensions
         private void StandardCommand_OnProgressEstimatorCreated(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e)
         {
             this.IProgressEstimator = e.ResultsEstimate;
-            //base.RaiseOnProgressEstimatorCreated(e.ResultsEstimate);
+            base.RaiseOnProgressEstimatorCreated(e.ResultsEstimate);
         }
 
         private void StandardCommand_OnFileProcessed(IRoboCommand sender, FileProcessedEventArgs e)
