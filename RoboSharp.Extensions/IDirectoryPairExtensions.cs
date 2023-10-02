@@ -126,12 +126,6 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Evaluate the enumerated file path to determine if it should be included in the enumerated file pairs
-        /// </summary>
-        /// <returns>TRUE to include, FALSE to exclude</returns>
-        public delegate bool IncludeFilePathDelegate(FileInfo enumeratedFile);
-
-        /// <summary>
         /// Enumerate the pairs from the source
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -139,22 +133,26 @@ namespace RoboSharp.Extensions
         /// <param name="whereTrue">Function to decide to include the file in the enumeration or not</param>
         /// <param name="ctor">the constructor to create the filepair</param>
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
-        public static CachedEnumerable<T> EnumerateSourcePairs<T>(this IDirectoryPair parent, IncludeFilePathDelegate whereTrue, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
+        public static CachedEnumerable<T> EnumerateSourceFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IFilePair
         {
             if (!parent.Source.Exists) return null;
-            return parent.Source.EnumerateFiles().Where(f => whereTrue(f)).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
-            //return parent.Source.EnumerateFiles().Where( f=> whereTrue(f)).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable(); ;
+            if (whereTrue is null)
+                return parent.Source.EnumerateFiles().Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+            else
+                return parent.Source.EnumerateFiles().Where(whereTrue).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
         }
 
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
         /// <inheritdoc cref="EnumerateSourcePairs{T}(IDirectoryPair, IncludeFilePathDelegate, Func{FileInfo, FileInfo, T})"/>
-        public static CachedEnumerable<T> EnumerateDestinationPairs<T>(this IDirectoryPair parent, IncludeFilePathDelegate whereTrue, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
+        public static CachedEnumerable<T> EnumerateDestinationFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IFilePair
         {
             if (!parent.Destination.Exists) return null;
-            return parent.Destination.EnumerateFiles().Where(f => whereTrue(f)).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
-            //return parent.Destination.EnumerateFiles().Where(f => whereTrue(f)).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+            if (whereTrue is null)
+                return parent.Source.EnumerateFiles().Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+            else
+                return parent.Source.EnumerateFiles().Where(whereTrue).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
         }
 
         /// <summary>
@@ -166,14 +164,13 @@ namespace RoboSharp.Extensions
         {
             CachedEnumerable<T> sourceFiles = null;
             CachedEnumerable<T> destFiles = null;
-            bool WhereTrue(FileInfo f) => true;
 
             if (parent.Source.Exists)
-                sourceFiles = EnumerateSourcePairs(parent, WhereTrue, ctor);
+                sourceFiles = EnumerateSourceFilePairs(parent, ctor);
             if (parent.Destination.Exists)
             {
                 if (sourceFiles is null)
-                    destFiles = EnumerateDestinationPairs(parent, WhereTrue, ctor);
+                    destFiles = EnumerateDestinationFilePairs(parent, ctor);
                 else
                 {
                     destFiles =
@@ -206,12 +203,6 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Evaluate the enumerated file path to determine if it should be included in the enumerated file pairs
-        /// </summary>
-        /// <returns>TRUE to include, FALSE to exclude</returns>
-        public delegate bool IncludeDirectoryPathDelegate(DirectoryInfo enumeratedDirectory);
-
-        /// <summary>
         /// Enumerate the pairs from the source
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -219,20 +210,26 @@ namespace RoboSharp.Extensions
         /// <param name="whereTrue">Function to decide to include the directory in the enumeration or not</param>
         /// <param name="ctor">the constructor to create the Directory Pair</param>
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
-        public static CachedEnumerable<T> EnumerateSourcePairs<T>(this IDirectoryPair parent, IncludeDirectoryPathDelegate whereTrue, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
+        public static CachedEnumerable<T> EnumerateSourceDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IDirectoryPair
         {
             if (!parent.Source.Exists) return null;
-            return parent.Source.EnumerateDirectories().Where(f => whereTrue(f)).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+            if (whereTrue is null)
+                return parent.Source.EnumerateDirectories().Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+            else
+                return parent.Source.EnumerateDirectories().Where(whereTrue).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
         }
 
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
-        /// <inheritdoc cref="EnumerateSourcePairs{T}(IDirectoryPair, IncludeDirectoryPathDelegate, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public static CachedEnumerable<T> EnumerateDestinationPairs<T>(this IDirectoryPair parent, IncludeDirectoryPathDelegate whereTrue, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
+        /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IDirectoryPair, IncludeDirectoryPathDelegate, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        public static CachedEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IDirectoryPair
         {
             if (!parent.Destination.Exists) return null;
-            return parent.Destination.EnumerateDirectories().Where(f => whereTrue(f)).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+            if (whereTrue is null)
+                return parent.Destination.EnumerateDirectories().Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+            else
+                return parent.Destination.EnumerateDirectories().Where(whereTrue).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
         }
 
         /// <summary>

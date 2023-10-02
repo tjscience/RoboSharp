@@ -129,7 +129,7 @@ namespace RoboSharp.Extensions.UnitTests
                 Console.WriteLine(RCResults.SpeedStatistic);
                 Console.WriteLine("-----------------------------");
                 Console.WriteLine("");
-                Console.WriteLine("CachedRoboCopy Results:");
+                Console.WriteLine("IRoboCommand Results:");
                 Console.Write("Directory : "); Console.WriteLine(customResults.DirectoriesStatistic);
                 Console.Write("    Files : "); Console.WriteLine(customResults.FilesStatistic);
                 Console.Write("    Bytes : "); Console.WriteLine(customResults.BytesStatistic);
@@ -142,11 +142,10 @@ namespace RoboSharp.Extensions.UnitTests
                 {
                     RCStat = rcStat;
                     CRCStat = crcSTat;
-                    evalSection = eval;
-                    Assert.AreEqual(RCStat.Total, CRCStat.Total, "Stat Category: TOTAL");
-                    Assert.AreEqual(RCStat.Copied, CRCStat.Copied, "Stat Category: COPIED");
-                    Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, "Stat Category: SKIPPED");
-                    Assert.AreEqual(RCStat.Extras, CRCStat.Extras, "Stat Category: EXTRAS");
+                    Assert.AreEqual(RCStat.Total, CRCStat.Total, $"\n{eval} Stat: TOTAL");
+                    Assert.AreEqual(RCStat.Copied, CRCStat.Copied, $"\n{eval} Stat: COPIED");
+                    Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, $"\n{eval} Stat: SKIPPED");
+                    Assert.AreEqual(RCStat.Extras, CRCStat.Extras, $"\n{eval} Stat: EXTRAS");
                 }
             }
             catch (Exception e)
@@ -159,7 +158,7 @@ namespace RoboSharp.Extensions.UnitTests
                     $"\nIs List Only: {ListOnly}" +
                     $"\n{evalSection} Stats: \n" +
                     $"RoboCopy Results: {RCStat}\n" +
-                    $"CachedRC Results: {CRCStat}" +
+                    $"IRoboCommand Results: {CRCStat}" +
                     (e.GetType() == typeof(AssertFailedException) ? "" : $" \nStackTrace: \n{e.StackTrace}"));
             }
 
@@ -174,7 +173,7 @@ namespace RoboSharp.Extensions.UnitTests
 
                 Console.WriteLine("-----------------------------");
                 Console.WriteLine("");
-                Console.WriteLine("CachedRoboCopy Log Lines:");
+                Console.WriteLine("IRoboCommand Log Lines:");
                 foreach (string s in customResults.LogLines)
                     Console.WriteLine(s);
             }

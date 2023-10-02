@@ -138,7 +138,7 @@ namespace RoboSharp.Extensions
         public virtual void AddFileCopied(ProcessedFileInfo file)
         {
             ProgressEstimator.AddFileCopied(file);
-            LogFileInfo(file, " -- OK");
+            //LogFileInfo(file, " -- OK");
         }
 
         /// <summary>
