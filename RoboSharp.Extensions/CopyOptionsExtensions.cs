@@ -23,12 +23,11 @@ namespace RoboSharp.Extensions
         /// <returns>TRUE if destination file should be deleted, otherwise false.</returns>
         public static bool ShouldPurge(this IRoboCommand command, IFilePair pair)
         {
-            bool destExists = pair.Destination.Exists;
-            bool sourceExists = pair.Source.Exists;
-            if ((command.CopyOptions.Mirror | command.CopyOptions.Purge) && destExists && !sourceExists)
-                return command.SelectionOptions.ExcludeExtra;
-            else
-                return false;
+            if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
+            {
+                return !command.SelectionOptions.ExcludeExtra && pair.Destination.Exists && !pair.Source.Exists; 
+            }
+            return false;
         }
 
         #region < IncludedFiles >

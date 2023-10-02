@@ -263,9 +263,12 @@ namespace RoboSharp
         public virtual bool ExcludeOlder { get; set; }
         
         /// <summary>
-        /// Excludes extra files and directories.
+        /// Prevent logging of extra files and directories (items that exist in the destination but not the source)
         /// [/XX]
         /// </summary>
+        /// <remarks>
+        /// When used the /PURGE or /MIRROR, this will prevent deletion of the extra files/directories. ( default robocopy behavior )
+        /// </remarks>
         public virtual bool ExcludeExtra { get; set; }
         
         /// <summary>
