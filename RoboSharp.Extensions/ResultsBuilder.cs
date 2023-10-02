@@ -22,14 +22,19 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Create a new  results builder
         /// </summary>
-        /// <param name="cmd"></param>
-        public ResultsBuilder(IRoboCommand cmd)
+        /// <param name="calculator">a ProgressEstimator used to calculate the total number of files/directories</param>
+        /// <param name="cmd">The associated IRoboCommand</param>
+        /// <param name="startTime">The time the IRoboCommand was started. If not specified, uses DateTime.Now</param>
+        public ResultsBuilder(ProgressEstimator calculator, IRoboCommand cmd, DateTime? startTime = null)
         {
-            ProgressEstimator = new ProgressEstimator(cmd);
-            StartTime = DateTime.Now;
-            Command = cmd;
+            Command = cmd ?? throw new ArgumentNullException(nameof(cmd));
+            ProgressEstimator = calculator ?? throw new ArgumentNullException(nameof(calculator)); ;
+            StartTime = startTime ?? DateTime.Now;
             CreateHeader();
         }
+
+        /// <inheritdoc cref="ResultsBuilder.ResultsBuilder(ProgressEstimator, IRoboCommand, DateTime?)"/>
+        public ResultsBuilder(IRoboCommand cmd) : this(new ProgressEstimator(cmd), cmd, DateTime.Now) { }
 
         #endregion
 
@@ -39,7 +44,6 @@ namespace RoboSharp.Extensions
         /// The associated <see cref="IRoboCommand"/> object
         /// </summary>
         protected IRoboCommand Command { get; }
-        private ProgressEstimator ProgressEstimatorField;
         
         /// <summary>
         /// The private collection of log lines
@@ -69,16 +73,12 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Flag to prevent writing the summary to the log multiple times
         /// </summary>
-        protected bool IsSummaryCreated { get; set; }
+        protected bool IsSummaryWritten { get; set; }
 
         /// <summary>
         /// The ProgressEstimator object that will be used to calculate the statistics objects
         /// </summary>
-        public ProgressEstimator ProgressEstimator
-        {
-            get { return ProgressEstimatorField; }
-            set { ProgressEstimatorField = value; }
-        }
+        public ProgressEstimator ProgressEstimator { get; }
 
         #endregion
 
@@ -156,15 +156,11 @@ namespace RoboSharp.Extensions
 
         #region < Add Dirs >
 
-        private ProcessedFileInfo LastDir;
-
-
         /// <summary>
         /// Add a directory to the log and progressEstimator
         /// </summary>
         public virtual void AddDir(ProcessedFileInfo dir)
         {
-            LastDir = dir;
             ProgressEstimator.AddDir(dir);
             //Check to log the directory listing
             if (!Command.LoggingOptions.NoDirectoryList)
@@ -204,7 +200,7 @@ namespace RoboSharp.Extensions
         protected string PadHeader(string RowName) => RowName.PadLeft(9);
 
         /// <summary>
-        /// Write the header to the log
+        /// Write the header to the log - this is performed at time on construction of the object
         /// </summary>
         protected virtual void CreateHeader()
         {
@@ -279,7 +275,7 @@ namespace RoboSharp.Extensions
             string SummaryLine() => string.Format("    {0}{1}\t{2}\t{3}\t{4}\t{5}\t{6}", PadHeader(""), RightAlign(ColSizes[0],"Total"), RightAlign(ColSizes[1], "Copied"), RightAlign(ColSizes[2], "Skipped"), RightAlign(ColSizes[3], "Mismatch"), RightAlign(ColSizes[4], "FAILED"), RightAlign(ColSizes[5], "Extras"));
             string Tabulator(string name, IStatistic stat) => string.Format("{0} : {1}\t{2}\t{3}\t{4}\t{5}\t{6}", PadHeader(name), Align(ColSizes[0], stat.Total), Align(ColSizes[1], stat.Copied), Align(ColSizes[2], stat.Skipped), Align(ColSizes[3], stat.Mismatch), Align(ColSizes[4], stat.Failed), Align(ColSizes[5], stat.Extras));
 
-            if (IsSummaryCreated) return;
+            if (IsSummaryWritten) return;
             EndTime = DateTime.Now;
 
             if (!Command.LoggingOptions.NoJobSummary)
@@ -307,7 +303,7 @@ namespace RoboSharp.Extensions
                 WriteToLogs("");
 
             }
-            IsSummaryCreated = true;
+            IsSummaryWritten = true;
         }
 
         #endregion
