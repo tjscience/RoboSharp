@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RoboSharp.Extensions\RoboSharp.Extensions.csproj" />
+    <ProjectReference Include="..\RoboSharpUnitTesting\RoboSharpUnitTesting.csproj" />
   </ItemGroup>
 
 </Project>
