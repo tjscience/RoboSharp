@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.UnitTests
 {
     [TestClass]
     public class RoboCommandEventTests

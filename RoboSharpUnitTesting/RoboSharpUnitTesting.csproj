@@ -4,6 +4,8 @@
     <PropertyGroup>
         <TargetFrameworks>net48</TargetFrameworks>
         <IsPackable>false</IsPackable>
+        <RootNamespace>RoboSharp.UnitTests</RootNamespace>
+        <AssemblyName>RoboSharp.UnitTests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

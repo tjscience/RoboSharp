@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RoboSharp.Tests
+namespace RoboSharp.UnitTests
 {
     [TestClass()]
     public class RoboCommandFactoryTests
