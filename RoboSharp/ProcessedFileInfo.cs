@@ -89,7 +89,7 @@ namespace RoboSharp
             if (command is null) throw new ArgumentNullException(nameof(command));
             FileClassType = FileClassType.NewDir;
             FileClass = command.Configuration.GetDirectoryClass(status);
-            Name = command.LoggingOptions.IncludeFullPathNames ? directory.FullName : directory.Name;
+            Name = directory.FullName; //command.LoggingOptions.IncludeFullPathNames ? directory.FullName : directory.Name;
             Size = size != -1 ? size : Directory.GetFiles(directory.FullName).Length;
         }
 
