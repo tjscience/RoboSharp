@@ -45,11 +45,11 @@ namespace RoboSharp.Extensions.UnitTests
             
             rc.LoggingOptions.ListOnly = true;
             var results1 = TestPrep.RunTests(rc, crc, false).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rc.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, crc, true).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
         private void PrepMoveTest(CopyActionFlags copyFlags, SelectionFlags selectionFlags, LoggingFlags loggingFlags, bool UseLargeFileSet, out RoboCommand rc, out RoboMover rm)
@@ -75,11 +75,11 @@ namespace RoboSharp.Extensions.UnitTests
            
             rc.LoggingOptions.ListOnly = true;
             var results1 = TestPrep.RunTests(rc, rm, false).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rc.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
         [TestMethod]
@@ -92,11 +92,11 @@ namespace RoboSharp.Extensions.UnitTests
             rc.LoggingOptions.ListOnly = true;
             rc.CopyOptions.FileFilter = new string[] { "*.txt" };
             var results1 = TestPrep.RunTests(rc, rm, false).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rm.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
         [TestMethod]
@@ -107,12 +107,14 @@ namespace RoboSharp.Extensions.UnitTests
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
             rc.LoggingOptions.ListOnly = true;
             rc.SelectionOptions.ExcludedFiles.Add("*.txt");
-            var results1 = TestPrep.RunTests(rc, rm, false).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            var task = TestPrep.RunTests(rc, rm, false);
+            task.Wait();
+            var results1 = task.Result;
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rc.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
 
@@ -125,11 +127,11 @@ namespace RoboSharp.Extensions.UnitTests
             rc.LoggingOptions.ListOnly = true;
             
             var results1 = TestPrep.RunTests(rc, rm, false, CreateFile).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rc.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, rm, true, CreateFile).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
             TestPrep.CleanDestination();
             void CreateFile()
             {
@@ -149,11 +151,11 @@ namespace RoboSharp.Extensions.UnitTests
             rc.LoggingOptions.ListOnly = true;
 
             var results1 = TestPrep.RunTests(rc, rm, false, CreateFile).Result;
-            AssertResults(results1, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
 
             rc.LoggingOptions.ListOnly = false;
             var results2 = TestPrep.RunTests(rc, rm, true, CreateFile).Result;
-            AssertResults(results2, rc.LoggingOptions.ListOnly);
+            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
             TestPrep.CleanDestination();
 
             void CreateFile()
@@ -167,100 +169,6 @@ namespace RoboSharp.Extensions.UnitTests
         }
 
 
-        private void AssertResults(RoboSharpTestResults[] results, bool ListOnly)
-        {
-            var RCResults = results[0].Results;
-            var CRCResults = results[1].Results;
-            Console.Write("---------------------------------------------------");
-            Console.WriteLine($"Is List Only: {ListOnly}");
-            Console.WriteLine($"RoboCopy Completion Time: {results[0].Results.TimeSpan.TotalMilliseconds} ms");
-            Console.WriteLine($"CachedRoboCopy Completion Time: {results[1].Results.TimeSpan.TotalMilliseconds} ms");
-            IStatistic RCStat = null, CRCStat = null;
-            string evalSection = "";
-
-            try
-            {
-                //Files
-                //Console.Write("Evaluating File Stats...");
-                AssertStat(results[0].Results.FilesStatistic, results[1].Results.FilesStatistic, "Files");
-                //Console.WriteLine("OK");
-
-                //Bytes
-                //Console.Write("Evaluating Byte Stats...");
-                AssertStat(results[0].Results.BytesStatistic, results[1].Results.BytesStatistic, "Bytes");
-                //Console.WriteLine("OK");
-
-                //Directories
-                //Console.Write("Evaluating Directory Stats...");
-                AssertStat(results[0].Results.DirectoriesStatistic, results[1].Results.DirectoriesStatistic, "Directory");
-                //Console.WriteLine("OK");
-
-                Console.WriteLine("Test Passed.");
-                //Console.WriteLine("RoboCopy Results:");
-                //Console.WriteLine($"{results[0].Results.DirectoriesStatistic}");
-                //Console.WriteLine($"{results[0].Results.BytesStatistic}");
-                //Console.WriteLine($"{results[0].Results.FilesStatistic}");
-                //Console.WriteLine("-----------------------------");
-                //Console.WriteLine("CachedRoboCopy Results:");
-                //Console.WriteLine($"{results[1].Results.DirectoriesStatistic}");
-                //Console.WriteLine($"{results[1].Results.BytesStatistic}");
-                //Console.WriteLine($"{results[1].Results.FilesStatistic}");
-                //Console.WriteLine("-----------------------------");
-
-                void AssertStat(IStatistic rcStat, IStatistic crcSTat, string eval)
-                {
-                    RCStat = rcStat;
-                    CRCStat = crcSTat;
-                    evalSection = eval;
-                    Assert.AreEqual(RCStat.Total, CRCStat.Total, "Stat Category: TOTAL");
-                    Assert.AreEqual(RCStat.Copied, CRCStat.Copied, "Stat Category: COPIED");
-                    Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, "Stat Category: SKIPPED");
-                    Assert.AreEqual(RCStat.Extras, CRCStat.Extras, "Stat Category: EXTRAS");
-                }
-
-                Console.WriteLine("");
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("RoboCopy Results:");
-                Console.Write("Directory : "); Console.WriteLine(RCResults.DirectoriesStatistic);
-                Console.Write("    Files : "); Console.WriteLine(RCResults.FilesStatistic);
-                Console.Write("    Bytes : "); Console.WriteLine(RCResults.BytesStatistic);
-                Console.WriteLine(RCResults.SpeedStatistic);
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("");
-                Console.WriteLine("CachedRoboCopy Results:");
-                Console.Write("Directory : "); Console.WriteLine(CRCResults.DirectoriesStatistic);
-                Console.Write("    Files : "); Console.WriteLine(CRCResults.FilesStatistic);
-                Console.Write("    Bytes : "); Console.WriteLine(CRCResults.BytesStatistic);
-                Console.WriteLine(CRCResults.SpeedStatistic);
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("");
-                Console.WriteLine("");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("");
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("RoboCopy Results:");
-                foreach (string s in results[0].Results.LogLines)
-                    Console.WriteLine(s);
-
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine("");
-                Console.WriteLine("CachedRoboCopy Results:");
-                foreach (string s in results[1].Results.LogLines)
-                    Console.WriteLine(s);
-
-                Console.WriteLine("-----------------------------");
-                Console.WriteLine($"Error: {e.Message}");
-                Console.WriteLine("-----------------------------");
-                throw new AssertFailedException(e.Message +
-                    $"\nIs List Only: {ListOnly}" +
-                    $"\n{evalSection} Stats: \n" +
-                    $"RoboCopy Results: {RCStat}\n" +
-                    $"CachedRC Results: {CRCStat}" +
-                    (e.GetType() == typeof(AssertFailedException) ? "" : $" \nStackTrace: \n{e.StackTrace}"));
-            }
-        }
-
+        
     }
 }

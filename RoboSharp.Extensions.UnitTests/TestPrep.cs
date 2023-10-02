@@ -56,17 +56,20 @@ namespace RoboSharp.Extensions.UnitTests
         }
 
 
-        public static async Task<RoboSharpTestResults[]> RunTests(RoboCommand roboCommand, RoboMover cachedRoboCommand, bool CleanBetweenRuns, Action actionBetweenRuns = null)
+        public static async Task<RoboSharpTestResults[]> RunTests(RoboCommand roboCommand, IRoboCommand customCommand, bool CleanBetweenRuns, Action actionBetweenRuns = null)
         {
             var results = new List<RoboSharpTestResults>();
             BetweenRuns();
             results.Add(await TestSetup.RunTest(roboCommand));
             BetweenRuns();
-            cachedRoboCommand.OnError += CachedRoboCommand_OnError;
-            cachedRoboCommand.OnCommandError += CachedRoboCommand_OnCommandError;
-            results.Add(await TestSetup.RunTest(cachedRoboCommand));
-            cachedRoboCommand.OnError -= CachedRoboCommand_OnError;
-            cachedRoboCommand.OnCommandError -= CachedRoboCommand_OnCommandError;
+            
+            customCommand.OnError += CachedRoboCommand_OnError;
+            customCommand.OnCommandError += CachedRoboCommand_OnCommandError;
+            
+            results.Add(await TestSetup.RunTest(customCommand));
+            
+            customCommand.OnError -= CachedRoboCommand_OnError;
+            customCommand.OnCommandError -= CachedRoboCommand_OnCommandError;
 
             if (CleanBetweenRuns) CleanDestination();
             return results.ToArray();
@@ -79,21 +82,104 @@ namespace RoboSharp.Extensions.UnitTests
 
 
         }
+        private static void CachedRoboCommand_OnCommandError(IRoboCommand sender, CommandErrorEventArgs e) => Console.WriteLine(e.Exception);
+        private static void CachedRoboCommand_OnError(IRoboCommand sender, RoboSharp.ErrorEventArgs e) => Console.WriteLine(e.Error);
 
-        private static void CachedRoboCommand_OnCommandError(IRoboCommand sender, CommandErrorEventArgs e)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="results"></param>
+        /// <param name="ListOnly"></param>
+        public static void CompareTestResults(RoboSharpTestResults roboCommandResults, RoboSharpTestResults iCommandResults, bool ListOnly)
         {
-            Console.WriteLine(e.Exception);
+            var RCResults = roboCommandResults.Results;
+            var customResults = iCommandResults.Results;
+            Console.Write("---------------------------------------------------");
+            Console.WriteLine($"Is List Only: {ListOnly}");
+            Console.WriteLine(string.Format("RoboCopy Completion Time     : {0} ms", RCResults.TimeSpan.TotalMilliseconds));
+            Console.WriteLine(string.Format("IRoboCommand Completion Time : {0} ms", customResults.TimeSpan.TotalMilliseconds));
+            IStatistic RCStat = null, CRCStat = null;
+            string evalSection = "";
+
+            try
+            {
+                //Files
+                //Console.Write("Evaluating File Stats...");
+                AssertStat(RCResults.FilesStatistic, customResults.FilesStatistic, "Files");
+                //Console.WriteLine("OK");
+
+                //Bytes
+                //Console.Write("Evaluating Byte Stats...");
+                AssertStat(RCResults.BytesStatistic, customResults.BytesStatistic, "Bytes");
+                //Console.WriteLine("OK");
+
+                //Directories
+                //Console.Write("Evaluating Directory Stats...");
+                AssertStat(RCResults.DirectoriesStatistic, customResults.DirectoriesStatistic, "Directory");
+                //Console.WriteLine("OK");
+
+                Console.WriteLine("Test Passed.");
+
+                Console.WriteLine("");
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("RoboCopy Results:");
+                Console.Write("Directory : "); Console.WriteLine(RCResults.DirectoriesStatistic);
+                Console.Write("    Files : "); Console.WriteLine(RCResults.FilesStatistic);
+                Console.Write("    Bytes : "); Console.WriteLine(RCResults.BytesStatistic);
+                Console.WriteLine(RCResults.SpeedStatistic);
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("");
+                Console.WriteLine("CachedRoboCopy Results:");
+                Console.Write("Directory : "); Console.WriteLine(customResults.DirectoriesStatistic);
+                Console.Write("    Files : "); Console.WriteLine(customResults.FilesStatistic);
+                Console.Write("    Bytes : "); Console.WriteLine(customResults.BytesStatistic);
+                Console.WriteLine(customResults.SpeedStatistic);
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("");
+                Console.WriteLine("");
+
+                void AssertStat(IStatistic rcStat, IStatistic crcSTat, string eval)
+                {
+                    RCStat = rcStat;
+                    CRCStat = crcSTat;
+                    evalSection = eval;
+                    Assert.AreEqual(RCStat.Total, CRCStat.Total, "Stat Category: TOTAL");
+                    Assert.AreEqual(RCStat.Copied, CRCStat.Copied, "Stat Category: COPIED");
+                    Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, "Stat Category: SKIPPED");
+                    Assert.AreEqual(RCStat.Extras, CRCStat.Extras, "Stat Category: EXTRAS");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine($"Error: {e.Message}");
+                Console.WriteLine("-----------------------------");
+
+                throw new AssertFailedException(e.Message +
+                    $"\nIs List Only: {ListOnly}" +
+                    $"\n{evalSection} Stats: \n" +
+                    $"RoboCopy Results: {RCStat}\n" +
+                    $"CachedRC Results: {CRCStat}" +
+                    (e.GetType() == typeof(AssertFailedException) ? "" : $" \nStackTrace: \n{e.StackTrace}"));
+            }
+
+            finally
+            {
+
+                Console.WriteLine("");
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("RoboCopy Log Lines:");
+                foreach (string s in RCResults.LogLines)
+                    Console.WriteLine(s);
+
+                Console.WriteLine("-----------------------------");
+                Console.WriteLine("");
+                Console.WriteLine("CachedRoboCopy Log Lines:");
+                foreach (string s in customResults.LogLines)
+                    Console.WriteLine(s);
+            }
         }
 
-        private static void CachedRoboCommand_OnError(IRoboCommand sender, RoboSharp.ErrorEventArgs e)
-        {
-            Console.WriteLine(e.Error);
-        }
-
-        public static Task<RoboSharpTestResults> RunTest(IRoboCommand roboCommand)
-        {
-            return TestSetup.RunTest(roboCommand);
-        }
 
     }
 }
