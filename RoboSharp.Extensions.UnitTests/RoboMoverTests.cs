@@ -23,16 +23,16 @@ namespace RoboSharp.Extensions.UnitTests
     {
         const LoggingFlags DefaultLoggingAction = LoggingFlags.NoJobHeader | LoggingFlags.RoboSharpDefault;
 
-        string GetMoveSource() => Path.Combine(TestPrep.DestDirPath.Replace(Path.GetFileName(TestPrep.DestDirPath), ""), "MoveSource");
-        
+        static string GetMoveSource() => Path.Combine(TestPrep.DestDirPath.Replace(Path.GetFileName(TestPrep.DestDirPath), ""), "MoveSource");
+
         /// <summary>
         /// Copy Test will use a standard ROBOCOPY command
         /// </summary>
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.Default, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Defaults")]
-        [DataRow(data: new object[] { CopyActionFlags.CopySubdirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Subdirectories")]
-        [DataRow(data: new object[] { CopyActionFlags.CopySubdirectoriesIncludingEmpty, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "EmptySubdirectories")]
-        [DataRow(data: new object[] { CopyActionFlags.Mirror, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Mirror")]
+        [DataRow(data: new object[] { DefaultLoggingAction, SelectionFlags.Default, CopyActionFlags.Mirror }, DisplayName = "Mirror")]
+        [DataRow(data: new object[] { DefaultLoggingAction, SelectionFlags.Default, CopyActionFlags.Default  }, DisplayName = "Defaults")]
+        [DataRow(data: new object[] { DefaultLoggingAction, SelectionFlags.Default, CopyActionFlags.CopySubdirectories}, DisplayName = "Subdirectories")]
+        [DataRow(data: new object[] { DefaultLoggingAction, SelectionFlags.Default, CopyActionFlags.CopySubdirectoriesIncludingEmpty }, DisplayName = "EmptySubdirectories")]
         public void CopyTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
             TestPrep.CleanDestination();
@@ -62,77 +62,65 @@ namespace RoboSharp.Extensions.UnitTests
             rm = TestPrep.GetRoboMover(rc);
         }
 
+        private const CopyActionFlags Mov_ = CopyActionFlags.MoveFiles;
+        private const CopyActionFlags Move = CopyActionFlags.MoveFilesAndDirectories;
+
         /// <summary>
         /// This uses the actual logic provided by the RoboMover object
         /// </summary>
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFiles, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void MoveTest(object[] flags)
         {
-            
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
-           
-            rc.LoggingOptions.ListOnly = true;
             var results1 = TestPrep.RunTests(rc, rm, false).Result;
             TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
-
-            rc.LoggingOptions.ListOnly = false;
-            var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFiles, SelectionFlags.Default, LoggingFlags.ReportExtraFiles }, DisplayName = "Move Files")]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void FileInclusionTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
-
-            rc.LoggingOptions.ListOnly = true;
             rc.CopyOptions.FileFilter = new string[] { "*.txt" };
             var results1 = TestPrep.RunTests(rc, rm, false).Result;
             TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
-
-            rm.LoggingOptions.ListOnly = false;
-            var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFiles, SelectionFlags.Default, LoggingFlags.ReportExtraFiles }, DisplayName = "Move Files")]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void FileExclusionTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
-            rc.LoggingOptions.ListOnly = true;
             rc.SelectionOptions.ExcludedFiles.Add("*.txt");
             var task = TestPrep.RunTests(rc, rm, false);
             task.Wait();
             var results1 = task.Result;
             TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
-
-            rc.LoggingOptions.ListOnly = false;
-            var results2 = TestPrep.RunTests(rc, rm, true).Result;
-            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
         }
 
 
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFiles, SelectionFlags.Default, LoggingFlags.ReportExtraFiles }, DisplayName = "Move Files")]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void ExtraFileTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
-            rc.LoggingOptions.ListOnly = true;
-            
             var results1 = TestPrep.RunTests(rc, rm, false, CreateFile).Result;
             TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
-
-            rc.LoggingOptions.ListOnly = false;
-            var results2 = TestPrep.RunTests(rc, rm, true, CreateFile).Result;
-            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
             TestPrep.CleanDestination();
+            
             void CreateFile()
             {
                 Directory.CreateDirectory(TestPrep.DestDirPath);
@@ -143,20 +131,15 @@ namespace RoboSharp.Extensions.UnitTests
         }
 
         [TestMethod]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFiles, SelectionFlags.Default, LoggingFlags.ReportExtraFiles }, DisplayName = "Move Files")]
-        [DataRow(data: new object[] { CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
+        [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void SameFileTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
             PrepMoveTest((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], false, out var rc, out var rm);
-            rc.LoggingOptions.ListOnly = true;
-
             var results1 = TestPrep.RunTests(rc, rm, false, CreateFile).Result;
             TestPrep.CompareTestResults(results1[0], results1[1], rc.LoggingOptions.ListOnly);
-
-            rc.LoggingOptions.ListOnly = false;
-            var results2 = TestPrep.RunTests(rc, rm, true, CreateFile).Result;
-            TestPrep.CompareTestResults(results2[0], results2[1], rc.LoggingOptions.ListOnly);
-            TestPrep.CleanDestination();
 
             void CreateFile()
             {
