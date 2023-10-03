@@ -24,7 +24,11 @@ namespace RoboSharp.Extensions.UnitTests
     {
         const LoggingFlags DefaultLoggingAction = LoggingFlags.RoboSharpDefault;
 
-        static string GetMoveSource() => Path.Combine(TestPrep.DestDirPath.Replace(Path.GetFileName(TestPrep.DestDirPath), ""), "MoveSource");
+        static string GetMoveSource()
+        {
+            string original = TestPrep.SourceDirPath;
+            return Path.Combine(original.Replace(Path.GetFileName(original), ""), "MoveSource");
+        }
 
         /// <summary>
         /// Copy Test will use a standard ROBOCOPY command

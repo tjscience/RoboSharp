@@ -9,6 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="TEST_FILES\MoveSource\4_Bytes.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\RoboSharp\RoboSharp.csproj" />
     </ItemGroup>
 
@@ -53,6 +57,9 @@
         </Content>
         <Content Include="TEST_FILES\LargerNewer\SubFolder_2\4_Bytes.txt">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="TEST_FILES\MoveSource\4_Bytes.txt">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <Content Include="TEST_FILES\STANDARD\0_Bytes.txt">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
