@@ -176,12 +176,7 @@ namespace RoboSharp.UnitTests
                 Assert.IsTrue(opt.Compress);
                 Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
 
-                if (Test_Setup.IsRunningOnAppVeyor(false))
-                {
-                    Assert.IsFalse(CopyOptions.TestCompressionFlag().Result);
-                    Assert.IsFalse(CopyOptions.CanEnableCompression);
-                }
-                else if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
+                if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
                 {
                     // Dev PC where its /compress is known to be allowed
                     CopyOptions.SetCanEnableCompression(false);
