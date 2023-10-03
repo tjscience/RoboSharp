@@ -219,11 +219,6 @@ namespace RoboSharp.Extensions
             {
                 info.SetFileClass(ProcessedFileFlag.FileExclusion, Command);
             }
-            else if (pair.IsExtra())
-            {
-                info.SetFileClass(ProcessedFileFlag.ExtraFile, Command);
-                return false; // Source doesn't exist
-            }
             else
             {
                 // Check for symbolic links
@@ -256,37 +251,36 @@ namespace RoboSharp.Extensions
 
         }
 
-
         /// <summary>
         /// Filter the filenames according to the filters specified by <see cref="CopyOptions.FileFilter"/>
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="collection"></param>
         /// <returns></returns>
-        public CachedEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T: IFilePair
+        public IEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T: IFilePair
         {
             var filters = Command.CopyOptions.FileFilter;
             if (filters.Any() && filters.All(s => s != "*.*" && s != "*"))
-                return collection
-                .Where(P => ShouldIncludeFileName(P))
-                .AsCachedEnumerable();
+            {
+                return collection.Where(ShouldIncludeFileName);
+            }
             else
-                return collection is CachedEnumerable<T> enumerable ? enumerable : collection.AsCachedEnumerable();
+                return collection;
         }
 
-        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, IFilePair, ref Regex[])"/>
-        public bool ShouldIncludeFileName(IFilePair pair)
+        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, IFilePair, IEnumerable{Regex})"/>
+        public bool ShouldIncludeFileName<T>(T pair) where T:IFilePair
         {
             return Command.CopyOptions.ShouldIncludeFileName(pair, FileFilterRegex);
         }
 
-        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, IFilePair, ref Regex[])"/>
+        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, FileInfo, IEnumerable{Regex})"/>
         public bool ShouldIncludeFileName(FileInfo file)
         {
             return Command.CopyOptions.ShouldIncludeFileName(file, FileFilterRegex);
         }
 
-        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, IFilePair, ref Regex[])"/>
+        /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, string, IEnumerable{Regex})"/>
         public bool ShouldIncludeFileName(string file)
         {
             return Command.CopyOptions.ShouldIncludeFileName(file, FileFilterRegex);

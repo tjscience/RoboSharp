@@ -200,7 +200,7 @@ namespace RoboSharp.Extensions
             resultsBuilder.AddDir(directoryPair.ProcessResult);
 
             // Files
-            foreach (var file in filePairs)
+            foreach (var file in PairEvaluator.FilterFilePairs(filePairs))
             {
                 if (cancelRequest.IsCancellationRequested) break;
                 try
