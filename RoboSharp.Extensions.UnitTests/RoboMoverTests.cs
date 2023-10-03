@@ -61,12 +61,14 @@ namespace RoboSharp.Extensions.UnitTests
 
         private static void PrepMoveFiles()
         {
+            System.Threading.Tasks.Task.Delay(50).Wait();
             Test_Setup.ClearOutTestDestination();
+            System.Threading.Tasks.Task.Delay(50).Wait(); // wait for environment to settle
             var rc = TestPrep.GetRoboCommand(false, CopyActionFlags.CopySubdirectoriesIncludingEmpty, SelectionFlags.Default, DefaultLoggingAction);
             rc.CopyOptions.Destination = GetMoveSource();
             rc.Start().Wait();
             var results = rc.GetResults();
-            if (results.RoboCopyErrors.Length > 0) throw new Exception("Prep Failed");
+            if (results.RoboCopyErrors.Length > 0) throw new Exception("Prep Failed  \n" + string.Concat(args: results.RoboCopyErrors));
         }
 
         private const CopyActionFlags Mov_ = CopyActionFlags.MoveFiles;
