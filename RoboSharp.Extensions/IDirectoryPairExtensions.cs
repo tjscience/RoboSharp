@@ -188,7 +188,7 @@ namespace RoboSharp.Extensions
             else if (destFiles is null)
                 return sourceFiles;
             else
-                return new CachedEnumerable<T>(sourceFiles.Concat(destFiles));
+                return new CachedEnumerable<T>(destFiles.Concat(sourceFiles));
         }
 
         #endregion
@@ -265,7 +265,7 @@ namespace RoboSharp.Extensions
             else if (destChildren is null)
                 return sourceChildren;
             else
-                return new CachedEnumerable<T>(sourceChildren.Concat(destChildren));
+                return new CachedEnumerable<T>(destChildren.Concat(sourceChildren));
         }
 
         #endregion
