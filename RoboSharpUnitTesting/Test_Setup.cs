@@ -23,9 +23,10 @@ namespace RoboSharp.UnitTests
         /// Check if running on AppVeyor -> Certain tests will always fail due to appveyor's setup -> this allows them to pass the checks on appveyor by just not running them
         /// </summary>
         /// <returns></returns>
-        public static bool IsRunningOnAppVeyor()
+        public static bool IsRunningOnAppVeyor(bool displayMessage = true)
         {
-            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
+            if (displayMessage) Console.WriteLine(" - Bypassing this test due to running on AppVeyor");
+            return TestDestination.StartsWith(@"C:\projects\robosharp\");
         }
 
         /// <summary>

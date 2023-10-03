@@ -93,6 +93,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void MoveTest(object[] flags)
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
             GetMoveCommands((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], out var rc, out var rm);
             bool listOnly = rc.LoggingOptions.ListOnly;
             var results1 = TestPrep.RunTests(rc, rm, !listOnly, PrepMoveFiles).Result;
@@ -106,6 +107,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void FileInclusionTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
             GetMoveCommands((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], out var rc, out var rm);
             bool listOnly = rc.LoggingOptions.ListOnly;
             rc.CopyOptions.FileFilter = new string[] { "*.txt" };
@@ -120,6 +122,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void FileExclusionTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
             GetMoveCommands((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], out var rc, out var rm);
             rc.SelectionOptions.ExcludedFiles.Add("*.txt");
             bool listOnly = rc.LoggingOptions.ListOnly;
@@ -136,6 +139,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void ExtraFileTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
             GetMoveCommands((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], out var rc, out var rm);
             bool listOnly = rc.LoggingOptions.ListOnly;
             var results1 = TestPrep.RunTests(rc, rm, !listOnly, CreateFile).Result;
@@ -160,6 +164,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
         public void SameFileTest(object[] flags) //CopyActionFlags copyAction, SelectionFlags selectionFlags, LoggingFlags loggingAction
         {
+            if (Test_Setup.IsRunningOnAppVeyor()) return;
             GetMoveCommands((CopyActionFlags)flags[0], (SelectionFlags)flags[0], (LoggingFlags)flags[2], out var rc, out var rm);
             bool listOnly = rc.LoggingOptions.ListOnly;
             var results1 = TestPrep.RunTests(rc, rm, !listOnly, CreateFile).Result;

@@ -176,7 +176,7 @@ namespace RoboSharp.UnitTests
                 Assert.IsTrue(opt.Compress);
                 Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
 
-                if (Test_Setup.IsRunningOnAppVeyor())
+                if (Test_Setup.IsRunningOnAppVeyor(false))
                 {
                     Assert.IsFalse(CopyOptions.TestCompressionFlag().Result);
                     Assert.IsFalse(CopyOptions.CanEnableCompression);
