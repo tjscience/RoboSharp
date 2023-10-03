@@ -274,7 +274,12 @@ namespace RoboSharp.Extensions
                     WriteToLogs("");
                 }
 
-                string cmdOptions = Command.CommandOptions.Replace(Command.CopyOptions.Parse(), Command.CopyOptions.Parse(true));
+                string parsedCopyOptions = Command.CopyOptions.Parse(true);
+                string parsedSelectionOptions = Command.SelectionOptions.Parse(true);
+                string parsedRetryOptions = Command.RetryOptions.ToString();
+                string parsedLoggingOptions = Command.LoggingOptions.ToString();
+                string cmdOptions  = string.Format("{0}{1}{2}{3}", parsedCopyOptions, parsedSelectionOptions, parsedRetryOptions, parsedLoggingOptions);
+
                 WriteToLogs($"{PadHeader("Options")} : {cmdOptions}");
                 WriteToLogs("");
                 WriteToLogs(Divider);
