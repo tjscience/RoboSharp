@@ -13,22 +13,8 @@ namespace RoboSharp.Extensions.UnitTests
 {
     public static class TestPrep
     {
-
-        public static string CopyFileExTestSourcePath => Path.GetDirectoryName(SourceDirPath);
         public static string SourceDirPath => RoboSharp.UnitTests.Test_Setup.Source_Standard;
         public static string DestDirPath => RoboSharp.UnitTests.Test_Setup.TestDestination;
-
-        /// <inheritdoc cref="Test_Setup.ClearOutTestDestination"/>
-        public static void CleanDestination()
-        {
-             TestSetup.ClearOutTestDestination();
-        }
-
-        /// <inheritdoc cref="Test_Setup.WriteLogLines(RoboSharp.Results.RoboCopyResults, bool)"/>
-        public static void WriteLogLines(RoboSharp.Results.RoboCopyResults results, bool summaryOnly = false)
-        {
-            TestSetup.WriteLogLines(results, summaryOnly);
-        }
 
         /// <inheritdoc cref="Test_Setup.GenerateCommand(bool, bool)"/>
         public static RoboCommand GetRoboCommand(bool useLargerFileSet, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags, LoggingFlags loggingAction)
@@ -42,19 +28,19 @@ namespace RoboSharp.Extensions.UnitTests
         }
 
         /// <summary>
-        /// Generate a new CachedRoboCommand
+        /// Generate a new IRoboCommand of type T that shares the same Options objects as the <paramref name="baseCommand"/>
         /// </summary>
         /// <returns></returns>
-        public static RoboMover GetRoboMover(IRoboCommand rc)
+        public static T GetIRoboCommand<T>(IRoboCommand baseCommand) where T : IRoboCommand, new()
         {
-            var cmd = new RoboMover(rc);
-            cmd.CopyOptions = rc.CopyOptions;
-            cmd.SelectionOptions = rc.SelectionOptions;
-            cmd.LoggingOptions = rc.LoggingOptions;
-            cmd.RetryOptions = rc.RetryOptions;
+            var cmd = new T();
+            cmd.CopyOptions = baseCommand.CopyOptions;
+            cmd.SelectionOptions = baseCommand.SelectionOptions;
+            cmd.LoggingOptions = baseCommand.LoggingOptions;
+            cmd.RetryOptions = baseCommand.RetryOptions;
+            try { cmd.JobOptions.Merge(baseCommand.JobOptions); }catch (NotImplementedException) { }
             return cmd;
         }
-
 
         public static async Task<RoboSharpTestResults[]> RunTests(RoboCommand roboCommand, IRoboCommand customCommand, bool CleanBetweenRuns, Action actionBetweenRuns = null)
         {
@@ -71,12 +57,12 @@ namespace RoboSharp.Extensions.UnitTests
             customCommand.OnError -= CachedRoboCommand_OnError;
             customCommand.OnCommandError -= CachedRoboCommand_OnCommandError;
 
-            if (CleanBetweenRuns) CleanDestination();
+            if (CleanBetweenRuns) TestSetup.ClearOutTestDestination();
             return results.ToArray();
 
             void BetweenRuns()
             {
-                if (CleanBetweenRuns) CleanDestination();
+                if (CleanBetweenRuns) TestSetup.ClearOutTestDestination();
                 if (actionBetweenRuns != null) actionBetweenRuns();
             }
 
@@ -142,10 +128,19 @@ namespace RoboSharp.Extensions.UnitTests
                 {
                     RCStat = rcStat;
                     CRCStat = crcSTat;
-                    Assert.AreEqual(RCStat.Total, CRCStat.Total, $"\n{eval} Stat: TOTAL");
-                    Assert.AreEqual(RCStat.Copied, CRCStat.Copied, $"\n{eval} Stat: COPIED");
-                    Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, $"\n{eval} Stat: SKIPPED");
-                    Assert.AreEqual(RCStat.Extras, CRCStat.Extras, $"\n{eval} Stat: EXTRAS");
+                    try
+                    {
+                        Assert.AreEqual(RCStat.Total, CRCStat.Total, $"\n{eval} Stat: TOTAL");
+                        Assert.AreEqual(RCStat.Copied, CRCStat.Copied, $"\n{eval} Stat: COPIED");
+                        Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, $"\n{eval} Stat: SKIPPED");
+                        Assert.AreEqual(RCStat.Extras, CRCStat.Extras, $"\n{eval} Stat: EXTRAS");
+                    }
+                    catch
+                    {
+                        Console.WriteLine("\n    RoboCopy Result : " + rcStat);
+                        Console.WriteLine("IRoboCommand Result : " + crcSTat);
+                        throw;
+                    }
                 }
             }
             catch (Exception e)
