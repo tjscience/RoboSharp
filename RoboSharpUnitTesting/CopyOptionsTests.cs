@@ -165,26 +165,33 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void Test_CanEnableCompression()
         {
-            Assert.IsFalse(CopyOptions.CanEnableCompression);
-            CopyOptions opt = new CopyOptions();
-            Assert.IsFalse(opt.Compress);
-            opt.Compress = true;
-            Assert.IsFalse(opt.Compress);
-            CopyOptions.SetCanEnableCompression(true);
-            Assert.IsTrue(opt.Compress);
-            Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
-
-            if (Test_Setup.IsRunningOnAppVeyor())
+            try
             {
-                Assert.IsFalse(CopyOptions.TestCompressionFlag().Result);
                 Assert.IsFalse(CopyOptions.CanEnableCompression);
+                CopyOptions opt = new CopyOptions();
+                Assert.IsFalse(opt.Compress);
+                opt.Compress = true;
+                Assert.IsFalse(opt.Compress);
+                CopyOptions.SetCanEnableCompression(true);
+                Assert.IsTrue(opt.Compress);
+                Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
+
+                if (Test_Setup.IsRunningOnAppVeyor())
+                {
+                    Assert.IsFalse(CopyOptions.TestCompressionFlag().Result);
+                    Assert.IsFalse(CopyOptions.CanEnableCompression);
+                }
+                else if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
+                {
+                    // Dev PC where its /compress is known to be allowed
+                    CopyOptions.SetCanEnableCompression(false);
+                    Assert.IsTrue(CopyOptions.TestCompressionFlag().Result);
+                    Assert.IsTrue(CopyOptions.CanEnableCompression);
+                }
             }
-            else if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
-            {            
-                // Dev PC where its /compress is known to be allowed
+            finally
+            {
                 CopyOptions.SetCanEnableCompression(false);
-                Assert.IsTrue(CopyOptions.TestCompressionFlag().Result);
-                Assert.IsTrue(CopyOptions.CanEnableCompression);
             }
         }
     }
