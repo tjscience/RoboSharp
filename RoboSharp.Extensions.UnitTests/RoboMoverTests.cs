@@ -69,7 +69,7 @@ namespace RoboSharp.Extensions.UnitTests
             rc.Start().Wait();
             var results = rc.GetResults();
             if (results.RoboCopyErrors.Length > 0) 
-                throw new Exception("Prep Failed  \n" + string.Concat(args: results.RoboCopyErrors.Select(e => "\n RoboCommandError :\t" + e.ErrorCode + "\t" + e.ErrorDescription )));
+                throw new Exception("Prep Failed  \n" + string.Concat(args: results.RoboCopyErrors.Select(e => "\n RoboCommandError :\t" + e.ErrorCode + "\t" + e.ErrorDescription ).ToArray()));
         }
 
         private const CopyActionFlags Mov_ = CopyActionFlags.MoveFiles;
