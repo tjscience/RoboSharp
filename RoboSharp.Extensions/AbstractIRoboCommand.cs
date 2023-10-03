@@ -191,11 +191,13 @@ namespace RoboSharp.Extensions
         public event RoboCommand.FileProcessedHandler OnFileProcessed;
 
         /// <summary> Raises the OnFileProcessed event </summary>
+        /// <remarks><inheritdoc cref="OnFileProcessed"  path="*"/></remarks>
         protected virtual void RaiseOnFileProcessed(FileProcessedEventArgs e)
         {
             OnFileProcessed?.Invoke(this, e);
         }
         /// <summary> Raises the OnFileProcessed event </summary>
+        /// <remarks><inheritdoc cref="OnFileProcessed"  path="*"/></remarks>
         protected virtual void RaiseOnFileProcessed(ProcessedFileInfo fileInfo)
         {
             OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(fileInfo));
@@ -209,16 +211,20 @@ namespace RoboSharp.Extensions
         public event RoboCommand.CommandErrorHandler OnCommandError;
 
         /// <summary> Raises the OnCommandError event </summary>
+        /// <remarks><inheritdoc cref="OnCommandError"  path="*"/></remarks>
         protected virtual void RaiseOnCommandError(CommandErrorEventArgs e)
         {
             OnCommandError?.Invoke(this, e);
         }
+
         /// <summary> Raises the OnCommandError event </summary>
+        /// <remarks><inheritdoc cref="OnCommandError"  path="*"/></remarks>
         protected virtual void RaiseOnCommandError(Exception exception)
         {
             OnCommandError?.Invoke(this, new CommandErrorEventArgs(exception));
         }
         /// <summary> Raises the OnCommandError event </summary>
+        /// <remarks><inheritdoc cref="OnCommandError"  path="*"/></remarks>
         protected virtual void RaiseOnCommandError(string message, Exception exception)
         {
             OnCommandError?.Invoke(this, new CommandErrorEventArgs(message, exception));
@@ -232,6 +238,7 @@ namespace RoboSharp.Extensions
         public event RoboCommand.ErrorHandler OnError;
 
         /// <summary> Raises the OnError event </summary>
+        /// <remarks><inheritdoc cref="OnError"  path="*"/></remarks>
         protected virtual void RaiseOnError(ErrorEventArgs e)
         {
             OnError?.Invoke(this, e);
@@ -245,11 +252,14 @@ namespace RoboSharp.Extensions
         public event RoboCommand.CommandCompletedHandler OnCommandCompleted;
 
         /// <summary> Raises the OnCommandCompleted event </summary>
+        /// <remarks><inheritdoc cref="OnCommandCompleted"  path="*"/></remarks>
         protected virtual void RaiseOnCommandCompleted(RoboCommandCompletedEventArgs e)
         {
             OnCommandCompleted?.Invoke(this, e);
         }
+
         /// <summary> Raises the OnCommandCompleted event </summary>
+        /// <remarks><inheritdoc cref="OnCommandCompleted"  path="*"/></remarks>
         protected virtual void RaiseOnCommandCompleted(RoboCopyResults results)
         {
             OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
@@ -263,12 +273,15 @@ namespace RoboSharp.Extensions
         public event RoboCommand.CopyProgressHandler OnCopyProgressChanged;
 
         /// <summary> Raises the OnCopyProgressChanged event </summary>
+        /// <remarks><inheritdoc cref="OnCopyProgressChanged"  path="*"/></remarks>
         protected virtual void RaiseOnCopyProgressChanged(CopyProgressEventArgs e)
         {
             OnCopyProgressChanged?.Invoke(this, e);
         }
+
         /// <summary> Raises the OnCopyProgressChanged event </summary>
         /// <inheritdoc cref="CopyProgressEventArgs.CopyProgressEventArgs(double, ProcessedFileInfo, ProcessedFileInfo)"/>
+        /// <remarks><inheritdoc cref="OnCopyProgressChanged"  path="*"/></remarks>
         protected virtual void RaiseOnCopyProgressChanged(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo dirInfo)
         {
             OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(progress, currentFile, dirInfo));
@@ -282,11 +295,14 @@ namespace RoboSharp.Extensions
         public event RoboCommand.ProgressUpdaterCreatedHandler OnProgressEstimatorCreated;
 
         /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        /// <remarks><inheritdoc cref="OnProgressEstimatorCreated"  path="*"/></remarks>
         protected virtual void RaiseOnProgressEstimatorCreated(ProgressEstimatorCreatedEventArgs e)
         {
             OnProgressEstimatorCreated?.Invoke(this, e);
         }
+
         /// <summary> Raises the OnProgressEstimatorCreated event </summary>
+        /// <remarks><inheritdoc cref="OnProgressEstimatorCreated"  path="*"/></remarks>
         protected virtual void RaiseOnProgressEstimatorCreated(IProgressEstimator estimator)
         {
             OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(estimator));
@@ -299,12 +315,15 @@ namespace RoboSharp.Extensions
         public event UnhandledExceptionEventHandler TaskFaulted;
 
         /// <summary> Raises the TaskFaulted event </summary>
+        /// <remarks><inheritdoc cref="TaskFaulted"  path="*"/></remarks>
         protected virtual void RaiseOnTaskFaulted(UnhandledExceptionEventArgs e)
         {
             TaskFaulted?.Invoke(this, e);
         }
+
         /// <summary> Raises the TaskFaulted event </summary>
         /// <inheritdoc cref="UnhandledExceptionEventArgs.UnhandledExceptionEventArgs(object, bool)" path="*"/>
+        /// <remarks><inheritdoc cref="TaskFaulted"  path="*"/></remarks>
         protected virtual void RaiseOnTaskFaulted(Exception exception, bool isTerminating = false)
         {
             TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(exception, isTerminating));
