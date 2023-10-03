@@ -135,11 +135,12 @@ namespace RoboSharp.Extensions
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
         public static CachedEnumerable<T> EnumerateSourceFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IFilePair
         {
+            T createPair(FileInfo f) => CreateSourceChild(parent, f, ctor);
             if (!parent.Source.Exists) return null;
             if (whereTrue is null)
-                return parent.Source.EnumerateFiles().Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Source.EnumerateFiles().Select(createPair).AsCachedEnumerable();
             else
-                return parent.Source.EnumerateFiles().Where(whereTrue).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Source.EnumerateFiles().Where(whereTrue).Select(createPair).AsCachedEnumerable();
         }
 
         /// <summary>
@@ -148,11 +149,13 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="EnumerateSourcePairs{T}(IDirectoryPair, IncludeFilePathDelegate, Func{FileInfo, FileInfo, T})"/>
         public static CachedEnumerable<T> EnumerateDestinationFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IFilePair
         {
+            T createPair(FileInfo f) => CreateDestinationChild(parent, f, ctor);
             if (!parent.Destination.Exists) return null;
             if (whereTrue is null)
-                return parent.Source.EnumerateFiles().Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Destination.EnumerateFiles().Select(createPair).AsCachedEnumerable();
             else
-                return parent.Source.EnumerateFiles().Where(whereTrue).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Destination.EnumerateFiles().Where(whereTrue).Select(createPair).AsCachedEnumerable();
+            
         }
 
         /// <summary>
@@ -162,6 +165,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, FileInfo, Func{FileInfo, FileInfo, T})"/>
         public static CachedEnumerable<T> EnumerateFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor) where T : IFilePair
         {
+            T createPair(string f) => CreateDestinationChild(parent, new FileInfo(f), ctor);
             CachedEnumerable<T> sourceFiles = null;
             CachedEnumerable<T> destFiles = null;
 
@@ -176,8 +180,7 @@ namespace RoboSharp.Extensions
                     destFiles =
                         Directory.EnumerateFiles(parent.Destination.FullName)
                         .Where(destPath => sourceFiles.None(sourceChild => sourceChild.Destination.FullName == destPath))
-                        .Select(f => new FileInfo(f))
-                        .Select(f => CreateDestinationChild(parent, f, ctor))
+                        .Select(createPair)
                         .AsCachedEnumerable();
                 }
             }
@@ -212,11 +215,12 @@ namespace RoboSharp.Extensions
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
         public static CachedEnumerable<T> EnumerateSourceDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IDirectoryPair
         {
+            T createPair(DirectoryInfo d) => CreateSourceChild(parent, d, ctor);
             if (!parent.Source.Exists) return null;
             if (whereTrue is null)
-                return parent.Source.EnumerateDirectories().Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Source.EnumerateDirectories().Select(createPair).AsCachedEnumerable();
             else
-                return parent.Source.EnumerateDirectories().Where(whereTrue).Select((f) => CreateSourceChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Source.EnumerateDirectories().Where(whereTrue).Select(createPair).AsCachedEnumerable();
         }
 
         /// <summary>
@@ -225,11 +229,12 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IDirectoryPair, IncludeDirectoryPathDelegate, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public static CachedEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IDirectoryPair
         {
+            T createPair(DirectoryInfo d) => CreateDestinationChild(parent, d, ctor);
             if (!parent.Destination.Exists) return null;
             if (whereTrue is null)
-                return parent.Destination.EnumerateDirectories().Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Destination.EnumerateDirectories().Select(createPair).AsCachedEnumerable();
             else
-                return parent.Destination.EnumerateDirectories().Where(whereTrue).Select((f) => CreateDestinationChild(parent, f, ctor)).AsCachedEnumerable();
+                return parent.Destination.EnumerateDirectories().Where(whereTrue).Select(createPair).AsCachedEnumerable();
         }
 
         /// <summary>
@@ -239,6 +244,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public static CachedEnumerable<T> EnumerateDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor) where T : IDirectoryPair
         {
+            T createPair(string d) => CreateDestinationChild(parent, new DirectoryInfo(d), ctor);
             CachedEnumerable<T> sourceChildren = null;
             CachedEnumerable<T> destChildren = null;
             if (parent.Source.Exists)
@@ -253,7 +259,7 @@ namespace RoboSharp.Extensions
                     destChildren =
                         Directory.EnumerateDirectories(parent.Destination.FullName)
                         .Where(destName => sourceChildren.None(sourceChild => sourceChild.Destination.FullName == destName))
-                        .Select(d => CreateDestinationChild(parent, new DirectoryInfo(d), ctor))
+                        .Select(createPair)
                         .AsCachedEnumerable();
                 }
             }

@@ -24,11 +24,11 @@ namespace RoboSharp.Extensions
         public PairEvaluator(IRoboCommand command)
         {
             Command = command ?? throw new ArgumentNullException(nameof(command));
-            FileAttributesToApplyField = new Lazy<FileAttributes?>(command.CopyOptions.GetAddAttributes);
-            FileAttributesToRemoveField = new Lazy<FileAttributes?>(command.CopyOptions.GetRemoveAttributes);
-            FileFilterRegexField = new Lazy<Regex[]>(command.CopyOptions.GetFileFilterRegex);
-            ExcludeFileNameRegexField = new Lazy<Regex[]>(command.SelectionOptions.GetExcludedFileRegex);
-            ExcludeDirectoryRegexField = new Lazy<Helpers.DirectoryRegex[]>(command.SelectionOptions.GetExcludedDirectoryRegex);
+            FileAttributesToApplyField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetAddAttributes);
+            FileAttributesToRemoveField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetRemoveAttributes);
+            FileFilterRegexField = new Lazy<Regex[]>(this.Command.CopyOptions.GetFileFilterRegex);
+            ExcludeFileNameRegexField = new Lazy<Regex[]>(this.Command.SelectionOptions.GetExcludedFileRegex);
+            ExcludeDirectoryRegexField = new Lazy<Helpers.DirectoryRegex[]>(this.Command.SelectionOptions.GetExcludedDirectoryRegex);
         }
 
         #region < Properties >

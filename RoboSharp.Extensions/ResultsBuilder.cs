@@ -118,7 +118,8 @@ namespace RoboSharp.Extensions
         public virtual void AddFile(ProcessedFileInfo file)
         {
             ProgressEstimator.AddFile(file);
-            if (Command.LoggingOptions.ListOnly) LogFileInfo(file);
+            //if (Command.LoggingOptions.ListOnly) 
+                LogFileInfo(file);
         }
 
         /// <summary>
@@ -248,7 +249,7 @@ namespace RoboSharp.Extensions
             if (!Command.LoggingOptions.NoJobHeader)
             {
                 WriteToLogs(Divider);
-                WriteToLogs("\tIRoboCommand '{0}'".Format(Command.GetType()));
+                WriteToLogs("\t   IRoboCommand : '{0}'".Format(Command.GetType()));
                 WriteToLogs("\tResults Builder : '{0}'".Format(this.GetType()));
                 WriteToLogs(Divider);
                 WriteToLogs("");

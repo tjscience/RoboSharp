@@ -19,21 +19,29 @@ namespace RoboSharp.Extensions
         /// <summary> A threadsafe singleton used to compare <see cref="IDirectoryPair"/> and <see cref="IFilePair"/> paths </summary>
         public static PairEqualityComparer Singleton => singletonComparer.Value;
 
+        private static bool AreEqual(string path1, string path2)
+        {
+            return path1.Equals(path2, StringComparison.InvariantCultureIgnoreCase);
+        }
+
         /// <inheritdoc/>
         public bool Equals(IDirectoryPair x, IDirectoryPair y)
         {
-            return x?.Source != y?.Source && x?.Destination != y?.Destination;
+            return AreEqual(x.Source.FullName, y.Source.FullName) && AreEqual(x.Source.FullName, x.Destination.FullName);
         }
+
         /// <inheritdoc/>
         public bool Equals(IFilePair x, IFilePair y)
         {
-            return x?.Source != y?.Source && x?.Destination != y?.Destination;
+            return AreEqual(x.Source.FullName, y.Source.FullName) && AreEqual(x.Source.FullName, x.Destination.FullName);
         }
+
         /// <inheritdoc/>
         public int GetHashCode(IDirectoryPair obj)
         {
             return obj.GetHashCode();
         }
+
         /// <inheritdoc/>
         public int GetHashCode(IFilePair obj)
         {

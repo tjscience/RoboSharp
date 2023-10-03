@@ -35,8 +35,7 @@ namespace RoboSharp.Extensions
         public static bool IsRecursive(this CopyActionFlags flag) =>
             flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
             flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
-            flag.HasFlag(CopyActionFlags.Mirror) ||
-            flag.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
+            flag.HasFlag(CopyActionFlags.Mirror);
 
         /// <summary>
         /// Evaluates the <paramref name="options"/> to check if any of the options the recurse through subdirectories are enabled
@@ -44,8 +43,7 @@ namespace RoboSharp.Extensions
         public static bool IsRecursive(this CopyOptions options) =>
             options.CopySubdirectories ||
             options.CopySubdirectories ||
-            options.Mirror ||
-            options.MoveFilesAndDirectories;
+            options.Mirror;
 
         /// <summary>
         /// Evaluates the <paramref name="flag"/> to check if any of the PURGE options are enabled

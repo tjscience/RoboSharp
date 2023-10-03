@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 using RoboSharp;
 using RoboSharp.Extensions;
 using RoboSharp.Interfaces;
@@ -20,10 +21,7 @@ namespace RoboSharp.Extensions
     public class RoboMover : AbstractIRoboCommand
     {
         /// <inheritdoc/>
-        public RoboMover() : base()
-        {
-            Evaluator = new PairEvaluator(this);
-        }
+        public RoboMover() : base() { }
 
         /// <inheritdoc/>
         public RoboMover(
@@ -33,9 +31,7 @@ namespace RoboSharp.Extensions
             SelectionOptions selectionOptions = null,
             RoboSharpConfiguration configuration = null
              ) : base(copyOptions, loggingOptions, retryOptions, selectionOptions, configuration)
-        {
-            Evaluator = new PairEvaluator(this);
-        }
+        { }
 
         /// <inheritdoc/>
         public RoboMover(
@@ -44,24 +40,20 @@ namespace RoboSharp.Extensions
             SelectionFlags selectionFlags = SelectionFlags.Default,
             LoggingFlags loggingFlags = LoggingFlags.RoboSharpDefault
              ) : base(source, destination, copyActionFlags, selectionFlags, loggingFlags)
-        {
-            Evaluator = new PairEvaluator(this);
-        }
+        { }
 
         /// <summary>
         /// Create a RoboMover object that clones the options of the input IRoboCommand
         /// </summary>
         /// <param name="cmd">The IRoboCommand to convert to a RoboMover object</param>
         public RoboMover(IRoboCommand cmd) : base(cmd)
-        {
-            Evaluator = new PairEvaluator(this);
-        }
+        { }
 
         private RoboCommand standardCommand;
         private Task runningTask;
         private CancellationTokenSource cancelRequest;
-        private readonly PairEvaluator Evaluator;
-        ResultsBuilder resultsBuilder;
+        private PairEvaluator PairEvaluator;
+        private ResultsBuilder resultsBuilder;
 
         public RoboMoverOptions RoboMoverOptions { get; set; } = new RoboMoverOptions();
 
@@ -80,7 +72,7 @@ namespace RoboSharp.Extensions
                 bool onSameDrive = Path.GetPathRoot(CopyOptions.Source).Equals(Path.GetPathRoot(CopyOptions.Destination), StringComparison.InvariantCultureIgnoreCase);
                 bool isMoving = CopyOptions.MoveFiles | CopyOptions.MoveFilesAndDirectories;
 
-                if (!isMoving | !onSameDrive | JobOptions.PreventCopyOperation)
+                if (!isMoving | !onSameDrive | JobOptions.PreventCopyOperation | CopyOptions.CreateDirectoryAndFileTree)
                 {
                     results = await RunAsRoboCopy(domain, username, password);
                     success = true;
@@ -128,6 +120,8 @@ namespace RoboSharp.Extensions
                 standardCommand = null;
                 runningTask = null;
                 cancelRequest = null;
+                PairEvaluator = null;
+                resultsBuilder = null;
                 IsRunning = false;
             }
         }
@@ -184,10 +178,16 @@ namespace RoboSharp.Extensions
             if (!ok) return null;
 
             // Move the files
+            PairEvaluator = new PairEvaluator(this);
             resultsBuilder = new ResultsBuilder(this);
             base.IProgressEstimator = resultsBuilder.ProgressEstimator;
             RaiseOnProgressEstimatorCreated(resultsBuilder.ProgressEstimator);
             var sourcePair = new DirectoryPair(source, dest);
+            sourcePair.ProcessResult = new ProcessedFileInfo(
+                directory: source, 
+                command: this, 
+                status: dest.Exists ? ProcessedDirectoryFlag.ExistingDir : ProcessedDirectoryFlag.NewDir, 
+                size: 0);
             runningTask = ProcessDirectory(sourcePair, 1);
             await runningTask;
             return resultsBuilder.GetResults();
@@ -195,25 +195,25 @@ namespace RoboSharp.Extensions
 
         private async Task ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
-            CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs(FilePair.CreatePair);
+            CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs();
             directoryPair.ProcessResult.Size = filePairs.Count();
             resultsBuilder.AddDir(directoryPair.ProcessResult);
-            
+
             // Files
             foreach (var file in filePairs)
             {
                 if (cancelRequest.IsCancellationRequested) break;
                 try
                 {
-                    bool shouldMove = Evaluator.ShouldCopyFile(file);
-                    bool shouldPurge = Evaluator.ShouldPurge(file);
+                    bool shouldMove = PairEvaluator.ShouldCopyFile(file);
+                    bool shouldPurge = PairEvaluator.ShouldPurge(file);
                     base.RaiseOnFileProcessed(file.ProcessResult);
-                    resultsBuilder.AddFile(file.ProcessResult);
 
                     if (shouldMove)
                     {
                         if (!LoggingOptions.ListOnly)
                         {
+                            Directory.CreateDirectory(directoryPair.Destination.FullName);
                             resultsBuilder.SetCopyOpStarted(file.ProcessResult);
                             File.Move(file.Source.FullName, file.Destination.FullName);
                         }
@@ -228,7 +228,7 @@ namespace RoboSharp.Extensions
                         }
                         else
                         {
-                            resultsBuilder.AddFileSkipped(file.ProcessResult);
+                            resultsBuilder.AddFileExtra(file.ProcessResult);
                         }
                     }
                     else
@@ -250,8 +250,8 @@ namespace RoboSharp.Extensions
                 {
                     if (cancelRequest.IsCancellationRequested) break;
                     if (!CopyOptions.IsRecursive()) break;
-                    bool processDir = Evaluator.ShouldCopyDir(dir);
-                    bool shouldPurge = Evaluator.ShouldPurge(dir);
+                    bool processDir = PairEvaluator.ShouldCopyDir(dir);
+                    bool shouldPurge = PairEvaluator.ShouldPurge(dir);
 
                     dir.ProcessResult.Size = shouldPurge ? dir.Destination.GetFileSystemInfos().Length : dir.Source.GetFileSystemInfos().Length;
                     RaiseOnFileProcessed(dir.ProcessResult);
@@ -287,7 +287,12 @@ namespace RoboSharp.Extensions
             }
 
             // Delete the source directory as part of the 'Move' command
-            if (CopyOptions.MoveFilesAndDirectories && directoryPair.Source.Exists && directoryPair.Source.EnumerateFileSystemInfos().None())
+            if (
+                !LoggingOptions.ListOnly && 
+                CopyOptions.MoveFilesAndDirectories && 
+                directoryPair.Source.Exists && 
+                directoryPair.Source.EnumerateFileSystemInfos().None()
+                )
             {
                 try
                 {

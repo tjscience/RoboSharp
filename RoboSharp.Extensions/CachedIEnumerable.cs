@@ -87,6 +87,39 @@ namespace RoboSharp.Extensions
                 return true;
             }
         }
+
+        /// <summary>
+        /// Iterate across a <paramref name="collection"/> and return any unique values, as determined by the <paramref name="comparer"/>
+        /// </summary>
+        /// <typeparam name="T">The type of object in the collectionm</typeparam>
+        /// <param name="collection">The collection to iterate against</param>
+        /// <param name="comparer">A comparer that compares each item in the collection with the other items in the collection to determine if the items is unique.</param>
+        /// <returns>All items considered unique within the collection.</returns>
+        public static IEnumerable<T> WhereUnique<T>(this IEnumerable<T> collection, IEqualityComparer<T> comparer)
+        {
+            if (collection is null) throw new ArgumentNullException(nameof(collection));
+            if (comparer is null) throw new ArgumentNullException(nameof(comparer));
+            List<T> yielded = new List<T>();
+            bool firstOK = false;
+            foreach(T obj in collection)
+            {
+                if (firstOK)
+                {
+                    if (!yielded.Any(previous => comparer.Equals(previous, obj)))
+                    {
+                        yielded.Add(obj);
+                        yield return obj;
+                    }
+                }
+                else
+                {
+                    yielded.Add(obj);
+                    firstOK = true;
+                    yield return obj;
+                }
+            }
+            yield break;
+        }
     }
 
     /// <summary>
