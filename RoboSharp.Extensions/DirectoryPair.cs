@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace RoboSharp.Extensions
@@ -47,33 +48,49 @@ namespace RoboSharp.Extensions
         /// </summary>
         public void RefreshSourcePairs()
         {
-            lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(() => this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair));
-            lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(() => this.EnumerateSourceFilePairs(FilePair.CreatePair));
+            RefreshDirs();
+            RefreshFiles();
         }
+        private void RefreshDirs() => lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(() => this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair));
+        private void RefreshFiles() => lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(() => this.EnumerateSourceFilePairs(FilePair.CreatePair));
 
         /// <inheritdoc cref="IDirectoryPairExtensions.GetFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
         public FilePair[] GetFilePairs()
         {
-            return this.GetFilePairs(FilePair.CreatePair);
+            return EnumerateFilePairs().ToArray();
         }
 
         /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
         public CachedEnumerable<FilePair> EnumerateFilePairs()
         {
-            return this.EnumerateFilePairs(FilePair.CreatePair);
+            RefreshFiles();
+            var destPairs = this.EnumerateDestinationFilePairs(FilePair.CreatePair);
+            if (destPairs is null && SourceFiles is null)
+                return null;
+            else if (destPairs is null)
+                return SourceFiles;
+            else
+                return destPairs.Concat(SourceFiles).AsCachedEnumerable();
         }
 
 
         /// <inheritdoc cref="IDirectoryPairExtensions.GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public DirectoryPair[] GetDirectoryPairs()
         {
-            return this.GetDirectoryPairs(CreatePair);
+            return EnumerateDirectoryPairs().ToArray();
         }
 
         /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
         public CachedEnumerable<DirectoryPair> EnumerateDirectoryPairs()
         {
-            return this.EnumerateDirectoryPairs(CreatePair);
+            RefreshDirs();
+            var destPairs = this.EnumerateDestinationDirectoryPairs(DirectoryPair.CreatePair);
+            if (destPairs is null && SourceDirectories is null)
+                return null;
+            else if (destPairs is null)
+                return SourceDirectories;
+            else
+                return destPairs.Concat(SourceDirectories).AsCachedEnumerable();
         }
 
     }
