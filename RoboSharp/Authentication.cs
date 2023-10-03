@@ -157,7 +157,9 @@ namespace RoboSharp
                 }
 
                 //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
-                if (!command.LoggingOptions.ListOnly)
+                bool PreventCopy = command.LoggingOptions.ListOnly;
+                try { PreventCopy |= command.JobOptions?.PreventCopyOperation ?? false; } catch(NotImplementedException) { }
+                if (!PreventCopy)
                 {
                     dInfo = Directory.CreateDirectory(command.CopyOptions.Destination);
                     if (!dInfo.Exists)
