@@ -5,6 +5,7 @@ using RoboSharp.UnitTests;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace RoboSharp.Extensions.UnitTests
@@ -61,14 +62,14 @@ namespace RoboSharp.Extensions.UnitTests
 
         private static void PrepMoveFiles()
         {
-            System.Threading.Tasks.Task.Delay(50).Wait();
             Test_Setup.ClearOutTestDestination();
-            System.Threading.Tasks.Task.Delay(50).Wait(); // wait for environment to settle
             var rc = TestPrep.GetRoboCommand(false, CopyActionFlags.CopySubdirectoriesIncludingEmpty, SelectionFlags.Default, DefaultLoggingAction);
             rc.CopyOptions.Destination = GetMoveSource();
+            Directory.CreateDirectory(rc.CopyOptions.Destination);
             rc.Start().Wait();
             var results = rc.GetResults();
-            if (results.RoboCopyErrors.Length > 0) throw new Exception("Prep Failed  \n" + string.Concat(args: results.RoboCopyErrors));
+            if (results.RoboCopyErrors.Length > 0) 
+                throw new Exception("Prep Failed  \n" + string.Concat(args: results.RoboCopyErrors.Select(e => "\n RoboCommandError :\t" + e.ErrorCode + "\t" + e.ErrorDescription )));
         }
 
         private const CopyActionFlags Mov_ = CopyActionFlags.MoveFiles;
