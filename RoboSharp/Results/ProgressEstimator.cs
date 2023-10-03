@@ -322,6 +322,12 @@ namespace RoboSharp.Results
         /// </remarks>
         public void ProcessPreviousFile()
         {
+            bool shouldRelease = false;
+            if (!Monitor.IsEntered(CurrentFileLock))
+            {
+                shouldRelease = true;
+                Monitor.Enter(CurrentFileLock);
+            }
             if (CurrentFile != null)
             {
                 if (FileFailed)
@@ -342,6 +348,8 @@ namespace RoboSharp.Results
                     PerformByteCalc(CurrentFile, WhereToAdd.Failed);
                 }
             }
+            if (shouldRelease)
+                Monitor.Exit(CurrentFileLock);
         }
 
         /// <summary>
@@ -475,10 +483,20 @@ namespace RoboSharp.Results
             }
         }
 
+        private void CheckToResetCurrentFile(ProcessedFileInfo compareTo)
+        {
+            lock (CurrentFileLock)
+            {
+                if (CurrentFile == compareTo)
+                    CurrentFile = null;
+            }
+        }
+
         /// <summary>Increment <see cref="FileStatsField"/>.Copied ( Triggered when copy progress = 100% ) </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         public void AddFileCopied(ProcessedFileInfo currentFile)
         {
+            CheckToResetCurrentFile(currentFile);
             PerformByteCalc(currentFile, WhereToAdd.Copied);
         }
 
@@ -495,24 +513,28 @@ namespace RoboSharp.Results
                     tmpByte.Copied -= currentFile.Size;
                 }
             }
+            CheckToResetCurrentFile(currentFile);
             PerformByteCalc(currentFile, WhereToAdd.Failed);
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Skipped</summary>
         public void AddFileSkipped(ProcessedFileInfo currentFile)
         {
+            CheckToResetCurrentFile(currentFile);
             PerformByteCalc(currentFile, WhereToAdd.Skipped);
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.MisMatch</summary>
         public void AddFileMisMatch(ProcessedFileInfo currentFile)
         {
+            CheckToResetCurrentFile(currentFile);
             PerformByteCalc(currentFile, WhereToAdd.MisMatch);
         }
 
         /// <summary>Increment <see cref="FileStatsField"/>.Extra</summary>
         public void AddFileExtra(ProcessedFileInfo currentFile)
         {
+            CheckToResetCurrentFile(currentFile);
             PerformByteCalc(currentFile, WhereToAdd.Extra);
         }
 

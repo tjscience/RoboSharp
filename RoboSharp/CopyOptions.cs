@@ -524,23 +524,25 @@ namespace RoboSharp
         /// <summary>
         /// Parse the class properties and generate the command arguments
         /// </summary>
-        /// <returns></returns>
-        internal string Parse()
+        /// <param name="optionsOnly">When <see langword="true"/> only returns the options tags, similar to how robocopy would display them. (omits the source/destination)</param>
+        public string Parse(bool optionsOnly = false)
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            // Set Source and Destination
-            options.Append(WrapPath(Source));
-            options.Append(WrapPath(Destination));
-
+            if (!optionsOnly)
+            {
+                // Set Source and Destination
+                options.Append(WrapPath(Source));
+                options.Append(WrapPath(Destination));
+            }
+            
             // Set FileFilter
             // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
             var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
             string fileFilter = String.Join(" ", fileFilterQuotedItems);
             options.Append($"{fileFilter} ");
-
             Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options

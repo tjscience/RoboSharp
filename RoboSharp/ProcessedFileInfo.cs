@@ -156,9 +156,9 @@ namespace RoboSharp
         /// </summary>
         private string FileInfoToString(bool includeClass, bool includeSize)
         {
-            string fc = (includeClass ? FileClass : "").PadLeft(10);
-            string fs = (includeSize? Size.ToString() : "").PadLeft(10);
-            return string.Format("\t   {0}  \t\t{1}\t{2}", fc, fs, Name);
+            string fc = (includeClass ? FileClass : "").PadLeft(10).PadRight(12);
+            string fs = (includeSize? Size.ToString() : "").PadLeft(8);
+            return string.Format("\t{0}\t\t{1}\t{2}", fc, fs, Name);
         }
 
         /// <summary>

@@ -122,33 +122,23 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Adds the file to the ProgressEstimator, then sets that the copy operation is started
-        /// </summary>
-        /// <param name="file"></param>
-        public virtual void SetCopyOpStarted(ProcessedFileInfo file)
-        {
-            ProgressEstimator.AddFile(file);
-            ProgressEstimator.SetCopyOpStarted();
-        }
-
-        /// <summary>
         /// Mark an file as Copied
         /// </summary>
         /// <param name="file"></param>
         public virtual void AddFileCopied(ProcessedFileInfo file)
         {
             ProgressEstimator.AddFileCopied(file);
-            //LogFileInfo(file, " -- OK");
+            LogFileInfo(file);
         }
 
         /// <summary>
-        /// Mark an file as SKIPPED
+        /// Mark an file as EXTRA
         /// </summary>
         /// <param name="file"></param>
-        public virtual void AddFileSkipped(ProcessedFileInfo file)
+        public virtual void AddFileExtra(ProcessedFileInfo file)
         {
-            ProgressEstimator.AddFileSkipped(file);
-            LogFileInfo(file, " -- Skipped");
+            ProgressEstimator.AddFileExtra(file);
+            LogFileInfo(file);
         }
 
         /// <summary>
@@ -157,7 +147,7 @@ namespace RoboSharp.Extensions
         public virtual void AddFileFailed(ProcessedFileInfo file)
         {
             ProgressEstimator.AddFileFailed(file);
-            LogFileInfo(file, " -- FAILED");
+            LogFileInfo(file);
         }
 
         /// <summary>
@@ -167,7 +157,17 @@ namespace RoboSharp.Extensions
         public virtual void AddFilePurged(ProcessedFileInfo file)
         {
             ProgressEstimator.AddFile(file);
-            LogFileInfo(file, " -- Purged");
+            LogFileInfo(file);
+        }
+
+        /// <summary>
+        /// Mark an file as SKIPPED
+        /// </summary>
+        /// <param name="file"></param>
+        public virtual void AddFileSkipped(ProcessedFileInfo file)
+        {
+            ProgressEstimator.AddFileSkipped(file);
+            LogFileInfo(file);
         }
 
         /// <summary>
@@ -180,6 +180,16 @@ namespace RoboSharp.Extensions
             //Check to log the directory listing
             if (!Command.LoggingOptions.NoFileList)
                 WriteToLogs(file.ToString(Command.LoggingOptions) + suffix);
+        }
+
+        /// <summary>
+        /// Adds the file to the ProgressEstimator, then sets that the copy operation is started
+        /// </summary>
+        /// <param name="file"></param>
+        public virtual void SetCopyOpStarted(ProcessedFileInfo file)
+        {
+            ProgressEstimator.AddFile(file);
+            ProgressEstimator.SetCopyOpStarted();
         }
 
         #endregion
@@ -238,10 +248,8 @@ namespace RoboSharp.Extensions
             if (!Command.LoggingOptions.NoJobHeader)
             {
                 WriteToLogs(Divider);
-                WriteToLogs("");
-                WriteToLogs("IRoboCommand '{0}' Operation".Format(Command.GetType()).PadCenter(Divider));
-                WriteToLogs("Results Builder : '{0}'".Format(this.GetType()).PadCenter(Divider));
-                WriteToLogs("");
+                WriteToLogs("\tIRoboCommand '{0}'".Format(Command.GetType()));
+                WriteToLogs("\tResults Builder : '{0}'".Format(this.GetType()));
                 WriteToLogs(Divider);
                 WriteToLogs("");
                 WriteToLogs($"{PadHeader("Started")} : {StartTime.ToLongDateString()} {StartTime.ToLongTimeString()}");
@@ -266,8 +274,8 @@ namespace RoboSharp.Extensions
                     WriteToLogs("");
                 }
 
-                WriteToLogs("");
-                WriteToLogs($"{PadHeader("Options")} : {Command.CommandOptions}");
+                string cmdOptions = Command.CommandOptions.Replace(Command.CopyOptions.Parse(), Command.CopyOptions.Parse(true));
+                WriteToLogs($"{PadHeader("Options")} : {cmdOptions}");
                 WriteToLogs("");
                 WriteToLogs(Divider);
                 WriteToLogs("");
