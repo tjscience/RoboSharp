@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Remove="TEST_FILES\DESTINATION\4_Bytes.txt" />
       <None Remove="TEST_FILES\MoveSource\4_Bytes.txt" />
     </ItemGroup>
 
@@ -57,6 +58,9 @@
         </Content>
         <Content Include="TEST_FILES\LargerNewer\SubFolder_2\4_Bytes.txt">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="TEST_FILES\DESTINATION\4_Bytes.txt">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
         <Content Include="TEST_FILES\MoveSource\4_Bytes.txt">
           <CopyToOutputDirectory>Always</CopyToOutputDirectory>
