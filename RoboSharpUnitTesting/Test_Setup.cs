@@ -13,9 +13,11 @@ namespace RoboSharp.UnitTests
 {
     public static class Test_Setup
     {
-        public static string TestDestination { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_DESTINATION");
-        public static string Source_LargerNewer { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
-        public static string Source_Standard { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
+        private static string TestFileRoot => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES");
+        
+        public static string TestDestination { get; } = Path.Combine(TestFileRoot, "DESTINATION");
+        public static string Source_LargerNewer { get; } = Path.Combine(TestFileRoot, "LargerNewer");
+        public static string Source_Standard { get; } = Path.Combine(TestFileRoot, "STANDARD");
 
         /// <summary>
         /// Check if running on AppVeyor -> Certain tests will always fail due to appveyor's setup -> this allows them to pass the checks on appveyor by just not running them
