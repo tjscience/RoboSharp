@@ -257,16 +257,18 @@ namespace RoboSharp.Extensions
         /// <typeparam name="T"></typeparam>
         /// <param name="collection"></param>
         /// <returns></returns>
-        public IEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T: IFilePair
+        public IEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T : IFilePair
         {
             var filters = Command.CopyOptions.FileFilter;
             if (filters.Any() && filters.All(s => s != "*.*" && s != "*"))
             {
                 return collection.Where(ShouldIncludeFileName);
+                //return collection.WhereUnique(Helpers.IFilePairEqualityComparer<T>.Singleton).Where(ShouldIncludeFileName);
             }
             else
-                return collection;
+                return collection;//.WhereUnique(Helpers.IFilePairEqualityComparer<T>.Singleton);
         }
+
 
         /// <inheritdoc cref="CopyOptionsExtensions.ShouldIncludeFileName(CopyOptions, IFilePair, IEnumerable{Regex})"/>
         public bool ShouldIncludeFileName<T>(T pair) where T:IFilePair

@@ -70,7 +70,7 @@ namespace RoboSharp.Extensions
             else if (destPairs is null)
                 return SourceFiles;
             else
-                return destPairs.Concat(SourceFiles).WhereUnique(PairEqualityComparer.Singleton).AsCachedEnumerable();
+                return destPairs.Concat(SourceFiles).WhereUnique(Helpers.PairEqualityComparer.Singleton).AsCachedEnumerable();
         }
 
 
@@ -90,7 +90,7 @@ namespace RoboSharp.Extensions
             else if (destPairs is null)
                 return SourceDirectories;
             else
-                return destPairs.Concat(SourceDirectories).WhereUnique(PairEqualityComparer.Singleton).AsCachedEnumerable();
+                return destPairs.Concat(SourceDirectories).WhereUnique(Helpers.PairEqualityComparer.Singleton).AsCachedEnumerable();
         }
 
     }

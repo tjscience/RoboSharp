@@ -215,6 +215,7 @@ namespace RoboSharp.Extensions
                         {
                             Directory.CreateDirectory(directoryPair.Destination.FullName);
                             resultsBuilder.SetCopyOpStarted(file.ProcessResult);
+                            if (file.Destination.Exists) file.Destination.Delete();
                             File.Move(file.Source.FullName, file.Destination.FullName);
                         }
                         resultsBuilder.AddFileCopied(file.ProcessResult);
