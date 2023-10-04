@@ -94,11 +94,18 @@ namespace RoboSharp.Extensions.Helpers
         {
             if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
             {
-                return !command.SelectionOptions.ExcludeExtra && pair.Destination.Exists && !pair.Source.Exists;
+                return !command.SelectionOptions.ExcludeExtra && pair.IsExtra();
             }
             return false;
         }
 
+
+        /// <summary>
+        /// Evaluate the pair and determine if it the directory at the destination should be purged or not
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="pair"></param>
+        /// <returns>TRUE if destination directory should be deleted, otherwise false.</returns>
         public static bool ShouldPurge(this IRoboCommand command, IDirectoryPair pair)
         {
             if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
@@ -149,11 +156,13 @@ namespace RoboSharp.Extensions.Helpers
             return fileFilterRegex.Any(r => r.IsMatch(fileName));
         }
 
-        /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, ref Regex[])"/>
-        public static bool ShouldIncludeFileName(this CopyOptions options, FileInfo Source, IEnumerable<Regex> inclusionCollection = null) => ShouldIncludeFileName(options, Source.Name, inclusionCollection);
+        /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, IEnumerable{Regex})"/>
+        public static bool ShouldIncludeFileName(this CopyOptions options, FileInfo Source, IEnumerable<Regex> inclusionCollection = null) 
+            => ShouldIncludeFileName(options, Source.Name, inclusionCollection);
 
-        /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, ref Regex[])"/>
-        public static bool ShouldIncludeFileName(this CopyOptions options, IFilePair comparer, IEnumerable<Regex> inclusionCollection = null) => ShouldIncludeFileName(options, comparer.Source.Name, inclusionCollection);
+        /// <inheritdoc cref="ShouldIncludeFileName(CopyOptions, string, IEnumerable{Regex})"/>
+        public static bool ShouldIncludeFileName(this CopyOptions options, IFilePair comparer, IEnumerable<Regex> inclusionCollection = null) 
+            => ShouldIncludeFileName(options, comparer.Source.Name, inclusionCollection);
 
         #endregion
 

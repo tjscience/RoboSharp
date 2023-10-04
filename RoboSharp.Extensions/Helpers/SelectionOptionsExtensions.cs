@@ -93,22 +93,16 @@ namespace RoboSharp.Extensions.Helpers
                 return false;
         }
 
-        /// <inheritdoc cref="IsExtra(string, string)"/>
-        public static bool IsExtra(FileInfo Source, FileInfo Destination) => Destination.Exists && !Source.Exists;
-
         /// <summary>
         /// EXTRA directories are folders that exist in the destination but not in the source
         /// </summary>
         /// <returns>TRUE if exists in the destination but not in the source, otherwise false</returns>
-        public static bool IsExtra(DirectoryInfo Source, DirectoryInfo Destination) => Destination.Exists && !Source.Exists;
-
-        /// <inheritdoc cref="IsExtra(DirectoryInfo, DirectoryInfo)"/>
-        public static bool IsExtra(this IDirectoryPair pair)
-            => pair is null ? throw new ArgumentNullException(nameof(pair)) : IsExtra(pair.Source, pair.Destination);
-
-        /// <inheritdoc cref="IsExtra(FileInfo, FileInfo)"/>
-        public static bool IsExtra(this IFilePair pair)
-            => pair is null ? throw new ArgumentNullException(nameof(pair)) : IsExtra(pair.Source, pair.Destination);
+        public static bool IsExtra<T>(T Source, T Destination) where T : FileSystemInfo
+        {
+            if (Destination is null) throw new ArgumentNullException(nameof(Destination));
+            if (Source is null) throw new ArgumentNullException(nameof(Source));
+            return Destination.Exists && !Source.Exists;
+        }
 
         ///// <summary> </summary>
         ///// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>
@@ -143,18 +137,12 @@ namespace RoboSharp.Extensions.Helpers
         }
         
         /// <inheritdoc cref="IsLonely(string, string)"/>
-        public static bool IsLonely(FileInfo Source, FileInfo Destination) => Source.Exists && !Destination.Exists;
-
-        /// <inheritdoc cref="IsLonely(string, string)"/>
-        public static bool IsLonely(DirectoryInfo Source, DirectoryInfo Destination) => Source.Exists && !Destination.Exists;
-
-        /// <inheritdoc cref="IsLonely(DirectoryInfo, DirectoryInfo)"/>
-        public static bool IsLonely(this IDirectoryPair pair) 
-            => pair is null ? throw new ArgumentNullException(nameof(pair)) : IsLonely(pair.Source, pair.Destination);
-
-        /// <inheritdoc cref="IsLonely(FileInfo, FileInfo)"/>
-        public static bool IsLonely(this IFilePair pair)
-            => pair is null ? throw new ArgumentNullException(nameof(pair)) : IsLonely(pair.Source, pair.Destination);
+        public static bool IsLonely<T>(T Source, T Destination) where T : FileSystemInfo
+        {
+            if (Destination is null) throw new ArgumentNullException(nameof(Destination));
+            if (Source is null) throw new ArgumentNullException(nameof(Source));
+            return Source.Exists && !Destination.Exists;
+        }
 
         /// <summary> </summary>
         /// <returns> TRUE if the file should be excluded, FALSE if it should be included </returns>
@@ -434,6 +422,10 @@ namespace RoboSharp.Extensions.Helpers
         /// </summary>
         /// <param name="options">if the <paramref name="exclusionCollection"/> is null, the options are used to generate the regex</param>
         /// <param name="fileName">filename to evaluate</param>
+        /// <param name="exclusionCollection">
+        /// The collection of regex objects to compare against - If this is null, a new array will be generated from <see cref="SelectionOptions.ExcludedFiles"/>. <br/>
+        /// ref is used for optimization during the course of the run, to avoid re-creating the regex for every file check.
+        /// </param>
         /// <returns><see langword="true"/> if any of the regex items in the <paramref name="exclusionCollection"/> match the filename, otherwise false</returns>
         public static bool ShouldExcludeFileName(this SelectionOptions options, string fileName, IEnumerable<Regex> exclusionCollection = null)
         {
@@ -443,11 +435,13 @@ namespace RoboSharp.Extensions.Helpers
             return exclusionCollection.Any(r => r.IsMatch(fname));
         }
 
-        /// <inheritdoc cref="ShouldExcludeFileName(SelectionOptions, string, ref Regex[])"/>
-        public static bool ShouldExcludeFileName(this SelectionOptions options, FileInfo Source, IEnumerable<Regex> exclusionCollection) => ShouldExcludeFileName(options, Source.Name, exclusionCollection);
+        /// <inheritdoc cref="ShouldExcludeFileName(SelectionOptions, string, IEnumerable{Regex})"/>
+        public static bool ShouldExcludeFileName(this SelectionOptions options, FileInfo Source, IEnumerable<Regex> exclusionCollection) 
+            => ShouldExcludeFileName(options, Source.Name, exclusionCollection);
 
-        /// <inheritdoc cref="ShouldExcludeFileName(SelectionOptions, string, ref Regex[])"/>
-        public static bool ShouldExcludeFileName(this SelectionOptions options, IFilePair pair, IEnumerable<Regex> exclusionCollection) => ShouldExcludeFileName(options, pair.Source.Name, exclusionCollection);
+        /// <inheritdoc cref="ShouldExcludeFileName(SelectionOptions, string, IEnumerable{Regex})"/>
+        public static bool ShouldExcludeFileName(this SelectionOptions options, IFilePair pair, IEnumerable<Regex> exclusionCollection) 
+            => ShouldExcludeFileName(options, pair.Source.Name, exclusionCollection);
 
         #endregion
 
@@ -479,7 +473,7 @@ namespace RoboSharp.Extensions.Helpers
         /// <param name="options"></param>
         /// <param name="directoryPath">directory Name to compare</param>
         /// <param name="exclusionCollection">
-        /// The collection of regex objects to compare against - If this is null, a new array will be generated from <see cref="SelectionOptions.ExcludedFiles"/>. <br/>
+        /// The collection of regex objects to compare against - If this is null, a new array will be generated from <see cref="SelectionOptions.ExcludedDirectories"/>. <br/>
         /// ref is used for optimization during the course of the run, to avoid creating regex for every file check.
         /// </param>
         /// <returns></returns>
@@ -490,11 +484,13 @@ namespace RoboSharp.Extensions.Helpers
             return exclusionCollection.Any(ob => ob.ShouldExcludeDirectory(directoryPath));
         }
 
-        /// <inheritdoc cref="ShouldExcludeDirectoryName(SelectionOptions, string, ref Tuple{bool, Regex}[])"/>
-        public static bool ShouldExcludeDirectoryName(this SelectionOptions options, DirectoryInfo Source, IEnumerable<Helpers.DirectoryRegex> exclusionCollection = null) => ShouldExcludeDirectoryName(options, Source.FullName, exclusionCollection);
+        /// <inheritdoc cref="ShouldExcludeDirectoryName(SelectionOptions, string, IEnumerable{DirectoryRegex})"/>
+        public static bool ShouldExcludeDirectoryName(this SelectionOptions options, DirectoryInfo directoryPath, IEnumerable<Helpers.DirectoryRegex> exclusionCollection = null) 
+            => ShouldExcludeDirectoryName(options, directoryPath.FullName, exclusionCollection);
 
-        /// <inheritdoc cref="ShouldExcludeDirectoryName(SelectionOptions, string, ref Tuple{bool, Regex}[])"/>
-        public static bool ShouldExcludeDirectoryName(this SelectionOptions options, IDirectoryPair pair, IEnumerable<Helpers.DirectoryRegex> exclusionCollection = null) => ShouldExcludeDirectoryName(options, pair.Source.FullName, exclusionCollection);
+        /// <inheritdoc cref="ShouldExcludeDirectoryName(SelectionOptions, string, IEnumerable{DirectoryRegex})"/>
+        public static bool ShouldExcludeDirectoryName(this SelectionOptions options, IDirectoryPair pair, IEnumerable<Helpers.DirectoryRegex> exclusionCollection = null) 
+            => ShouldExcludeDirectoryName(options, pair.Source.FullName, exclusionCollection);
 
         #endregion
 

@@ -25,6 +25,14 @@ namespace RoboSharp.Extensions
             return Path.GetPathRoot(pair.Source.FullName).Equals(Path.GetPathRoot(pair.Destination.FullName), StringComparison.InvariantCultureIgnoreCase);
         }
 
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsExtra(FileSystemInfo, FileSystemInfo)"/>
+        public static bool IsExtra(this IFilePair pair)
+            => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsExtra(pair.Source, pair.Destination);
+
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsLonely(FileSystemInfo, FileSystemInfo)"/>
+        public static bool IsLonely(this IFilePair pair)
+            => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
+
         /// <summary>
         /// Gets the file length from the pair, prioritizing the source file over the destination file.
         /// </summary>
