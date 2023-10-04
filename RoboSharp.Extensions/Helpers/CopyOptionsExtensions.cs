@@ -34,7 +34,7 @@ namespace RoboSharp.Extensions.Helpers
         /// </summary>
         public static bool IsRecursive(this CopyActionFlags flag) =>
             flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
-            flag.HasFlag(CopyActionFlags.CopySubdirectories) ||
+            flag.HasFlag(CopyActionFlags.CopySubdirectoriesIncludingEmpty) ||
             flag.HasFlag(CopyActionFlags.Mirror);
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace RoboSharp.Extensions.Helpers
         /// </summary>
         public static bool IsRecursive(this CopyOptions options) =>
             options.CopySubdirectories ||
-            options.CopySubdirectories ||
+            options.CopySubdirectoriesIncludingEmpty ||
             options.Mirror;
 
         /// <summary>

@@ -29,7 +29,26 @@ namespace RoboSharp.Extensions
         public static bool IsLonely(this IDirectoryPair pair)
             => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
 
-        
+        /// <summary>
+        /// Check if the  <see cref="IDirectoryPair.Source"/> directory is the root of its drive
+        /// </summary>
+        /// <returns><see langword="true"/> if the FullName of the source == Root.FullName, otherwise <see langword="false"/></returns>
+        public static bool IsRootSource(this IDirectoryPair pair) => pair.Source.IsRootDir();
+
+        /// <summary>
+        /// Check if the  <see cref="IDirectoryPair.Destination"/> directory is the root of its drive
+        /// </summary>
+        /// <inheritdoc cref="IsRootDestination(IDirectoryPair)"/>
+        public static bool IsRootDestination(this IDirectoryPair pair) => pair.Destination.IsRootDir();
+
+        /// <summary>
+        /// Check if the <paramref name="directory"/> is the root of its drive
+        /// </summary>
+        /// <inheritdoc cref="IsRootDestination(IDirectoryPair)"/>
+        public static bool IsRootDir(this DirectoryInfo directory)
+            => directory.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .Equals(directory.Root.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+
         #region < Create Pair Functions >
 
         /// <summary>

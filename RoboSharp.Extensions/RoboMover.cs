@@ -26,7 +26,7 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc/>
         public RoboMover(
-            CopyOptions copyOptions = null, 
+            CopyOptions copyOptions = null,
             LoggingOptions loggingOptions = null,
             RetryOptions retryOptions = null,
             SelectionOptions selectionOptions = null,
@@ -77,7 +77,7 @@ namespace RoboSharp.Extensions
                 bool onSameDrive = Path.GetPathRoot(CopyOptions.Source).Equals(Path.GetPathRoot(CopyOptions.Destination), StringComparison.InvariantCultureIgnoreCase);
                 bool isMoving = CopyOptions.MoveFiles | CopyOptions.MoveFilesAndDirectories;
 
-                if (!isMoving | !onSameDrive | JobOptions.PreventCopyOperation | CopyOptions.CreateDirectoryAndFileTree)
+                if (!isMoving | !onSameDrive | CopyOptions.Mirror | JobOptions.PreventCopyOperation | CopyOptions.CreateDirectoryAndFileTree)
                 {
                     results = await RunAsRoboCopy(domain, username, password);
                     success = true;
@@ -102,11 +102,11 @@ namespace RoboSharp.Extensions
                     }
                     // Run
                     results = await RunAsRoboMover(domain, username, password);
-                    success = results != null; 
+                    success = results != null;
                 }
-                
+
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 RaiseOnCommandError(new CommandErrorEventArgs(ex));
                 throw;
@@ -134,7 +134,7 @@ namespace RoboSharp.Extensions
         /// <summary> Run the RoboCommand - used when the source and destination are on separate drives </summary>
         private async Task<RoboCopyResults> RunAsRoboCopy(string domain, string username, string password)
         {
-            standardCommand = new RoboCommand(command: this, LinkConfiguration:true, LinkRetryOptions:true, LinkSelectionOptions:true, LinkLoggingOptions:true, LinkJobOptions: false);
+            standardCommand = new RoboCommand(command: this, LinkConfiguration: true, LinkRetryOptions: true, LinkSelectionOptions: true, LinkLoggingOptions: true, LinkJobOptions: false);
             standardCommand.OnCommandCompleted += StandardCommand_OnCommandCompleted;
             standardCommand.OnCommandError += StandardCommand_OnCommandError;
             standardCommand.OnCopyProgressChanged += StandardCommand_OnCopyProgressChanged;
@@ -189,13 +189,24 @@ namespace RoboSharp.Extensions
             RaiseOnProgressEstimatorCreated(resultsBuilder.ProgressEstimator);
             var sourcePair = new DirectoryPair(source, dest);
             sourcePair.ProcessResult = new ProcessedFileInfo(
-                directory: source, 
-                command: this, 
-                status: dest.Exists ? ProcessedDirectoryFlag.ExistingDir : ProcessedDirectoryFlag.NewDir, 
+                directory: source,
+                command: this,
+                status: dest.Exists ? ProcessedDirectoryFlag.ExistingDir : ProcessedDirectoryFlag.NewDir,
                 size: 0);
             runningTask = Task.Run(() => ProcessDirectory(sourcePair, 1));
             await runningTask;
             return resultsBuilder.GetResults();
+        }
+
+
+        static readonly string[] DisallowedRootDirectories = new string[] { "System Volume Information" };
+
+        /// <summary> Check the directory name to determine if it should be ignored, such as the 'System Volume Information' folder.  </summary>
+        /// <remarks>Meant to only filter root directories.</remarks>
+        /// <returns> True if the directory name is not in the list of disallowed names. </returns>
+        public static bool IsAllowedRootDirectory(DirectoryInfo d)
+        {
+            return !DisallowedRootDirectories.Contains(d.Name);
         }
 
         private void ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
@@ -251,7 +262,9 @@ namespace RoboSharp.Extensions
             // Iterate through dirs
             if (CopyOptions.IsRecursive() && !CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
             {
-                CachedEnumerable<DirectoryPair> childDirs = SelectionOptions.ExcludeExtra ? directoryPair.SourceDirectories : directoryPair.EnumerateDirectoryPairs();
+                IEnumerable<DirectoryPair> childDirs = SelectionOptions.ExcludeExtra ? directoryPair.SourceDirectories : directoryPair.EnumerateDirectoryPairs();
+                childDirs = directoryPair.IsRootSource() ? childDirs.Where(d => IsAllowedRootDirectory(d.Source)) : childDirs;
+
                 foreach (var dir in childDirs)
                 {
                     if (cancelRequest.IsCancellationRequested) break;
@@ -293,9 +306,10 @@ namespace RoboSharp.Extensions
 
             // Delete the source directory as part of the 'Move' command
             if (
-                !LoggingOptions.ListOnly && 
-                CopyOptions.MoveFilesAndDirectories && 
-                directoryPair.Source.Exists && 
+                !LoggingOptions.ListOnly &&
+                CopyOptions.MoveFilesAndDirectories &&
+                !directoryPair.IsRootSource() &&
+                directoryPair.Source.Exists &&
                 directoryPair.Source.EnumerateFileSystemInfos().None()
                 )
             {
@@ -303,7 +317,7 @@ namespace RoboSharp.Extensions
                 {
                     directoryPair.Source.Delete();
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     RaiseOnCommandError(e);
                 }
@@ -311,6 +325,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary> Purges a directory tree from the destination </summary>
+        /// <remarks>It has already been determined that the source directory was marked for purging if within this method</remarks>
         private void PurgeDirectory(DirectoryPair pair, int currentDepth)
         {
             if (!pair.Destination.Exists) return;

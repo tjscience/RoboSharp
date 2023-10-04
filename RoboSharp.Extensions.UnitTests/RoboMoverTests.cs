@@ -30,6 +30,14 @@ namespace RoboSharp.Extensions.UnitTests
             return Path.Combine(original.Replace(Path.GetFileName(original), ""), "MoveSource");
         }
 
+        [DataRow(true, @"C:\SomeDir")]
+        [DataRow(false, @"D:\System Volume Information")]
+        [TestMethod]
+        public void IsAllowedDir(bool expected, string path)
+        {
+            Assert.AreEqual(expected, RoboMover.IsAllowedRootDirectory(new DirectoryInfo(path)));
+        }
+
         /// <summary>
         /// Copy Test will use a standard ROBOCOPY command
         /// </summary>
@@ -91,6 +99,10 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Move Files and Directories")]
         [DataRow(data: new object[] { Mov_, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files")]
         [DataRow(data: new object[] { Move, SelectionFlags.Default, DefaultLoggingAction | LoggingFlags.ListOnly }, DisplayName = "ListOnly | Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_ | CopyActionFlags.CopySubdirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Subdirectories | Move Files")]
+        [DataRow(data: new object[] { Move | CopyActionFlags.CopySubdirectories, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Subdirectories | Move Files and Directories")]
+        [DataRow(data: new object[] { Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Subdirectories-Empty | Move Files")]
+        [DataRow(data: new object[] { Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty, SelectionFlags.Default, DefaultLoggingAction }, DisplayName = "Subdirectories-Empty | Move Files and Directories")]
         public void MoveTest(object[] flags)
         {
             if (Test_Setup.IsRunningOnAppVeyor()) return;
