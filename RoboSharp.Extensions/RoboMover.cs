@@ -193,12 +193,12 @@ namespace RoboSharp.Extensions
                 command: this, 
                 status: dest.Exists ? ProcessedDirectoryFlag.ExistingDir : ProcessedDirectoryFlag.NewDir, 
                 size: 0);
-            runningTask = ProcessDirectory(sourcePair, 1);
+            runningTask = Task.Run(() => ProcessDirectory(sourcePair, 1));
             await runningTask;
             return resultsBuilder.GetResults();
         }
 
-        private async Task ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
+        private void ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
             CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs();
             directoryPair.ProcessResult.Size = filePairs.Count();
@@ -249,13 +249,12 @@ namespace RoboSharp.Extensions
             }
 
             // Iterate through dirs
-            if (!CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
+            if (CopyOptions.IsRecursive() && !CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
             {
                 CachedEnumerable<DirectoryPair> childDirs = SelectionOptions.ExcludeExtra ? directoryPair.SourceDirectories : directoryPair.EnumerateDirectoryPairs();
                 foreach (var dir in childDirs)
                 {
                     if (cancelRequest.IsCancellationRequested) break;
-                    if (!CopyOptions.IsRecursive()) break;
                     bool processDir = PairEvaluator.ShouldCopyDir(dir);
                     bool shouldPurge = PairEvaluator.ShouldPurge(dir);
 
@@ -264,7 +263,7 @@ namespace RoboSharp.Extensions
                     if (shouldPurge)
                     {
                         resultsBuilder.AddDir(dir.ProcessResult);
-                        PurgeDirectory(dir);
+                        PurgeDirectory(dir, currentDepth);
 
                     }
                     else if (processDir)
@@ -283,7 +282,7 @@ namespace RoboSharp.Extensions
                                 RaiseOnCommandError("Unable to perform QuickMove on path: " + dir.Source.FullName, e);
                             }
                         }
-                        if (!isMoved) await ProcessDirectory(dir, currentDepth + 1);
+                        if (!isMoved) ProcessDirectory(dir, currentDepth + 1);
                     }
                     else
                     {
@@ -312,7 +311,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary> Purges a directory tree from the destination </summary>
-        private void PurgeDirectory(DirectoryPair pair)
+        private void PurgeDirectory(DirectoryPair pair, int currentDepth)
         {
             if (!pair.Destination.Exists) return;
             if (RoboMoverOptions.QuickMove)
@@ -336,10 +335,13 @@ namespace RoboSharp.Extensions
                         resultsBuilder.AddFileFailed(pInfo);
                     }
                 }
-                foreach (var dir in pair.EnumerateDirectoryPairs())
+                if (CopyOptions.IsRecursive() && !CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
                 {
-                    if (cancelRequest.IsCancellationRequested) break;
-                    PurgeDirectory(dir);
+                    foreach (var dir in pair.EnumerateDirectoryPairs())
+                    {
+                        if (cancelRequest.IsCancellationRequested) break;
+                        PurgeDirectory(dir, currentDepth + 1);
+                    }
                 }
                 try
                 {
