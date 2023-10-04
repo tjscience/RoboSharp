@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RoboSharp.Extensions
+namespace RoboSharp.Extensions.Helpers
 {
     /// <summary>
     /// Extension Methods for selections options to assist with custom implementations

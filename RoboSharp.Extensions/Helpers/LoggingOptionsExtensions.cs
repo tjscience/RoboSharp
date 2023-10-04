@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RoboSharp.Extensions
+namespace RoboSharp.Extensions.Helpers
 {
     /// <summary>
     /// Extensions for the loggingOptions ojbect

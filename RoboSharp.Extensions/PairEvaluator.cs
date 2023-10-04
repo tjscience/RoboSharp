@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using RoboSharp.Extensions;
+using RoboSharp.Extensions.Helpers;
 
 namespace RoboSharp.Extensions
 {

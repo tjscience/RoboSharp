@@ -10,6 +10,7 @@ using RoboSharp.Results;
 using RoboSharp.EventArgObjects;
 using System.Threading.Tasks;
 using System.Threading;
+using RoboSharp.Extensions.Helpers;
 
 namespace RoboSharp.Extensions
 {

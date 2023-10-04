@@ -9,6 +9,7 @@ using RoboSharp.Interfaces;
 using RoboSharp.Results;
 using RoboSharp.EventArgObjects;
 using static RoboSharp.Results.ProgressEstimator;
+using RoboSharp.Extensions.Helpers;
 
 namespace RoboSharp.Extensions
 {

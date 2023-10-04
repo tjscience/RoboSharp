@@ -146,7 +146,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
-        /// <inheritdoc cref="EnumerateSourcePairs{T}(IDirectoryPair, IncludeFilePathDelegate, Func{FileInfo, FileInfo, T})"/>
+        /// <inheritdoc cref="EnumerateSourceFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T}, Func{FileInfo, bool})"/>
         public static CachedEnumerable<T> EnumerateDestinationFilePairs<T>(this IDirectoryPair parent, Func<FileInfo, FileInfo, T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IFilePair
         {
             T createPair(FileInfo f) => CreateDestinationChild(parent, f, ctor);
@@ -226,7 +226,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
-        /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IDirectoryPair, IncludeDirectoryPathDelegate, Func{DirectoryInfo, DirectoryInfo, T})"/>
+        /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T}, Func{DirectoryInfo, bool})"/>
         public static CachedEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IDirectoryPair parent, Func<DirectoryInfo, DirectoryInfo, T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IDirectoryPair
         {
             T createPair(DirectoryInfo d) => CreateDestinationChild(parent, d, ctor);
