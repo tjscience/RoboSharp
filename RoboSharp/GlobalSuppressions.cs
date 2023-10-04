@@ -8,3 +8,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE0090:Use 'new(...)'", Justification = "Required by .NetStandard Target")]
 [assembly: SuppressMessage("Style", "IDE0066:Use 'switch expression(...)'", Justification = "Not compatible with C# 7.3 - NetStandard")]
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Required by IList interface", Scope = "member", Target = "~M:RoboSharp.ImmutableList`1.Clear~RoboSharp.ImmutableList`1")]
+[assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Maintain compatibility with previous releases", Scope = "member", Target = "~M:RoboSharp.CopyOptions.CheckRunHoursString(System.String)~System.Boolean")]

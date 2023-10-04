@@ -26,9 +26,9 @@ namespace RoboSharp.Extensions.Helpers
             if (string.IsNullOrWhiteSpace(path)) return false;
             bool Unique = !path.Equals(options.UnicodeLogPath, StringComparison.InvariantCultureIgnoreCase);
             if (Unique)
-                Unique = !CompareAgainstAppendUniPath ? true : !path.Equals(options.AppendUnicodeLogPath, StringComparison.InvariantCultureIgnoreCase);
+                Unique = !CompareAgainstAppendUniPath || !path.Equals(options.AppendUnicodeLogPath, StringComparison.InvariantCultureIgnoreCase);
             if (Unique)
-                Unique = !CompareAgainstLogPath ? true : !path.Equals(options.AppendLogPath, StringComparison.InvariantCultureIgnoreCase);
+                Unique = !CompareAgainstLogPath || !path.Equals(options.AppendLogPath, StringComparison.InvariantCultureIgnoreCase);
             return Unique;
         }
 

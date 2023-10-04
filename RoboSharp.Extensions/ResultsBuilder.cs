@@ -242,7 +242,7 @@ namespace RoboSharp.Extensions
         /// </summary>
         /// <param name="RowName"></param>
         /// <returns>A padded string</returns>
-        protected string PadHeader(string RowName) => RowName.PadLeft(9);
+        protected static string PadHeader(string RowName) => RowName.PadLeft(9);
 
         /// <summary>
         /// Write the header to the log - this is performed at time on construction of the object

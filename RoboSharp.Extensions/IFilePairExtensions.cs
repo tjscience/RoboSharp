@@ -25,11 +25,11 @@ namespace RoboSharp.Extensions
             return Path.GetPathRoot(pair.Source.FullName).Equals(Path.GetPathRoot(pair.Destination.FullName), StringComparison.InvariantCultureIgnoreCase);
         }
 
-        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsExtra(FileSystemInfo, FileSystemInfo)"/>
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsExtra{T}(T, T)"/>
         public static bool IsExtra(this IFilePair pair)
             => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsExtra(pair.Source, pair.Destination);
 
-        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsLonely(FileSystemInfo, FileSystemInfo)"/>
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsLonely{T}(T, T)"/>
         public static bool IsLonely(this IFilePair pair)
             => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
 
@@ -48,11 +48,11 @@ namespace RoboSharp.Extensions
             if (pair is null) throw new ArgumentNullException(nameof(pair));
             
             // Check source
-            if (pair.Source is null) throw new ArgumentNullException(nameof(pair.Source));
+            if (pair.Source is null) throw new ArgumentNullException("IFilePair.Source is null");
             if (pair.Source.Exists) return pair.Source.Length;
 
             // Check Destination
-            if (pair.Destination is null) throw new ArgumentNullException(nameof(pair.Destination));
+            if (pair.Destination is null) throw new ArgumentNullException("IFilePair.Destination is null");
             if (pair.Destination.Exists) return pair.Destination.Length;
 
             return 0; // neither exist

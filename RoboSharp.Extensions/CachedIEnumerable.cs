@@ -135,11 +135,7 @@ namespace RoboSharp.Extensions
 
         static CachedEnumerable()
         {
-#if NET45
-            Empty= new CachedEnumerable<T>(new T[]{});
-#else
             Empty = new CachedEnumerable<T>(Array.Empty<T>());
-#endif
         }
 
         /// <summary>
@@ -239,6 +235,7 @@ namespace RoboSharp.Extensions
                 _enumerator.Dispose();
                 _enumerator = null;
             }
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>

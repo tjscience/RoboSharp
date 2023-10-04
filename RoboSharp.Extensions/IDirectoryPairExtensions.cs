@@ -21,11 +21,11 @@ namespace RoboSharp.Extensions
         public static bool IsLocatedOnSameDrive(this IDirectoryPair pair) 
             => Path.GetPathRoot(pair.Source.FullName).Equals(Path.GetPathRoot(pair.Destination.FullName), StringComparison.InvariantCultureIgnoreCase);
 
-        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsExtra(FileSystemInfo, FileSystemInfo)"/>
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsExtra{T}(T, T)"/>
         public static bool IsExtra(this IDirectoryPair pair)
             => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsExtra(pair.Source, pair.Destination);
 
-        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsLonely(FileSystemInfo, FileSystemInfo)"/>
+        /// <inheritdoc cref="Helpers.SelectionOptionsExtensions.IsLonely{T}(T, T)"/>
         public static bool IsLonely(this IDirectoryPair pair)
             => pair is null ? throw new ArgumentNullException(nameof(pair)) : Helpers.SelectionOptionsExtensions.IsLonely(pair.Source, pair.Destination);
 

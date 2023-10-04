@@ -47,8 +47,10 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void Test_AddAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
-            var options = new CopyOptions();
-            options.AddAttributes = input;
+            var options = new CopyOptions
+            {
+                AddAttributes = input
+            };
             Assert.AreEqual(expected, options.GetAddAttributes());
             Assert.AreEqual(expectedstring ?? input,options.AddAttributes);
         }
@@ -66,8 +68,10 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void Test_RemoveAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
-            var options = new CopyOptions();
-            options.RemoveAttributes = input;
+            var options = new CopyOptions
+            {
+                RemoveAttributes = input
+            };
             Assert.AreEqual(expected, options.GetRemoveAttributes());
             Assert.AreEqual(expectedstring ?? input, options.RemoveAttributes);
         }
@@ -114,8 +118,10 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void Test_RunHours(string startTime, string endTime)
         {
-            var options = new CopyOptions();
-            options.RunHours = $"{startTime}-{endTime}";
+            var options = new CopyOptions
+            {
+                RunHours = $"{startTime}-{endTime}"
+            };
             Assert.AreEqual(startTime, options.GetRunHours_StartTime());
             Assert.AreEqual(endTime, options.GetRunHours_EndTime());
         }

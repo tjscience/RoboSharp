@@ -33,7 +33,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Instantiate all the robosharp options except JobOptions, then apply the provided parameters
         /// </summary>
-        /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, CopyActionFlags, SelectionFlags)"/>
+        /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, CopyActionFlags, SelectionFlags, LoggingFlags)"/>
         protected AbstractIRoboCommand(
             string source, 
             string destination, 

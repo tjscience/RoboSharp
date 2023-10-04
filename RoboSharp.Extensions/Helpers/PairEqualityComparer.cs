@@ -21,8 +21,8 @@ namespace RoboSharp.Extensions.Helpers
         /// <summary> A threadsafe singleton used to compare <see cref="IDirectoryPair"/> and <see cref="IFilePair"/> paths </summary>
         public static PairEqualityComparer Singleton => singletonComparer.Value;
 
-        private IFilePairEqualityComparer<IFilePair> FileComparer => IFilePairEqualityComparer<IFilePair>.Singleton;
-        private IDirectoryPairEqualityComparer<IDirectoryPair> DirComparer => IDirectoryPairEqualityComparer<IDirectoryPair>.Singleton;
+        private static IFilePairEqualityComparer<IFilePair> FileComparer => IFilePairEqualityComparer<IFilePair>.Singleton;
+        private static IDirectoryPairEqualityComparer<IDirectoryPair> DirComparer => IDirectoryPairEqualityComparer<IDirectoryPair>.Singleton;
 
         /// <inheritdoc cref="IFilePairEqualityComparer{T}.Equals(T, T)"/>
         public bool Equals(IFilePair x, IFilePair y)
