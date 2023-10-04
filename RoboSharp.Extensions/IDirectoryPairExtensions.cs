@@ -49,6 +49,30 @@ namespace RoboSharp.Extensions
             => directory.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .Equals(directory.Root.FullName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
+        /// <summary>
+        /// Check for the existence of the directories and, if able, update the <see cref="IDirectoryPair.ProcessResult"/>.Size with the number of files.
+        /// </summary>
+        /// <param name="pair">The pair to evaluate.</param>
+        /// <param name="prioritizeDestination">If both directories exists, setting this to TRUE will use the file count from the destination.</param>
+        /// <returns><see langword="true"/> if the object was updated, otherwise false.</returns>
+        public static bool TrySetSizeAndPath(this IDirectoryPair pair, bool prioritizeDestination)
+        {
+            
+            if (prioritizeDestination && pair.Destination.Exists || pair.IsExtra())
+            {
+                pair.ProcessResult.Size = pair.Destination.GetFiles().Length;
+                pair.ProcessResult.Name = pair.Destination.FullName;
+                return true;
+            }
+            else if (pair.Source.Exists)
+            {
+                pair.ProcessResult.Size = pair.Source.GetFiles().Length;
+                pair.ProcessResult.Name = pair.Source.FullName;
+                return true;
+            }
+            return false;
+        }
+
         #region < Create Pair Functions >
 
         /// <summary>

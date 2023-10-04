@@ -192,7 +192,9 @@ namespace RoboSharp.Extensions
                 directory: source,
                 command: this,
                 status: dest.Exists ? ProcessedDirectoryFlag.ExistingDir : ProcessedDirectoryFlag.NewDir,
-                size: 0);
+                size: sourcePair.SourceFiles.Count());
+
+            resultsBuilder.AddDir(sourcePair.ProcessResult);
             runningTask = Task.Run(() => ProcessDirectory(sourcePair, 1));
             await runningTask;
             return resultsBuilder.GetResults();
@@ -212,8 +214,6 @@ namespace RoboSharp.Extensions
         private void ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
             CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs();
-            directoryPair.ProcessResult.Size = filePairs.Count();
-            resultsBuilder.AddDir(directoryPair.ProcessResult);
 
             // Files
             foreach (var file in PairEvaluator.FilterFilePairs(filePairs))
@@ -271,13 +271,12 @@ namespace RoboSharp.Extensions
                     bool processDir = PairEvaluator.ShouldCopyDir(dir);
                     bool shouldPurge = PairEvaluator.ShouldPurge(dir);
 
-                    dir.ProcessResult.Size = shouldPurge ? dir.Destination.GetFileSystemInfos().Length : dir.Source.GetFileSystemInfos().Length;
+                    _ = dir.TrySetSizeAndPath(shouldPurge);
+                    resultsBuilder.AddDir(dir.ProcessResult);
                     RaiseOnFileProcessed(dir.ProcessResult);
                     if (shouldPurge)
                     {
-                        resultsBuilder.AddDir(dir.ProcessResult);
                         PurgeDirectory(dir, currentDepth);
-
                     }
                     else if (processDir)
                     {
@@ -296,10 +295,6 @@ namespace RoboSharp.Extensions
                             }
                         }
                         if (!isMoved) ProcessDirectory(dir, currentDepth + 1);
-                    }
-                    else
-                    {
-                        resultsBuilder.AddDir(dir.ProcessResult);
                     }
                 }
             }
