@@ -9,7 +9,7 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// Helper Class that implements the <see cref="IDirectoryPair"/> interface
     /// </summary>
-    public class DirectoryPair : IDirectoryPair
+    public sealed class DirectoryPair : IDirectoryPair
     {
         /// <summary>
         /// Create a new DirectoryPair object
@@ -36,8 +36,16 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
+        /// <summary>
+        /// The collection of <see cref="IFilePair"/>s generated from scanning the <see cref="Source"/> directory.
+        /// </summary>
+        /// <remarks>Refresh this via <see cref="RefreshSourcePairs"/></remarks>
         public CachedEnumerable<FilePair> SourceFiles => lazySourceFiles.Value;
 
+        /// <summary>
+        /// The collection of <see cref="IDirectoryPair"/>s generated from scanning the <see cref="Source"/> directory.
+        /// </summary>
+        /// <remarks>Refresh this via <see cref="RefreshSourcePairs"/></remarks>
         public CachedEnumerable<DirectoryPair> SourceDirectories => lazySourceDirs.Value;
 
         /// <inheritdoc/>

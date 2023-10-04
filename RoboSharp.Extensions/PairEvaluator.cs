@@ -79,8 +79,7 @@ namespace RoboSharp.Extensions
         /// Compare the Source/Destination directories, and decide if the directory should be copied down.
         /// </summary>
         /// <param name="pair">the pair to evaluate</param>
-        /// <param name="info">the generated ProcessedFileInfo</param>
-        /// <param name="dirClass">The dirClass applied to the <paramref name="info"/></param>
+        /// <param name="dirClass">The dirClass applied to the <see cref="IDirectoryPair.ProcessResult"/></param>
         /// <param name="ExcludeDirectoryName">Result of <see cref="ShouldExcludeDirectoryName(IDirectoryPair)"/></param>
         /// <param name="ExcludeJunctionDirectory">Result of <see cref="ShouldExcludeJunctionDirectory(IDirectoryPair)"/></param>
         /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
@@ -120,7 +119,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeJunctionDirectory(SelectionOptions, IDirectoryPair)"/>
         public bool ShouldExcludeJunctionDirectory(IDirectoryPair pair) => Command.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
 
-        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeDirectoryName(SelectionOptions, IDirectoryPair, ref Tuple{bool, Regex}[])"/ >
+        /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeDirectoryName(SelectionOptions, IDirectoryPair, IEnumerable{DirectoryRegex})"/>
         public bool ShouldExcludeDirectoryName(IDirectoryPair pair) => Command.SelectionOptions.ShouldExcludeDirectoryName(pair.Source.FullName, ExcludedDirectoriesRegex);
 
         #endregion
@@ -131,12 +130,11 @@ namespace RoboSharp.Extensions
         /// Evaluate RoboCopy Options of the command, the source, and destination and compute a ProcessedFileInfo object, which is then assigned to the <paramref name="pair"/> <br/>
         /// Ignores <see cref="LoggingOptions.ListOnly"/>
         /// </summary>
-        /// <param name="info">a ProcessedFileInfo object generated that reflects the output of this method</param>
         /// <param name="pair">the pair of Source/Destination to compare</param>
         /// <returns>TRUE if the file should be copied/moved, FALSE if the file should be skiped</returns>
         /// <remarks>
         /// Note: Does not evaluate the FileName inclusions from CopyOptions, since RoboCopy appears to use those to filter prior to performing these evaluations. <br/>
-        /// Use <see cref="ShouldIncludeFileName(IFilePair)"/> as a pre-filter for this.
+        /// Use <see cref="FilterFilePairs{T}(IEnumerable{T})"/> as a pre-filter for this.
         /// </remarks>
         public virtual bool ShouldCopyFile(IFilePair pair)
         {

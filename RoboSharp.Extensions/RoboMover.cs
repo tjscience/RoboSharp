@@ -55,8 +55,12 @@ namespace RoboSharp.Extensions
         private PairEvaluator PairEvaluator;
         private ResultsBuilder resultsBuilder;
 
-        public RoboMoverOptions RoboMoverOptions { get; set; } = new RoboMoverOptions();
+        /// <summary>
+        /// Object that provides RoboMover specific options
+        /// </summary>
+        public RoboMoverOptions RoboMoverOptions { get; } = new RoboMoverOptions();
 
+        /// <inheritdoc cref="RoboCommand.JobOptions"/>
         public override JobOptions JobOptions { get; } = new JobOptions();
 
         /// <inheritdoc/>

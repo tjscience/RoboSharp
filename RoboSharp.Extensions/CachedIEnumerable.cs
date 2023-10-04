@@ -249,7 +249,7 @@ namespace RoboSharp.Extensions
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc/>
-        public void CopyTo(Array array, int index)
+        public void CopyTo(System.Array array, int index)
         {
             ((ICollection)_cache).CopyTo(array, index);
         }

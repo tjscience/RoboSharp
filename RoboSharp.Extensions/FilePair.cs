@@ -8,7 +8,7 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// Helper Class that implements the <see cref="IFilePair"/> interface
     /// </summary>
-    public class FilePair : IFilePair
+    public sealed class FilePair : IFilePair
     {
         /// <summary>
         /// Create a new DirectoryPair object
@@ -31,6 +31,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public FileInfo Destination { get; }
 
+        /// <inheritdoc/>
         public ProcessedFileInfo ProcessResult { get; set; }
     }
 }
