@@ -33,11 +33,13 @@ namespace RoboSharp.Extensions.UnitTests
         /// <returns></returns>
         public static T GetIRoboCommand<T>(IRoboCommand baseCommand) where T : IRoboCommand, new()
         {
-            var cmd = new T();
-            cmd.CopyOptions = baseCommand.CopyOptions;
-            cmd.SelectionOptions = baseCommand.SelectionOptions;
-            cmd.LoggingOptions = baseCommand.LoggingOptions;
-            cmd.RetryOptions = baseCommand.RetryOptions;
+            var cmd = new T
+            {
+                CopyOptions = baseCommand.CopyOptions,
+                SelectionOptions = baseCommand.SelectionOptions,
+                LoggingOptions = baseCommand.LoggingOptions,
+                RetryOptions = baseCommand.RetryOptions
+            };
             try { cmd.JobOptions.Merge(baseCommand.JobOptions); }catch (NotImplementedException) { }
             return cmd;
         }
@@ -63,7 +65,7 @@ namespace RoboSharp.Extensions.UnitTests
             void BetweenRuns()
             {
                 if (CleanBetweenRuns) TestSetup.ClearOutTestDestination();
-                if (actionBetweenRuns != null) actionBetweenRuns();
+                actionBetweenRuns?.Invoke();
             }
 
 

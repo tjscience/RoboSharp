@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace RoboSharp.Extensions.Helpers
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
     public sealed class StringEqualityComparer : IEqualityComparer<string>
     {
         /// <summary> Create a new Comparer </summary>
@@ -16,6 +18,7 @@ namespace RoboSharp.Extensions.Helpers
         }
 
         public static readonly StringEqualityComparer Ordinal = new StringEqualityComparer(StringComparison.Ordinal);
+
         public static readonly StringEqualityComparer OrdinalIgnoreCase = new StringEqualityComparer(StringComparison.OrdinalIgnoreCase);
 
         public static readonly StringEqualityComparer InvariantCulture = new StringEqualityComparer(StringComparison.InvariantCulture);
@@ -25,7 +28,7 @@ namespace RoboSharp.Extensions.Helpers
         public static readonly StringEqualityComparer CurrentCultureIgnoreCase = new StringEqualityComparer(StringComparison.CurrentCultureIgnoreCase);
 
         /// <summary>
-        /// The comparison enum to use within <see cref="String.Equals(string?, StringComparison)"/>
+        /// The comparison enum to use within <see cref="string.Equals(string, StringComparison)"/>
         /// </summary>
         public StringComparison ComparisonType { get; }
 
@@ -41,4 +44,5 @@ namespace RoboSharp.Extensions.Helpers
             return obj.GetHashCode();
         }
     }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
