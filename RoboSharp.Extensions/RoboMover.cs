@@ -64,6 +64,22 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="RoboCommand.JobOptions"/>
         public override JobOptions JobOptions { get; } = new JobOptions();
 
+        // Safeguard against accidental deletion/movement of the following special folders
+        static readonly string[] DisallowedRootDirectories = new string[] { 
+            "System Volume Information" , 
+            "Windows", "System32",
+            "Program Files", "Program Files (x86)",
+            "Users", "Program Data"
+        };
+
+        /// <summary> Check the directory name to determine if it should be ignored, such as the 'System Volume Information' folder.  </summary>
+        /// <remarks>Meant to only filter out special root directories.</remarks>
+        /// <returns> True if the directory name is not in the list of disallowed names. </returns>
+        public static bool IsAllowedRootDirectory(DirectoryInfo d)
+        {
+            return !DisallowedRootDirectories.Contains(d.Name, StringEqualityComparer.InvariantCultureIgnoreCase);
+        }
+
         /// <inheritdoc/>
         public override async Task Start(string domain = "", string username = "", string password = "")
         {
@@ -200,85 +216,59 @@ namespace RoboSharp.Extensions
             return resultsBuilder.GetResults();
         }
 
-
-        static readonly string[] DisallowedRootDirectories = new string[] { "System Volume Information" };
-
-        /// <summary> Check the directory name to determine if it should be ignored, such as the 'System Volume Information' folder.  </summary>
-        /// <remarks>Meant to only filter root directories.</remarks>
-        /// <returns> True if the directory name is not in the list of disallowed names. </returns>
-        public static bool IsAllowedRootDirectory(DirectoryInfo d)
-        {
-            return !DisallowedRootDirectories.Contains(d.Name);
-        }
-
         private void ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
-            CachedEnumerable<FilePair> filePairs = SelectionOptions.ExcludeExtra ? directoryPair.SourceFiles : directoryPair.EnumerateFilePairs();
+            bool evaluateExtras = CopyOptions.Purge | LoggingOptions.ReportExtraFiles | LoggingOptions.VerboseOutput;
 
-            // Files
-            foreach (var file in PairEvaluator.FilterFilePairs(filePairs))
+            // Extra Directories
+            if (CopyOptions.Depth != 1 && (PairEvaluator.CanDigDeeper(currentDepth) | evaluateExtras))
             {
-                if (cancelRequest.IsCancellationRequested) break;
-                try
-                {
-                    bool shouldMove = PairEvaluator.ShouldCopyFile(file);
-                    bool shouldPurge = PairEvaluator.ShouldPurge(file);
-                    base.RaiseOnFileProcessed(file.ProcessResult);
+                IEnumerable<DirectoryPair> childDirs = directoryPair.IsRootDestination() ?
+                    directoryPair.ExtraDirectories.Where(d => IsAllowedRootDirectory(d.Source)) :
+                    directoryPair.ExtraDirectories;
 
-                    if (shouldMove)
-                    {
-                        if (!LoggingOptions.ListOnly)
-                        {
-                            Directory.CreateDirectory(directoryPair.Destination.FullName);
-                            resultsBuilder.SetCopyOpStarted(file.ProcessResult);
-                            if (file.Destination.Exists) file.Destination.Delete();
-                            File.Move(file.Source.FullName, file.Destination.FullName);
-                        }
-                        resultsBuilder.AddFileCopied(file.ProcessResult);
-                    }
-                    else if (file.IsExtra())
-                    {
-                        if (CopyOptions.Purge && !LoggingOptions.ListOnly)
-                        {
-                            file.Destination.Delete();
-                            resultsBuilder.AddFilePurged(file.ProcessResult);
-                        }
-                        else
-                        {
-                            resultsBuilder.AddFileExtra(file.ProcessResult);
-                        }
-                    }
-                    else
-                    {
-                        resultsBuilder.AddFileSkipped(file.ProcessResult);
-                    }
-                }
-                catch (Exception e)
+                foreach (var extraDir in childDirs)
                 {
-                    RaiseOnCommandError(e);
+                    if (cancelRequest.IsCancellationRequested) break;
+                    ProcessExtraDirectory(extraDir, currentDepth + 1);
                 }
             }
 
-            // Iterate through dirs
-            if (CopyOptions.IsRecursive() && !CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
+            // Extra Files
+            if (evaluateExtras)
             {
-                IEnumerable<DirectoryPair> childDirs = SelectionOptions.ExcludeExtra ? directoryPair.SourceDirectories : directoryPair.EnumerateDirectoryPairs();
-                childDirs = directoryPair.IsRootSource() ? childDirs.Where(d => IsAllowedRootDirectory(d.Source)) : childDirs;
+                foreach (var extraFile in directoryPair.ExtraFiles)
+                {
+                    if (cancelRequest.IsCancellationRequested) break;
+                    ProcessExtraFile(extraFile);
+                }
+            }
+
+            // Source Files
+            IEnumerable<FilePair> sourceFiles = LoggingOptions.ReportExtraFiles ? directoryPair.SourceFiles : PairEvaluator.FilterFilePairs(directoryPair.SourceFiles);
+            foreach (var file in sourceFiles)
+            {
+                if (cancelRequest.IsCancellationRequested) break;
+                ProcessSourceFile(file);
+            }
+
+            // Iterate through source dirs
+            if (PairEvaluator.CanDigDeeper(currentDepth))
+            {
+                IEnumerable<DirectoryPair> childDirs = directoryPair.IsRootSource() ?
+                    directoryPair.SourceDirectories.Where(d => IsAllowedRootDirectory(d.Source)) :
+                    directoryPair.SourceDirectories;
 
                 foreach (var dir in childDirs)
                 {
                     if (cancelRequest.IsCancellationRequested) break;
                     bool processDir = PairEvaluator.ShouldCopyDir(dir);
-                    bool shouldPurge = PairEvaluator.ShouldPurge(dir);
+                    _ = dir.TrySetSizeAndPath(false);
 
-                    _ = dir.TrySetSizeAndPath(shouldPurge);
                     resultsBuilder.AddDir(dir.ProcessResult);
                     RaiseOnFileProcessed(dir.ProcessResult);
-                    if (shouldPurge)
-                    {
-                        PurgeDirectory(dir, currentDepth);
-                    }
-                    else if (processDir)
+                    
+                    if (processDir)
                     {
                         bool isMoved = false;
                         if (RoboMoverOptions.QuickMove && !dir.Destination.Exists)
@@ -286,7 +276,7 @@ namespace RoboSharp.Extensions
                             try
                             {
                                 dir.Source.MoveTo(dir.Destination.FullName);
-                                dir.Source.Refresh();
+                                dir.Refresh();
                                 isMoved = !dir.Source.Exists;
                             }
                             catch (Exception e)
@@ -319,49 +309,110 @@ namespace RoboSharp.Extensions
             }
         }
 
-        /// <summary> Purges a directory tree from the destination </summary>
-        /// <remarks>It has already been determined that the source directory was marked for purging if within this method</remarks>
-        private void PurgeDirectory(DirectoryPair pair, int currentDepth)
+        /// <summary> Processes an EXTRA directory tree from the destination, potentially purging it.</summary>
+        private void ProcessExtraDirectory(DirectoryPair pair, int currentDepth) 
         {
             if (!pair.Destination.Exists) return;
-            if (RoboMoverOptions.QuickMove)
+            bool isRootDir = pair.Destination.IsRootDir();
+            bool shouldPurge = PairEvaluator.ShouldPurge(pair);
+
+#if NETFRAMEWORK || NETSTANDARD
+            if (pair.ProcessResult is null)
+                pair.ProcessResult = new ProcessedFileInfo(directory: pair.Destination, this, ProcessedDirectoryFlag.ExtraDir);
+#else
+            pair.ProcessResult ??= new ProcessedFileInfo(directory: pair.Destination, this, ProcessedDirectoryFlag.ExtraDir);
+#endif
+            resultsBuilder.AddDir(pair.ProcessResult);
+
+            if (CopyOptions.Purge | LoggingOptions.ReportExtraFiles)
             {
-                pair.Destination.Delete(true);
-            }
-            else
-            {
-                foreach (var file in pair.Destination.GetFiles())
+                //Process Files
+                IEnumerable<FilePair> files = pair.ExtraFiles;
+                foreach (var file in files)
                 {
                     if (cancelRequest.IsCancellationRequested) break;
-                    ProcessedFileInfo pInfo = new ProcessedFileInfo(file, this, ProcessedFileFlag.ExtraFile);
-                    try
-                    {
-                        file.Delete();
-                        resultsBuilder.AddFilePurged(pInfo);
-                    }
-                    catch (Exception e)
-                    {
-                        RaiseOnCommandError("Unable to purge file : " + file.FullName, e);
-                        resultsBuilder.AddFileFailed(pInfo);
-                    }
+                    ProcessExtraFile(file);
                 }
-                if (CopyOptions.IsRecursive() && !CopyOptions.ExceedsAllowedDepth(currentDepth + 1))
+
+
+                // Dig into subdirectories
+                if (PairEvaluator.CanDigDeeper(currentDepth))
                 {
-                    foreach (var dir in pair.EnumerateDirectoryPairs())
+                    foreach (var dir in pair.ExtraDirectories)
                     {
                         if (cancelRequest.IsCancellationRequested) break;
-                        PurgeDirectory(dir, currentDepth + 1);
+                        ProcessExtraDirectory(dir, currentDepth + 1);
                     }
                 }
+            }
+            if (CopyOptions.Purge)
+            {
+                // Delete the current directory
                 try
                 {
-                    if (pair.Destination.Exists && pair.Destination.EnumerateFileSystemInfos().None())
+                    if (shouldPurge && pair.Destination.Exists && !isRootDir && pair.Destination.EnumerateFileSystemInfos().None())
                         pair.Destination.Delete();
                 }
                 catch (Exception e)
                 {
                     RaiseOnCommandError("Unable to purge directory : " + pair.Destination.FullName, e);
                 }
+            }
+        }
+
+        private void ProcessExtraFile(FilePair extraFile)
+        {
+#if NETFRAMEWORK || NETSTANDARD
+            if (extraFile.ProcessResult is null)
+                extraFile.ProcessResult = new ProcessedFileInfo(file: extraFile.Destination, this, ProcessedFileFlag.ExtraFile);
+#else
+            extraFile.ProcessResult ??= new ProcessedFileInfo(file: extraFile.Destination, this, ProcessedFileFlag.ExtraFile);
+#endif
+            bool shouldPurge = PairEvaluator.ShouldPurge(extraFile);
+            if (shouldPurge && !LoggingOptions.ListOnly)
+            {
+                try
+                {
+                    extraFile.Destination.Delete();
+                    resultsBuilder.AddFilePurged(extraFile.ProcessResult);
+                }
+                catch (Exception e)
+                {
+                    RaiseOnCommandError("Unable to Delete File : " + extraFile.ProcessResult.Name, e);
+                }
+            }
+            else
+            {
+                resultsBuilder.AddFileExtra(extraFile.ProcessResult);
+            }
+        }
+
+        private void ProcessSourceFile(FilePair file)
+        {
+            try
+            {
+                bool shouldMove = PairEvaluator.ShouldCopyFile(file);
+                base.RaiseOnFileProcessed(file.ProcessResult);
+
+                if (shouldMove)
+                {
+                    if (!LoggingOptions.ListOnly)
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(file.Destination.FullName));
+                        resultsBuilder.SetCopyOpStarted(file.ProcessResult);
+                        if (file.Destination.Exists) file.Destination.Delete();
+                        File.Move(file.Source.FullName, file.Destination.FullName);
+                    }
+                    resultsBuilder.AddFileCopied(file.ProcessResult);
+                }
+                else
+                {
+                    resultsBuilder.AddFileSkipped(file.ProcessResult);
+                }
+            }
+            catch (Exception e)
+            {
+                RaiseOnCommandError("Unable to Move File : " + file.ProcessResult.Name, e);
             }
         }
 
@@ -385,7 +436,7 @@ namespace RoboSharp.Extensions
             standardCommand?.Dispose();
         }
 
-        #region < Event Handlers >
+#region < Event Handlers >
 
         private void StandardCommand_OnProgressEstimatorCreated(IRoboCommand sender, ProgressEstimatorCreatedEventArgs e)
         {
@@ -418,7 +469,7 @@ namespace RoboSharp.Extensions
             //base.RaiseOnCommandCompleted(e);
         }
 
-        #endregion
+#endregion
 
     }
 }

@@ -163,14 +163,15 @@ namespace RoboSharp.Extensions.UnitTests
             {
 
                 Console.WriteLine("");
-                Console.WriteLine("-----------------------------");
+                Console.WriteLine("///////////////////////////////////////////////////////");
                 Console.WriteLine("RoboCopy Log Lines:");
                 foreach (string s in RCResults.LogLines)
                     Console.WriteLine(s);
 
-                Console.WriteLine("-----------------------------");
+                Console.WriteLine("///////////////////////////////////////////////////////");
                 Console.WriteLine("");
                 Console.WriteLine("IRoboCommand Log Lines:");
+                Console.WriteLine("");
                 foreach (string s in customResults.LogLines)
                     Console.WriteLine(s);
             }

@@ -73,6 +73,17 @@ namespace RoboSharp.Extensions
 
         #endregion
 
+        /// <summary>
+        /// Evaluate the depth and determine if subdirectories should be evaluated.
+        /// </summary>
+        /// <param name="currentDepth"></param>
+        /// <returns>true if the subdirectories should be evaluated, otherwise false.</returns>
+        public bool CanDigDeeper(int currentDepth)
+        {
+            if (!Command.CopyOptions.IsRecursive()) return false;
+            return !CopyOptionsExtensions.ExceedsAllowedDepth(Command.CopyOptions, currentDepth + 1);
+        }
+
         #region < ShouldCopyDir >
 
         /// <summary>

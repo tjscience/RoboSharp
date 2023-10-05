@@ -22,7 +22,7 @@ namespace RoboSharp.Extensions.UnitTests
     [TestClass]
     public class RoboMoverTests
     {
-        const LoggingFlags DefaultLoggingAction = LoggingFlags.RoboSharpDefault;
+        const LoggingFlags DefaultLoggingAction = LoggingFlags.RoboSharpDefault | LoggingFlags.NoJobHeader;
 
         static string GetMoveSource()
         {
