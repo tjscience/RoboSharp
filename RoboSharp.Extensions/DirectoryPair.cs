@@ -22,11 +22,13 @@ namespace RoboSharp.Extensions
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-            RefreshSourcePairs();
+            RefreshLazy();
         }
 
+        private Lazy<CachedEnumerable<DirectoryPair>> lazyExtraDirs;
         private Lazy<CachedEnumerable<DirectoryPair>> lazySourceDirs;
         private Lazy<CachedEnumerable<FilePair>> lazySourceFiles;
+        private Lazy<CachedEnumerable<FilePair>> lazyExtraFiles;
 
         /// <inheritdoc cref="DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
         public static DirectoryPair CreatePair(DirectoryInfo source, DirectoryInfo destination) => new DirectoryPair(source, destination);
@@ -37,70 +39,67 @@ namespace RoboSharp.Extensions
         /// <inheritdoc/>
         public DirectoryInfo Destination { get; }
 
+        /// <inheritdoc/>
+        public ProcessedFileInfo ProcessResult { get; set; }
+
+        /// <summary>
+        /// The collection of <see cref="FilePair"/>s generated from scanning the <see cref="Destination"/> directory where <see cref="IFilePairExtensions.IsExtra(IFilePair)"/> returns true.
+        /// </summary>
+        /// <remarks>Refresh this via <see cref="Refresh"/></remarks>
+        public CachedEnumerable<FilePair> ExtraFiles => lazyExtraFiles.Value;
+
+        /// <summary>
+        /// The collection of <see cref="IDirectoryPair"/>s generated from scanning the <see cref="Destination"/> directory where <see cref="IDirectoryPairExtensions.IsExtra(IDirectoryPair)"/> returns true.
+        /// </summary>
+        /// <remarks>Refresh this via <see cref="Refresh"/></remarks>
+        public CachedEnumerable<DirectoryPair> ExtraDirectories => lazyExtraDirs.Value;
+
         /// <summary>
         /// The collection of <see cref="IFilePair"/>s generated from scanning the <see cref="Source"/> directory.
         /// </summary>
-        /// <remarks>Refresh this via <see cref="RefreshSourcePairs"/></remarks>
+        /// <remarks>Refresh this via <see cref="Refresh"/></remarks>
         public CachedEnumerable<FilePair> SourceFiles => lazySourceFiles.Value;
 
         /// <summary>
         /// The collection of <see cref="IDirectoryPair"/>s generated from scanning the <see cref="Source"/> directory.
         /// </summary>
-        /// <remarks>Refresh this via <see cref="RefreshSourcePairs"/></remarks>
+        /// <remarks>Refresh this via <see cref="Refresh"/></remarks>
         public CachedEnumerable<DirectoryPair> SourceDirectories => lazySourceDirs.Value;
 
-        /// <inheritdoc/>
-        public ProcessedFileInfo ProcessResult { get; set; }
-
-        /// <summary>
-        /// Refreshes the <see cref="SourceFiles"/> and <see cref="SourceDirectories"/> cached enumerables
-        /// </summary>
-        public void RefreshSourcePairs()
+        /// <inheritdoc cref="FileSystemInfo.Refresh"/>
+        public void Refresh()
         {
-            RefreshDirs();
-            RefreshFiles();
-        }
-        private void RefreshDirs() => lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(() => this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair));
-        private void RefreshFiles() => lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(() => this.EnumerateSourceFilePairs(FilePair.CreatePair));
-
-        /// <inheritdoc cref="IDirectoryPairExtensions.GetFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
-        public FilePair[] GetFilePairs()
-        {
-            return EnumerateFilePairs().ToArray();
+            Source.Refresh();
+            Destination.Refresh();
+            RefreshLazy();
         }
 
-        /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateFilePairs{T}(IDirectoryPair, Func{FileInfo, FileInfo, T})"/>
-        public CachedEnumerable<FilePair> EnumerateFilePairs()
+        private void RefreshLazy()
         {
-            RefreshFiles();
-            var destPairs = this.EnumerateDestinationFilePairs(FilePair.CreatePair);
-            if (destPairs is null && SourceFiles is null)
-                return null;
-            else if (destPairs is null)
-                return SourceFiles;
-            else
-                return destPairs.Concat(SourceFiles).WhereUnique(Helpers.PairEqualityComparer.Singleton).AsCachedEnumerable();
+            lazyExtraDirs = new Lazy<CachedEnumerable<DirectoryPair>>(GetExtraDirectories);
+            lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(GetSourceDirectories);
+            lazyExtraFiles = new Lazy<CachedEnumerable<FilePair>>(GetExtraFiles);
+            lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(GetSourceFiles);
         }
 
-
-        /// <inheritdoc cref="IDirectoryPairExtensions.GetDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public DirectoryPair[] GetDirectoryPairs()
+        private CachedEnumerable<FilePair> GetExtraFiles()
         {
-            return EnumerateDirectoryPairs().ToArray();
+            return this.EnumerateDestinationFilePairs(FilePair.CreatePair).Where(IFilePairExtensions.IsExtra).AsCachedEnumerable();
         }
 
-        /// <inheritdoc cref="IDirectoryPairExtensions.EnumerateDirectoryPairs{T}(IDirectoryPair, Func{DirectoryInfo, DirectoryInfo, T})"/>
-        public CachedEnumerable<DirectoryPair> EnumerateDirectoryPairs()
+        private CachedEnumerable<DirectoryPair> GetExtraDirectories()
         {
-            RefreshDirs();
-            var destPairs = this.EnumerateDestinationDirectoryPairs(DirectoryPair.CreatePair);
-            if (destPairs is null && SourceDirectories is null)
-                return null;
-            else if (destPairs is null)
-                return SourceDirectories;
-            else
-                return destPairs.Concat(SourceDirectories).WhereUnique(Helpers.PairEqualityComparer.Singleton).AsCachedEnumerable();
+            return this.EnumerateDestinationDirectoryPairs(DirectoryPair.CreatePair).Where(IDirectoryPairExtensions.IsExtra).AsCachedEnumerable();
         }
 
+        private CachedEnumerable<FilePair> GetSourceFiles()
+        {
+            return this.EnumerateSourceFilePairs(FilePair.CreatePair);
+        }
+
+        private CachedEnumerable<DirectoryPair> GetSourceDirectories()
+        {
+            return this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair);
+        }
     }
 }
