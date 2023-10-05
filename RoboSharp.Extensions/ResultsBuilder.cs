@@ -156,12 +156,12 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Mark an file as PURGED
+        /// Mark an file as PURGED ( EXTRA )
         /// </summary>
         /// <param name="file"></param>
         public virtual void AddFilePurged(ProcessedFileInfo file)
         {
-            ProgressEstimator.AddFile(file);
+            ProgressEstimator.AddFileExtra(file);
             LogFileInfo(file);
         }
 
