@@ -211,7 +211,7 @@ namespace RoboSharp.Extensions
                 else
                 {
                     // There are no more items, we can dispose the underlying enumerator
-                    _enumerator.Dispose();
+                    //_enumerator.Dispose(); may be used elsewhere - disposal can be handled by the GC
                     _enumerator = null;
                     _enumerated = true;
                     result = default;
