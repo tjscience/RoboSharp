@@ -24,6 +24,7 @@ namespace RoboSharp.Extensions
         public PairEvaluator(IRoboCommand command)
         {
             Command = command ?? throw new ArgumentNullException(nameof(command));
+            FileSorter = new FilePairSorter<IFilePair>(command.Configuration);
             FileAttributesToApplyField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetAddAttributes);
             FileAttributesToRemoveField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetRemoveAttributes);
             FileFilterRegexField = new Lazy<Regex[]>(this.Command.CopyOptions.GetFileFilterRegex);
@@ -38,6 +39,7 @@ namespace RoboSharp.Extensions
         private readonly Lazy<Regex[]> FileFilterRegexField;
         private readonly Lazy<Regex[]> ExcludeFileNameRegexField;
         private readonly Lazy<Helpers.DirectoryRegex[]> ExcludeDirectoryRegexField;
+        private readonly FilePairSorter<IFilePair> FileSorter;
 
         /// <summary>
         /// The IRoboCommand object this evaluator is tied to
@@ -82,6 +84,34 @@ namespace RoboSharp.Extensions
         {
             if (!Command.CopyOptions.IsRecursive()) return false;
             return !CopyOptionsExtensions.ExceedsAllowedDepth(Command.CopyOptions, currentDepth + 1);
+        }
+
+        /// <summary>
+        /// Evaluate the current depth and determine if the Extra Subfolders contained within should be evaluated.
+        /// <br/>This should should not be used when evaluating within a purge loop.
+        /// </summary>
+        /// <returns>true if the subdirectories should be evaluated, otherwise false.</returns>
+        public bool CanProcessExtraDirs(int currentDepth)
+        {
+            bool evalExtra = Command.CopyOptions.Purge | Command.LoggingOptions.ReportExtraFiles;
+            if (currentDepth == 1) return Command.CopyOptions.Depth != 1 && (evalExtra | !CopyOptionsExtensions.ExceedsAllowedDepth(Command.CopyOptions, currentDepth + 1));
+            if (evalExtra) return true;
+            return CanDigDeeper(currentDepth);
+        }
+
+        /// <summary>
+        /// EXTRA files are files that exist in the directory but are not selected for the operation.
+        /// </summary>
+        /// <param name="parent"></param>
+        /// <param name="selectedFiles">Files selected for the operation</param>
+        /// <returns></returns>
+        public IEnumerable<FilePair> GetExtraFiles(DirectoryPair parent, IEnumerable<FilePair> selectedFiles)
+        {
+            var coll = parent.DestinationFiles;
+            if (Command.LoggingOptions.ReportExtraFiles)
+                return coll.Where(d => selectedFiles.None(s => PairEqualityComparer.AreEqual(s, d)));
+            else
+                return coll.Where(IFilePairExtensions.IsExtra);
         }
 
         #region < ShouldCopyDir >
@@ -158,10 +188,11 @@ namespace RoboSharp.Extensions
             {
                 FileClassType = FileClassType.File,
                 Name = Name,
-                Size = SourceExists ? pair.Source.Length : DestExists? pair.Destination.Length : 0,
+                Size = SourceExists ? pair.Source.Length : DestExists ? pair.Destination.Length : 0,
             };
             var info = pair.ProcessResult;
             var SO = Command.SelectionOptions;
+            bool result = false;
 
             // Order of the following checks was done to allow what are likely the fastest checks to go first. More complex checks (such as DateTime parsing) are towards the bottom.
 
@@ -169,9 +200,6 @@ namespace RoboSharp.Extensions
             if (pair.IsExtra())// SO.ShouldExcludeExtra(pair))
             {
                 info.SetFileClass(ProcessedFileFlag.ExtraFile, Command);
-                //info.Name = AssociatedCommand.LoggingOptions.IncludeFullPathNames ? pair.Destination.FullName : pair.Destination.Name; //Already Handled in ctor
-                //info.Size = pair.Destination.Length;  //Already handled in ctor
-                return false;
             }
             //Lonely
             else if (SO.ShouldExcludeLonely(pair))
@@ -224,11 +252,11 @@ namespace RoboSharp.Extensions
                 info.SetFileClass(ProcessedFileFlag.MinAgeSizeExclusion, Command); // TO-DO: Does RoboCopy iddentify Last Access Date exclusions seperately? If so, we need a token for it!
             }
             // Name Filters - These are last check since Regex will likely take the longest to evaluate
-            if (SO.ShouldExcludeFileName(pair.Source.Name, ExcludedFileNamesRegex))
+            else if (SO.ShouldExcludeFileName(pair.Source.Name, ExcludedFileNamesRegex))
             {
                 info.SetFileClass(ProcessedFileFlag.FileExclusion, Command);
             }
-            else
+            else // Only the following conditions may return true 
             {
                 // Check for symbolic links
                 bool xjf = SO.ExcludeSymbolicFile(pair.Source); // TO-DO: Likely needs its own 'FileClass' set up for proper evaluation by ProgressEstimator
@@ -237,27 +265,26 @@ namespace RoboSharp.Extensions
                 if (pair.IsLonely())
                 {
                     info.SetFileClass(ProcessedFileFlag.NewFile, Command);
-                    return !xjf && !Command.SelectionOptions.ExcludeLonely;
+                    result = !xjf && !Command.SelectionOptions.ExcludeLonely;
                 }
                 else if (pair.IsSourceNewer())
                 {
                     info.SetFileClass(ProcessedFileFlag.NewerFile, Command);
-                    return !xjf && !Command.SelectionOptions.ExcludeNewer;
+                    result = !xjf && !Command.SelectionOptions.ExcludeNewer;
                 }
                 else if (pair.IsDestinationNewer())
                 {
                     info.SetFileClass(ProcessedFileFlag.OlderFile, Command);
-                    return !xjf && !Command.SelectionOptions.ExcludeOlder;
+                    result = !xjf && !Command.SelectionOptions.ExcludeOlder;
                 }
                 else
                 {
                     info.SetFileClass(ProcessedFileFlag.SameFile, Command);
-                    return !xjf && Command.SelectionOptions.IncludeSame;
+                    result = !xjf && Command.SelectionOptions.IncludeSame;
                 }
             }
-
-            return false; // File failed one of the checks, do not copy.
-
+            if (pair is FilePair fp) fp.ShouldCopy = result;
+            return result;
         }
 
         /// <summary>
@@ -268,14 +295,16 @@ namespace RoboSharp.Extensions
         /// <returns></returns>
         public IEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T : IFilePair
         {
-            var filters = Command.CopyOptions.FileFilter;
-            if (filters.Any() && filters.All(s => s != "*.*" && s != "*"))
-            {
-                return collection.Where(ShouldIncludeFileName);
-                //return collection.WhereUnique(Helpers.IFilePairEqualityComparer<T>.Singleton).Where(ShouldIncludeFileName);
-            }
+            List<T> coll;
+            if (Command.CopyOptions.HasDefaultFileFilter())
+                coll = collection.ToList(); 
             else
-                return collection;//.WhereUnique(Helpers.IFilePairEqualityComparer<T>.Singleton);
+                coll = collection.Where(ShouldIncludeFileName).ToList();
+            // Sort
+            foreach (var obj in coll)
+                _ = ShouldCopyFile(obj);
+            coll.Sort(FileSorter.Compare);
+            return coll;
         }
 
 
@@ -302,7 +331,13 @@ namespace RoboSharp.Extensions
         #region < Purge >
 
         /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IFilePair)"/>
-        public bool ShouldPurge(IFilePair pair) => Command.ShouldPurge(pair);
+        public bool ShouldPurge(IFilePair pair)
+        {
+            bool result = Command.ShouldPurge(pair);
+            if (pair is FilePair fp)
+                fp.ShouldPurge = result;
+            return result;
+        }
 
         /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IDirectoryPair)"/>
         public bool ShouldPurge(IDirectoryPair pair) => Command.ShouldPurge(pair);

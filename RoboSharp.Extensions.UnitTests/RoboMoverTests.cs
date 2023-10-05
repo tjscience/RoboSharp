@@ -194,18 +194,21 @@ namespace RoboSharp.Extensions.UnitTests
         
         // purge all
         [DataRow(0, true, Mov_)]
-        [DataRow(0, false, Move)]
+        [DataRow(0, true, Move)]
         [DataRow(0, true, Mov_ | CopyActionFlags.CopySubdirectories)]
         [DataRow(0, true, Move | CopyActionFlags.CopySubdirectories)]
-        [DataRow(0, false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
-        [DataRow(0, false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(0, true, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(0, true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(0, true, Mov_, LoggingFlags.ReportExtraFiles)]
+        [DataRow(0, true, Mov_ | CopyActionFlags.CopySubdirectories, LoggingFlags.ReportExtraFiles)]
+        [DataRow(0, true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty, LoggingFlags.ReportExtraFiles)]
         // purge depth 1 
         [DataRow(1, true, Mov_)]
-        [DataRow(1, false, Move)]
+        [DataRow(1, true, Move)]
         [DataRow(1, true, Mov_ | CopyActionFlags.CopySubdirectories)]
         [DataRow(1, true, Move | CopyActionFlags.CopySubdirectories)]
-        [DataRow(1, false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
-        [DataRow(1, false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(1, true, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(1, true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
         // purge depth 2
         [DataRow(2, true, Mov_)]
         [DataRow(2, false, Move)]
@@ -213,10 +216,14 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(2, true, Move | CopyActionFlags.CopySubdirectories)]
         [DataRow(2, false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
         [DataRow(2, false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(2, true, Mov_, LoggingFlags.ReportExtraFiles)]
+        [DataRow(2, true, Mov_ | CopyActionFlags.CopySubdirectories, LoggingFlags.ReportExtraFiles)]
+        [DataRow(2, true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty, LoggingFlags.ReportExtraFiles)]
         [TestMethod]
-        public void Purge_Depth(int depth, bool listOnly, CopyActionFlags flags)
+        public void Purge_Depth(int depth, bool listOnly, CopyActionFlags flags, LoggingFlags? loggs = null)
         {
-            GetMoveCommands(flags, SelectionFlags.Default, DefaultLoggingAction, out var cmd, out var mover);
+            LoggingFlags log = loggs.HasValue ? loggs.Value | DefaultLoggingAction : DefaultLoggingAction;
+            GetMoveCommands(flags, SelectionFlags.Default, log, out var cmd, out var mover);
             cmd.LoggingOptions.ListOnly = listOnly;
             cmd.CopyOptions.Depth = depth;
             RunPurge(cmd, mover);
@@ -229,7 +236,7 @@ namespace RoboSharp.Extensions.UnitTests
         [DataRow(false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
         [DataRow(false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
         [TestMethod]
-        public void Purge_ExludeFiles(bool listOnly, CopyActionFlags flags)
+        public void Purge_ExcludeFiles(bool listOnly, CopyActionFlags flags)
         {
             GetMoveCommands(flags, SelectionFlags.Default, DefaultLoggingAction, out var cmd, out var mover);
             cmd.LoggingOptions.ListOnly = listOnly;
@@ -238,28 +245,13 @@ namespace RoboSharp.Extensions.UnitTests
         }
 
         [DataRow(true, Mov_)]
-        [DataRow(false, Move)]
+        [DataRow(true, Move)]
         [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectories)]
         [DataRow(true, Move | CopyActionFlags.CopySubdirectories)]
-        [DataRow(false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
-        [DataRow(false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
         [TestMethod]
-        public void Purge_IncludedFiles(bool listOnly, CopyActionFlags flags)
-        {
-            GetMoveCommands(flags, SelectionFlags.Default, DefaultLoggingAction, out var cmd, out var mover);
-            cmd.LoggingOptions.ListOnly = listOnly;
-            cmd.CopyOptions.FileFilter = new string[] { "*0*_Bytes.txt" };
-            RunPurge(cmd, mover);
-        }
-
-        [DataRow(true, Mov_)]
-        [DataRow(false, Move)]
-        [DataRow(false, Mov_ | CopyActionFlags.CopySubdirectories)]
-        [DataRow(false, Move | CopyActionFlags.CopySubdirectories)]
-        [DataRow(false, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
-        [DataRow(false, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
-        [TestMethod]
-        public void Purge_ExludeFolders(bool listOnly, CopyActionFlags flags)
+        public void Purge_ExcludeFolders(bool listOnly, CopyActionFlags flags)
         {
             GetMoveCommands(flags, SelectionFlags.Default, DefaultLoggingAction, out var cmd, out var mover);
             cmd.LoggingOptions.ListOnly = listOnly;
@@ -269,26 +261,68 @@ namespace RoboSharp.Extensions.UnitTests
             RunPurge(cmd, mover);
         }
 
+        [DataRow(true, Mov_)]
+        [DataRow(true, Move)]
+        [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectories)]
+        [DataRow(true, Move | CopyActionFlags.CopySubdirectories)]
+        [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty)]
+        [DataRow(true, Mov_, LoggingFlags.ReportExtraFiles)]
+        [DataRow(true, Move, LoggingFlags.ReportExtraFiles)]
+        [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectories, LoggingFlags.ReportExtraFiles)]
+        [DataRow(true, Move | CopyActionFlags.CopySubdirectories, LoggingFlags.ReportExtraFiles)]
+        [DataRow(true, Mov_ | CopyActionFlags.CopySubdirectoriesIncludingEmpty, LoggingFlags.ReportExtraFiles)]
+        [DataRow(true, Move | CopyActionFlags.CopySubdirectoriesIncludingEmpty, LoggingFlags.ReportExtraFiles)]
+        [TestMethod]
+        public void Purge_IncludedFiles(bool listOnly, CopyActionFlags flags, LoggingFlags? loggs = null)
+        {
+            LoggingFlags log = loggs.HasValue ? loggs.Value | DefaultLoggingAction : DefaultLoggingAction;
+            GetMoveCommands(flags, SelectionFlags.Default, log, out var cmd, out var mover);
+            cmd.LoggingOptions.ListOnly = listOnly;
+            cmd.CopyOptions.FileFilter = new string[] { "*0*_Bytes.txt" };
+            RunPurge(cmd, mover);
+        }
+
         private void RunPurge(RoboCommand cmd, RoboMover mover)
         {
             //if (Test_Setup.IsRunningOnAppVeyor()) return;
             var results = TestPrep.RunTests(cmd, mover, !cmd.LoggingOptions.ListOnly, CreateFilesToPurge).Result;
             TestPrep.CompareTestResults(results[0], results[1], cmd.LoggingOptions.ListOnly);
+        }
 
-            void CreateFilesToPurge()
-            {
-                PrepMoveFiles();
-                RoboCommand prep = new RoboCommand();
-                prep.CopyOptions.Source = Path.Combine(Test_Setup.Source_Standard, "SubFolder_1");
-                prep.CopyOptions.Destination = Path.Combine(Test_Setup.TestDestination, "SubFolder_3");
-                prep.CopyOptions.ApplyActionFlags(CopyActionFlags.CopySubdirectoriesIncludingEmpty);
-                Directory.CreateDirectory(Path.Combine(prep.CopyOptions.Destination, "EmptyFolder1", "EmptyFolder2"));
-                prep.Start().Wait();
-                prep.CopyOptions.Source = Path.Combine(Test_Setup.Source_Standard, "SubFolder_2");
-                prep.CopyOptions.Destination = Path.Combine(prep.CopyOptions.Destination, "SubFolder_2a");
-                prep.Start().Wait();
-                Directory.CreateDirectory(Path.Combine(prep.CopyOptions.Destination, "EmptyFolder3", "EmptyFolder4"));
-            }
+        [DataRow(true)]
+        [DataRow(false)]
+        [DataTestMethod]
+        public void TestPurge(bool purge)
+        {
+            GetMoveCommands(
+                CopyActionFlags.CopySubdirectoriesIncludingEmpty | CopyActionFlags.MoveFilesAndDirectories,
+                SelectionFlags.Default,
+                DefaultLoggingAction,
+                out _, out var rm);
+            Test_Setup.ClearOutTestDestination();
+            PrepMoveFiles();
+            CreateFilesToPurge();
+            rm.CopyOptions.Purge = purge;
+            rm.Start().Wait();
+            foreach (var lin in rm.GetResults().LogLines)
+                Console.WriteLine(lin);
+        }
+
+        [DataTestMethod]
+        public void CreateFilesToPurge()
+        {
+            PrepMoveFiles();
+            RoboCommand prep = new RoboCommand();
+            prep.CopyOptions.Source = Path.Combine(Test_Setup.Source_Standard, "SubFolder_1");
+            prep.CopyOptions.Destination = Path.Combine(Test_Setup.TestDestination, "SubFolder_3");
+            prep.CopyOptions.ApplyActionFlags(CopyActionFlags.CopySubdirectoriesIncludingEmpty);
+            Directory.CreateDirectory(Path.Combine(prep.CopyOptions.Destination, "EmptyFolder1", "EmptyFolder2"));
+            prep.Start().Wait();
+            prep.CopyOptions.Source = Path.Combine(Test_Setup.Source_Standard, "SubFolder_2");
+            prep.CopyOptions.Destination = Path.Combine(prep.CopyOptions.Destination, "SubFolder_2a");
+            prep.Start().Wait();
+            Directory.CreateDirectory(Path.Combine(prep.CopyOptions.Destination, "EmptyFolder3", "EmptyFolder4"));
         }
     }
 }

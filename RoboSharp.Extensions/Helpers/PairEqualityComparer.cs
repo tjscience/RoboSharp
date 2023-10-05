@@ -25,6 +25,18 @@ namespace RoboSharp.Extensions.Helpers
         private static IDirectoryPairEqualityComparer<IDirectoryPair> DirComparer => IDirectoryPairEqualityComparer<IDirectoryPair>.Singleton;
 
         /// <inheritdoc cref="IFilePairEqualityComparer{T}.Equals(T, T)"/>
+        public static bool AreEqual(IFilePair x, IFilePair y)
+        {
+            return FileComparer.Equals(x, y);
+        }
+
+        /// <inheritdoc cref="IDirectoryPairEqualityComparer{T}.Equals(T, T)"/>
+        public static bool AreEqual(IDirectoryPair x, IDirectoryPair y)
+        {
+            return DirComparer.Equals(x, y);
+        }
+
+        /// <inheritdoc cref="IFilePairEqualityComparer{T}.Equals(T, T)"/>
         public bool Equals(IFilePair x, IFilePair y)
         {
             return FileComparer.Equals(x, y);

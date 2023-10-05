@@ -128,12 +128,25 @@ namespace RoboSharp.Extensions.Helpers
         public static Regex[] GetFileFilterRegex(this CopyOptions options)
         {
             //Check if any filters exist, or if the single filter is equivalent to the default filter
-            if (options.FileFilter.None() || !options.FileFilter.HasMultiple() && options.FileFilter.Single() == CopyOptions.DefaultFileFilter)
+            if (options.FileFilter.None() || HasDefaultFileFilter(options))
             {
                 return Array.Empty<Regex>();
             }
             //Non-Default filters have been specified - convert into regex
             return options.FileFilter.Select(SelectionOptionsExtensions.CreateWildCardRegex).ToArray();
+        }
+
+        /// <summary>
+        /// Check if the <see cref="CopyOptions.FileFilter"/> is using the <see cref="CopyOptions.DefaultFileFilter"/>
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static bool HasDefaultFileFilter(this CopyOptions options)
+        {
+            if (options.FileFilter?.Any() ?? false)
+                return !options.FileFilter.All(s => s != CopyOptions.DefaultFileFilter && s != "*");
+            else
+                return true;
         }
 
         /// <summary>

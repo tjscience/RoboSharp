@@ -58,7 +58,7 @@ namespace RoboSharp.Extensions.UnitTests
             File.WriteAllText(f1, "MyText");
             File.WriteAllText(Path.Combine(dest.FullName, "TestFile2.txt"), "MyText");
             var dp = DirectoryPair.CreatePair(source, dest);
-            Assert.AreEqual(2, dp.ExtraFiles.Count());
+            Assert.AreEqual(2, dp.DestinationFiles.Count());
             Assert.IsFalse(dp.SourceFiles.Any(d => d.Destination.FullName == f1));
         }
 

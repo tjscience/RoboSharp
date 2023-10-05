@@ -201,15 +201,45 @@ namespace RoboSharp.Extensions
 
         #region < Add Dirs >
 
+        private void LogDir(ProcessedFileInfo dir)
+        {
+            //Check to log the directory listing
+            if (!Command.LoggingOptions.NoDirectoryList)
+                WriteToLogs(dir.ToString(Command.LoggingOptions));
+        }
+
+        /// <summary>
+        /// Process the first directory
+        /// </summary>
+        public void AddFirstDir(IDirectoryPair topLevelDirectory)
+        {
+            var info = topLevelDirectory.ProcessResult;
+            if (topLevelDirectory.Destination.Exists)
+                ProgressEstimator.AddDirSkipped(info);
+            else
+            {
+                info.SetDirectoryClass(ProcessedDirectoryFlag.NewDir, Command.Configuration);
+                ProgressEstimator.AddDirCopied(info);
+            }
+            LogDir(info);
+        }
+
         /// <summary>
         /// Add a directory to the log and progressEstimator
         /// </summary>
         public virtual void AddDir(ProcessedFileInfo dir)
         {
             ProgressEstimator.AddDir(dir);
-            //Check to log the directory listing
-            if (!Command.LoggingOptions.NoDirectoryList)
-                WriteToLogs(dir.ToString(Command.LoggingOptions));
+            LogDir(dir);
+        }
+
+        /// <summary>
+        /// Add a directory to the log and progressEstimator
+        /// </summary>
+        public virtual void AddDirSkipped(ProcessedFileInfo dir)
+        {
+            ProgressEstimator.AddDirSkipped(dir);
+            LogDir(dir);
         }
 
         #endregion

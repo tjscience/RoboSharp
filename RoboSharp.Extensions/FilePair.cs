@@ -25,6 +25,16 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="FilePair(FileInfo, FileInfo)"/>
         public static FilePair CreatePair(FileInfo source, FileInfo destination) => new FilePair(source, destination);
 
+        /// <summary>
+        /// Stores the result of <see cref="PairEvaluator.ShouldCopyFile(IFilePair)"/>
+        /// </summary>
+        public bool ShouldCopy { get; internal set; }
+
+        /// <summary>
+        /// Stores the result of <see cref="PairEvaluator.ShouldPurge(IFilePair)"/> if this object has been run through that method.
+        /// </summary>
+        public bool ShouldPurge { get; internal set; }
+
         /// <inheritdoc/>
         public FileInfo Source { get; }
 

@@ -49,7 +49,7 @@ namespace RoboSharp.Extensions.UnitTests
             var results = new List<RoboSharpTestResults>();
             BetweenRuns();
             results.Add(await TestSetup.RunTest(roboCommand));
-            BetweenRuns();
+            if (!roboCommand.LoggingOptions.ListOnly) BetweenRuns();
             
             customCommand.OnError += CachedRoboCommand_OnError;
             customCommand.OnCommandError += CachedRoboCommand_OnCommandError;
@@ -132,10 +132,10 @@ namespace RoboSharp.Extensions.UnitTests
                     CRCStat = crcSTat;
                     try
                     {
-                        Assert.AreEqual(RCStat.Total, CRCStat.Total, $"\n{eval} Stat: TOTAL");
                         Assert.AreEqual(RCStat.Copied, CRCStat.Copied, $"\n{eval} Stat: COPIED");
                         Assert.AreEqual(RCStat.Skipped, CRCStat.Skipped, $"\n{eval} Stat: SKIPPED");
                         Assert.AreEqual(RCStat.Extras, CRCStat.Extras, $"\n{eval} Stat: EXTRAS");
+                        Assert.AreEqual(RCStat.Total, CRCStat.Total, $"\n{eval} Stat: TOTAL");
                     }
                     catch
                     {

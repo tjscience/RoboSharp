@@ -28,7 +28,7 @@ namespace RoboSharp.Extensions
         private Lazy<CachedEnumerable<DirectoryPair>> lazyExtraDirs;
         private Lazy<CachedEnumerable<DirectoryPair>> lazySourceDirs;
         private Lazy<CachedEnumerable<FilePair>> lazySourceFiles;
-        private Lazy<CachedEnumerable<FilePair>> lazyExtraFiles;
+        private Lazy<CachedEnumerable<FilePair>> lazyDestinationFiles;
 
         /// <inheritdoc cref="DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
         public static DirectoryPair CreatePair(DirectoryInfo source, DirectoryInfo destination) => new DirectoryPair(source, destination);
@@ -43,10 +43,10 @@ namespace RoboSharp.Extensions
         public ProcessedFileInfo ProcessResult { get; set; }
 
         /// <summary>
-        /// The collection of <see cref="FilePair"/>s generated from scanning the <see cref="Destination"/> directory where <see cref="IFilePairExtensions.IsExtra(IFilePair)"/> returns true.
+        /// The collection of <see cref="FilePair"/>s generated from scanning the <see cref="Destination"/> directory.
         /// </summary>
         /// <remarks>Refresh this via <see cref="Refresh"/></remarks>
-        public CachedEnumerable<FilePair> ExtraFiles => lazyExtraFiles.Value;
+        public CachedEnumerable<FilePair> DestinationFiles => lazyDestinationFiles.Value;
 
         /// <summary>
         /// The collection of <see cref="IDirectoryPair"/>s generated from scanning the <see cref="Destination"/> directory where <see cref="IDirectoryPairExtensions.IsExtra(IDirectoryPair)"/> returns true.
@@ -78,28 +78,28 @@ namespace RoboSharp.Extensions
         {
             lazyExtraDirs = new Lazy<CachedEnumerable<DirectoryPair>>(GetExtraDirectories);
             lazySourceDirs = new Lazy<CachedEnumerable<DirectoryPair>>(GetSourceDirectories);
-            lazyExtraFiles = new Lazy<CachedEnumerable<FilePair>>(GetExtraFiles);
+            lazyDestinationFiles = new Lazy<CachedEnumerable<FilePair>>(GetDestinationFiles);
             lazySourceFiles = new Lazy<CachedEnumerable<FilePair>>(GetSourceFiles);
         }
 
-        private CachedEnumerable<FilePair> GetExtraFiles()
+        private CachedEnumerable<FilePair> GetDestinationFiles()
         {
-            return this.EnumerateDestinationFilePairs(FilePair.CreatePair).Where(IFilePairExtensions.IsExtra).AsCachedEnumerable();
+            return this.EnumerateDestinationFilePairs(FilePair.CreatePair).AsCachedEnumerable();
         }
 
         private CachedEnumerable<DirectoryPair> GetExtraDirectories()
         {
-            return this.EnumerateDestinationDirectoryPairs(DirectoryPair.CreatePair).Where(IDirectoryPairExtensions.IsExtra).AsCachedEnumerable();
+            return this.EnumerateDestinationDirectoryPairs(CreatePair).Where(IDirectoryPairExtensions.IsExtra).AsCachedEnumerable();
         }
 
         private CachedEnumerable<FilePair> GetSourceFiles()
         {
-            return this.EnumerateSourceFilePairs(FilePair.CreatePair);
+            return this.EnumerateSourceFilePairs(FilePair.CreatePair).AsCachedEnumerable();
         }
 
         private CachedEnumerable<DirectoryPair> GetSourceDirectories()
         {
-            return this.EnumerateSourceDirectoryPairs(DirectoryPair.CreatePair);
+            return this.EnumerateSourceDirectoryPairs(CreatePair).AsCachedEnumerable();
         }
     }
 }

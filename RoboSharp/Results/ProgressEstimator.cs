@@ -310,6 +310,22 @@ namespace RoboSharp.Results
                 }
         }
 
+        /// <summary>
+        /// Adds 1 to the directories Skipped stat
+        /// </summary>
+        /// <param name="dir"></param>
+        public void AddDirSkipped(ProcessedFileInfo dir)
+        {
+            lock (DirLock)
+            {
+                if (dir != CurrentDir)
+                {
+                    tmpDir.Total++;
+                    tmpDir.Skipped++;
+                }
+            }
+        }
+
         #endregion
 
         #region < Calculate Files (Internal) >
