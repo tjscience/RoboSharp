@@ -53,6 +53,7 @@ namespace RoboSharp.Extensions.UnitTests
             DirectoryInfo source = new DirectoryInfo(Test_Setup.Source_Standard);
             DirectoryInfo dest = new DirectoryInfo(Test_Setup.TestDestination);
             if (!dest.Exists) dest.Create();
+            dest.Refresh();
             string f1 = Path.Combine(dest.FullName, "TestFile.txt");
             File.WriteAllText(f1, "MyText");
             File.WriteAllText(Path.Combine(dest.FullName, "TestFile2.txt"), "MyText");

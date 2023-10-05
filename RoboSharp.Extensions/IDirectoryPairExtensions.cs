@@ -73,6 +73,15 @@ namespace RoboSharp.Extensions
             return false;
         }
 
+        /// <summary>
+        /// Refreshes both the <see cref="IDirectoryPair.Source"/> and <see cref="IDirectoryPair.Destination"/> objects
+        /// </summary>
+        public static void RefreshDirectoryInfo(this IDirectoryPair pair)
+        {
+            pair?.Source?.Refresh();
+            pair?.Destination?.Refresh();
+        }
+
         #region < Create Pair Functions >
 
         /// <summary>
