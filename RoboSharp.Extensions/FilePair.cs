@@ -8,22 +8,24 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// Helper Class that implements the <see cref="IFilePair"/> interface
     /// </summary>
-    public sealed class FilePair : IFilePair
+    public class FilePair : IFilePair
     {
         /// <summary>
         /// Create a new DirectoryPair object
         /// </summary>
         /// <param name="source">The source FileInfo object</param>
         /// <param name="destination">The Destination FileInfo object</param>
+        /// <param name="parent">The Parent Directory Pair</param>
         /// <exception cref="ArgumentNullException"/>
-        public FilePair(FileInfo source, FileInfo destination)
+        public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
+            Parent = parent;// ?? throw new ArgumentNullException(nameof(parent));
         }
 
-        /// <inheritdoc cref="FilePair(FileInfo, FileInfo)"/>
-        public static FilePair CreatePair(FileInfo source, FileInfo destination) => new FilePair(source, destination);
+        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
+        public static FilePair CreatePair(FileInfo source, FileInfo destination, IDirectoryPair parent) => new FilePair(source, destination, parent);
 
         /// <summary>
         /// Stores the result of <see cref="PairEvaluator.ShouldCopyFile(IFilePair)"/>
@@ -43,5 +45,8 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc/>
         public ProcessedFileInfo ProcessResult { get; set; }
+
+        /// <inheritdoc/>
+        public IDirectoryPair Parent { get; }
     }
 }

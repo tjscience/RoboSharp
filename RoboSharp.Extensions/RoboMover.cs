@@ -55,7 +55,6 @@ namespace RoboSharp.Extensions
         private CancellationTokenSource cancelRequest;
         private PairEvaluator PairEvaluator;
         private ResultsBuilder resultsBuilder;
-        private bool evaluateExtraDirs;
         private bool evaluateExtraFiles;
 
         /// <summary>

@@ -16,6 +16,11 @@ namespace RoboSharp.Extensions
     public interface IFilePair
     {
         /// <summary>
+        /// The Parent IDirectoryPair
+        /// </summary>
+        IDirectoryPair Parent { get; }
+        
+        /// <summary>
         /// Source File Information
         /// </summary>
         FileInfo Source { get; }

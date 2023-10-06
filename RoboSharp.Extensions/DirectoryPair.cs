@@ -25,6 +25,16 @@ namespace RoboSharp.Extensions
             RefreshLazy();
         }
 
+        /// <summary>
+        /// Create a new DirectoryPair object from the specified directory paths
+        /// </summary>
+        /// <param name="source">The source directory</param>
+        /// <param name="destination">The Destination directory</param>
+        /// <inheritdoc cref="DirectoryInfo.DirectoryInfo(string)"/>
+        /// <inheritdoc cref="DirectoryPair.DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
+        public DirectoryPair(string source, string destination) : this(new DirectoryInfo(source), new DirectoryInfo(destination))
+        { }
+
         private Lazy<CachedEnumerable<DirectoryPair>> lazyExtraDirs;
         private Lazy<CachedEnumerable<DirectoryPair>> lazySourceDirs;
         private Lazy<CachedEnumerable<FilePair>> lazySourceFiles;
@@ -32,6 +42,9 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc cref="DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
         public static DirectoryPair CreatePair(DirectoryInfo source, DirectoryInfo destination) => new DirectoryPair(source, destination);
+
+        /// <inheritdoc cref="FilePair.CreatePair(FileInfo, FileInfo, IDirectoryPair)"/>
+        public FilePair CreateFilePair(FileInfo source, FileInfo destination) => new FilePair(source, destination, this);
 
         /// <inheritdoc/>
         public DirectoryInfo Source { get; }
