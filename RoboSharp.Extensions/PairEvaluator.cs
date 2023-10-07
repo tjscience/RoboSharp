@@ -120,7 +120,7 @@ namespace RoboSharp.Extensions
         /// Compare the Source/Destination directories, and decide if the directory should be copied down.
         /// </summary>
         /// <param name="pair">the pair to evaluate</param>
-        /// <param name="dirClass">The dirClass applied to the <see cref="IDirectoryPair.ProcessResult"/></param>
+        /// <param name="dirClass">The dirClass applied to the <see cref="IDirectoryPair.ProcessedFileInfo"/></param>
         /// <param name="ExcludeDirectoryName">Result of <see cref="ShouldExcludeDirectoryName(IDirectoryPair)"/></param>
         /// <param name="ExcludeJunctionDirectory">Result of <see cref="ShouldExcludeJunctionDirectory(IDirectoryPair)"/></param>
         /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
@@ -133,23 +133,23 @@ namespace RoboSharp.Extensions
             if (!shouldExclude && pair.Source.Exists && pair.Destination.Exists)
             {
                 dirClass = ProcessedDirectoryFlag.ExistingDir;
-                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.ExistingDir, 0);
+                pair.ProcessedFileInfo = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.ExistingDir, 0);
             }
             else if (!shouldExclude && pair.Source.Exists && !Command.SelectionOptions.ExcludeLonely)
             {
                 dirClass = ProcessedDirectoryFlag.NewDir;
-                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.NewDir, 0);
+                pair.ProcessedFileInfo = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.NewDir, 0);
             }
             else if (pair.Destination.Exists && !Command.SelectionOptions.ExcludeExtra)
             {
                 dirClass = ProcessedDirectoryFlag.ExtraDir;
-                pair.ProcessResult = new ProcessedFileInfo(pair.Destination, Command, ProcessedDirectoryFlag.ExtraDir, 0);
+                pair.ProcessedFileInfo = new ProcessedFileInfo(pair.Destination, Command, ProcessedDirectoryFlag.ExtraDir, 0);
                 return false;
             }
             else
             {
                 dirClass = ProcessedDirectoryFlag.Exclusion;
-                pair.ProcessResult = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.Exclusion, 0);
+                pair.ProcessedFileInfo = new ProcessedFileInfo(pair.Source, Command, ProcessedDirectoryFlag.Exclusion, 0);
             }
             return !shouldExclude;
         }
@@ -184,13 +184,13 @@ namespace RoboSharp.Extensions
             string Name = Command.LoggingOptions.IncludeFullPathNames ?
                 (DestExists & !SourceExists ? pair.Destination.FullName : pair.Source.FullName) :
                 (DestExists & !SourceExists ? pair.Destination.Name : pair.Source.Name);
-            pair.ProcessResult = new ProcessedFileInfo()
+            pair.ProcessedFileInfo = new ProcessedFileInfo()
             {
                 FileClassType = FileClassType.File,
                 Name = Name,
                 Size = SourceExists ? pair.Source.Length : DestExists ? pair.Destination.Length : 0,
             };
-            var info = pair.ProcessResult;
+            var info = pair.ProcessedFileInfo;
             var SO = Command.SelectionOptions;
             bool result = false;
 

@@ -53,7 +53,7 @@ namespace RoboSharp.Extensions
         public DirectoryInfo Destination { get; }
 
         /// <inheritdoc/>
-        public ProcessedFileInfo ProcessResult { get; set; }
+        public ProcessedFileInfo ProcessedFileInfo { get; set; }
 
         /// <summary>
         /// The collection of <see cref="FilePair"/>s generated from scanning the <see cref="Destination"/> directory.

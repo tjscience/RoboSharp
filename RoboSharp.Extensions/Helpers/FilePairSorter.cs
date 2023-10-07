@@ -23,18 +23,18 @@ namespace RoboSharp.Extensions.Helpers
         private RoboSharpConfiguration Config { get; }
 
         /// <summary>
-        /// Evaluate the <see cref="IFilePair.ProcessResult"/> and sort accordingly
+        /// Evaluate the <see cref="IFilePair.ProcessedFileInfo"/> and sort accordingly
         /// </summary>
         /// <inheritdoc/>
         public int Compare(T x, T y)
         {
-            return Compare(x?.ProcessResult, y?.ProcessResult);
+            return Compare(x?.ProcessedFileInfo, y?.ProcessedFileInfo);
         }
 
         /// <inheritdoc cref="Compare(T, T)"/>
         public int Compare<T1>(T1 x, T1 y) where T1 : IFilePair
         {
-            return Compare(x?.ProcessResult, y?.ProcessResult);
+            return Compare(x?.ProcessedFileInfo, y?.ProcessedFileInfo);
         }
 
         /// <inheritdoc cref="IComparer{T}.Compare(T, T)"/>

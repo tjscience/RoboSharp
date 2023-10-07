@@ -19,7 +19,7 @@ namespace RoboSharp
         /// <param name="progress"><inheritdoc cref="CurrentFileProgress"/></param>
         /// <param name="currentFile"><inheritdoc cref="CurrentFile"/></param>
         /// <param name="SourceDir"><inheritdoc cref="CurrentDirectory"/></param>
-        public CopyProgressEventArgs(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo SourceDir)
+        public CopyProgressEventArgs(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo SourceDir = null)
         {
             CurrentFileProgress = progress;
             CurrentFile = currentFile;
@@ -34,7 +34,10 @@ namespace RoboSharp
         /// <inheritdoc cref="ProcessedFileInfo"/>
         public ProcessedFileInfo CurrentFile { get; internal set; }
 
-        /// <summary>Contains information about the Last Directory RoboCopy reported into the log. </summary>
+        /// <summary>
+        /// Contains information about the Last Directory RoboCopy reported into the log. 
+        /// <br/> This may be null.
+        /// </summary>
         public ProcessedFileInfo CurrentDirectory{ get; internal set; }
     }
 }

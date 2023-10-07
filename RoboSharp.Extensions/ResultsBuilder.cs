@@ -213,7 +213,7 @@ namespace RoboSharp.Extensions
         /// </summary>
         public void AddFirstDir(IDirectoryPair topLevelDirectory)
         {
-            var info = topLevelDirectory.ProcessResult;
+            var info = topLevelDirectory.ProcessedFileInfo;
             if (topLevelDirectory.Destination.Exists)
                 ProgressEstimator.AddDirSkipped(info);
             else

@@ -205,7 +205,7 @@ namespace RoboSharp.Extensions
             base.IProgressEstimator = resultsBuilder.ProgressEstimator;
             RaiseOnProgressEstimatorCreated(resultsBuilder.ProgressEstimator);
             var sourcePair = new DirectoryPair(source, dest);
-            sourcePair.ProcessResult = new ProcessedFileInfo(
+            sourcePair.ProcessedFileInfo = new ProcessedFileInfo(
                 directory: source,
                 command: this,
                 status: ProcessedDirectoryFlag.None,
@@ -222,12 +222,12 @@ namespace RoboSharp.Extensions
         {
             // Create the ProcessFileInfo for this pair
             CachedEnumerable<FilePair> sourceFiles = PairEvaluator.FilterFilePairs(directoryPair.SourceFiles).AsCachedEnumerable();
-            directoryPair.ProcessResult.Size = sourceFiles.Count();
+            directoryPair.ProcessedFileInfo.Size = sourceFiles.Count();
             if (currentDepth > 1)
-                resultsBuilder.AddDir(directoryPair.ProcessResult);
+                resultsBuilder.AddDir(directoryPair.ProcessedFileInfo);
             else
                 resultsBuilder.AddFirstDir(directoryPair);
-            RaiseOnFileProcessed(directoryPair.ProcessResult);
+            RaiseOnFileProcessed(directoryPair.ProcessedFileInfo);
 
             // Extra Directories
             if (PairEvaluator.CanProcessExtraDirs(currentDepth))
@@ -285,8 +285,8 @@ namespace RoboSharp.Extensions
                                 if (!dir.Source.Exists)
                                 {
                                     isMoved = true;
-                                    resultsBuilder.AddDir(dir.ProcessResult);
-                                    RaiseOnFileProcessed(dir.ProcessResult);
+                                    resultsBuilder.AddDir(dir.ProcessedFileInfo);
+                                    RaiseOnFileProcessed(dir.ProcessedFileInfo);
                                 }
                             }
                             catch (Exception e)
@@ -298,8 +298,8 @@ namespace RoboSharp.Extensions
                     }
                     else
                     {
-                        resultsBuilder.AddDir(dir.ProcessResult);
-                        RaiseOnFileProcessed(dir.ProcessResult);
+                        resultsBuilder.AddDir(dir.ProcessedFileInfo);
+                        RaiseOnFileProcessed(dir.ProcessedFileInfo);
                     }
                 }
             }
@@ -333,10 +333,10 @@ namespace RoboSharp.Extensions
             // This gets it to pass unit tests, but *feels* wrong
             if (!shouldPurge && !CopyOptions.IsRecursive() && !LoggingOptions.ReportExtraFiles && !CopyOptions.HasDefaultFileFilter()) return; 
 
-            if (pair.ProcessResult is null)
-                pair.ProcessResult = new ProcessedFileInfo(directory: pair.Destination, this, ProcessedDirectoryFlag.ExtraDir, size: -1);
+            if (pair.ProcessedFileInfo is null)
+                pair.ProcessedFileInfo = new ProcessedFileInfo(directory: pair.Destination, this, ProcessedDirectoryFlag.ExtraDir, size: -1);
             
-            resultsBuilder.AddDir(pair.ProcessResult);
+            resultsBuilder.AddDir(pair.ProcessedFileInfo);
             if (!shouldPurge) return;
 
             //Process Files
@@ -371,8 +371,8 @@ namespace RoboSharp.Extensions
 
         private void ProcessExtraFile(FilePair extraFile)
         {
-            if (extraFile.ProcessResult is null)
-                extraFile.ProcessResult = new ProcessedFileInfo(file: extraFile.Destination, this, ProcessedFileFlag.ExtraFile);
+            if (extraFile.ProcessedFileInfo is null)
+                extraFile.ProcessedFileInfo = new ProcessedFileInfo(file: extraFile.Destination, this, ProcessedFileFlag.ExtraFile);
 
             bool shouldPurge = PairEvaluator.ShouldPurge(extraFile);
             if (shouldPurge && !LoggingOptions.ListOnly)
@@ -380,16 +380,16 @@ namespace RoboSharp.Extensions
                 try
                 {
                     extraFile.Destination.Delete();
-                    resultsBuilder.AddFilePurged(extraFile.ProcessResult);
+                    resultsBuilder.AddFilePurged(extraFile.ProcessedFileInfo);
                 }
                 catch (Exception e)
                 {
-                    RaiseOnCommandError("Unable to Delete File : " + extraFile.ProcessResult.Name, e);
+                    RaiseOnCommandError("Unable to Delete File : " + extraFile.ProcessedFileInfo.Name, e);
                 }
             }
             else
             {
-                resultsBuilder.AddFileExtra(extraFile.ProcessResult);
+                resultsBuilder.AddFileExtra(extraFile.ProcessedFileInfo);
             }
         }
 
@@ -397,27 +397,27 @@ namespace RoboSharp.Extensions
         {
             try
             {
-                base.RaiseOnFileProcessed(file.ProcessResult);
+                base.RaiseOnFileProcessed(file.ProcessedFileInfo);
 
                 if (file.ShouldCopy)
                 {
                     if (!LoggingOptions.ListOnly)
                     {
                         Directory.CreateDirectory(Path.GetDirectoryName(file.Destination.FullName));
-                        resultsBuilder.SetCopyOpStarted(file.ProcessResult);
+                        resultsBuilder.SetCopyOpStarted(file.ProcessedFileInfo);
                         if (file.Destination.Exists) file.Destination.Delete();
                         File.Move(file.Source.FullName, file.Destination.FullName);
                     }
-                    resultsBuilder.AddFileCopied(file.ProcessResult);
+                    resultsBuilder.AddFileCopied(file.ProcessedFileInfo);
                 }
                 else
                 {
-                    resultsBuilder.AddFileSkipped(file.ProcessResult);
+                    resultsBuilder.AddFileSkipped(file.ProcessedFileInfo);
                 }
             }
             catch (Exception e)
             {
-                RaiseOnCommandError("Unable to Move File : " + file.ProcessResult.Name, e);
+                RaiseOnCommandError("Unable to Move File : " + file.ProcessedFileInfo.Name, e);
             }
         }
 

@@ -16,7 +16,7 @@ namespace RoboSharp.Extensions
     public interface IFilePair
     {
         /// <summary>
-        /// The Parent IDirectoryPair
+        /// The Parent IDirectoryPair. This may be null.
         /// </summary>
         IDirectoryPair Parent { get; }
         
@@ -33,6 +33,6 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// The ProcessedFileInfo that represents how the IRoboCommand has processed the pair
         /// </summary>
-        ProcessedFileInfo ProcessResult { get; set; }
+        ProcessedFileInfo ProcessedFileInfo { get; set; }
     }
 }

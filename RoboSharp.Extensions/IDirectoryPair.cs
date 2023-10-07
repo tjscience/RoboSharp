@@ -28,6 +28,6 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// The ProcessedFileInfo that represents how the IRoboCommand has processed the pair
         /// </summary>
-        ProcessedFileInfo ProcessResult { get; set; }
+        ProcessedFileInfo ProcessedFileInfo { get; set; }
     }
 }

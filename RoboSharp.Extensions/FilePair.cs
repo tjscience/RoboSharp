@@ -15,13 +15,16 @@ namespace RoboSharp.Extensions
         /// </summary>
         /// <param name="source">The source FileInfo object</param>
         /// <param name="destination">The Destination FileInfo object</param>
-        /// <param name="parent">The Parent Directory Pair</param>
+        /// <param name="parent">The Parent Directory Pair - this is allowed to be null.</param>
         /// <exception cref="ArgumentNullException"/>
         public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-            Parent = parent;// ?? throw new ArgumentNullException(nameof(parent));
+            if (parent is null)
+                Parent = new DirectoryPair(source.Directory, destination.Directory);
+            else
+                Parent = parent;
         }
 
         /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
@@ -44,7 +47,7 @@ namespace RoboSharp.Extensions
         public FileInfo Destination { get; }
 
         /// <inheritdoc/>
-        public ProcessedFileInfo ProcessResult { get; set; }
+        public ProcessedFileInfo ProcessedFileInfo { get; set; }
 
         /// <inheritdoc/>
         public IDirectoryPair Parent { get; }
