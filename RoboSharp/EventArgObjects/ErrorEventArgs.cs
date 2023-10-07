@@ -10,6 +10,42 @@ namespace RoboSharp
     /// </summary>
     public class ErrorEventArgs : EventArgs
     {
+        /// <inheritdoc/>
+        public ErrorEventArgs() { }
+    
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="errorPath"></param>
+        /// <param name="dateTime"></param>
+        public ErrorEventArgs(Exception ex, string errorPath, DateTime dateTime)
+        {
+            Error = ex.HResult.ToString();
+            ErrorDescription = ex.Message;
+            ErrorCode = ex.HResult;
+            SignedErrorCode = ex.HResult.ToString();
+            ErrorPath = errorPath;
+            DateTime = dateTime;
+        }
+
+        /// <summary> </summary>
+        /// <param name="error"><inheritdoc cref="Error" path="*"/></param>
+        /// <param name="errorDescription"><inheritdoc cref="ErrorDescription" path="*"/></param>
+        /// <param name="errorCode"><inheritdoc cref="ErrorCode" path="*"/></param>
+        /// <param name="signedErrorCode"><inheritdoc cref="SignedErrorCode" path="*"/></param>
+        /// <param name="errorPath"><inheritdoc cref="ErrorPath" path="*"/></param>
+        /// <param name="dateTime"><inheritdoc cref="DateTime" path="*"/></param>
+        public ErrorEventArgs(int errorCode, string error, string errorDescription, string errorPath, DateTime? dateTime = null, string signedErrorCode = null)
+        {
+            Error = error;
+            ErrorDescription = errorDescription;
+            ErrorCode = errorCode;
+            ErrorPath = errorPath;
+            DateTime = dateTime ?? DateTime.Now;
+            SignedErrorCode = signedErrorCode ?? errorCode.ToString();
+        }
+
         /// <summary>
         /// Error Code
         /// </summary>

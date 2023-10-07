@@ -147,16 +147,16 @@ namespace RoboSharp.Results
         private void CompareAndRaiseEvents(object[] OriginalValues)
         {
             object[] CurrentValues = StoreCurrentValues();
-            if (CurrentValues[0] != OriginalValues[0]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("WasCancelled"));
-            if (CurrentValues[1] != OriginalValues[1]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AnyNoCopyNoError"));
-            if (CurrentValues[2] != OriginalValues[2]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AnyWasCancelled"));
-            if (CurrentValues[3] != OriginalValues[3]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AllSuccessful"));
-            if (CurrentValues[4] != OriginalValues[4]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("AllSuccessful_WithWarnings"));
-            if (CurrentValues[5] != OriginalValues[5]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("HasErrors"));
-            if (CurrentValues[6] != OriginalValues[6]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("HasWarnings"));
-            if (CurrentValues[7] != OriginalValues[7]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Successful"));
-            if (CurrentValues[8] != OriginalValues[8]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ExitCode"));
-            if (CurrentValues[9] != OriginalValues[9]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ExitCodeValue"));
+            if (CurrentValues[0] != OriginalValues[0]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(WasCancelled)));
+            if (CurrentValues[1] != OriginalValues[1]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AnyNoCopyNoError)));
+            if (CurrentValues[2] != OriginalValues[2]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AnyWasCancelled)));
+            if (CurrentValues[3] != OriginalValues[3]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AllSuccessful)));
+            if (CurrentValues[4] != OriginalValues[4]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AllSuccessful_WithWarnings)));
+            if (CurrentValues[5] != OriginalValues[5]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasErrors)));
+            if (CurrentValues[6] != OriginalValues[6]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasWarnings)));
+            if (CurrentValues[7] != OriginalValues[7]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Successful)));
+            if (CurrentValues[8] != OriginalValues[8]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ExitCode)));
+            if (CurrentValues[9] != OriginalValues[9]) PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ExitCodeValue)));
         }
 
         #endregion

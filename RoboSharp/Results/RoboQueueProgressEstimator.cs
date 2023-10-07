@@ -51,7 +51,7 @@ namespace RoboSharp.Results
         private readonly Statistic ByteStatsField = new Statistic(Statistic.StatType.Bytes, "Byte Stats Estimate");
 
         //Add Tasks
-        private int UpdatePeriodInMilliSecond = 250;
+        private readonly int UpdatePeriodInMilliSecond = 250;
         private readonly Statistic tmpDirs;
         private readonly Statistic tmpFiles;
         private readonly Statistic tmpBytes;
