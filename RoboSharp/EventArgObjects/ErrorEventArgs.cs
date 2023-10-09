@@ -21,10 +21,10 @@ namespace RoboSharp
         /// <param name="dateTime"></param>
         public ErrorEventArgs(Exception ex, string errorPath, DateTime dateTime)
         {
-            Error = ex.HResult.ToString();
-            ErrorDescription = ex.Message;
-            ErrorCode = ex.HResult;
-            SignedErrorCode = ex.HResult.ToString();
+            Error = ex?.Message;
+            ErrorDescription = ex?.StackTrace;
+            ErrorCode = ex?.HResult ?? 0;
+            SignedErrorCode = ErrorCode.ToString();
             ErrorPath = errorPath;
             DateTime = dateTime;
         }

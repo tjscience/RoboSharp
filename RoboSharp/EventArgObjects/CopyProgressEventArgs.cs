@@ -29,15 +29,15 @@ namespace RoboSharp
         /// <summary>
         /// Current File Progress Percentage
         /// </summary>
-        public double CurrentFileProgress { get; internal set; }
+        public double CurrentFileProgress { get; }
 
         /// <inheritdoc cref="ProcessedFileInfo"/>
-        public ProcessedFileInfo CurrentFile { get; internal set; }
+        public ProcessedFileInfo CurrentFile { get; }
 
         /// <summary>
         /// Contains information about the Last Directory RoboCopy reported into the log. 
         /// <br/> This may be null.
         /// </summary>
-        public ProcessedFileInfo CurrentDirectory{ get; internal set; }
+        public ProcessedFileInfo CurrentDirectory{ get; }
     }
 }
