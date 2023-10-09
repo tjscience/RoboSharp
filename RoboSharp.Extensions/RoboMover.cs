@@ -97,7 +97,6 @@ namespace RoboSharp.Extensions
                 if (!isMoving | !onSameDrive | CopyOptions.Mirror | JobOptions.PreventCopyOperation | CopyOptions.CreateDirectoryAndFileTree)
                 {
                     results = await RunAsRoboCopy(domain, username, password);
-                    success = true;
                 }
                 else
                 {
@@ -119,9 +118,8 @@ namespace RoboSharp.Extensions
                     }
                     // Run
                     results = await RunAsRoboMover(domain, username, password);
-                    success = results != null;
                 }
-
+                success = results != null;
             }
             catch (Exception ex)
             {
