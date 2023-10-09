@@ -10,7 +10,7 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// Helper Class that implements the <see cref="IDirectoryPair"/> interface
     /// </summary>
-    public sealed class DirectoryPair : IDirectoryPair
+    public sealed class DirectoryPair : IDirectoryPair, IProcessedDirectoryPair
     {
         /// <summary>
         /// Create a new DirectoryPair object
@@ -43,7 +43,7 @@ namespace RoboSharp.Extensions
         /// <inheritdoc cref="DirectoryPair(DirectoryInfo, DirectoryInfo)"/>
         public static DirectoryPair CreatePair(DirectoryInfo source, DirectoryInfo destination) => new DirectoryPair(source, destination);
 
-        /// <inheritdoc cref="FilePair.CreatePair(FileInfo, FileInfo, IDirectoryPair)"/>
+        /// <inheritdoc cref="FilePair.CreatePair(FileInfo, FileInfo, IProcessedDirectoryPair)"/>
         public FilePair CreateFilePair(FileInfo source, FileInfo destination) => new FilePair(source, destination, this);
 
         /// <inheritdoc/>

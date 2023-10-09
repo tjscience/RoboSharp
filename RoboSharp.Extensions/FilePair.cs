@@ -17,7 +17,7 @@ namespace RoboSharp.Extensions
         /// <param name="destination">The Destination FileInfo object</param>
         /// <param name="parent">The Parent Directory Pair - this is allowed to be null.</param>
         /// <exception cref="ArgumentNullException"/>
-        public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent = null)
+        public FilePair(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent = null)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
@@ -27,8 +27,27 @@ namespace RoboSharp.Extensions
                 Parent = parent;
         }
 
-        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FilePair CreatePair(FileInfo source, FileInfo destination, IDirectoryPair parent = null) => new FilePair(source, destination, parent);
+        /// <summary>
+        /// Create a new FilePair object from an existing <see cref="IFilePair"/>
+        /// </summary>
+        /// <exception cref="ArgumentNullException"/>
+        /// <exception cref="ArgumentException"/>
+        public FilePair(IFilePair filePair, IProcessedDirectoryPair parent = null)
+        {
+            if (filePair is null) throw new ArgumentNullException(nameof(filePair));
+            Source = filePair.Source ?? throw new ArgumentException("filePair.Source is null");
+            Destination = filePair.Destination ?? throw new ArgumentException("filePair.Destination is null");
+            if (parent is null)
+                Parent = new DirectoryPair(filePair.Source.Directory, filePair.Destination.Directory);
+            else
+                Parent = parent;
+        }
+
+        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IProcessedDirectoryPair)"/>
+        public static FilePair CreatePair(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent = null) => new FilePair(source, destination, parent);
+
+        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IProcessedDirectoryPair)"/>
+        public static FilePair CreatePair(IFilePair filePair, IProcessedDirectoryPair parent = null) => new FilePair(filePair, parent);
 
         /// <inheritdoc/>
         public bool ShouldCopy { get; set; }
@@ -46,6 +65,6 @@ namespace RoboSharp.Extensions
         public ProcessedFileInfo ProcessedFileInfo { get; set; }
 
         /// <inheritdoc/>
-        public IDirectoryPair Parent { get; }
+        public IProcessedDirectoryPair Parent { get; }
     }
 }

@@ -14,7 +14,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// The Parent IDirectoryPair. This may be null.
         /// </summary>
-        IDirectoryPair Parent { get; }
+        IProcessedDirectoryPair Parent { get; }
 
         /// <summary>
         /// The ProcessedFileInfo that represents how the IRoboCommand has processed the pair

@@ -211,7 +211,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Process the first directory
         /// </summary>
-        public void AddFirstDir(IDirectoryPair topLevelDirectory)
+        public void AddFirstDir(IProcessedDirectoryPair topLevelDirectory)
         {
             var info = topLevelDirectory.ProcessedFileInfo;
             if (topLevelDirectory.Destination.Exists)

@@ -24,10 +24,5 @@ namespace RoboSharp.Extensions
         /// Destination directory information
         /// </summary>
         DirectoryInfo Destination { get; }
-
-        /// <summary>
-        /// The ProcessedFileInfo that represents how the IRoboCommand has processed the pair
-        /// </summary>
-        ProcessedFileInfo ProcessedFileInfo { get; set; }
     }
 }

@@ -120,11 +120,11 @@ namespace RoboSharp.Extensions
         /// Compare the Source/Destination directories, and decide if the directory should be copied down.
         /// </summary>
         /// <param name="pair">the pair to evaluate</param>
-        /// <param name="dirClass">The dirClass applied to the <see cref="IDirectoryPair.ProcessedFileInfo"/></param>
+        /// <param name="dirClass">The dirClass applied to the <see cref="IProcessedDirectoryPair.ProcessedFileInfo"/></param>
         /// <param name="ExcludeDirectoryName">Result of <see cref="ShouldExcludeDirectoryName(IDirectoryPair)"/></param>
         /// <param name="ExcludeJunctionDirectory">Result of <see cref="ShouldExcludeJunctionDirectory(IDirectoryPair)"/></param>
         /// <returns>TRUE if the directory would be excluded based on the current IROboCommand settings, otherwise false</returns>
-        public virtual bool ShouldCopyDir(IDirectoryPair pair, out ProcessedDirectoryFlag dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
+        public virtual bool ShouldCopyDir(IProcessedDirectoryPair pair, out ProcessedDirectoryFlag dirClass, out bool ExcludeJunctionDirectory, out bool ExcludeDirectoryName)
         {
             ExcludeDirectoryName = ShouldExcludeDirectoryName(pair);
             ExcludeJunctionDirectory = ShouldExcludeJunctionDirectory(pair);
@@ -154,8 +154,8 @@ namespace RoboSharp.Extensions
             return !shouldExclude;
         }
 
-        /// <inheritdoc cref="ShouldCopyDir(IDirectoryPair, out ProcessedDirectoryFlag, out bool, out bool)"/>
-        public bool ShouldCopyDir(IDirectoryPair pair) => ShouldCopyDir(pair, out _, out _, out _);
+        /// <inheritdoc cref="ShouldCopyDir(IProcessedDirectoryPair , out ProcessedDirectoryFlag, out bool, out bool)"/>
+        public bool ShouldCopyDir(IProcessedDirectoryPair pair) => ShouldCopyDir(pair, out _, out _, out _);
 
         /// <inheritdoc cref="SelectionOptionsExtensions.ShouldExcludeJunctionDirectory(SelectionOptions, IDirectoryPair)"/>
         public bool ShouldExcludeJunctionDirectory(IDirectoryPair pair) => Command.SelectionOptions.ShouldExcludeJunctionDirectory(pair.Source);
