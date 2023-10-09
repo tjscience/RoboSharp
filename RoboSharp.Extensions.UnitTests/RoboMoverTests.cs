@@ -290,24 +290,27 @@ namespace RoboSharp.Extensions.UnitTests
             TestPrep.CompareTestResults(results[0], results[1], cmd.LoggingOptions.ListOnly);
         }
 
-        [DataRow(true)]
-        [DataRow(false)]
+        [DataRow(CopyActionFlags.MoveFiles)]
+        [DataRow(CopyActionFlags.MoveFiles | CopyActionFlags.Purge)]
+        [DataRow(CopyActionFlags.MoveFilesAndDirectories)]
+        [DataRow(CopyActionFlags.MoveFilesAndDirectories | CopyActionFlags.Purge)]
         [DataTestMethod]
-        public void ValidateRoboMover(bool purge)
+        public void ValidateRoboMover(CopyActionFlags copyOptions)
         {
             GetMoveCommands(
-                CopyActionFlags.CopySubdirectoriesIncludingEmpty | CopyActionFlags.MoveFilesAndDirectories,
+                CopyActionFlags.CopySubdirectoriesIncludingEmpty | copyOptions,
                 SelectionFlags.Default,
                 DefaultLoggingAction,
                 out _, out var rm);
             Test_Setup.ClearOutTestDestination();
             PrepMoveFiles();
+            
             string subfolderpath = @"SubFolder_1\SubFolder_1.1\SubFolder_1.2";
             FilePair[] SourceFiles = new FilePair[] {
                 new FilePair(Path.Combine(rm.CopyOptions.Source, "4_Bytes.txt"), Path.Combine(rm.CopyOptions.Destination, "4_Bytes.txt")),
                 new FilePair(Path.Combine(rm.CopyOptions.Source, "1024_Bytes.txt"), Path.Combine(rm.CopyOptions.Destination, "1024_Bytes.txt")),
                 new FilePair(Path.Combine(rm.CopyOptions.Source, subfolderpath, "0_Bytes.txt"), Path.Combine(rm.CopyOptions.Destination, subfolderpath, "0_Bytes.txt")),
-                new FilePair(Path.Combine(rm.CopyOptions.Source, subfolderpath, "0_Bytes.htm"), Path.Combine(rm.CopyOptions.Destination, subfolderpath, "0_Bytes.htm")),
+                new FilePair(Path.Combine(rm.CopyOptions.Source, subfolderpath, "4_Bytes.htm"), Path.Combine(rm.CopyOptions.Destination, subfolderpath, "4_Bytes.htm")),
             };
             FileInfo[] purgeFiles = new FileInfo[] 
             {
@@ -322,31 +325,36 @@ namespace RoboSharp.Extensions.UnitTests
                 purgeFiles[3].Directory,
                 purgeFiles[3].Directory.Parent,
             };
+
             foreach (var dir in PurgeDirectories) Directory.CreateDirectory(dir.FullName);
             foreach (var file in purgeFiles) File.WriteAllText(file.FullName, "PURGE ME");
 
-            rm.CopyOptions.Purge = purge;
             rm.Start().Wait();
             foreach (var lin in rm.GetResults().LogLines)
                 Console.WriteLine(lin);
-            
+
+            bool purge = rm.CopyOptions.Purge;
             // Evaluate purged
             foreach (var file in purgeFiles)
             {
                 file.Refresh();
-                Assert.AreEqual(purge, file.Exists, purge ? "File was not purged." : "File was purged unexpectedly.");
+                Assert.AreEqual(purge, !file.Exists, purge ? "File was not purged." : "File was purged unexpectedly.");
             }
             foreach (var dir in PurgeDirectories)
             {
                 dir.Refresh();
-                Assert.AreEqual(purge, dir.Exists, purge ? "Directory was not purged." : "Directory was purged unexpectedly.");
+                Assert.AreEqual(purge, !dir.Exists, purge ? "Directory was not purged." : "Directory was purged unexpectedly.");
             }
             //evaluate moved
             foreach(var filepair in SourceFiles)
             {
                 filepair.Refresh();
-                Assert.IsTrue(filepair.IsExtra(), "File was not moved to destination directory.");
+                Assert.IsTrue(filepair.IsExtra(), string.Format("\nSource:{0}\nDestination:{1}\nFile was not moved to destination directory.", filepair.Source, filepair.Destination));
             }
+            bool moveDirectories = rm.CopyOptions.MoveFilesAndDirectories;
+            Assert.AreEqual(moveDirectories, SourceFiles[2].Parent.IsExtra(), moveDirectories ? "Directory was not moved" : "Directory was moved unexpectedly.");
+            Assert.AreEqual(moveDirectories, SourceFiles[3].Parent.IsExtra(), moveDirectories ? "Directory was not moved" : "Directory was moved unexpectedly.");
+
         }
 
         [DataTestMethod]
