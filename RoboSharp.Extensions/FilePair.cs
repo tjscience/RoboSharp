@@ -24,13 +24,7 @@ namespace RoboSharp.Extensions
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-
-            if (parent is IProcessedDirectoryPair pd)
-                Parent = pd;
-            else if (parent is null)
-                Parent = new DirectoryPair(source.Directory, destination.Directory);
-            else
-                Parent = new DirectoryPair(parent.Source, parent.Destination);
+            Parent = GetParent(parent, this);
         }
 
         /// <summary>
@@ -55,13 +49,31 @@ namespace RoboSharp.Extensions
                 this.ShouldCopy = pf.ShouldCopy;
                 this.ShouldPurge = pf.ShouldPurge;
             }
+            Parent = GetParent(parent, this);
+        }
 
+        /// <param name="source">Source File Path</param>
+        /// <param name="destination">Destination File Path</param>
+        /// <inheritdoc cref="FilePair.FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
+        /// <inheritdoc cref="FileInfo.FileInfo(string)"/>
+        /// <param name="parent"/>
+        public FilePair(string source, string destination, IDirectoryPair parent = null)
+        {
+            if (string.IsNullOrWhiteSpace(nameof(source))) throw new ArgumentException("source cannot be empty", nameof(source));
+            if (string.IsNullOrWhiteSpace(nameof(destination))) throw new ArgumentException("source cannot be empty", nameof(destination));
+            Source = new FileInfo(source);
+            Destination = new FileInfo(destination);
+            Parent = GetParent(parent, this);
+        }
+
+        private static IProcessedDirectoryPair GetParent(IDirectoryPair parent, FilePair pair)
+        {
             if (parent is IProcessedDirectoryPair pd)
-                Parent = pd;
+                return pd;
             else if (parent is null)
-                Parent = new DirectoryPair(filePair.Source.Directory, filePair.Destination.Directory);
+                return new DirectoryPair(pair.Source.Directory, pair.Destination.Directory);
             else
-                Parent = new DirectoryPair(parent.Source, parent.Destination);
+                return new DirectoryPair(parent.Source, parent.Destination);
         }
 
         /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
