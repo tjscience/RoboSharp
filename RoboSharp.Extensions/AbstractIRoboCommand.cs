@@ -194,12 +194,14 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnFileProcessed"  path="*"/></remarks>
         protected virtual void RaiseOnFileProcessed(FileProcessedEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnFileProcessed?.Invoke(this, e);
         }
         /// <summary> Raises the OnFileProcessed event </summary>
         /// <remarks><inheritdoc cref="OnFileProcessed"  path="*"/></remarks>
         protected virtual void RaiseOnFileProcessed(ProcessedFileInfo fileInfo)
         {
+            if (fileInfo is null) throw new ArgumentNullException(nameof(fileInfo));
             OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(fileInfo));
         }
 
@@ -214,6 +216,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnCommandError"  path="*"/></remarks>
         protected virtual void RaiseOnCommandError(CommandErrorEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnCommandError?.Invoke(this, e);
         }
 
@@ -221,6 +224,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnCommandError"  path="*"/></remarks>
         protected virtual void RaiseOnCommandError(Exception exception)
         {
+            if (exception is null) throw new ArgumentNullException(nameof(exception));
             OnCommandError?.Invoke(this, new CommandErrorEventArgs(exception));
         }
         /// <summary> Raises the OnCommandError event </summary>
@@ -241,6 +245,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnError"  path="*"/></remarks>
         protected virtual void RaiseOnError(ErrorEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnError?.Invoke(this, e);
         }
 
@@ -255,6 +260,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnCommandCompleted"  path="*"/></remarks>
         protected virtual void RaiseOnCommandCompleted(RoboCommandCompletedEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnCommandCompleted?.Invoke(this, e);
         }
 
@@ -262,6 +268,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnCommandCompleted"  path="*"/></remarks>
         protected virtual void RaiseOnCommandCompleted(RoboCopyResults results)
         {
+            if (results is null) throw new ArgumentNullException(nameof(results));
             OnCommandCompleted?.Invoke(this, new RoboCommandCompletedEventArgs(results));
         }
 
@@ -276,13 +283,14 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnCopyProgressChanged"  path="*"/></remarks>
         protected virtual void RaiseOnCopyProgressChanged(CopyProgressEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnCopyProgressChanged?.Invoke(this, e);
         }
 
         /// <summary> Raises the OnCopyProgressChanged event </summary>
         /// <inheritdoc cref="CopyProgressEventArgs.CopyProgressEventArgs(double, ProcessedFileInfo, ProcessedFileInfo)"/>
         /// <remarks><inheritdoc cref="OnCopyProgressChanged"  path="*"/></remarks>
-        protected virtual void RaiseOnCopyProgressChanged(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo dirInfo)
+        protected virtual void RaiseOnCopyProgressChanged(double progress, ProcessedFileInfo currentFile, ProcessedFileInfo dirInfo = null)
         {
             OnCopyProgressChanged?.Invoke(this, new CopyProgressEventArgs(progress, currentFile, dirInfo));
         }
@@ -298,6 +306,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnProgressEstimatorCreated"  path="*"/></remarks>
         protected virtual void RaiseOnProgressEstimatorCreated(ProgressEstimatorCreatedEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             OnProgressEstimatorCreated?.Invoke(this, e);
         }
 
@@ -305,6 +314,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="OnProgressEstimatorCreated"  path="*"/></remarks>
         protected virtual void RaiseOnProgressEstimatorCreated(IProgressEstimator estimator)
         {
+            if (estimator is null) throw new ArgumentNullException(nameof(estimator));
             OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(estimator));
         }
 
@@ -318,6 +328,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="TaskFaulted"  path="*"/></remarks>
         protected virtual void RaiseOnTaskFaulted(UnhandledExceptionEventArgs e)
         {
+            if (e is null) throw new ArgumentNullException(nameof(e));
             TaskFaulted?.Invoke(this, e);
         }
 
@@ -326,6 +337,7 @@ namespace RoboSharp.Extensions
         /// <remarks><inheritdoc cref="TaskFaulted"  path="*"/></remarks>
         protected virtual void RaiseOnTaskFaulted(Exception exception, bool isTerminating = false)
         {
+            if (exception is null) throw new ArgumentNullException(nameof(exception));
             TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(exception, isTerminating));
         }
 

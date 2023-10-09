@@ -63,7 +63,7 @@ namespace RoboSharp.Results
                 EndTime = builder.EndTime,
                 JobName = builder.JobName,
                 Status = builder.ExitStatus,
-                SpeedStatistic = builder.SpeedStatistic.Clone(),
+                SpeedStatistic = builder.SpeedStatistic?.Clone(),
 #if NET452
                 LogLines = builder.LogLines?.ToArray() ?? new string[] {},
                 RoboCopyErrors = builder.CommandErrors?.ToArray() ?? new ErrorEventArgs[] { },
