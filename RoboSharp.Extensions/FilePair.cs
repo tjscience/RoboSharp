@@ -99,5 +99,14 @@ namespace RoboSharp.Extensions
 
         /// <inheritdoc/>
         public IProcessedDirectoryPair Parent { get; }
+
+        /// <summary>
+        /// Refresh the source and destinationd FileInfo objects.
+        /// </summary>
+        public virtual void Refresh()
+        {
+            Source.Refresh();
+            Destination.Refresh();
+        }
     }
 }
