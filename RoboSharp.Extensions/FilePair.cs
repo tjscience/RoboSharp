@@ -6,9 +6,9 @@ using System.Text;
 namespace RoboSharp.Extensions
 {
     /// <summary>
-    /// Helper Class that implements the <see cref="IFilePair"/> interface
+    /// Class that implements the <see cref="IFilePair"/> and <see cref="IProcessedFilePair"/> interfaces
     /// </summary>
-    public class FilePair : IFilePair
+    public class FilePair : IFilePair, IProcessedFilePair
     {
         /// <summary>
         /// Create a new DirectoryPair object
@@ -17,7 +17,7 @@ namespace RoboSharp.Extensions
         /// <param name="destination">The Destination FileInfo object</param>
         /// <param name="parent">The Parent Directory Pair - this is allowed to be null.</param>
         /// <exception cref="ArgumentNullException"/>
-        public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent)
+        public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent = null)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
@@ -28,17 +28,13 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FilePair CreatePair(FileInfo source, FileInfo destination, IDirectoryPair parent) => new FilePair(source, destination, parent);
+        public static FilePair CreatePair(FileInfo source, FileInfo destination, IDirectoryPair parent = null) => new FilePair(source, destination, parent);
 
-        /// <summary>
-        /// Stores the result of <see cref="PairEvaluator.ShouldCopyFile(IFilePair)"/>
-        /// </summary>
-        public bool ShouldCopy { get; internal set; }
+        /// <inheritdoc/>
+        public bool ShouldCopy { get; set; }
 
-        /// <summary>
-        /// Stores the result of <see cref="PairEvaluator.ShouldPurge(IFilePair)"/> if this object has been run through that method.
-        /// </summary>
-        public bool ShouldPurge { get; internal set; }
+        /// <inheritdoc/>
+        public bool ShouldPurge { get; set; }
 
         /// <inheritdoc/>
         public FileInfo Source { get; }

@@ -24,7 +24,7 @@ namespace RoboSharp.Extensions
         public PairEvaluator(IRoboCommand command)
         {
             Command = command ?? throw new ArgumentNullException(nameof(command));
-            FileSorter = new FilePairSorter<IFilePair>(command.Configuration);
+            FileSorter = new FilePairSorter<IProcessedFilePair>(command.Configuration);
             FileAttributesToApplyField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetAddAttributes);
             FileAttributesToRemoveField = new Lazy<FileAttributes?>(this.Command.CopyOptions.GetRemoveAttributes);
             FileFilterRegexField = new Lazy<Regex[]>(this.Command.CopyOptions.GetFileFilterRegex);
@@ -39,7 +39,7 @@ namespace RoboSharp.Extensions
         private readonly Lazy<Regex[]> FileFilterRegexField;
         private readonly Lazy<Regex[]> ExcludeFileNameRegexField;
         private readonly Lazy<Helpers.DirectoryRegex[]> ExcludeDirectoryRegexField;
-        private readonly FilePairSorter<IFilePair> FileSorter;
+        private readonly FilePairSorter<IProcessedFilePair> FileSorter;
 
         /// <summary>
         /// The IRoboCommand object this evaluator is tied to
@@ -175,9 +175,9 @@ namespace RoboSharp.Extensions
         /// <returns>TRUE if the file should be copied/moved, FALSE if the file should be skiped</returns>
         /// <remarks>
         /// Note: Does not evaluate the FileName inclusions from CopyOptions, since RoboCopy appears to use those to filter prior to performing these evaluations. <br/>
-        /// Use <see cref="FilterFilePairs{T}(IEnumerable{T})"/> as a pre-filter for this.
+        /// Use <see cref="FilterAndSortSourceFiles{T}(IEnumerable{T})"/> as a pre-filter for this.
         /// </remarks>
-        public virtual bool ShouldCopyFile(IFilePair pair)
+        public virtual bool ShouldCopyFile(IProcessedFilePair pair)
         {
             bool SourceExists = pair.Source.Exists;
             bool DestExists = pair.Destination.Exists;
@@ -283,26 +283,28 @@ namespace RoboSharp.Extensions
                     result = !xjf && Command.SelectionOptions.IncludeSame;
                 }
             }
-            if (pair is FilePair fp) fp.ShouldCopy = result;
             return result;
         }
 
         /// <summary>
-        /// Filter the filenames according to the filters specified by <see cref="CopyOptions.FileFilter"/>
+        /// - Filter the filenames according to the filters specified by <see cref="CopyOptions.FileFilter"/>
+        /// <br/> - Generate the <see cref="IProcessedFilePair.ProcessedFileInfo"/> via <see cref="ShouldCopyFile(IProcessedFilePair)"/>
+        /// <br/> - Sort the collection, then return it.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="collection"></param>
         /// <returns></returns>
-        public IEnumerable<T> FilterFilePairs<T>(IEnumerable<T> collection) where T : IFilePair
+        public IEnumerable<T> FilterAndSortSourceFiles<T>(IEnumerable<T> collection) where T : IProcessedFilePair
         {
             List<T> coll;
             if (Command.CopyOptions.HasDefaultFileFilter())
                 coll = collection.ToList(); 
             else
                 coll = collection.Where(ShouldIncludeFileName).ToList();
-            // Sort
+
+            // Generate the ProcessedFileInto and sort
             foreach (var obj in coll)
-                _ = ShouldCopyFile(obj);
+                obj.ShouldCopy = ShouldCopyFile(obj);
             coll.Sort(FileSorter.Compare);
             return coll;
         }
@@ -330,13 +332,10 @@ namespace RoboSharp.Extensions
 
         #region < Purge >
 
-        /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IFilePair)"/>
-        public bool ShouldPurge(IFilePair pair)
+        /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IProcessedFilePair)"/>
+        public bool ShouldPurge(IProcessedFilePair pair)
         {
-            bool result = Command.ShouldPurge(pair);
-            if (pair is FilePair fp)
-                fp.ShouldPurge = result;
-            return result;
+            return  Command.ShouldPurge(pair);
         }
 
         /// <inheritdoc cref="CopyOptionsExtensions.ShouldPurge(IRoboCommand, IDirectoryPair)"/>

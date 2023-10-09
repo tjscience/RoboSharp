@@ -85,18 +85,21 @@ namespace RoboSharp.Extensions.Helpers
         }
 
         /// <summary>
-        /// Evaluate the pair and determine if it the file at the destination should be purged or not
+        /// Evaluate the pair and determine if it the file at the destination should be purged or not.
+        /// <br/> Store the result into <see cref="IProcessedFilePair.ShouldPurge"/>
         /// </summary>
         /// <param name="command"></param>
         /// <param name="pair"></param>
         /// <returns>TRUE if destination file should be deleted, otherwise false.</returns>
-        public static bool ShouldPurge(this IRoboCommand command, IFilePair pair)
+        public static bool ShouldPurge(this IRoboCommand command, IProcessedFilePair pair)
         {
+            bool result = false;
             if (command.CopyOptions.Mirror | command.CopyOptions.Purge)
             {
-                return !command.SelectionOptions.ExcludeExtra && pair.IsExtra();
+                result = !command.SelectionOptions.ExcludeExtra && pair.IsExtra();
             }
-            return false;
+            pair.ShouldPurge = result;
+            return result;
         }
 
 

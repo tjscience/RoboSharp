@@ -9,7 +9,7 @@ namespace RoboSharp.Extensions.Helpers
     /// <summary>
     /// Sort FilePairs by their <see cref="ProcessedFileInfo.FileClass"/>
     /// </summary>
-    public sealed class FilePairSorter<T> : IComparer<T> where T: IFilePair
+    public sealed class FilePairSorter<T> : IComparer<T> where T: IProcessedFilePair
     {
         /// <summary>
         /// 
@@ -23,7 +23,7 @@ namespace RoboSharp.Extensions.Helpers
         private RoboSharpConfiguration Config { get; }
 
         /// <summary>
-        /// Evaluate the <see cref="IFilePair.ProcessedFileInfo"/> and sort accordingly
+        /// Evaluate the <see cref="IProcessedFilePair.ProcessedFileInfo"/> and sort accordingly
         /// </summary>
         /// <inheritdoc/>
         public int Compare(T x, T y)
@@ -32,7 +32,7 @@ namespace RoboSharp.Extensions.Helpers
         }
 
         /// <inheritdoc cref="Compare(T, T)"/>
-        public int Compare<T1>(T1 x, T1 y) where T1 : IFilePair
+        public int Compare<T1>(T1 x, T1 y) where T1 : IProcessedFilePair
         {
             return Compare(x?.ProcessedFileInfo, y?.ProcessedFileInfo);
         }

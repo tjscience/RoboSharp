@@ -8,18 +8,10 @@ using System.Threading.Tasks;
 namespace RoboSharp.Extensions
 {
     /// <summary>
-    /// Interface used for extension methods for RoboSharp custom implementations that has File Source/Destination info 
+    /// Interface used for extension methods for RoboSharp custom implementations that has Source/Destination FileInfo 
     /// </summary>
-    /// <remarks>
-    /// This interface should only include the Source and Destination information, and not any methods to implement copying/moving
-    /// </remarks>
     public interface IFilePair
-    {
-        /// <summary>
-        /// The Parent IDirectoryPair. This may be null.
-        /// </summary>
-        IDirectoryPair Parent { get; }
-        
+    {   
         /// <summary>
         /// Source File Information
         /// </summary>
@@ -29,10 +21,5 @@ namespace RoboSharp.Extensions
         /// Destination File Information
         /// </summary>
         FileInfo Destination { get; }
-
-        /// <summary>
-        /// The ProcessedFileInfo that represents how the IRoboCommand has processed the pair
-        /// </summary>
-        ProcessedFileInfo ProcessedFileInfo { get; set; }
     }
 }

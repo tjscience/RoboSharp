@@ -221,7 +221,7 @@ namespace RoboSharp.Extensions
         private void ProcessDirectory(DirectoryPair directoryPair, int currentDepth)
         {
             // Create the ProcessFileInfo for this pair
-            CachedEnumerable<FilePair> sourceFiles = PairEvaluator.FilterFilePairs(directoryPair.SourceFiles).AsCachedEnumerable();
+            CachedEnumerable<FilePair> sourceFiles = PairEvaluator.FilterAndSortSourceFiles(directoryPair.SourceFiles).AsCachedEnumerable();
             directoryPair.ProcessedFileInfo.Size = sourceFiles.Count();
             if (currentDepth > 1)
                 resultsBuilder.AddDir(directoryPair.ProcessedFileInfo);
