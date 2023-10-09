@@ -16,6 +16,9 @@ namespace RoboSharp.Extensions.UnitTests
         public static string SourceDirPath => RoboSharp.UnitTests.Test_Setup.Source_Standard;
         public static string DestDirPath => RoboSharp.UnitTests.Test_Setup.TestDestination;
 
+        /// <inheritdoc cref="TestSetup.ClearOutTestDestination"/>
+        public static void CleanDestination() => TestSetup.ClearOutTestDestination();
+
         /// <inheritdoc cref="Test_Setup.GenerateCommand(bool, bool)"/>
         public static RoboCommand GetRoboCommand(bool useLargerFileSet, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags, LoggingFlags loggingAction)
         {
