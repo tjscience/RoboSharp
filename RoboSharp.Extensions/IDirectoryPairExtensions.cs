@@ -85,10 +85,10 @@ namespace RoboSharp.Extensions
         #region < Create Pair Functions >
 
         /// <summary> A constructor delegate for an IFilePair </summary>
-        public delegate T IFilePairCTor<T>(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent) where T : IProcessedFilePair;
+        public delegate T CreateProcessedFilePair<T>(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent) where T : IProcessedFilePair;
         
         /// <summary> A constructor delegate for an IDirectoryPair </summary>
-        public delegate T IDirectoryPairCTor<T>(DirectoryInfo source, DirectoryInfo destination) where T : IProcessedDirectoryPair;
+        public delegate T CreateProcessedDirectoryPair<T>(DirectoryInfo source, DirectoryInfo destination) where T : IProcessedDirectoryPair;
 
         /// <summary>
         /// Create a new DirPair object using a child of the Source directory
@@ -97,10 +97,10 @@ namespace RoboSharp.Extensions
         /// <param name="dir">the file that is a child of either the Source</param>
         /// <param name="parent">the parent pair</param>
         /// <param name="ctor">the method used to generate the new object</param>
-        /// <returns>new <see cref="IDirectoryPair"/> object</returns>
+        /// <returns>new <see cref="IProcessedDirectoryPair"/> object</returns>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="ArgumentException"/>
-        public static T CreateSourceChild<T>(this IDirectoryPair parent, DirectoryInfo dir, IDirectoryPairCTor<T> ctor) where T : IProcessedDirectoryPair
+        public static T CreateSourceChild<T>(this IDirectoryPair parent, DirectoryInfo dir, CreateProcessedDirectoryPair<T> ctor) where T : IProcessedDirectoryPair
         {
             if (parent is null) throw new ArgumentNullException(nameof(parent));
             if (dir is null) throw new ArgumentNullException(nameof(dir));
@@ -118,11 +118,11 @@ namespace RoboSharp.Extensions
         /// Create a new DirPair object using a child of the Destination directory
         /// </summary>
         /// <param name="dir">the file that is a child of the Destination</param>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, IDirectoryPairCTor{T})"/>
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, CreateProcessedDirectoryPair{T})"/>
         /// <param name="ctor"/><param name="parent"/><typeparam name="T"/>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="ArgumentException"/>
-        public static T CreateDestinationChild<T>(this IDirectoryPair parent, DirectoryInfo dir, IDirectoryPairCTor<T> ctor) where T : IProcessedDirectoryPair
+        public static T CreateDestinationChild<T>(this IDirectoryPair parent, DirectoryInfo dir, CreateProcessedDirectoryPair<T> ctor) where T : IProcessedDirectoryPair
         {
             if (parent is null) throw new ArgumentNullException(nameof(parent));
             if (dir is null) throw new ArgumentNullException(nameof(dir));
@@ -142,10 +142,10 @@ namespace RoboSharp.Extensions
         /// <param name="file">the file that is a child of either the Source</param>
         /// <param name="parent">the parent pair</param>
         /// <param name="ctor">the method used to generate the new object</param>
-        /// <returns>new <see cref="IDirectoryPair"/> object</returns>
+        /// <returns>new <see cref="IProcessedFilePair"/> object</returns>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="ArgumentException"/>
-        public static T CreateSourceChild<T>(this IProcessedDirectoryPair parent, FileInfo file, IFilePairCTor<T> ctor) where T : IProcessedFilePair
+        public static T CreateSourceChild<T>(this IProcessedDirectoryPair parent, FileInfo file, CreateProcessedFilePair<T> ctor) where T : IProcessedFilePair
         {
             if (parent is null) throw new ArgumentNullException(nameof(parent));
             if (file is null) throw new ArgumentNullException(nameof(file));
@@ -163,11 +163,11 @@ namespace RoboSharp.Extensions
         /// Create a new FilePair object using a child of the Destination directory
         /// </summary>
         /// <param name="file">the file that is a child of the Destination</param>
-        /// <inheritdoc cref="CreateSourceChild{T}(IProcessedDirectoryPair, FileInfo, IFilePairCTor{T})"/>
+        /// <inheritdoc cref="CreateSourceChild{T}(IProcessedDirectoryPair, FileInfo, CreateProcessedFilePair{T})"/>
         /// <param name="ctor"/><param name="parent"/><typeparam name="T"/>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="ArgumentException"/>
-        public static T CreateDestinationChild<T>(this IProcessedDirectoryPair parent, FileInfo file, IFilePairCTor<T> ctor) where T : IProcessedFilePair
+        public static T CreateDestinationChild<T>(this IProcessedDirectoryPair parent, FileInfo file, CreateProcessedFilePair<T> ctor) where T : IProcessedFilePair
         {
             if (parent is null) throw new ArgumentNullException(nameof(parent));
             if (file is null) throw new ArgumentNullException(nameof(file));
@@ -186,8 +186,8 @@ namespace RoboSharp.Extensions
         #region < Get File Pairs >
 
         /// <returns>Array of the FilePairs that were found in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="EnumerateFilePairs{T}(IProcessedDirectoryPair, IFilePairCTor{T})"/>
-        public static T[] GetFilePairs<T>(this IProcessedDirectoryPair parent, IFilePairCTor<T> ctor) where T : IProcessedFilePair
+        /// <inheritdoc cref="EnumerateFilePairs{T}(IProcessedDirectoryPair, CreateProcessedFilePair{T})"/>
+        public static T[] GetFilePairs<T>(this IProcessedDirectoryPair parent, CreateProcessedFilePair<T> ctor) where T : IProcessedFilePair
         {
             return EnumerateFilePairs(parent, ctor).ToArray();
         }
@@ -200,7 +200,7 @@ namespace RoboSharp.Extensions
         /// <param name="whereTrue">Function to decide to include the file in the enumeration or not</param>
         /// <param name="ctor">the constructor to create the filepair</param>
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
-        public static IEnumerable<T> EnumerateSourceFilePairs<T>(this IProcessedDirectoryPair parent, IFilePairCTor<T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IProcessedFilePair
+        public static IEnumerable<T> EnumerateSourceFilePairs<T>(this IProcessedDirectoryPair parent, CreateProcessedFilePair<T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IProcessedFilePair
         {
             T createPair(FileInfo f) => CreateSourceChild(parent, f, ctor);
             if (!parent.Source.Exists) return Array.Empty<T>();
@@ -213,8 +213,8 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
-        /// <inheritdoc cref="EnumerateSourceFilePairs{T}(IProcessedDirectoryPair, IFilePairCTor{T}, Func{FileInfo, bool})"/>
-        public static IEnumerable<T> EnumerateDestinationFilePairs<T>(this IProcessedDirectoryPair parent, IFilePairCTor<T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IProcessedFilePair
+        /// <inheritdoc cref="EnumerateSourceFilePairs{T}(IProcessedDirectoryPair, CreateProcessedFilePair{T}, Func{FileInfo, bool})"/>
+        public static IEnumerable<T> EnumerateDestinationFilePairs<T>(this IProcessedDirectoryPair parent, CreateProcessedFilePair<T> ctor, Func<FileInfo, bool> whereTrue = null) where T : IProcessedFilePair
         {
             T createPair(FileInfo f) => CreateDestinationChild(parent, f, ctor);
             if (!parent.Destination.Exists) return Array.Empty<T>();
@@ -229,8 +229,8 @@ namespace RoboSharp.Extensions
         /// Gets all the File Pairs from the <see cref="IDirectoryPair"/>
         /// </summary>
         /// <returns>cached Ienumerable of the FilePairs that were found in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="CreateSourceChild{T}(IProcessedDirectoryPair, FileInfo, IFilePairCTor{T})"/>
-        public static IEnumerable<T> EnumerateFilePairs<T>(this IProcessedDirectoryPair parent, IFilePairCTor<T> ctor) where T : IProcessedFilePair
+        /// <inheritdoc cref="CreateSourceChild{T}(IProcessedDirectoryPair, FileInfo, CreateProcessedFilePair{T})"/>
+        public static IEnumerable<T> EnumerateFilePairs<T>(this IProcessedDirectoryPair parent, CreateProcessedFilePair<T> ctor) where T : IProcessedFilePair
         {
             T createPair(string f) => CreateDestinationChild(parent, new FileInfo(f), ctor);
             IEnumerable<T> sourceFiles = null;
@@ -265,8 +265,8 @@ namespace RoboSharp.Extensions
         #region < Get Directory Pairs >
 
         /// <returns>Array of the DirectoryPairs that were foudn in both the Source and Destination via <see cref="DirectoryInfo.GetFiles()"/></returns>
-        /// <inheritdoc cref="EnumerateDirectoryPairs{T}(IProcessedDirectoryPair, IDirectoryPairCTor{T})"/>
-        public static T[] GetDirectoryPairs<T>(this IProcessedDirectoryPair parent, IDirectoryPairCTor<T> ctor) where T : IProcessedDirectoryPair
+        /// <inheritdoc cref="EnumerateDirectoryPairs{T}(IProcessedDirectoryPair, CreateProcessedDirectoryPair{T})"/>
+        public static T[] GetDirectoryPairs<T>(this IProcessedDirectoryPair parent, CreateProcessedDirectoryPair<T> ctor) where T : IProcessedDirectoryPair
         {
             return EnumerateDirectoryPairs(parent, ctor).ToArray();
         }
@@ -279,7 +279,7 @@ namespace RoboSharp.Extensions
         /// <param name="whereTrue">Function to decide to include the directory in the enumeration or not</param>
         /// <param name="ctor">the constructor to create the Directory Pair</param>
         /// <returns>A CachedEnumerable if the directory exists, otherwise null</returns>
-        public static IEnumerable<T> EnumerateSourceDirectoryPairs<T>(this IProcessedDirectoryPair parent, IDirectoryPairCTor<T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IProcessedDirectoryPair
+        public static IEnumerable<T> EnumerateSourceDirectoryPairs<T>(this IProcessedDirectoryPair parent, CreateProcessedDirectoryPair<T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IProcessedDirectoryPair
         {
             T createPair(DirectoryInfo d) => CreateSourceChild(parent, d, ctor);
             if (!parent.Source.Exists) return Array.Empty<T>();
@@ -292,8 +292,8 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Enumerate the pairs from the destination
         /// </summary>
-        /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IProcessedDirectoryPair, IDirectoryPairCTor{T}, Func{DirectoryInfo, bool})"/>
-        public static IEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IProcessedDirectoryPair parent, IDirectoryPairCTor<T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IProcessedDirectoryPair
+        /// <inheritdoc cref="EnumerateSourceDirectoryPairs{T}(IProcessedDirectoryPair, CreateProcessedDirectoryPair{T}, Func{DirectoryInfo, bool})"/>
+        public static IEnumerable<T> EnumerateDestinationDirectoryPairs<T>(this IProcessedDirectoryPair parent, CreateProcessedDirectoryPair<T> ctor, Func<DirectoryInfo, bool> whereTrue = null) where T : IProcessedDirectoryPair
         {
             T createPair(DirectoryInfo d) => CreateDestinationChild(parent, d, ctor);
             if (!parent.Destination.Exists) return Array.Empty<T>();
@@ -307,8 +307,8 @@ namespace RoboSharp.Extensions
         /// Gets all the Directory Pairs from the <see cref="IProcessedDirectoryPair"/>
         /// </summary>
         /// <returns> IEnumerable{T} of of the Directory Pairs</returns>
-        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, IDirectoryPairCTor{T})"/>
-        public static IEnumerable<T> EnumerateDirectoryPairs<T>(this IProcessedDirectoryPair parent, IDirectoryPairCTor<T> ctor) where T : IProcessedDirectoryPair
+        /// <inheritdoc cref="CreateSourceChild{T}(IDirectoryPair, DirectoryInfo, CreateProcessedDirectoryPair{T})"/>
+        public static IEnumerable<T> EnumerateDirectoryPairs<T>(this IProcessedDirectoryPair parent, CreateProcessedDirectoryPair<T> ctor) where T : IProcessedDirectoryPair
         {
             T createPair(string d) => CreateDestinationChild(parent, new DirectoryInfo(d), ctor);
             IEnumerable<T> sourceChildren = null;

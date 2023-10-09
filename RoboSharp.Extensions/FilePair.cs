@@ -15,38 +15,59 @@ namespace RoboSharp.Extensions
         /// </summary>
         /// <param name="source">The source FileInfo object</param>
         /// <param name="destination">The Destination FileInfo object</param>
-        /// <param name="parent">The Parent Directory Pair - this is allowed to be null.</param>
+        /// <param name="parent">
+        /// The Parent Directory Pair. 
+        /// <br/> - If the supplied object is an <see cref="IProcessedDirectoryPair"/>, the object will be used.
+        /// <br/> - If the object is null or does not implement <see cref="IProcessedDirectoryPair"/>, creates a new <see cref="DirectoryPair"/> object.</param>
         /// <exception cref="ArgumentNullException"/>
-        public FilePair(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent = null)
+        public FilePair(FileInfo source, FileInfo destination, IDirectoryPair parent = null)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
             Destination = destination ?? throw new ArgumentNullException(nameof(destination));
-            if (parent is null)
+
+            if (parent is IProcessedDirectoryPair pd)
+                Parent = pd;
+            else if (parent is null)
                 Parent = new DirectoryPair(source.Directory, destination.Directory);
             else
-                Parent = parent;
+                Parent = new DirectoryPair(parent.Source, parent.Destination);
         }
 
         /// <summary>
-        /// Create a new FilePair object from an existing <see cref="IFilePair"/>
+        /// Create a new FilePair object from an existing <see cref="IFilePair"/>.
+        /// <br/> If the input <paramref name="filePair"/> is a <see cref="IProcessedFilePair"/>, adopt the properties.
         /// </summary>
+        /// <param name="filePair">Provides Source/Destination FileInfo objects</param>
+        /// <inheritdoc cref="FilePair.FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="ArgumentException"/>
-        public FilePair(IFilePair filePair, IProcessedDirectoryPair parent = null)
+        /// <param name="parent"/>
+        public FilePair(IFilePair filePair, IDirectoryPair parent = null)
         {
             if (filePair is null) throw new ArgumentNullException(nameof(filePair));
             Source = filePair.Source ?? throw new ArgumentException("filePair.Source is null");
             Destination = filePair.Destination ?? throw new ArgumentException("filePair.Destination is null");
-            if (parent is null)
+
+            if (filePair is IProcessedFilePair pf)
+            {
+                this.ProcessedFileInfo = pf.ProcessedFileInfo;
+                if (parent is null) parent = pf.Parent;
+                this.ShouldCopy = pf.ShouldCopy;
+                this.ShouldPurge = pf.ShouldPurge;
+            }
+
+            if (parent is IProcessedDirectoryPair pd)
+                Parent = pd;
+            else if (parent is null)
                 Parent = new DirectoryPair(filePair.Source.Directory, filePair.Destination.Directory);
             else
-                Parent = parent;
+                Parent = new DirectoryPair(parent.Source, parent.Destination);
         }
 
-        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IProcessedDirectoryPair)"/>
+        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
         public static FilePair CreatePair(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent = null) => new FilePair(source, destination, parent);
 
-        /// <inheritdoc cref="FilePair(FileInfo, FileInfo, IProcessedDirectoryPair)"/>
+        /// <inheritdoc cref="FilePair(IFilePair, IDirectoryPair)"/>
         public static FilePair CreatePair(IFilePair filePair, IProcessedDirectoryPair parent = null) => new FilePair(filePair, parent);
 
         /// <inheritdoc/>
