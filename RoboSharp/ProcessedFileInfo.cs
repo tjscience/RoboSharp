@@ -79,18 +79,18 @@ namespace RoboSharp
         /// <br/> The <see cref="Name"/> will depend on <see cref="LoggingOptions.IncludeFullPathNames"/>
         /// </summary>
         /// <param name="directory">the Directory</param>
-        /// <param name="size">number of files/folders in the directory - If left at -1, then it will check check using the <paramref name="directory"/> length</param>
+        /// <param name="size">number of files in the directory. Use -1 if purging.</param>
         /// <param name="status">The status of the file to look up from the config</param>
         /// <param name="command">The command that provides the <see cref="RoboSharpConfiguration"/> and <see cref="LoggingOptions"/> objects that will be evaluated</param>
         /// <exception cref="ArgumentNullException"/>
-        public ProcessedFileInfo(DirectoryInfo directory, IRoboCommand command, ProcessedDirectoryFlag status = ProcessedDirectoryFlag.None, long size = -1)
+        public ProcessedFileInfo(DirectoryInfo directory, IRoboCommand command, ProcessedDirectoryFlag status = ProcessedDirectoryFlag.None, long size = 0)
         {
             if (directory is null) throw new ArgumentNullException(nameof(directory));
             if (command is null) throw new ArgumentNullException(nameof(command));
             FileClassType = FileClassType.NewDir;
             FileClass = command.Configuration.GetDirectoryClass(status);
-            Name = command.LoggingOptions.IncludeFullPathNames ? directory.FullName : directory.Name;
-            Size = size != -1 ? size : Directory.GetFiles(directory.FullName).Length;
+            Name = directory.FullName; //command.LoggingOptions.IncludeFullPathNames ? directory.FullName : directory.Name;
+            Size = size;
         }
 
         /// <summary>Description of the item as reported by RoboCopy</summary>
@@ -101,7 +101,7 @@ namespace RoboSharp
 
         /// <summary>
         /// File -> File Size <br/>
-        /// Directory -> Number files in folder -> Can be negative if PURGE is used <br/>
+        /// Directory -> Number of selected files in folder -> Can be negative if PURGE is used <br/>
         /// SystemMessage -> Should be 0
         /// </summary>
         public long Size { get; set; }
@@ -156,9 +156,9 @@ namespace RoboSharp
         /// </summary>
         private string FileInfoToString(bool includeClass, bool includeSize)
         {
-            string fc = (includeClass ? FileClass : "").PadLeft(10);
-            string fs = (includeSize? Size.ToString() : "").PadLeft(10);
-            return string.Format("\t   {0}  \t\t{1}\t{2}", fc, fs, Name);
+            string fc = (includeClass ? FileClass : "").PadLeft(10).PadRight(12);
+            string fs = (includeSize? Size.ToString() : "").PadLeft(8);
+            return string.Format("\t{0}\t\t{1}\t{2}", fc, fs, Name);
         }
 
         /// <summary>
@@ -184,5 +184,43 @@ namespace RoboSharp
         }
         /// <inheritdoc cref="SetDirectoryClass(ProcessedDirectoryFlag, RoboSharpConfiguration)"/>
         public void SetFileClass(ProcessedFileFlag status, IRoboCommand config) => SetFileClass(status, config.Configuration);
+
+        /// <summary>
+        /// Try to get the corresponding <see cref="ProcessedFileFlag"/> that was assigned to this object
+        /// </summary>
+        /// <inheritdoc cref="TryGetDirectoryClass(RoboSharpConfiguration, out ProcessedDirectoryFlag)"/>
+        public bool TryGetFileClass(RoboSharpConfiguration conf, out ProcessedFileFlag flag)
+        {
+            foreach(ProcessedFileFlag f in typeof(ProcessedFileFlag).GetEnumValues())
+            {
+                if (this.FileClass == conf.GetFileClass(f))
+                {
+                    flag = f;
+                    return true;
+                }
+            }
+            flag = ProcessedFileFlag.None;
+            return false;
+        }
+
+        /// <summary>
+        /// Try to get the corresponding <see cref="ProcessedDirectoryFlag"/> that was 
+        /// </summary>
+        /// <param name="conf">The RoboSharpConfiguration that has a matching <see cref="FileClass"/> value</param>
+        /// <param name="flag">If found, this will return the located enum value</param>
+        /// <returns>TRUE if a match was found, otherwise false.</returns>
+        public bool TryGetDirectoryClass(RoboSharpConfiguration conf, out ProcessedDirectoryFlag flag)
+        {
+            foreach (ProcessedDirectoryFlag f in typeof(ProcessedDirectoryFlag).GetEnumValues())
+            {
+                if (this.FileClass == conf.GetDirectoryClass(f))
+                {
+                    flag = f;
+                    return true;
+                }
+            }
+            flag = ProcessedDirectoryFlag.None;
+            return false;
+        }
     }
 }

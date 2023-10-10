@@ -263,9 +263,12 @@ namespace RoboSharp
         public virtual bool ExcludeOlder { get; set; }
         
         /// <summary>
-        /// Excludes extra files and directories.
+        /// Prevent logging of extra files and directories (items that exist in the destination but not the source)
         /// [/XX]
         /// </summary>
+        /// <remarks>
+        /// When used the /PURGE or /MIRROR, this will prevent deletion of the extra files/directories. ( default robocopy behavior )
+        /// </remarks>
         public virtual bool ExcludeExtra { get; set; }
         
         /// <summary>
@@ -449,7 +452,11 @@ namespace RoboSharp
             return attr;
         }
 
-        internal string Parse()
+        /// <summary>
+        /// Parse the class properties and generate the command arguments
+        /// </summary>
+        /// <param name="optionsOnly">When <see langword="true"/> only returns the options tags, similar to how robocopy would display them. (omits the source/destination)</param>
+        public string Parse(bool optionsOnly = false)
         {
             var options = new StringBuilder();
 
@@ -464,10 +471,13 @@ namespace RoboSharp
             if (!ExcludeAttributes.IsNullOrWhiteSpace())
                 options.Append(string.Format(EXCLUDE_ATTRIBUTES, ExcludeAttributes.CleanOptionInput()));
 #pragma warning disable CS0618 // Marked as Obsolete for consumers, but it originally functionality is still intact, so this still works properly.
-            if (!ExcludeFiles.IsNullOrWhiteSpace())
-                options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
-            if (!ExcludeDirectories.IsNullOrWhiteSpace())
-                options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
+            if (!optionsOnly)
+            {
+                if (!ExcludeFiles.IsNullOrWhiteSpace())
+                    options.Append(string.Format(EXCLUDE_FILES, ExcludeFiles));
+                if (!ExcludeDirectories.IsNullOrWhiteSpace())
+                    options.Append(string.Format(EXCLUDE_DIRECTORIES, ExcludeDirectories));
+            }
 #pragma warning restore CS0618 
             if (ExcludeChanged)
                 options.Append(EXCLUDE_CHANGED);

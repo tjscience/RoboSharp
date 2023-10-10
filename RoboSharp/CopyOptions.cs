@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace RoboSharp
 {
@@ -124,11 +125,12 @@ namespace RoboSharp
         internal const string DIRECTORY_COPY_FLAGS = "/DCOPY:{0} ";
         internal const string DO_NOT_COPY_DIRECTORY_INFO = "/NODCOPY ";
         internal const string DO_NOT_USE_WINDOWS_COPY_OFFLOAD = "/NOOFFLOAD ";
+        internal const string NETWORK_COMPRESSION = "/COMPRESS ";
 
         #endregion Option Constants
 
         #region Option Defaults
-        
+
         /// <summary>
         /// The Default File Filter used that will allow copying of all files
         /// </summary>
@@ -220,6 +222,65 @@ namespace RoboSharp
         public virtual bool EnableEfsRawMode { get; set; }
 
         /// <summary>
+        /// Requests network compression during file transfer, if applicable.
+        /// [/COMPRESS]
+        /// </summary>
+        /// <remarks>
+        /// Compression became available in Windows 10 / Server2019 build 20206. Earlier than that and this flag will cause robocopy to report an Invalid Parameter.
+        /// <br/>Due to that, this option has been safeguarded by the static <see cref="CanEnableCompression"/> property.</remarks>
+        public virtual bool Compress 
+        { 
+            get => CanEnableCompression && compress;
+            set => compress = value;
+        }
+        private bool compress;
+
+        /// <summary>
+        /// Value indicating if the current system supports robocopy using the <see cref="Compress"/> function. 
+        /// </summary>
+        /// <remarks>Value can be forced via <see cref="SetCanEnableCompression"/>, or tested via <see cref="TestCompressionFlag"/> </remarks>
+        public static bool CanEnableCompression => canEnableCompression;
+        private static bool canEnableCompression;
+
+        /// <summary>Update the value of <see cref="CanEnableCompression"/></summary>
+        /// <param name="value"><see langword="true"/> if you wish to permit using the /COMPRESS flag. <see langword="false"/> if you wish to prevent usage of the flag.</param>
+        public static void SetCanEnableCompression(bool value) => canEnableCompression = value;
+
+        /// <summary>
+        /// Run a RoboCommand that has the /COMPRESS /ListOnly /QUIT options enabled as to test the ability to enable the /COMPRESS flag in other commands. 
+        /// <br/>No items will be moved or copied as part of this test.
+        /// </summary>
+        /// <param name="source">The source supplied to the test command</param>
+        /// <param name="dest">The destination supplied to the test command</param>
+        /// <param name="updateCanEnableCompression">When <see langword="true"/>, updates <see cref="CanEnableCompression"/> with the result.</param>
+        /// <param name="configuration">The configuration to use for the test. If not specified, uses the default configuration.</param>
+        /// <returns>A task that returns <see langword="true"/> if the command supported compression, otherwise false.</returns>
+        /// <inheritdoc cref="Authentication.Authenticate(string, string, string, Interfaces.IRoboCommand, Authentication.AuthenticationDelegate)"/>
+        /// <param name="domain"/><param name="username"/><param name="password"/>
+        public static async Task<bool> TestCompressionFlag(
+            string source = @"C:\", 
+            string dest = @"C:\", 
+            bool updateCanEnableCompression = true, 
+            RoboSharpConfiguration configuration = null,
+            string domain = "",
+            string username = "",
+            string password = ""
+            )
+        {
+            bool result = false;
+            RoboCommand cmd = new RoboCommand("TestCompressionFlag", source, dest, configuration: configuration);
+            cmd.CopyOptions.ApplyActionFlags(CopyActionFlags.Compress);
+            cmd.CopyOptions.FileFilter = new string[] { "*.ABCDEF" };
+            cmd.CopyOptions.Depth = 1;
+            cmd.LoggingOptions.ListOnly = true;
+            cmd.JobOptions.PreventCopyOperation = true;
+            var results = await cmd.StartAsync(domain, username, password);
+            result = !results.RoboCopyErrors.Any(n => n.ErrorDescription.Contains("Invalid Parameter"));
+            if (updateCanEnableCompression) SetCanEnableCompression(result);
+            return result;
+        }
+
+        /// <summary>
         /// This property should be set to a string consisting of all the flags to include (eg. DAT; DATSOU)
         /// Specifies the file properties to be copied. The following are the valid values for this option:
         ///D Data
@@ -274,12 +335,16 @@ namespace RoboSharp
         /// Deletes destination files and directories that no longer exist in the source.
         /// [/PURGE]
         /// </summary>
+        /// <remarks>
+        /// Using this option with the <see cref="CopySubdirectoriesIncludingEmpty"/> option allows the destination directory security settings to not be overwritten.
+        /// </remarks>
         public virtual bool Purge { get; set; }
 
         /// <summary>
         /// Mirrors a directory tree (equivalent to CopySubdirectoriesIncludingEmpty plus Purge).
         /// [/MIR]
         /// </summary>
+        /// <remarks>Using this option with the <see cref="CopySubdirectoriesIncludingEmpty"/> overwrites the destination directory security settings.</remarks>
         public virtual bool Mirror { get; set; }
 
         /// <summary>
@@ -459,23 +524,25 @@ namespace RoboSharp
         /// <summary>
         /// Parse the class properties and generate the command arguments
         /// </summary>
-        /// <returns></returns>
-        internal string Parse()
+        /// <param name="optionsOnly">When <see langword="true"/> only returns the options tags, similar to how robocopy would display them. (omits the source/destination)</param>
+        public string Parse(bool optionsOnly = false)
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
-            // Set Source and Destination
-            options.Append(WrapPath(Source));
-            options.Append(WrapPath(Destination));
-
+            if (!optionsOnly)
+            {
+                // Set Source and Destination
+                options.Append(WrapPath(Source));
+                options.Append(WrapPath(Destination));
+            }
+            
             // Set FileFilter
             // Quote each FileFilter item. The quotes are trimmed first to ensure that they are applied only once.
             var fileFilterQuotedItems = FileFilter.Select(word => "\"" + word.Trim('"') + "\"");
             string fileFilter = String.Join(" ", fileFilterQuotedItems);
             options.Append($"{fileFilter} ");
-
             Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
 
             #region Set Options
@@ -557,6 +624,8 @@ namespace RoboSharp
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
             if (DoNotUseWindowsCopyOffload && version >= 6.2)
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
+            if (Compress)
+                options.Append(NETWORK_COMPRESSION);
             #endregion Set Options
 
             var parsedOptions = options.ToString();
@@ -637,6 +706,7 @@ namespace RoboSharp
             this.MoveFiles = flags.HasFlag(CopyActionFlags.MoveFiles);
             this.MoveFilesAndDirectories = flags.HasFlag(CopyActionFlags.MoveFilesAndDirectories);
             this.CreateDirectoryAndFileTree = flags.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree);
+            this.Compress = flags.HasFlag(CopyActionFlags.Compress);
         }
 
         /// <summary>
@@ -652,6 +722,7 @@ namespace RoboSharp
             if (this.MoveFiles) flags |=CopyActionFlags.MoveFiles;
             if (this.MoveFilesAndDirectories) flags |=CopyActionFlags.MoveFilesAndDirectories;
             if (this.CreateDirectoryAndFileTree) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
+            if (this.Compress) flags |= CopyActionFlags.Compress;
             return flags;
         }
 
@@ -733,6 +804,7 @@ namespace RoboSharp
 
             //Bool
             CheckPerFile |= copyOptions.CheckPerFile;
+            Compress |= copyOptions.Compress;
             CopyAll |= copyOptions.CopyAll;
             CopyFilesWithSecurity |= copyOptions.CopyFilesWithSecurity;
             CopySubdirectories |= copyOptions.CopySubdirectories;

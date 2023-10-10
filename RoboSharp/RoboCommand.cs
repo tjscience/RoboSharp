@@ -111,11 +111,11 @@ namespace RoboSharp
             StopIfDisposing = command.StopIfDisposing;
 
             configuration = LinkConfiguration ? command.Configuration : command.Configuration.Clone();
-            copyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
-            JobOptions = LinkJobOptions ? command.JobOptions : command.JobOptions.Clone();
-            loggingOptions = LinkLoggingOptions ? command.LoggingOptions : command.LoggingOptions.Clone();
-            retryOptions = LinkRetryOptions ? command.RetryOptions : command.RetryOptions.Clone();
-            selectionOptions = LinkSelectionOptions ? command.SelectionOptions : command.SelectionOptions.Clone();
+            CopyOptions = new CopyOptions(command.CopyOptions, NewSource, NewDestination);
+            LoggingOptions = LinkLoggingOptions ? command.LoggingOptions : command.LoggingOptions.Clone();
+            RetryOptions = LinkRetryOptions ? command.RetryOptions : command.RetryOptions.Clone();
+            SelectionOptions = LinkSelectionOptions ? command.SelectionOptions : command.SelectionOptions.Clone();
+            try { JobOptions = LinkJobOptions ? command.JobOptions : command.JobOptions.Clone(); } catch(NotImplementedException) { JobOptions = new JobOptions(); }
         }
 
         /// <summary>Create a new RoboCommand object</summary>

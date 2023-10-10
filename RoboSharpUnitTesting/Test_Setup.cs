@@ -9,21 +9,25 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.UnitTests
 {
-    static class Test_Setup
+    public static class Test_Setup
     {
-        public static string TestDestination { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_DESTINATION");
-        public static string Source_LargerNewer { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "LargerNewer");
-        public static string Source_Standard { get; } = Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES", "STANDARD");
+        private static string TestFileRoot => Path.Combine(Directory.GetCurrentDirectory(), "TEST_FILES");
+        
+        public static string TestDestination { get; } = Path.Combine(TestFileRoot, "DESTINATION");
+        public static string Source_LargerNewer { get; } = Path.Combine(TestFileRoot, "LargerNewer");
+        public static string Source_Standard { get; } = Path.Combine(TestFileRoot, "STANDARD");
 
         /// <summary>
         /// Check if running on AppVeyor -> Certain tests will always fail due to appveyor's setup -> this allows them to pass the checks on appveyor by just not running them
         /// </summary>
         /// <returns></returns>
-        public static bool IsRunningOnAppVeyor()
+        public static bool IsRunningOnAppVeyor(bool displayMessageIfReturnTrue = true)
         {
-            return TestDestination == @"C:\projects\robosharp\RoboSharpUnitTesting\bin\Debug\TEST_DESTINATION";
+            bool returnValue = TestDestination.StartsWith(@"C:\projects\robosharp\");
+            if (returnValue && displayMessageIfReturnTrue) Console.WriteLine(" - Bypassing this test due to running on AppVeyor");
+            return returnValue;
         }
 
         /// <summary>
@@ -43,7 +47,7 @@ namespace RoboSharpUnitTesting
             return cmd;
         }
 
-        public static async Task<RoboSharpTestResults> RunTest(RoboCommand cmd)
+        public static async Task<RoboSharpTestResults> RunTest(IRoboCommand cmd)
         {
             IProgressEstimator prog = null;
             cmd.OnProgressEstimatorCreated += (o, e) => prog = e.ResultsEstimate;

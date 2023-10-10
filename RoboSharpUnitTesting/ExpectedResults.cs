@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.UnitTests
 {
     internal class ExpectedResults : IResults
     {

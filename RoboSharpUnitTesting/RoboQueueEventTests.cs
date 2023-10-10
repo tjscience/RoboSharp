@@ -5,7 +5,7 @@ using RoboSharp;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.UnitTests
 {
     [TestClass]
     public class RoboQueueEventTests

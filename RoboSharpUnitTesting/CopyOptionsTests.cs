@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace RoboSharpUnitTesting
+namespace RoboSharp.UnitTests
 {
     [TestClass]
     public class CopyOptionsTest
@@ -47,8 +47,10 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void Test_AddAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
-            var options = new CopyOptions();
-            options.AddAttributes = input;
+            var options = new CopyOptions
+            {
+                AddAttributes = input
+            };
             Assert.AreEqual(expected, options.GetAddAttributes());
             Assert.AreEqual(expectedstring ?? input,options.AddAttributes);
         }
@@ -66,8 +68,10 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void Test_RemoveAttributes(string input, FileAttributes? expected, string expectedstring = null)
         {
-            var options = new CopyOptions();
-            options.RemoveAttributes = input;
+            var options = new CopyOptions
+            {
+                RemoveAttributes = input
+            };
             Assert.AreEqual(expected, options.GetRemoveAttributes());
             Assert.AreEqual(expectedstring ?? input, options.RemoveAttributes);
         }
@@ -114,8 +118,10 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void Test_RunHours(string startTime, string endTime)
         {
-            var options = new CopyOptions();
-            options.RunHours = $"{startTime}-{endTime}";
+            var options = new CopyOptions
+            {
+                RunHours = $"{startTime}-{endTime}"
+            };
             Assert.AreEqual(startTime, options.GetRunHours_StartTime());
             Assert.AreEqual(endTime, options.GetRunHours_EndTime());
         }
@@ -136,6 +142,7 @@ namespace RoboSharpUnitTesting
         [TestMethod]
         public void Test_ApplyCopyFlags()
         {
+            CopyOptions.SetCanEnableCompression(true);
             foreach (CopyActionFlags flag in typeof(CopyActionFlags).GetEnumValues())
             {
                 var options = new CopyOptions();
@@ -143,6 +150,7 @@ namespace RoboSharpUnitTesting
                 {
                     options.ApplyActionFlags(flag);
                     Assert.AreEqual(flag, options.GetCopyActionFlags());
+                    Assert.AreEqual(flag.HasFlag(CopyActionFlags.Compress), options.Compress);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CopySubdirectories), options.CopySubdirectories);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CopySubdirectoriesIncludingEmpty), options.CopySubdirectoriesIncludingEmpty);
                     Assert.AreEqual(flag.HasFlag(CopyActionFlags.CreateDirectoryAndFileTree), options.CreateDirectoryAndFileTree);
@@ -156,6 +164,35 @@ namespace RoboSharpUnitTesting
                     Console.WriteLine($"Error occured on flag: {flag}");
                     throw;
                 }
+            }
+            CopyOptions.SetCanEnableCompression(false);
+        }
+
+        [TestMethod]
+        public void Test_CanEnableCompression()
+        {
+            try
+            {
+                Assert.IsFalse(CopyOptions.CanEnableCompression);
+                CopyOptions opt = new CopyOptions();
+                Assert.IsFalse(opt.Compress);
+                opt.Compress = true;
+                Assert.IsFalse(opt.Compress);
+                CopyOptions.SetCanEnableCompression(true);
+                Assert.IsTrue(opt.Compress);
+                Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
+
+                if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
+                {
+                    // Dev PC where its /compress is known to be allowed
+                    CopyOptions.SetCanEnableCompression(false);
+                    Assert.IsTrue(CopyOptions.TestCompressionFlag().Result);
+                    Assert.IsTrue(CopyOptions.CanEnableCompression);
+                }
+            }
+            finally
+            {
+                CopyOptions.SetCanEnableCompression(false);
             }
         }
     }

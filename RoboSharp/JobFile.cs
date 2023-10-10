@@ -27,7 +27,7 @@ namespace RoboSharp
         /// <summary>
         /// Create a JobFile with Default Options
         /// </summary>
-        public JobFile() { }
+        public JobFile() { roboCommand = new RoboCommand(); }
 
         /// <summary>
         /// Constructor for ICloneable Interface
@@ -41,21 +41,24 @@ namespace RoboSharp
         /// <summary>
         /// Clone the RoboCommand's options objects into a new JobFile
         /// </summary>
-        /// <param name="cmd">RoboCommand whose options shall be cloned</param>
+        /// <param name="cmd">IRoboCommand whose options shall be saved.</param>
         /// <param name="filePath">Optional FilePath to specify for future call to <see cref="Save()"/></param>
-        public JobFile(RoboCommand cmd, string filePath = "")
+        public JobFile(IRoboCommand cmd, string filePath = "")
         {
             FilePath = filePath ?? "";
-            roboCommand = cmd.Clone();
+            roboCommand = new RoboCommand(cmd.Name, cmd.CopyOptions.Source, cmd.CopyOptions.Destination, true, cmd.Configuration, cmd.CopyOptions, cmd.SelectionOptions, cmd.RetryOptions, cmd.LoggingOptions);
+            try { roboCommand.JobOptions = cmd.JobOptions; } catch { }
         }
 
         /// <summary>
         /// Constructor for Factory Methods
         /// </summary>
-        private JobFile(string filePath, RoboCommand cmd)
+        /// <param name="filePath">the filepath to save the job file into</param>
+        /// <param name="commandToUseWhenSaving">the RoboCommand to use when saving</param>
+        private JobFile(string filePath, RoboCommand commandToUseWhenSaving)
         {
             FilePath = filePath;
-            roboCommand = cmd;
+            roboCommand = commandToUseWhenSaving;
         }
 
         #endregion
@@ -143,21 +146,26 @@ namespace RoboSharp
         /// <inheritdoc cref="RoboCommand.Name"/>
         public string Job_Name
         {
-            get => roboCommand.Name;
-            set => roboCommand.Name = value;
+            get => roboCommand?.Name ?? jobName;
+            set
+            {
+                jobName = value;
+                if (roboCommand != null) roboCommand.Name = value;
+            }
         }
+        string jobName;
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
-        public CopyOptions CopyOptions => roboCommand.CopyOptions;
+        public CopyOptions CopyOptions => roboCommand?.CopyOptions;
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
-        public LoggingOptions LoggingOptions => roboCommand.LoggingOptions;
+        public LoggingOptions LoggingOptions => roboCommand?.LoggingOptions;
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
-        public RetryOptions RetryOptions => roboCommand.RetryOptions;
+        public RetryOptions RetryOptions => roboCommand?.RetryOptions;
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
-        public SelectionOptions SelectionOptions => roboCommand.SelectionOptions;
+        public SelectionOptions SelectionOptions => roboCommand?.SelectionOptions;
 
         #endregion
 
