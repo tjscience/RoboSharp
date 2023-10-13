@@ -1,9 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp;
+using RoboSharp.Interfaces;
 using RoboSharp.Results;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace RoboSharp.UnitTests
 {
@@ -150,6 +153,37 @@ namespace RoboSharp.UnitTests
             File.SetLastAccessTime(filePath2, DateTime.Now);
         }
 
+
+        [DataRow(0)]
+        [DataRow(1)]
+        [DataRow(8)]
+        [TestMethod]
+        public void TestMultiThread(int threads)
+        {
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, ListOnlyMode);
+            cmd.CopyOptions.MultiThreadedCopiesCount = threads;
+            Test_Setup.ClearOutTestDestination();
+            RoboSharpTestResults UnitTestResults = Test_Setup.RunTest(cmd).Result;
+            
+            // Ignore Directory Statistics during a multithread test, as they are not reported by robocopy
+            List<string> Errors = new List<string>();
+            RoboSharpTestResults.CompareStatistics(UnitTestResults.Results.FilesStatistic, UnitTestResults.Estimator.FilesStatistic, ref Errors);
+            RoboSharpTestResults.CompareStatistics(UnitTestResults.Results.BytesStatistic, UnitTestResults.Estimator.BytesStatistic, ref Errors);
+
+            Console.WriteLine("______ Files ______");
+            Console.WriteLine("  Command : " + UnitTestResults.Results.FilesStatistic);
+            Console.WriteLine("Estimator : " + UnitTestResults.Estimator.FilesStatistic);
+
+            Console.WriteLine("______ Bytes ______");
+            Console.WriteLine("  Command : " + UnitTestResults.Results.BytesStatistic);
+            Console.WriteLine("Estimator : " + UnitTestResults.Estimator.BytesStatistic);
+
+            var errTxt = new StringBuilder();
+            errTxt.Append("\n\n");
+            foreach (string st in Errors) errTxt.AppendLine(st);
+            Assert.IsFalse(Errors.Any(), errTxt.ToString());
+
+        }
 
         #region < Attribute Testing >
 
