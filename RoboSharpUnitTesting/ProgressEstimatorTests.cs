@@ -182,8 +182,9 @@ namespace RoboSharp.UnitTests
         //[TestMethod] public void Test_ExcludeAttribEncrypted() => Test_Attributes(FileAttributes.Encrypted, false);
         [TestMethod] public void Test_ExcludeAttribTemporary() => Test_Attributes(FileAttributes.Temporary, false);
         [TestMethod] public void Test_ExcludeAttribOffline() => Test_Attributes(FileAttributes.Offline, false);
-        
 
+
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
         /// <param name="attributes"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)" path="*"/></param>
         /// <param name="Include">TRUE if setting to INCLUDE, False to EXCLUDE</param>
         private void Test_Attributes(FileAttributes attributes, bool Include)
@@ -237,7 +238,7 @@ namespace RoboSharp.UnitTests
             UnitTestResults.AssertTest();
             Assert.AreEqual(expectedFileCounts.Copied, UnitTestResults.Results.FilesStatistic.Copied);
         }
-
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
         #endregion
 
     }
