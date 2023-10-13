@@ -152,7 +152,7 @@ namespace RoboSharp.Results
                 if (value != NameField)
                 {
                     NameField = value ?? "";
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Name"));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
                 }
             }
         }
@@ -622,9 +622,9 @@ namespace RoboSharp.Results
         }
 
         
-        #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
         /// <param name="enablePropertyChangedEvent"><inheritdoc cref="EnablePropertyChangeEvent" path="*"/></param>
-        /// <inheritdoc cref="AddStatistic(IStatistic)"/>        
+        /// <inheritdoc cref="AddStatistic(IStatistic)"/>
+        /// <param name="stats"/>
         internal void AddStatistic(IStatistic stats, bool enablePropertyChangedEvent)
         {
             EnablePropertyChangeEvent = enablePropertyChangedEvent;
@@ -632,8 +632,6 @@ namespace RoboSharp.Results
             EnablePropertyChangeEvent = true;
 
         }
-        #pragma warning restore CS1573
-
 
         /// <summary>
         /// Add the results of the supplied Statistics objects to this Statistics object.

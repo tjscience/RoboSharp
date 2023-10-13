@@ -175,7 +175,7 @@ namespace RoboSharp
         protected Results.RoboCopyResults results;
 
         /// <summary> 
-        /// Stores the LastData processed by <see cref="process_OutputDataReceived(object, DataReceivedEventArgs)"/> 
+        /// Stores the LastData processed by <see cref="Process_OutputDataReceived(object, DataReceivedEventArgs)"/> 
         /// </summary>
         private string LastDataReceived = "";
 
@@ -489,7 +489,6 @@ namespace RoboSharp
               process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
               process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
 
-#pragma warning disable CA1416 // Call Site Unreachable on non-Windows Platforms - RoboCopy is only available on windows, so its moot.
               if (!string.IsNullOrEmpty(domain))
               {
                   Debugger.Instance.DebugMessage(string.Format("RoboCommand running under domain - {0}", domain));
@@ -514,7 +513,6 @@ namespace RoboSharp
 
                   process.StartInfo.Password = ssPwd;
               }
-#pragma warning restore CA1416
 
               Debugger.Instance.DebugMessage("Setting RoboCopy process up...");
               process.StartInfo.UseShellExecute = false;
@@ -530,8 +528,8 @@ namespace RoboSharp
                   resultsBuilder.CommandOptions = GenerateParameters();
               }
               process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
-              process.OutputDataReceived += process_OutputDataReceived;
-              process.ErrorDataReceived += process_ErrorDataReceived;
+              process.OutputDataReceived += Process_OutputDataReceived;
+              process.ErrorDataReceived += Process_ErrorDataReceived;
               process.EnableRaisingEvents = true;
 
               //Setup the WaitForExitAsync Task
@@ -645,7 +643,7 @@ namespace RoboSharp
         #region < Process Event Handlers >
 
         /// <summary> Occurs when the Process reports an error prior to starting the robocopy process, not an 'error' from Robocopy </summary>
-        void process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+        void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (OnCommandError != null && !e.Data.IsNullOrWhiteSpace())
             {
@@ -655,7 +653,7 @@ namespace RoboSharp
         }
 
         /// <summary> React to Process.StandardOutput </summary>
-        void process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             var lastData = resultsBuilder.LastLine;
             resultsBuilder?.AddOutput(e.Data);
@@ -695,8 +693,10 @@ namespace RoboSharp
                     // Regex to parse the string for FileCount, Path, and Type (Description)
                     Regex DirRegex = new Regex("^(?<Type>\\*?[a-zA-Z]{0,10}\\s?[a-zA-Z]{0,3})\\s*(?<FileCount>[-]{0,1}[0-9]{1,100})\\t(?<Path>.+)", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 
-                    var file = new ProcessedFileInfo();
-                    file.FileClassType = FileClassType.NewDir;
+                    var file = new ProcessedFileInfo
+                    {
+                        FileClassType = FileClassType.NewDir
+                    };
 
                     if (DirRegex.IsMatch(data))
                     {
@@ -704,16 +704,14 @@ namespace RoboSharp
                         GroupCollection MatchData = DirRegex.Match(data).Groups;
                         file.FileClass = MatchData["Type"].Value.Trim();
                         if (file.FileClass == "") file.FileClass = configuration.LogParsing_ExistingDir;
-                        long.TryParse(MatchData["FileCount"].Value, out long size);
-                        file.Size = size;
+                        file.Size = long.TryParse(MatchData["FileCount"].Value, out long size) ? size : 0;
                         file.Name = MatchData["Path"].Value.Trim();
                     }
                     else
                     {
                         //Old Method -> Left Intact for other language compatibilty / unforseen cases
                         file.FileClass = "New Dir";
-                        long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out long size);
-                        file.Size = size;
+                        file.Size = long.TryParse(splitData[0].Replace("New Dir", "").Trim(), out long size) ? size : 0;
                         file.Name = splitData[1];
                     }
 
@@ -722,13 +720,13 @@ namespace RoboSharp
                 }
                 else if (splitData.Length == 3) // File
                 {
-                    var file = new ProcessedFileInfo();
-                    file.FileClass = splitData[0].Trim();
-                    file.FileClassType = FileClassType.File;
-                    long size = 0;
-                    long.TryParse(splitData[1].Trim(), out size);
-                    file.Size = size;
-                    file.Name = splitData[2];
+                    var file = new ProcessedFileInfo
+                    {
+                        FileClass = splitData[0].Trim(),
+                        FileClassType = FileClassType.File,
+                        Size = long.TryParse(splitData[1].Trim(), out long size) ? size : 0,
+                        Name = splitData[2]
+                    };
                     resultsBuilder?.Estimator?.AddFile(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }

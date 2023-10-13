@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -14,18 +15,36 @@ namespace RoboSharp
     /// </remarks>
     public class RoboSharpConfiguration : ICloneable
     {
+        // Perform any preliminary library setup
+        static RoboSharpConfiguration()
+        {
+            // Perform any preliminary library setup
+            _ = ApplicationConstants.Initializer;
+            defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
+            {
+                {"en", new RoboSharpConfig_EN() }, //en uses Defaults for LogParsing properties
+                {"de", new RoboSharpConfig_DE() },
+            };
+        }
+
+        private static readonly IDictionary<string, RoboSharpConfiguration> defaultConfigurations;
+
         #region Constructors 
 
         /// <summary>
         /// Create new LoggingOptions with Default Settings
         /// </summary>
-        public RoboSharpConfiguration() { }
+        public RoboSharpConfiguration() 
+        {
+            StandardErrorEncoding = GetEncoding();
+            StandardOutputEncoding = GetEncoding();
+        }
 
         /// <summary>
         /// Clone a RoboSharpConfiguration Object
         /// </summary>
         /// <param name="options">RoboSharpConfiguration object to clone</param>
-        public RoboSharpConfiguration(RoboSharpConfiguration options)
+        public RoboSharpConfiguration(RoboSharpConfiguration options) : this()
         {
             errorToken = options.errorToken;
             errorTokenRegex = options.errorTokenRegex;
@@ -55,13 +74,6 @@ namespace RoboSharp
         object ICloneable.Clone() => Clone();
 
         #endregion
-
-        private static readonly IDictionary<string, RoboSharpConfiguration>
-            defaultConfigurations = new Dictionary<string, RoboSharpConfiguration>()
-        {
-            {"en", new RoboSharpConfig_EN() }, //en uses Defaults for LogParsing properties
-            {"de", new RoboSharpConfig_DE() },
-        };
 
         /// <summary>
         /// Error Token Identifier -- EN = "ERROR", DE = "FEHLER", etc <br/>
@@ -116,7 +128,7 @@ namespace RoboSharp
             string pattern = BaseErrTokenRegex.ToString().Replace("IDENTIFIER", errorToken);
             return new Regex(pattern, BaseErrTokenRegex.Options);
         }
-        
+
 
         #region < Tokens for Log Parsing >
 
@@ -207,7 +219,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_AttribExclusion
         {
-            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; } 
+            get { return attribExcludedToken ?? GetDefaultConfiguration().attribExcludedToken ?? "attrib"; }
             set { attribExcludedToken = value; }
         }
         private string attribExcludedToken;
@@ -217,7 +229,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_MaxFileSizeExclusion
         {
-            get { return maxfilesizeExcludedToken ?? GetDefaultConfiguration().maxfilesizeExcludedToken ?? "large"; } 
+            get { return maxfilesizeExcludedToken ?? GetDefaultConfiguration().maxfilesizeExcludedToken ?? "large"; }
             set { maxfilesizeExcludedToken = value; }
         }
         private string maxfilesizeExcludedToken;
@@ -227,7 +239,7 @@ namespace RoboSharp
         /// </summary>
         public string LogParsing_MinFileSizeExclusion
         {
-            get { return minfilesizeExcludedToken ?? GetDefaultConfiguration().minfilesizeExcludedToken ?? "small"; } 
+            get { return minfilesizeExcludedToken ?? GetDefaultConfiguration().minfilesizeExcludedToken ?? "small"; }
             set { minfilesizeExcludedToken = value; }
         }
         private string minfilesizeExcludedToken;
@@ -332,11 +344,11 @@ namespace RoboSharp
 
         /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardOutputEncoding" path="/summary"/>
-        public System.Text.Encoding StandardOutputEncoding { get; set; } = GetEncoding();
+        public System.Text.Encoding StandardOutputEncoding { get; set; }
 
         /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardErrorEncoding" path="/summary"/>
-        public System.Text.Encoding StandardErrorEncoding { get; set; } = GetEncoding();
+        public System.Text.Encoding StandardErrorEncoding { get; set; }
 
         static System.Text.Encoding GetEncoding()
         {
@@ -413,13 +425,13 @@ namespace RoboSharp
                 default:
                     throw new NotImplementedException(string.Format("{0} '{1}' Not Implemented!", nameof(ProcessedDirectoryFlag), status));
             }
-    }
+        }
 
-    /// <summary> Get the string representing the enum from the configuration </summary>
-    /// <param name="config">The configuration file to pull the log parsing string from</param>
-    /// <param name="status">The status to look up from the configuration</param>
-    /// <returns>The string from the config that is associated with this enum value</returns>
-    public static string GetFileClass(ProcessedFileFlag status, RoboSharpConfiguration config)
+        /// <summary> Get the string representing the enum from the configuration </summary>
+        /// <param name="config">The configuration file to pull the log parsing string from</param>
+        /// <param name="status">The status to look up from the configuration</param>
+        /// <returns>The string from the config that is associated with this enum value</returns>
+        public static string GetFileClass(ProcessedFileFlag status, RoboSharpConfiguration config)
         {
             if (config is null) throw new ArgumentNullException(nameof(config));
             switch (status)

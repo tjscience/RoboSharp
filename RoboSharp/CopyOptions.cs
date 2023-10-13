@@ -22,7 +22,11 @@ namespace RoboSharp
         /// <summary>
         /// Create new CopyOptions with Default Settings
         /// </summary>
-        public CopyOptions() { }
+        public CopyOptions() 
+        {
+            this.Source = string.Empty;
+            this.Destination = string.Empty;
+        }
 
         /// <summary>
         /// Create a new CopyOptions object with the provided settings
@@ -268,12 +272,19 @@ namespace RoboSharp
             )
         {
             bool result = false;
-            RoboCommand cmd = new RoboCommand("TestCompressionFlag", source, dest, configuration: configuration);
-            cmd.CopyOptions.ApplyActionFlags(CopyActionFlags.Compress);
-            cmd.CopyOptions.FileFilter = new string[] { "*.ABCDEF" };
-            cmd.CopyOptions.Depth = 1;
-            cmd.LoggingOptions.ListOnly = true;
-            cmd.JobOptions.PreventCopyOperation = true;
+            RoboCommand cmd = new RoboCommand("TestCompressionFlag", configuration: configuration)
+            {
+                CopyOptions = new CompressionTestSettings()
+                {
+                    Source = source,
+                    Destination = dest,
+                    FileFilter = new string[] { "*.ABCDEF" },
+                    Depth = 1
+                },
+                LoggingOptions = new LoggingOptions(LoggingFlags.ListOnly),
+                JobOptions = new JobOptions() { PreventCopyOperation = true }
+            };
+            if (!cmd.CopyOptions.Parse().Contains(NETWORK_COMPRESSION)) throw new InvalidOperationException("Compression Test failed to enable" + NETWORK_COMPRESSION);
             var results = await cmd.StartAsync(domain, username, password);
             result = !results.RoboCopyErrors.Any(n => n.ErrorDescription.Contains("Invalid Parameter"));
             if (updateCanEnableCompression) SetCanEnableCompression(result);
@@ -831,5 +842,9 @@ namespace RoboSharp
 
         #endregion
 
+        private class CompressionTestSettings : CopyOptions
+        {
+            public override bool Compress { get => true; set { } }
+        }
     }
 }

@@ -1,9 +1,12 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp;
+using RoboSharp.Interfaces;
 using RoboSharp.Results;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace RoboSharp.UnitTests
 {
@@ -151,6 +154,37 @@ namespace RoboSharp.UnitTests
         }
 
 
+        [DataRow(0)]
+        [DataRow(1)]
+        [DataRow(8)]
+        [TestMethod]
+        public void TestMultiThread(int threads)
+        {
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, ListOnlyMode);
+            cmd.CopyOptions.MultiThreadedCopiesCount = threads;
+            Test_Setup.ClearOutTestDestination();
+            RoboSharpTestResults UnitTestResults = Test_Setup.RunTest(cmd).Result;
+            
+            // Ignore Directory Statistics during a multithread test, as they are not reported by robocopy
+            List<string> Errors = new List<string>();
+            RoboSharpTestResults.CompareStatistics(UnitTestResults.Results.FilesStatistic, UnitTestResults.Estimator.FilesStatistic, ref Errors);
+            RoboSharpTestResults.CompareStatistics(UnitTestResults.Results.BytesStatistic, UnitTestResults.Estimator.BytesStatistic, ref Errors);
+
+            Console.WriteLine("______ Files ______");
+            Console.WriteLine("  Command : " + UnitTestResults.Results.FilesStatistic);
+            Console.WriteLine("Estimator : " + UnitTestResults.Estimator.FilesStatistic);
+
+            Console.WriteLine("______ Bytes ______");
+            Console.WriteLine("  Command : " + UnitTestResults.Results.BytesStatistic);
+            Console.WriteLine("Estimator : " + UnitTestResults.Estimator.BytesStatistic);
+
+            var errTxt = new StringBuilder();
+            errTxt.Append("\n\n");
+            foreach (string st in Errors) errTxt.AppendLine(st);
+            Assert.IsFalse(Errors.Any(), errTxt.ToString());
+
+        }
+
         #region < Attribute Testing >
 
         /*TODO: While these all report identical values from RoboCopy and progressEstimator, they aren't working as expected.
@@ -182,8 +216,9 @@ namespace RoboSharp.UnitTests
         //[TestMethod] public void Test_ExcludeAttribEncrypted() => Test_Attributes(FileAttributes.Encrypted, false);
         [TestMethod] public void Test_ExcludeAttribTemporary() => Test_Attributes(FileAttributes.Temporary, false);
         [TestMethod] public void Test_ExcludeAttribOffline() => Test_Attributes(FileAttributes.Offline, false);
-        
 
+
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
         /// <param name="attributes"><inheritdoc cref="SelectionOptions.ConvertFileAttrToString(FileAttributes?)" path="*"/></param>
         /// <param name="Include">TRUE if setting to INCLUDE, False to EXCLUDE</param>
         private void Test_Attributes(FileAttributes attributes, bool Include)
@@ -237,7 +272,7 @@ namespace RoboSharp.UnitTests
             UnitTestResults.AssertTest();
             Assert.AreEqual(expectedFileCounts.Copied, UnitTestResults.Results.FilesStatistic.Copied);
         }
-
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
         #endregion
 
     }
