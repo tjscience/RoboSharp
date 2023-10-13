@@ -4,6 +4,7 @@ using RoboSharp.Results;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace RoboSharp.UnitTests
 {
@@ -182,13 +183,20 @@ namespace RoboSharp.UnitTests
                 Assert.IsTrue(opt.Compress);
                 Console.WriteLine("Current OS Version: " + Environment.OSVersion.VersionString);
 
+                CopyOptions.SetCanEnableCompression(false);
                 if (Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= 19045)
                 {
                     // Dev PC where its /compress is known to be allowed
-                    CopyOptions.SetCanEnableCompression(false);
                     Assert.IsTrue(CopyOptions.TestCompressionFlag().Result);
                     Assert.IsTrue(CopyOptions.CanEnableCompression);
+                    Assert.IsTrue(new CopyOptions() { Compress = true }.Parse().ToLower().Contains("/compress"));
                 }
+                else
+                {
+                    // Unknown runner
+                    Assert.AreEqual(CopyOptions.TestCompressionFlag().Result, CopyOptions.CanEnableCompression);
+                }
+                Console.WriteLine("Compression Test - CanEnableCompression : " + CopyOptions.CanEnableCompression);
             }
             finally
             {
