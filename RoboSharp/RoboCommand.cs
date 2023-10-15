@@ -626,6 +626,12 @@ namespace RoboSharp
             JobOptions.PreventCopyOperation = true;
             try
             {
+                var AuthResult = Authentication.AuthenticateJobFileSavePath(this, domain, username, password);
+                if (!AuthResult.Success)
+                {
+                    RaiseOnCommandError(AuthResult.CommandErrorArgs);
+                    return;
+                }
                 await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
             }
             finally
@@ -636,6 +642,12 @@ namespace RoboSharp
                 JobOptions.NoDestinationDirectory = _NODD;
                 JobOptions.PreventCopyOperation = _QUIT;
             }
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public static RoboCommand LoadFromJobFile(string filePath)
+        {
+            return JobFileBuilder.Parse(filePath);
         }
 
         #endregion
@@ -655,7 +667,7 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            var lastData = resultsBuilder.LastLine;
+            string lastData = resultsBuilder?.LastLine ?? "";
             resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null) return; // Nothing to do
