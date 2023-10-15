@@ -617,13 +617,13 @@ namespace RoboSharp
 
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
-            bool _NODD = JobOptions.NoDestinationDirectory;
-            bool _NOSD = JobOptions.NoSourceDirectory;
+            string _SOURCE = CopyOptions.Source;
+            string _DEST = CopyOptions.Destination;
 
             JobOptions.FilePath = path;
-            JobOptions.NoSourceDirectory = !IncludeSource;
-            JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
+            CopyOptions.Source = IncludeSource ? _SOURCE : string.Empty;
+            CopyOptions.Destination = IncludeDestination ? _DEST : string.Empty;
             try
             {
                 var AuthResult = Authentication.AuthenticateJobFileSavePath(this, domain, username, password);
@@ -638,9 +638,9 @@ namespace RoboSharp
             {
                 //Restore Original Settings
                 JobOptions.FilePath = _PATH;
-                JobOptions.NoSourceDirectory = _NOSD;
-                JobOptions.NoDestinationDirectory = _NODD;
                 JobOptions.PreventCopyOperation = _QUIT;
+                CopyOptions.Source = _SOURCE;
+                CopyOptions.Destination = _DEST;
             }
         }
 

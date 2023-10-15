@@ -2,6 +2,7 @@
 using RoboSharp.Interfaces;
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RoboSharp.UnitTests
@@ -39,15 +40,24 @@ namespace RoboSharp.UnitTests
                     try { Directory.Delete(cmd.CopyOptions.Destination); } catch { }
             }
         }
-		
-		
-		[TestMethod]
-        public async Task Test_SaveJobFile() 
+
+
+        [DataRow(true)]
+        [DataRow(false)]
+        [TestMethod]
+        public async Task Test_SaveJobFile(bool savePaths) 
 		{
-            RoboCommand cmd = new RoboCommand(source: Test_Setup.Source_Standard, destination: Path.Combine(Test_Setup.TestDestination, Path.GetRandomFileName()));
-            await cmd.SaveAsJobFile(GetJobFilePath());
+            if (File.Exists(GetJobFilePath())) File.Delete(GetJobFilePath());
+            string dest = Path.Combine(Test_Setup.TestDestination, Path.GetRandomFileName());
+            RoboCommand cmd = new RoboCommand(source: Test_Setup.Source_Standard, destination: dest);
+            await cmd.SaveAsJobFile(GetJobFilePath(), savePaths, savePaths);
             Assert.IsTrue(File.Exists(GetJobFilePath()), "\n Job File was not saved.");
-		}
+
+            var jb = JobFile.ParseJobFile(GetJobFilePath());
+            Assert.AreEqual(savePaths, jb.CopyOptions.Source == Test_Setup.Source_Standard, "Source was " + (savePaths ? "not saved" : "saved when set to not save"));
+            Assert.AreEqual(savePaths, jb.CopyOptions.Destination == dest, "Destination was " + (savePaths ? "not saved" : "saved when set to not save"));
+
+        }
 
         [DataRow(null, DisplayName = "Bad File Extension")]
         [DataRow("ZZ:\\SomeDestination\\BadFile.rcj", DisplayName = "Bad Input String")]
@@ -70,11 +80,23 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public async Task Test_LoadJobFile()
         {
-            await (Test_SaveJobFile());
+            await (Test_SaveJobFile(true));
             RoboCommand cmd = RoboCommand.LoadFromJobFile(GetJobFilePath());
             Assert.IsNotNull(cmd);
         }
 
-        
+        [TestMethod]
+        public async Task Test_LoadJobFile_RoboQueue()
+        {
+            await (Test_SaveJobFile(true));
+            var Q = new RoboQueue();
+            Q.AddCommand(RoboCommand.LoadFromJobFile(GetJobFilePath()));
+            Q.AddCommand(JobFile.ParseJobFile(GetJobFilePath()));
+            Assert.IsTrue(Q.Count() == 2);
+            Assert.IsNotNull(Q.First());
+            Assert.IsNotNull(Q.Last());
+            Assert.IsTrue(Q.Last().CopyOptions.Source == Test_Setup.Source_Standard);
+        }
+
     }
 }

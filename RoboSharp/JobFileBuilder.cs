@@ -24,10 +24,15 @@ namespace RoboSharp
         internal const string JOBFILE_StopIfDisposing = ":: StopIfDisposing: ";
 
         /// <summary>Pattern to Identify the SWITCH, DELIMITER and VALUE section</summary>
+        //language=regex
         private const string RegString_SWITCH = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>.+?)";
+        
         /// <summary>Pattern to Identify the SWITCH, DELIMIETER and VALUE section</summary>
+        //language=regex
         private const string RegString_SWITCH_NumericValue = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>[0-9]+?)";
+        
         /// <summary>Pattern to Identify COMMENT sections - Throws out white space and comment delimiter '::' </summary>
+        //language=regex
         private const string RegString_COMMENT = "((?:\\s*[:]{2,}\\s*[:]{0,})(?<COMMENT>.*))";
 
 
@@ -312,6 +317,9 @@ namespace RoboSharp
 
                 switch (flag)
                 {
+                    case "/NOSD": // No Source Directory
+                    case "/NODD": // No Desstination Directory
+                        break;
                     case "/A+":
                         options.AddAttributes = value;
                         break;

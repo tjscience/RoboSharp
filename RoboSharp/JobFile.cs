@@ -167,6 +167,16 @@ namespace RoboSharp
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public SelectionOptions SelectionOptions => roboCommand?.SelectionOptions;
 
+        /// <summary>
+        /// Check if the <see cref="CopyOptions.Source"/> is empty
+        /// </summary>
+        public bool NoSourceDirectory => string.IsNullOrWhiteSpace(CopyOptions.Source);
+
+        /// <summary>
+        /// Check if the <see cref="CopyOptions.Destination"/> is empty
+        /// </summary>
+        public bool NoDestinationDirectory => string.IsNullOrWhiteSpace(CopyOptions.Destination);
+
         #endregion
 
         #region < Methods >
