@@ -108,7 +108,7 @@ namespace RoboSharp.Extensions
                         LoggingOptions.Merge(jobfile.LoggingOptions);
                         RetryOptions.Merge(jobfile.RetryOptions);
                         SelectionOptions.Merge(jobfile.SelectionOptions);
-                        if (String.IsNullOrWhiteSpace(Name)) Name = jobfile.Job_Name;
+                        if (String.IsNullOrWhiteSpace(Name)) Name = jobfile.Name;
                     }
                     // Save the job file needed
                     if (Path.IsPathRooted(JobOptions.FilePath))

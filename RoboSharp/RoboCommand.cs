@@ -827,7 +827,7 @@ namespace RoboSharp
         /// <param name="jobFile"></param>
         public void MergeJobFile(JobFile jobFile)
         {
-            Name = Name.ReplaceIfEmpty(jobFile.Job_Name);
+            Name = Name.ReplaceIfEmpty(jobFile.Name);
             copyOptions.Merge(jobFile.CopyOptions);
             LoggingOptions.Merge(jobFile.LoggingOptions);
             RetryOptions.Merge(jobFile.RetryOptions);
