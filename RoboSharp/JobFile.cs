@@ -179,9 +179,9 @@ namespace RoboSharp
         #region < Fields >
 
         /// <summary>
-        /// Options are stored in a RoboCommand object for simplicity.
+        /// The underlying RoboCommand object
         /// </summary>
-        public readonly RoboCommand roboCommand;
+        private readonly RoboCommand roboCommand;
 
         #endregion
 
