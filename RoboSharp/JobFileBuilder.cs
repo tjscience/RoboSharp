@@ -158,19 +158,24 @@ namespace RoboSharp
         /// <param name="file">FileInfo object for some Job File. File Path should end in .RCJ</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"/>
+        /// <exception cref="FileNotFoundException"/>
+        /// <inheritdoc cref="Parse(StreamReader)"/>
+        /// <inheritdoc cref="File.OpenText(string)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(FileInfo file)
         {
             if (!IsCorrectFileExtension(file.Name)) throw new ArgumentException("Unexpected FileName - Must end with " + JobFile.JOBFILE_Extension, nameof(file));
+            if (!File.Exists(file.FullName)) throw new FileNotFoundException("Unable to parse file, file not found.", file.FullName);
             return Parse(file.OpenText());
         }
 
         /// <summary>
-        /// Use <see cref="File.OpenText(string)"/> to read all lines from the supplied file path. <para/>
+        /// Read each line using <see cref="File.OpenText"/> and attempt to produce a Job File. <para/>
         /// </summary>
         /// <param name="path">File Path to some Job File. File Path should end in .RCJ</param>
-        /// <returns></returns>
         /// <exception cref="ArgumentException"/>
+        /// <inheritdoc cref="Parse(StreamReader)"/>
+        /// <inheritdoc cref="File.OpenText(string)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(string path)
         {
@@ -181,11 +186,13 @@ namespace RoboSharp
         /// <summary>
         /// Read each line from a StreamReader and attempt to produce a Job File.
         /// </summary>
-        /// <param name="streamReader">StreamReader for a file stream that represents a Job File</param>
-        /// <returns></returns>
+        /// <param name="streamReader">StreamReader for a file stream that represents a Job File.</param>
+        /// <exception cref="ArgumentNullException"/>
+        /// <inheritdoc cref="Parse(IEnumerable{string})"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(StreamReader streamReader)
         {
+            if (streamReader is null) throw new ArgumentNullException(nameof(streamReader));
             List<string> Lines = new List<string>();
             using (streamReader)
             {
@@ -203,7 +210,7 @@ namespace RoboSharp
         /// Parse each line in <paramref name="Lines"/>, and attempt to create a new JobFile object.
         /// </summary>
         /// <param name="Lines">String[] read from a JobFile</param>
-        /// <returns></returns>
+        /// <returns>A new robocommand</returns>
         internal static RoboCommand Parse(IEnumerable<string> Lines)
         {
             //Extract information from the Lines to quicken processing in *OptionsRegex classes

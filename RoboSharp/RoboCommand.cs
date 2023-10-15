@@ -650,6 +650,23 @@ namespace RoboSharp
             return JobFileBuilder.Parse(filePath);
         }
 
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public static bool TryLoadFromJobFile(string filePath, out RoboCommand cmd)
+        {
+            try
+            {
+                cmd = JobFileBuilder.Parse(filePath);
+                return true;
+            }
+            catch
+            {
+                cmd = null;
+                return false;
+
+            }
+            
+        }
+
         #endregion
 
         #region < Process Event Handlers >

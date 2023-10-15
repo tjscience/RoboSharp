@@ -72,33 +72,76 @@ namespace RoboSharp
         /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
         public static JobFile ParseJobFile(string path)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(path);
-            if (cmd != null) return new JobFile(path, cmd);
-            return null;
+            return new JobFile(path, JobFileBuilder.Parse(path));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(StreamReader)"/>
         public static JobFile ParseJobFile(StreamReader streamReader)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(streamReader);
-            if (cmd != null) return new JobFile("", cmd);
-            return null;
+            return new JobFile("", JobFileBuilder.Parse(streamReader));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(FileInfo)"/>
         public static JobFile ParseJobFile(FileInfo file)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(file);
-            if (cmd != null) return new JobFile(file.FullName, cmd);
-            return null;
+            return new JobFile(file.FullName, JobFileBuilder.Parse(file));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(IEnumerable{String})"/>
         public static JobFile ParseJobFile(IEnumerable<string> FileText)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(FileText);
-            if (cmd != null) return new JobFile("", cmd);
-            return null;
+            return new JobFile("", JobFileBuilder.Parse(FileText));
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(string)"/>
+        public static bool TryParseJobFile(string path, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(path);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(FileInfo)"/>
+        public static bool TryParseJobFile(FileInfo file, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(file);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(StreamReader)"/>
+        public static bool TryParseJobFile(StreamReader streamReader, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(streamReader);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -138,7 +181,7 @@ namespace RoboSharp
         /// <summary>
         /// Options are stored in a RoboCommand object for simplicity.
         /// </summary>
-        protected RoboCommand roboCommand;
+        public readonly RoboCommand roboCommand;
 
         #endregion
 
