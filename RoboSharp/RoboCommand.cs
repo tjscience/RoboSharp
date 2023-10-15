@@ -828,8 +828,8 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("JobOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
-            return string.Format("{0}{1}{2}{3} /BYTES {4}", parsedCopyOptions, parsedSelectionOptions,
-                parsedRetryOptions, parsedLoggingOptions, parsedJobOptions);
+            return string.Format("{0}{1}{2}{3}{5}{4}", parsedCopyOptions, parsedSelectionOptions,
+                parsedRetryOptions, parsedLoggingOptions, parsedJobOptions, (LoggingOptions.PrintSizesAsBytes ? string.Empty : " /BYTES"));
         }
 
         /// <inheritdoc cref="GenerateParameters"/>
