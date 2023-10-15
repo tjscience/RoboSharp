@@ -35,6 +35,11 @@ namespace RoboSharp
     /// </summary>
     public static class Authentication
     {
+        const string DestDriveInvalid = "The destination drive does not exist.";
+        const string CheckDestinationWriteAccess = "Unable to create Destination Folder. Check Write Access.";
+        const string CheckJobFileWriteAccess = "Unable to create Job File. Check Write Access.";
+        const string CatchMessage = "The Destination directory is invalid.";
+
         private delegate AuthenticationResult AuthenticationDelegate(IRoboCommand command);
         
         /// <inheritdoc cref="Authenticate"/>
@@ -56,6 +61,13 @@ namespace RoboSharp
         public static AuthenticationResult AuthenticateDestination(IRoboCommand command, string domain = "", string username = "", string password = "")
         {
             return Authenticate(domain, username, password, command, CheckDestinationDirectory);
+        }
+
+        /// <inheritdoc cref="Authenticate"/>
+        /// <inheritdoc cref="CheckJobFileSavePath(IRoboCommand)"/>
+        public static AuthenticationResult AuthenticateJobFileSavePath(IRoboCommand command, string domain = "", string username = "", string password = "")
+        {
+            return Authenticate(domain, username, password, command, CheckJobFileSavePath);
         }
 
         /// <summary>
@@ -141,10 +153,6 @@ namespace RoboSharp
         /// <returns><see langword="true"/> if the destination is accessible, otherwise <see langword="false"/></returns>
         private static AuthenticationResult CheckDestinationDirectory(IRoboCommand command)
         {
-            const string DestDriveInvalid = "The destination drive does not exist.";
-            const string CheckWriteAccess = "Unable to create Destination Folder. Check Write Access.";
-            const string CatchMessage = "The Destination directory is invalid.";
-
             //Check that the Destination Drive is accessible instead [fixes #106]
             try
             {
@@ -156,18 +164,76 @@ namespace RoboSharp
                     return new AuthenticationResult(false, new CommandErrorEventArgs(new DirectoryNotFoundException(DestDriveInvalid)));
                 }
 
+
                 //If not list only, verify that drive has write access -> should cause exception if no write access [Fix #101]
                 bool PreventCopy = command.LoggingOptions.ListOnly;
-                try { PreventCopy |= command.JobOptions?.PreventCopyOperation ?? false; } catch(NotImplementedException) { }
+                try { PreventCopy |= command.JobOptions?.PreventCopyOperation ?? false; } catch (NotImplementedException) { }
                 if (!PreventCopy)
                 {
                     dInfo = Directory.CreateDirectory(command.CopyOptions.Destination);
                     if (!dInfo.Exists)
                     {
-                        Debugger.Instance.DebugMessage(CheckWriteAccess);
-                        return new AuthenticationResult(false, new CommandErrorEventArgs(new DirectoryNotFoundException(CheckWriteAccess)));
+                        Debugger.Instance.DebugMessage(CheckDestinationWriteAccess);
+                        return new AuthenticationResult(false, new CommandErrorEventArgs(new DirectoryNotFoundException(CheckDestinationWriteAccess)));
                     }
                 }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Debugger.Instance.DebugMessage(CheckDestinationWriteAccess);
+                Debugger.Instance.DebugMessage(ex.Message);
+                return new AuthenticationResult(false, new CommandErrorEventArgs(CheckDestinationWriteAccess, ex));
+            }
+            catch (Exception ex)
+            {
+                Debugger.Instance.DebugMessage(ex.Message);
+                return new AuthenticationResult(false, new CommandErrorEventArgs(CatchMessage, ex));
+            }
+            return new AuthenticationResult(true, null);
+        }
+
+        /// <summary>
+        /// Check that you have write access to the JobFile Save Path. Create the destination directory if it does not exist.       
+        /// </summary>
+        /// <returns><see langword="true"/> if the you have write access to the <see cref="JobOptions.FilePath"/>, otherwise <see langword="false"/></returns>
+        private static AuthenticationResult CheckJobFileSavePath(IRoboCommand command)
+        {
+            //Check that the Destination Drive is accessible instead [fixes #106]
+            try
+            {
+                //Check if the destination drive is accessible -> should not cause exception [Fix for #106]
+                FileInfo savePath = new FileInfo(command.JobOptions?.FilePath);
+
+                if (!JobFileBuilder.IsCorrectFileExtension(savePath.Name))
+                    return new AuthenticationResult(false, new CommandErrorEventArgs(new ArgumentException("Unexpected FileName - Job File Path Must end with " + JobFile.JOBFILE_Extension)));
+
+                DirectoryInfo dInfo = savePath.Directory;
+                
+                // Ensure destination directory exists
+                if (!dInfo.Exists)
+                {
+                    dInfo = Directory.CreateDirectory(dInfo.FullName);
+                }
+
+                // Check ability to write to destination path
+                var exists = savePath.Exists;
+                try
+                {
+                    using (var stream = exists ? savePath.OpenWrite() : savePath.Create())
+                    {
+                        stream?.Dispose();
+                    }
+                }catch when (!exists)
+                {
+                    if (File.Exists(savePath.FullName)) savePath.Delete();
+                    throw;
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Debugger.Instance.DebugMessage(CheckJobFileWriteAccess);
+                Debugger.Instance.DebugMessage(ex.Message);
+                return new AuthenticationResult(false, new CommandErrorEventArgs(CheckJobFileWriteAccess, ex));
             }
             catch (Exception ex)
             {
