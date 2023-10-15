@@ -19,9 +19,6 @@ namespace RoboSharp
         public const string JOBFILE_CommentPrefix = ":: ";
 
         /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
-        public const string JOBFILE_Extension = JobFile.JOBFILE_Extension;
-
-        /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
         internal const string JOBFILE_JobName = ":: JOB_NAME: ";
 
         internal const string JOBFILE_StopIfDisposing = ":: StopIfDisposing: ";
@@ -144,28 +141,35 @@ namespace RoboSharp
         #region < Methods that feed Main Parse Routine >
 
         /// <summary>
+        /// Check if the supplied filepath is valid for a RoboCopyJob file (.rcj)
+        /// </summary>
+        /// <param name="filePath">The file path to evaluate</param>
+        /// <returns>TRUE if the path has the correct extension, otherwise false.</returns>
+        public static bool IsCorrectFileExtension(string filePath) => Path.GetExtension(filePath).Equals(JobFile.JOBFILE_Extension, StringComparison.InvariantCultureIgnoreCase);
+
+        /// <summary>
         /// Read each line using <see cref="FileInfo.OpenText"/> and attempt to produce a Job File. <para/>
-        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
         /// </summary>
         /// <param name="file">FileInfo object for some Job File. File Path should end in .RCJ</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(FileInfo file)
         {
-            if (file.Extension != JOBFILE_Extension) return null;
+            if (!IsCorrectFileExtension(file.Name)) throw new ArgumentException("Unexpected FileName - Must end with " + JobFile.JOBFILE_Extension, nameof(file));
             return Parse(file.OpenText());
         }
 
         /// <summary>
         /// Use <see cref="File.OpenText(string)"/> to read all lines from the supplied file path. <para/>
-        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
         /// </summary>
         /// <param name="path">File Path to some Job File. File Path should end in .RCJ</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(string path)
         {
-            if (Path.GetExtension(path) != JOBFILE_Extension) return null;
+            if (!IsCorrectFileExtension(path)) throw new ArgumentException("Unexpected FileName - Must end with " + JobFile.JOBFILE_Extension, nameof(path));
             return Parse(File.OpenText(path));
         }
 
