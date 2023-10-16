@@ -127,8 +127,11 @@ namespace RoboSharp.Extensions
                 {
                     continue;
                 }
-                if (xEl is null) xEl = new XElement(prop.Name);
-                xEl.SetValue(value);
+                if (xEl is null)
+                {
+                    xEl = new XElement(prop.Name);
+                    xEl.SetValue(value);
+                }
                 xElements.Add(xEl);
             }
             return xElements.ToArray();
@@ -150,17 +153,21 @@ namespace RoboSharp.Extensions
                 if (prop.CustomAttributes.Any(attr => attr.AttributeType == typeof(ObsoleteAttribute)))
                     continue;
                 Type propType = prop.PropertyType;
-
-                if (propType == typeof(IEnumerable<string>) || propType == typeof(List<string>))
+                bool isPropIEnum = propType == typeof(IEnumerable<string>);
+                bool isPropList = propType == typeof(List<string>);
+                if (isPropIEnum || isPropList)
                 {
                     
-                    List<string> items = xElement
+                    var items = xElement
                         .Element(prop.Name)
                         ?.Elements(CollectionItemXelementName)
                         ?.Select(item => item.Value)
-                        ?.ToList();
+                        ?.ToArray();
                     if (items is null) continue;
-                    prop.SetValue(obj, items);
+                    if (isPropIEnum)
+                        prop.SetValue(obj, items);
+                    else if (isPropList)
+                        (prop.GetValue(obj) as List<string>).AddRange(items);
                 }
                 else
                 {
@@ -184,10 +191,6 @@ namespace RoboSharp.Extensions
                     {
                         if (long.TryParse(strValue, out var val))
                             prop.SetValue(obj, val);
-                    }
-                    else if (propType == typeof(IEnumerable<string>) | propType == typeof(List<string>))
-                    {
-
                     }
                 }
             }
