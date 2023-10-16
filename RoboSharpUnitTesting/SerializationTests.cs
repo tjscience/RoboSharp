@@ -28,5 +28,33 @@ namespace RoboSharp.UnitTests
             var obj = serializer.Deserialize(path);
             Assert.IsTrue(obj.Count() == 3);
         }
+
+        [TestMethod]
+        public void Test_XmlSerializer()
+        {
+            var serializer = new RoboSharp.RoboCommandXmlSerializer();
+            var commands = new IRoboCommand[]
+            {
+                new RoboCommand("Test1", "C:\\Test", "C:\\TestDest", true),
+                new RoboCommand(null, null, copyActionFlags: CopyActionFlags.Purge, loggingFlags: LoggingFlags.IncludeFullPathNames),
+                new RoboCommand(null, null, CopyActionFlags.MoveFilesAndDirectories, SelectionFlags.ExcludeLonely, LoggingFlags.NoDirectoryList)
+            };
+            commands[0].CopyOptions.AddFileFilter("*.pdf", "*.txt");
+            commands[1].SelectionOptions.ExcludedDirectories.AddRange(new string[] { "Archive", "SomeDirectory" });
+            commands[2].SelectionOptions.ExcludedFiles.AddRange(new string[] { "SomeFile.txt", "SomeOtherFile.pdf" });
+            string path = Path.Combine(Test_Setup.TestDestination, "XmlSerializerTest.xml");
+            serializer.Serialize(commands, path);
+            Assert.IsTrue(File.Exists(path), "Failed to create file.");
+            var readCommands = serializer.Deserialize(path).ToArray();
+            Assert.AreEqual(commands.Length, readCommands.Length, "\nParsed count != Input Count");
+
+            for (int i = 0; i < commands.Length; i++)
+            {
+                Console.WriteLine("\nCommand Index " + i);
+                Console.WriteLine("Input  : " + commands[i].CommandOptions);
+                Console.WriteLine("Output : " + readCommands[i].CommandOptions);
+                Assert.AreEqual(commands[i].CommandOptions, readCommands[i].CommandOptions, $"\n Command index {i} Input != Output");
+            }
+        }
     }
 }
