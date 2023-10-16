@@ -18,7 +18,12 @@ namespace RoboSharp
         /// <summary>
         /// Create new LoggingOptions with Default Settings
         /// </summary>
-        public LoggingOptions(LoggingFlags flags = LoggingFlags.RoboSharpDefault) 
+        public LoggingOptions() : this(LoggingFlags.RoboSharpDefault) { }
+
+        /// <summary>
+        /// Create new LoggingOptions with Default Settings
+        /// </summary>
+        public LoggingOptions(LoggingFlags flags) 
         {
             ApplyLoggingFlags(flags |= LoggingFlags.RoboSharpDefault);
             LogPath = string.Empty;
