@@ -7,35 +7,22 @@ using System.Linq;
 namespace RoboSharp.Interfaces
 {
     /// <summary>
-    /// An object that represents a collection of deserialized IRoboCommands
-    /// </summary>
-    public interface IRoboQueueDeserializer
-    {
-        /// <summary>
-        /// Enumerate the IRoboCommands
-        /// </summary>
-        /// <returns>An IEnumerable that returns deserialized IRoboCommand objects</returns>
-        IEnumerable<IRoboCommand> ReadCommands();
-    }
-
-    /// <summary>
-    /// 
+    /// Interface for objects to serialize / deserialize a collection of <see cref="IRoboCommand"/> objects
     /// </summary>
     public interface IRoboQueueSerializer
     {
         /// <summary>
-        /// Serialize the IRoboCommands into a <see cref="IRoboQueueDeserializer"/>
+        /// Serialize the IRoboCommands to a specified <paramref name="path"/>
         /// </summary>
         /// <param name="commands">The commands to serialize</param>
         /// <param name="path">The path to save the serialized commands into</param>
-        /// <returns>a new <see cref="IRoboQueueDeserializer"/></returns>
         void Serialize(IEnumerable<IRoboCommand> commands, string path);
 
         /// <summary>
-        /// Read the file path and produce an <see cref="IRoboQueueDeserializer"/>
+        /// Deserialize the specified path into a collection of <see cref="IRoboCommand"/> objects
         /// </summary>
-        /// <param name="path">The file path to read</param>
-        /// <returns>a new <see cref="IRoboQueueDeserializer"/></returns>
-        IRoboQueueDeserializer Deserialize(string path);
+        /// <param name="path">The file/folder path to read</param>
+        /// <returns>a new collection of <see cref="IRoboCommand"/> objects</returns>
+        IEnumerable<IRoboCommand> Deserialize(string path);
     }
 }

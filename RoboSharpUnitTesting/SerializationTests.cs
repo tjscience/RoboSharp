@@ -26,8 +26,7 @@ namespace RoboSharp.UnitTests
             var serializer = new JobFileSerializer();
             serializer.Serialize(arr1, path);
             var obj = serializer.Deserialize(path);
-            Assert.IsTrue(obj.ReadCommands().Count() == 3);
-            Assert.IsTrue(obj.ReadCommands().Count() == 3);
+            Assert.IsTrue(obj.Count() == 3);
         }
     }
 }

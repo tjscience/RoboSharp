@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,21 +17,23 @@ namespace RoboSharp
 
         /// <inheritdoc cref="Deserialize(string)"/>
         /// <inheritdoc cref="DirectoryInfo.DirectoryInfo(string)"/>
-        public IRoboQueueDeserializer Deserialize(string path)
+        public IEnumerable<IRoboCommand> Deserialize(string path)
         {
             return Deserialize(new DirectoryInfo(path));
         }
 
 
         /// <summary>
-        /// Create an <see cref=" IRoboQueueDeserializer"/> that reads all .RCJ files within the specified directory <paramref name="path"/>
+        /// Enumerate all .RCJ files within the specified directory, and return a collection of <see cref="JobFile"/> objects.
         /// </summary>
         /// <param name="path">The directory to read .RCJ files from</param>
-        /// <returns>A new <see cref="IRoboQueueDeserializer"/></returns>
+        /// <returns>A new IEnumerable&lt;<see cref="JobFile"/>&gt; object</returns>
         /// <exception cref="ArgumentNullException"/>
-        public virtual IRoboQueueDeserializer Deserialize(DirectoryInfo path)
+        /// <inheritdoc cref="DirectoryInfo.EnumerateFiles(string)"/>
+        public virtual IEnumerable<IRoboCommand> Deserialize(DirectoryInfo path)
         {
-            return new JobFileDeserializer(path ?? throw new ArgumentNullException(nameof(path)));
+            if (path is null) throw new ArgumentNullException(nameof(path));
+            return path.EnumerateFiles("*.rcj").Select(JobFile.ParseJobFile);
         }
 
         /// <inheritdoc cref="Serialize(IEnumerable{IRoboCommand}, DirectoryInfo)"/>
@@ -75,18 +78,6 @@ namespace RoboSharp
                 name = Path.Combine(dest.FullName, name);
                 return Path.ChangeExtension(name, ".rcj");
             }
-        }
-
-        private class JobFileDeserializer : IRoboQueueDeserializer
-        {
-            public JobFileDeserializer(DirectoryInfo dir)
-            {
-                if (dir is null) throw new ArgumentNullException(nameof(dir));
-                enumerator = dir.EnumerateFiles("*.rcj").Select(JobFile.ParseJobFile);
-            }
-
-            private readonly IEnumerable<IRoboCommand> enumerator;
-            public IEnumerable<IRoboCommand> ReadCommands() => enumerator;
         }
     }
 }

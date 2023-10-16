@@ -18,10 +18,29 @@ namespace RoboSharp.Extensions
     {
 
         /// <inheritdoc/>
-        public virtual IRoboQueueDeserializer Deserialize(string path)
+        public virtual IEnumerable<IRoboCommand> Deserialize(string path)
         {
-            return new Deserializer(path);
+            if (!File.Exists(path)) throw new FileNotFoundException(path);
+            List<IRoboCommand> commands = new List<IRoboCommand>();
+            XDocument doc = XDocument.Load(path);
+            foreach (var rootNode in doc.Root.Elements("IRoboCommand"))
+            {
+                var Copy = ReadNodes<CopyOptions>(rootNode.Element(nameof(CopyOptions)));
+                var Logging = ReadNodes<LoggingOptions>(rootNode.Element(nameof(LoggingOptions)));
+                var Retry = ReadNodes<RetryOptions>(rootNode.Element(nameof(RetryOptions)));
+                var selection = ReadNodes<SelectionOptions>(rootNode.Element(nameof(SelectionOptions)));
+                commands.Add(new RoboCommand()
+                {
+                    CopyOptions = Copy,
+                    LoggingOptions = Logging,
+                    RetryOptions = Retry,
+                    SelectionOptions = selection,
+                    Name = rootNode.Attribute("Name")?.Value ?? string.Empty
+                });
+            }
+            return commands;
         }
+
 
         /// <inheritdoc/>
         public void Serialize(IEnumerable<IRoboCommand> commands, string path)
@@ -84,7 +103,7 @@ namespace RoboSharp.Extensions
 
         /// <summary>Name of nodes contained within IEnumerable nodes</summary>
         protected const string CollectionItemXelementName = "Item";
-        private const BindingFlags PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty;
+        private const BindingFlags PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty;
 
         /// <summary>
         /// Read all boolean, integer, and string properties of the specified object, and create <see cref="XElement"/> nodes to represent them.
@@ -222,49 +241,5 @@ namespace RoboSharp.Extensions
             }
             return obj;
         }
-
-        private class Deserializer : Interfaces.IRoboQueueDeserializer
-        {
-            public Deserializer(string path)
-            {
-                if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("path can not be empty", nameof(path));
-                Path = path;
-            }
-            readonly string Path;
-
-            /// <inheritdoc/>
-            public IEnumerable<Interfaces.IRoboCommand> ReadCommands()
-            {
-                if (!File.Exists(Path)) throw new FileNotFoundException(Path);
-                List<IRoboCommand> commands = new List<IRoboCommand>();
-                XDocument doc = XDocument.Load(Path);
-                foreach(var el in doc.Root.Elements("IRoboCommand"))
-                {
-                    commands.Add(ReadNodes(el));
-                }
-                return commands;
-            }
-
-            private static RoboCommand ReadNodes(XElement rootNode)
-            {
-                var Copy = ReadNodes<CopyOptions>(rootNode.Element(nameof(CopyOptions)));
-                var Logging = ReadNodes<LoggingOptions>(rootNode.Element(nameof(LoggingOptions)));
-                var Retry = ReadNodes<RetryOptions>(rootNode.Element(nameof(RetryOptions)));
-                var selection = ReadNodes<SelectionOptions>(rootNode.Element(nameof(SelectionOptions)));
-                return new RoboCommand()
-                {
-                    CopyOptions = Copy,
-                    LoggingOptions = Logging,
-                    RetryOptions = Retry,
-                    SelectionOptions = selection,
-                    Name = rootNode.Attribute("Name")?.Value ?? string.Empty
-                };
-            }
-
-        }
-
-        
-
-
     }
 }

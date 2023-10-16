@@ -29,7 +29,7 @@ namespace RoboSharp.Extensions.UnitTests
             string path = Path.Combine(Test_Setup.TestDestination, "XmlSerializerTest.xml");
             serializer.Serialize(commands, path);
             Assert.IsTrue(File.Exists(path), "Failed to create file.");
-            var readCommands = serializer.Deserialize(path).ReadCommands().ToArray();
+            var readCommands = serializer.Deserialize(path).ToArray();
             Assert.AreEqual(commands.Length, readCommands.Length, "\nParsed count != Input Count");
 
             for(int i = 0; i < commands.Length; i++)
