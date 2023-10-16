@@ -16,7 +16,7 @@ namespace RoboSharp.Extensions.UnitTests
         [TestMethod]
         public void Test_Serializer()
         {
-            var serializer = new RoboSharp.Extensions.RoboCommandXmlSerializer();
+            var serializer = new RoboSharp.RoboCommandXmlSerializer();
             var commands = new IRoboCommand[]
             {
                 new RoboCommand("Test1", "C:\\Test", "C:\\TestDest", true),

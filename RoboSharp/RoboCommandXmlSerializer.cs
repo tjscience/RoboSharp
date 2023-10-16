@@ -7,9 +7,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
-namespace RoboSharp.Extensions
+namespace RoboSharp
 {
     /// <summary>
     /// Serialize an IEnumerable&lt;IRoboCommand&gt; into/out of XML
@@ -17,38 +18,89 @@ namespace RoboSharp.Extensions
     public class RoboCommandXmlSerializer : IRoboQueueSerializer
     {
 
+        /// <inheritdoc cref="Append(XElement, IEnumerable{IRoboCommand})"/>
+        protected void Append(XElement parent, params IRoboCommand[] commands) => Append(parent, (IEnumerable<IRoboCommand>)commands);
+
+        /// <summary>
+        /// Serializes the <paramref name="commands"/> and adds each one as a new node within the <paramref name="parent"/>
+        /// </summary>
+        /// <param name="parent">The parent element to add the collection of serialized commands into</param>
+        /// <param name="commands">the commands to serialize</param>
+        protected void Append(XElement parent, IEnumerable<IRoboCommand> commands) => parent.Add(commands.Select(SerializeRoboCommand).ToArray());
+
+        /// <summary>
+        /// The factory method used to create the IRoboCommand object during deserialization.
+        /// </summary>
+        /// <returns>A new <see cref="IRoboCommand"/> object</returns>
+        protected virtual IRoboCommand CreateIRoboCommand(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, SelectionOptions selectionOptions, RetryOptions retryOptions)
+        {
+            return new RoboCommand()
+            {
+                Name = name,
+                CopyOptions = copyOptions,
+                LoggingOptions = loggingOptions,
+                RetryOptions = retryOptions,
+                SelectionOptions = selectionOptions,
+            };
+        }
+
         /// <inheritdoc/>
+        /// <exception cref="FileNotFoundException"/>
+        /// <inheritdoc cref="Deserialize(XElement)"/>
         public virtual IEnumerable<IRoboCommand> Deserialize(string path)
         {
             if (!File.Exists(path)) throw new FileNotFoundException(path);
-            List<IRoboCommand> commands = new List<IRoboCommand>();
             XDocument doc = XDocument.Load(path);
-            foreach (var rootNode in doc.Root.Elements("IRoboCommand"))
+            return Deserialize(doc.Root);
+        }
+
+        /// <summary>
+        /// Scan the <paramref name="parent"/> node for children elements named 'IRoboCommand' and parse each one into a new <see cref="RoboCommand"/> object.
+        /// </summary>
+        /// <param name="parent">The parent node which contains Elements named 'IRoboCommand'</param>
+        /// <returns>A collection of <see cref="IRoboCommand"/> objects that were deserialized.</returns>
+        public virtual IEnumerable<IRoboCommand> Deserialize(XElement parent)
+        {
+            List<IRoboCommand> commands = new List<IRoboCommand>();
+            foreach (var rootNode in parent.Elements(nameof(IRoboCommand)))
             {
                 var Copy = ReadNodes<CopyOptions>(rootNode.Element(nameof(CopyOptions)));
                 var Logging = ReadNodes<LoggingOptions>(rootNode.Element(nameof(LoggingOptions)));
                 var Retry = ReadNodes<RetryOptions>(rootNode.Element(nameof(RetryOptions)));
-                var selection = ReadNodes<SelectionOptions>(rootNode.Element(nameof(SelectionOptions)));
-                commands.Add(new RoboCommand()
-                {
-                    CopyOptions = Copy,
-                    LoggingOptions = Logging,
-                    RetryOptions = Retry,
-                    SelectionOptions = selection,
-                    Name = rootNode.Attribute("Name")?.Value ?? string.Empty
-                });
+                var Selection = ReadNodes<SelectionOptions>(rootNode.Element(nameof(SelectionOptions)));
+                commands.Add(CreateIRoboCommand(
+                    name: rootNode.Attribute("Name")?.Value ?? string.Empty,
+                    copyOptions: Copy,
+                    loggingOptions: Logging,
+                    selectionOptions: Selection,
+                    retryOptions: Retry
+                    ));
             }
             return commands;
         }
 
+        /// <summary>
+        /// Create a new XmlWriter object to write at the specified path.
+        /// </summary>
+        protected virtual XmlWriter GetXmlWriter(string path)
+        {
+            return XmlWriter.Create(path, new System.Xml.XmlWriterSettings()
+            {
+                Indent = true,
+            });
+        }
 
         /// <inheritdoc/>
+        /// <remarks>Note: This overwrites the xml file at the specified <paramref name="path"/></remarks>
+        /// <inheritdoc cref="System.Xml.XmlWriter.Create(string)"/>
+        /// <inheritdoc cref="XDocument.Save(System.Xml.XmlWriter)"/>
         public void Serialize(IEnumerable<IRoboCommand> commands, string path)
         {
-            var doc = SerializeRoboCommands(commands);
-            using (var writer = System.Xml.XmlWriter.Create(path, GetXmlWriterSettings()))
+            var doc = new XDocument(new XElement("IRoboCommands"));
+            Append(doc.Root, commands);
+            using (XmlWriter writer = GetXmlWriter(path))
             {
-                doc.WriteTo(writer);
+                doc.Save(writer);
                 writer.Dispose();
             }
         }
@@ -58,25 +110,13 @@ namespace RoboSharp.Extensions
             => Serialize(commands, path);
 
         /// <summary>
-        /// Serialize each IRoboCommand via <see cref="SerializeRoboCommand(IRoboCommand)"/>
-        /// </summary>
-        /// <returns>A new XDocument object</returns>
-        protected virtual XDocument SerializeRoboCommands(IEnumerable<IRoboCommand> commands)
-        {
-            var doc = new XDocument(new XElement("IRoboCommands"));
-            foreach (var cmd in commands)
-                doc.Root.Add(SerializeRoboCommand(cmd));
-            return doc;
-        }
-
-        /// <summary>
         /// Serialize an IRoboCommand into an <see cref="XElement"/>
         /// </summary>
         /// <param name="command">The command to serialize</param>
         /// <returns>An <see cref="XElement"/> tree representing the serialized <paramref name="command"/></returns>
         protected virtual XElement SerializeRoboCommand(IRoboCommand command)
         {
-            var root = new XElement("IRoboCommand");
+            var root = new XElement(nameof(IRoboCommand));
             root.SetAttributeValue(nameof(command.Name), command.Name);
             // CopyOptions
             root.Add(new XElement(nameof(command.CopyOptions), CreatePropertyNodes(command.CopyOptions)));
@@ -88,18 +128,6 @@ namespace RoboSharp.Extensions
             root.Add(new XElement(nameof(command.RetryOptions), CreatePropertyNodes(command.RetryOptions)));
             return root;
         }
-
-        /// <summary>
-        /// Get the XMLWriterSettings object to use when writing the file to disk
-        /// </summary>
-        protected virtual System.Xml.XmlWriterSettings GetXmlWriterSettings()
-        {
-            return new System.Xml.XmlWriterSettings()
-            {
-                Indent = true,
-            };
-        }
-
 
         /// <summary>Name of nodes contained within IEnumerable nodes</summary>
         protected const string CollectionItemXelementName = "Item";
