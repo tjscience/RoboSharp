@@ -1,6 +1,7 @@
 ﻿using RoboSharp.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -106,16 +107,26 @@ namespace RoboSharp.Extensions
                 {
                     value = prop.GetValue(optionsObject)?.ToString();
                     if (!createNodeWhenEmpty && string.IsNullOrWhiteSpace(value)) continue;
+                    if (TryGetDefaultValue<string>(prop, out string defaultValue) && value.Equals(defaultValue, StringComparison.InvariantCultureIgnoreCase)) continue;
                 }
                 else if (propType == typeof(bool))
                 {
                     bool val = (bool)prop.GetValue(optionsObject);
+                    if (TryGetDefaultValue<bool>(prop, out bool defaultValue) && val == defaultValue) continue;
                     if (!val && !createNodeWhenFalse) continue;
                     value = val.ToString();
                 }
-                else if (propType == typeof(int) | propType == typeof(long))
+                else if (propType == typeof(int))
                 {
-                    value = prop.GetValue(optionsObject).ToString();
+                    int val = (int)prop.GetValue(optionsObject);
+                    if (TryGetDefaultValue<int>(prop, out int defaultValue) && val == defaultValue) continue;
+                    value = val.ToString();
+                }
+                else if (propType == typeof(long))
+                {
+                    long val = (long)prop.GetValue(optionsObject);
+                    if (TryGetDefaultValue(prop, out long defaultValue) && val == defaultValue) continue;
+                    value = val.ToString();
                 }
                 else if (propType == typeof(IEnumerable<string>) || propType == typeof(List<string>))
                 {
@@ -141,6 +152,17 @@ namespace RoboSharp.Extensions
             return xElements.ToArray();
         }
 
+        private static bool TryGetDefaultValue<T>(PropertyInfo prop, out T value)
+        {
+            value = default;
+            var defAttr = prop.GetCustomAttribute(typeof(DefaultValueAttribute));
+            if (defAttr is DefaultValueAttribute valueAttr)
+            {
+                value = (T)valueAttr.Value;
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Create a new <typeparamref name="T"/> object, applying properties from the supplied <paramref name="xElement"/>
