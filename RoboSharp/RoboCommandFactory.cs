@@ -14,6 +14,20 @@ namespace RoboSharp
     /// </summary>
     public class RoboCommandFactory : IRoboCommandFactory
     {
+        /// <summary>
+        /// The Default <see cref="CopyActionFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
+        /// </summary>
+        public CopyActionFlags DefaultCopyOptions { get; set; } = CopyActionFlags.Default;
+
+        /// <summary>
+        /// The Default <see cref="LoggingFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
+        /// </summary>
+        public LoggingFlags DefaultLoggingOptions { get; set; } = LoggingFlags.RoboSharpDefault;
+
+        /// <summary>
+        /// The Default <see cref="SelectionFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
+        /// </summary>
+        public SelectionFlags DefaultSelectionOptions { get; set; } = SelectionFlags.Default;
 
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object using default settings.
@@ -24,7 +38,14 @@ namespace RoboSharp
         /// <br/>As such, overriding this one method will to provide will provide the other factory methods with the customized default IRobocommand object.
         /// </remarks>
         /// <returns>new <see cref="IRoboCommand"/> object using the parameterless constructor</returns>
-        public virtual IRoboCommand GetRoboCommand() => new RoboCommand();
+        public virtual IRoboCommand GetRoboCommand()
+            => new RoboCommand(
+                source: string.Empty,
+                destination: string.Empty,
+                copyActionFlags: DefaultCopyOptions,
+                selectionFlags: DefaultSelectionOptions,
+                loggingFlags: DefaultLoggingOptions
+             );
 
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.
@@ -61,7 +82,7 @@ namespace RoboSharp
         /// <inheritdoc cref="GetRoboCommand(string, string, CopyActionFlags, SelectionFlags)"/>
         public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags)
         {
-            return GetRoboCommand(source, destination, copyActionFlags, SelectionFlags.Default);
+            return GetRoboCommand(source, destination, copyActionFlags, DefaultSelectionOptions);
         }
     }
 }

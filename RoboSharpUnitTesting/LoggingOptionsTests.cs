@@ -3,6 +3,7 @@ using RoboSharp.Interfaces;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace RoboSharp.UnitTests
 {
@@ -39,6 +40,49 @@ namespace RoboSharp.UnitTests
             cmd.LoggingOptions.ListOnly = false;
             cmd.Start().Wait();
             Assert.IsTrue(Directory.Exists(cmd.CopyOptions.Destination), "\nDestination Directory was not created.");
+        }
+
+        [TestMethod]
+        public void TestIsLogFileSpecified()
+        {
+            LoggingOptions options = new LoggingOptions();
+
+            Assert.IsFalse(options.IsLogFileSpecified());
+
+            options.AppendLogPath = "G";
+            Assert.IsTrue(options.IsLogFileSpecified());
+
+            options.AppendLogPath = "";
+            options.AppendUnicodeLogPath = "G";
+            Assert.IsTrue(options.IsLogFileSpecified());
+
+            options.AppendUnicodeLogPath = "";
+            options.LogPath = "G";
+            Assert.IsTrue(options.IsLogFileSpecified());
+
+            options.LogPath = "";
+            options.UnicodeLogPath = "G";
+            Assert.IsTrue(options.IsLogFileSpecified());
+            
+            options.LogPath = null;
+            options.UnicodeLogPath = null;
+            options.AppendLogPath = null;
+            options.AppendUnicodeLogPath = null;
+            Assert.IsFalse(options.IsLogFileSpecified());
+        }
+
+        [DataRow(true)]
+        [DataRow(false)]
+        [TestMethod]
+        public void TestBytes(bool withBytes)
+        {
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, true);
+            cmd.LoggingOptions.PrintSizesAsBytes = withBytes;
+            cmd.Start().Wait();
+            var results = cmd.GetResults();
+            Assert.IsNotNull(results);
+            results.LogLines.ToList().ForEach(Console.WriteLine);
+            Console.WriteLine(results.BytesStatistic.ToString());
         }
     }
 }

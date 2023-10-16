@@ -43,6 +43,7 @@ namespace RoboSharp.UnitTests
             cmd.CopyOptions.Source = UseLargerFileSet ? Source_LargerNewer : Source_Standard;
             cmd.CopyOptions.Destination = TestDestination;
             cmd.CopyOptions.CopySubdirectoriesIncludingEmpty = true;
+            cmd.LoggingOptions.ApplyLoggingFlags(LoggingFlags.VerboseOutput | LoggingFlags.OutputToRoboSharpAndLog | LoggingFlags.PrintSizesAsBytes);
             cmd.LoggingOptions.ListOnly = ListOnlyMode;
             return cmd;
         }

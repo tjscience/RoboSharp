@@ -21,7 +21,10 @@ namespace RoboSharp
         /// <summary>
         /// 
         /// </summary>
-        public JobOptions() { }
+        public JobOptions() 
+        {
+            FilePath = string.Empty;
+        }
 
         /// <summary>
         /// Constructor for ICloneable Interface
@@ -87,7 +90,7 @@ namespace RoboSharp
         /// <remarks>
         /// This causes RoboCopy to generate an RCJ file where the command options are stored to so it can be used later.
         /// </remarks>
-        public virtual string FilePath { get; set; } = "";
+        public virtual string FilePath { get; set; }
 
         /// <summary>
         /// When set, RoboCopy will load the job options from the specified <see cref="FilePath"/>. <br/>

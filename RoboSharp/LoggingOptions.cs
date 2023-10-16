@@ -21,6 +21,10 @@ namespace RoboSharp
         public LoggingOptions(LoggingFlags flags = LoggingFlags.RoboSharpDefault) 
         {
             ApplyLoggingFlags(flags |= LoggingFlags.RoboSharpDefault);
+            LogPath = string.Empty;
+            AppendLogPath = string.Empty;
+            UnicodeLogPath = string.Empty;
+            AppendUnicodeLogPath = string.Empty;
         }
 
         /// <summary>
@@ -99,7 +103,7 @@ namespace RoboSharp
         /// <remarks>
         /// If set false, RoboCommand ProgressEstimator will not be accurate due files not showing in the logs.
         /// </remarks>
-        public virtual bool VerboseOutput { get; set; } = true;
+        public virtual bool VerboseOutput { get; set; }
         /// <summary>
         /// Include source file time stamps in the output.
         /// [/TS]
@@ -193,10 +197,6 @@ namespace RoboSharp
         
         #endregion
 
-        #region < Flags >
-
-        
-
         /// <summary>
         /// Set the Logging Options using the <paramref name="flags"/> <br/>
         /// </summary>
@@ -220,9 +220,9 @@ namespace RoboSharp
             this.OutputAsUnicode = flags.HasFlag(LoggingFlags.OutputAsUnicode);
             this.ReportExtraFiles = flags.HasFlag(LoggingFlags.ReportExtraFiles);
             this.ShowEstimatedTimeOfArrival = flags.HasFlag(LoggingFlags.ShowEstimatedTimeOfArrival);
+            this.VerboseOutput = flags.HasFlag(LoggingFlags.VerboseOutput);
 
             //RoboSharp Defaults
-            if (flags.HasFlag(LoggingFlags.VerboseOutput)) this.VerboseOutput = true;
             if (flags.HasFlag(LoggingFlags.OutputToRoboSharpAndLog)) this.OutputToRoboSharpAndLog = true;
             if (flags.HasFlag(LoggingFlags.PrintSizesAsBytes)) this.PrintSizesAsBytes = true;
         }
@@ -252,8 +252,6 @@ namespace RoboSharp
             if (VerboseOutput) flags |= LoggingFlags.VerboseOutput;
             return flags;
         }
-
-        #endregion
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
         internal static string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
@@ -294,7 +292,7 @@ namespace RoboSharp
                 options.Append(string.Format(UNICODE_LOG_PATH, WrapPath(UnicodeLogPath)));
             if (!AppendUnicodeLogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(APPEND_UNICODE_LOG_PATH, WrapPath(AppendUnicodeLogPath)));
-            if (OutputToRoboSharpAndLog)
+            if (OutputToRoboSharpAndLog && IsLogFileSpecified())
                 options.Append(OUTPUT_TO_ROBOSHARP_AND_LOG);
             if (NoJobHeader)
                 options.Append(NO_JOB_HEADER);
@@ -313,6 +311,18 @@ namespace RoboSharp
         public override string ToString()
         {
             return Parse();
+        }
+        
+        /// <summary>
+        /// Evaluate the Log File paths and determine if any are specified.
+        /// </summary>
+        /// <returns>TRUE if atleast one log file is specified, otherwise false.</returns>
+        public bool IsLogFileSpecified()
+        {
+            return !string.IsNullOrWhiteSpace(LogPath) ||
+                !string.IsNullOrWhiteSpace(UnicodeLogPath) ||
+                !string.IsNullOrWhiteSpace(AppendLogPath) ||
+                !string.IsNullOrWhiteSpace(AppendUnicodeLogPath);
         }
 
         /// <summary>

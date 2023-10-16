@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp.Interfaces;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +12,48 @@ namespace RoboSharp.UnitTests
     [TestClass]
     public class JobOptionsTests
     {
-        private static string GetJobFilePath() => Path.Combine(Path.GetDirectoryName(Test_Setup.Source_Standard), "JobFileTesting", "TestJobFile.rcj");
+        private static string GetJobFilePath(string fileName = "TestJobFile.rcj") => Path.Combine(Path.GetDirectoryName(Test_Setup.Source_Standard), "JobFileTesting", fileName);
+
+        [DataRow("Mirror.rcj", "/MIR")]
+        [DataRow("Subdirectories_IgnoreEmpty.rcj", "/S")]
+        [DataRow("Subdirectories_CopyEmpty.rcj", "/E")]
+        [DataRow("Verbose.rcj", "/V")]
+        [TestMethod]
+        public void RoboCopyJobFileOutput(string fileName, string arguments)
+        {
+            // Create an RCJ file free of RoboSharp influence
+            if (Test_Setup.IsRunningOnAppVeyor()) return; // Ignore on Appveyor, since this is for manual inspection.
+            string filepath = GetJobFilePath(GetJobFilePath(fileName));
+            Directory.CreateDirectory(Path.GetDirectoryName(filepath));
+            using (var proc = new Process()
+            {
+                StartInfo = new ProcessStartInfo()
+                {
+                    Arguments = arguments + $" /QUIT /SAVE:\"{filepath}\"",
+                    CreateNoWindow = true,
+                    RedirectStandardError = false,
+                    RedirectStandardInput = false,
+                    RedirectStandardOutput = true,
+                    FileName = "robocopy",
+                    UseShellExecute = false,
+                }
+            })
+            {
+                List<string> lines = new List<string>();
+                proc.OutputDataReceived += (o, e) => lines.Add(e.Data);
+                proc.Start();
+                proc.BeginOutputReadLine();
+                proc.WaitForExit();
+                lines.ForEach(Console.WriteLine);
+            }
+
+            Console.WriteLine("\n\n --------  RCJ File Created  -------- \n\n");
+            using (var reader = new StreamReader(filepath))
+            {
+                while (!reader.EndOfStream)
+                    Console.WriteLine(reader.ReadLine());
+            }
+        }
 
         /// <summary>
         /// This test ensures that the destination directory is not created when using the /QUIT function
