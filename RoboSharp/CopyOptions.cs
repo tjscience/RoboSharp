@@ -26,6 +26,7 @@ namespace RoboSharp
         {
             this.Source = string.Empty;
             this.Destination = string.Empty;
+            this.runHours = string.Empty;
         }
 
         /// <summary>
@@ -161,9 +162,11 @@ namespace RoboSharp
         private string _destination;
 
         /// <summary>
-        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
-        /// JobOptions file saves these into the /IF (Include Files) section
+        /// Allows you to supply a set of files to copy or use wildcard characters (* or ?).
+        /// <para/> * = wildcard, any number of characters.
+        /// <br/> ? = wildcard, single character.
         /// </summary>
+        /// <remarks>JobOptions file saves these into the /IF (Include Files) section</remarks>
         public IEnumerable<string> FileFilter
         {
             get
@@ -701,6 +704,27 @@ namespace RoboSharp
         public bool CheckRunHoursString(string runHours) => IsRunHoursStringValid(runHours);
 
         #endregion
+
+        /// <summary>
+        /// Add file filters to the <see cref="FileFilter"/> property.
+        /// <para/> Note: If the FileFilter contains only <see cref="DefaultFileFilter"/>, it will be replaced with the new collection.
+        /// <br/>Otherwise, the <paramref name="filters"/> will be added to the collection.
+        /// </summary>
+        /// <param name="filters"><inheritdoc cref="FileFilter" path="/summary"/></param>
+        public void AddFileFilter(params string[] filters)
+        {
+            if (filters.Length == 0) return;
+            if (FileFilter is null | !FileFilter.Any())
+                FileFilter = filters;
+            else
+            {
+                var cur = FileFilter.ToArray();
+                if (cur.Length == 1 && cur[0] == DefaultFileFilter)
+                    FileFilter = filters;
+                else
+                    FileFilter = cur.Concat(filters);
+            }
+        }
 
         #region < Flags >
 
