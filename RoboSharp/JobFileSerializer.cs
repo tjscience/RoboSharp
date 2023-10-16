@@ -38,6 +38,14 @@ namespace RoboSharp
         public void Serialize(IEnumerable<IRoboCommand> commands, string path)
             => Serialize(commands, new DirectoryInfo(path));
 
+        /// <inheritdoc cref="Serialize(IEnumerable{IRoboCommand}, string)"/>
+        public void Serialize(string path, params IRoboCommand[] commands)
+            => Serialize(commands, path);
+
+        /// <inheritdoc cref="Serialize(IEnumerable{IRoboCommand}, DirectoryInfo)"/>
+        public void Serialize(DirectoryInfo path, params IRoboCommand[] commands)
+            => Serialize(commands, path);
+
         /// <summary>
         /// Process each command and save it as a JobFile
         /// </summary>

@@ -33,6 +33,10 @@ namespace RoboSharp.Extensions
             }
         }
 
+        /// <inheritdoc cref="Serialize(IEnumerable{IRoboCommand}, string)"/>
+        public void Serialize(string path, params IRoboCommand[] commands)
+            => Serialize(commands, path);
+
         /// <summary>
         /// Serialize each IRoboCommand via <see cref="SerializeRoboCommand(IRoboCommand)"/>
         /// </summary>
