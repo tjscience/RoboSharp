@@ -2,9 +2,12 @@
 # RoboSharp
 ![AppVeyor Build](https://img.shields.io/appveyor/build/tjscience/RoboSharp)
 ### NuGet Packages
-![Nuget](https://img.shields.io/nuget/dt/RoboSharp?label=RoboSharp&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp) \
-![Nuget](https://img.shields.io/nuget/dt/RoboSharp.Extensions?label=RoboSharp.Extensions&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp.Extensions) \
-![Nuget](https://img.shields.io/nuget/dt/RoboSharpNET35?label=RoboSharpNET35&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharpNET35)
+![Nuget](https://img.shields.io/nuget/v/RoboSharp?label=RoboSharp&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp) 
+![Nuget](https://img.shields.io/nuget/dt/RoboSharp?label=%20&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp)\
+![Nuget](https://img.shields.io/nuget/v/RoboSharp.Extensions?label=RoboSharp.Extensions&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp.Extensions)
+![Nuget](https://img.shields.io/nuget/dt/RoboSharp.Extensions?label=%20&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharp.Extensions)\
+![Nuget](https://img.shields.io/nuget/v/RoboSharpNET35?label=RoboSharpNET35&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharpNET35)
+![Nuget](https://img.shields.io/nuget/dt/RoboSharpNET35?label=%20&link=https%3A%2F%2Fwww.nuget.org%2Fpackages%2FRoboSharpNET35)
 
 ### Wiki - in progress - https://github.com/tjscience/RoboSharp/wiki
 
