@@ -15,7 +15,7 @@ namespace RoboSharp
     /// <summary>
     /// Serialize an IEnumerable&lt;IRoboCommand&gt; into/out of XML
     /// </summary>
-    public class RoboCommandXmlSerializer : IRoboQueueSerializer
+    public class RoboCommandXmlSerializer : IRoboCommandSerializer
     {
         /// <summary>
         /// Function used to create an <see cref="IRoboCommand"/> object from the deserialized parameters
