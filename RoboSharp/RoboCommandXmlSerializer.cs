@@ -17,72 +17,55 @@ namespace RoboSharp
     /// </summary>
     public class RoboCommandXmlSerializer : IRoboQueueSerializer
     {
+        /// <summary>
+        /// Function used to create an <see cref="IRoboCommand"/> object from the deserialized parameters
+        /// </summary>
+        /// <param name="name"><inheritdoc cref="IRoboCommand.Name"/></param>
+        /// <param name="copyOptions">The CopyOptions deserialized from the XML file</param>
+        /// <param name="loggingOptions">The LoggingOptions deserialized from the XML file</param>
+        /// <param name="retryOptions">The RetryOptions deserialized from the XML file</param>
+        /// <param name="selectionOptions">The SelectionOptions deserialized from the XML file</param>
+        /// <returns></returns>
+        public delegate IRoboCommand CreateIRoboCommandFunc(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, RetryOptions retryOptions, SelectionOptions selectionOptions);
 
-        /// <inheritdoc cref="Append(XElement, IEnumerable{IRoboCommand})"/>
-        protected void Append(XElement parent, params IRoboCommand[] commands) => Append(parent, (IEnumerable<IRoboCommand>)commands);
+        /// <inheritdoc cref="CreateIRoboCommandFunc"/>
+        /// <remarks>This is the default <see cref="CreateIRoboCommandFunc"/> used by the <see cref="RoboCommandXmlSerializer"/></remarks>
+        protected static RoboCommand DefaultCreationDelegate(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, RetryOptions retryOptions, SelectionOptions selectionOptions)
+            => new RoboCommand(name, null, null, true, null, copyOptions, selectionOptions, retryOptions, loggingOptions, null);
+
+        private const BindingFlags PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty;
+
+        /// <summary>Name of nodes contained within IEnumerable nodes</summary>
+        protected const string Item = nameof(Item);
+
+        private readonly CreateIRoboCommandFunc CreationDelegate;
 
         /// <summary>
-        /// Serializes the <paramref name="commands"/> and adds each one as a new node within the <paramref name="parent"/>
+        /// Create a new RoboCommandXmlSerializer that serializes / deserializes <see cref="RoboCommand"/> objects
         /// </summary>
-        /// <param name="parent">The parent element to add the collection of serialized commands into</param>
-        /// <param name="commands">the commands to serialize</param>
-        protected void Append(XElement parent, IEnumerable<IRoboCommand> commands) => parent.Add(commands.Select(SerializeRoboCommand).ToArray());
+        public RoboCommandXmlSerializer() : this(DefaultCreationDelegate) { }
 
         /// <summary>
-        /// The factory method used to create the IRoboCommand object during deserialization.
+        /// Create a new RoboCommandXmlSerializer that uses the provided <paramref name="createIRoboCommandFunc"/> 
+        /// to create the IRoboCommand objects during deserialization.
         /// </summary>
-        /// <returns>A new <see cref="IRoboCommand"/> object</returns>
-        protected virtual IRoboCommand CreateIRoboCommand(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, SelectionOptions selectionOptions, RetryOptions retryOptions)
+        /// <param name="createIRoboCommandFunc">A <see cref="CreateIRoboCommandFunc"/> used to create the IRoboCommands during deserialization</param>
+        /// <exception cref="ArgumentNullException"/>
+        public RoboCommandXmlSerializer(CreateIRoboCommandFunc createIRoboCommandFunc) 
         {
-            return new RoboCommand()
-            {
-                Name = name,
-                CopyOptions = copyOptions,
-                LoggingOptions = loggingOptions,
-                RetryOptions = retryOptions,
-                SelectionOptions = selectionOptions,
-            };
+            CreationDelegate = createIRoboCommandFunc ?? throw new ArgumentNullException(nameof(createIRoboCommandFunc));
         }
 
-        /// <inheritdoc/>
-        /// <exception cref="FileNotFoundException"/>
-        /// <inheritdoc cref="Deserialize(XElement)"/>
-        public virtual IEnumerable<IRoboCommand> Deserialize(string path)
+        /// <inheritdoc cref="CreateIRoboCommandFunc"/>
+        protected virtual IRoboCommand CreateIRoboCommand(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, RetryOptions retryOptions, SelectionOptions selectionOptions)
         {
-            if (!File.Exists(path)) throw new FileNotFoundException(path);
-            XDocument doc = XDocument.Load(path);
-            return Deserialize(doc.Root);
-        }
-
-        /// <summary>
-        /// Scan the <paramref name="parent"/> node for children elements named 'IRoboCommand' and parse each one into a new <see cref="RoboCommand"/> object.
-        /// </summary>
-        /// <param name="parent">The parent node which contains Elements named 'IRoboCommand'</param>
-        /// <returns>A collection of <see cref="IRoboCommand"/> objects that were deserialized.</returns>
-        public virtual IEnumerable<IRoboCommand> Deserialize(XElement parent)
-        {
-            List<IRoboCommand> commands = new List<IRoboCommand>();
-            foreach (var rootNode in parent.Elements(nameof(IRoboCommand)))
-            {
-                var Copy = ReadNodes<CopyOptions>(rootNode.Element(nameof(CopyOptions)));
-                var Logging = ReadNodes<LoggingOptions>(rootNode.Element(nameof(LoggingOptions)));
-                var Retry = ReadNodes<RetryOptions>(rootNode.Element(nameof(RetryOptions)));
-                var Selection = ReadNodes<SelectionOptions>(rootNode.Element(nameof(SelectionOptions)));
-                commands.Add(CreateIRoboCommand(
-                    name: rootNode.Attribute("Name")?.Value ?? string.Empty,
-                    copyOptions: Copy,
-                    loggingOptions: Logging,
-                    selectionOptions: Selection,
-                    retryOptions: Retry
-                    ));
-            }
-            return commands;
+            return CreationDelegate(name, copyOptions, loggingOptions, retryOptions, selectionOptions);
         }
 
         /// <summary>
-        /// Create a new XmlWriter object to write at the specified path.
+        /// Create a new XmlWriter object to write the xml document to the specified <paramref name="path"/>
         /// </summary>
-        protected virtual XmlWriter GetXmlWriter(string path)
+        protected virtual XmlWriter CreateXmlWriter(string path)
         {
             return XmlWriter.Create(path, new System.Xml.XmlWriterSettings()
             {
@@ -91,14 +74,141 @@ namespace RoboSharp
         }
 
         /// <inheritdoc/>
+        /// <exception cref="FileNotFoundException"/>
+        /// <inheritdoc cref="DeserializeCommands(XElement)"/>
+        public virtual IEnumerable<IRoboCommand> Deserialize(string path)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException(path);
+            XDocument doc = XDocument.Load(path);
+            return DeserializeCommands(doc.Root);
+        }
+
+        /// <summary>
+        /// Scan the <paramref name="parent"/> node for children elements named 'IRoboCommand' and parse each one into a new <see cref="RoboCommand"/> object.
+        /// </summary>
+        /// <param name="parent">The parent node which contains Elements named 'IRoboCommand'</param>
+        /// <returns>A collection of <see cref="IRoboCommand"/> objects that were deserialized.</returns>
+        protected virtual IEnumerable<IRoboCommand> DeserializeCommands(XElement parent)
+        {
+            return parent.Elements(nameof(IRoboCommand)).Select(DeserializeCommand);
+        }
+
+        /// <summary>
+        /// Evaluate the <paramref name="IRoboCommandNode"/>'s children, and deserialize it into a new <see cref="IRoboCommand"/>
+        /// </summary>
+        /// <param name="IRoboCommandNode"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"/>
+        protected virtual IRoboCommand DeserializeCommand(XElement IRoboCommandNode)
+        {
+            if (IRoboCommandNode is null) throw new ArgumentNullException(nameof(IRoboCommandNode));
+
+            return CreateIRoboCommand(
+                name: IRoboCommandNode.Attribute("Name")?.Value ?? string.Empty,
+                copyOptions: DeserializeCopyOptions(IRoboCommandNode.Element(nameof(CopyOptions))),
+                loggingOptions: DeserializeLoggingOptions(IRoboCommandNode.Element(nameof(LoggingOptions))),
+                retryOptions: DeserializeRetryOptions(IRoboCommandNode.Element(nameof(RetryOptions))),
+                selectionOptions: DeserializeSelectionOptions(IRoboCommandNode.Element(nameof(SelectionOptions)))
+                );
+        }
+
+        /// <param name="optionsElement">The element representing the CopyOptions object</param>
+        /// <returns>The deserialized CopyOptions object</returns>
+        protected virtual CopyOptions DeserializeCopyOptions(XElement optionsElement)
+        {
+            return DeserializeNode(optionsElement, new CopyOptions());
+        }
+
+        /// <param name="optionsElement">The element representing the LoggingOptions object</param>
+        /// <returns>The deserialized LoggingOptions object</returns>
+        protected virtual LoggingOptions DeserializeLoggingOptions(XElement optionsElement)
+        {
+            return DeserializeNode(optionsElement, new LoggingOptions());
+        }
+
+        /// <param name="optionsElement">The element representing the RetryOptions object</param>
+        /// <returns>The deserialized RetryOptions object</returns>
+        protected virtual RetryOptions DeserializeRetryOptions(XElement optionsElement)
+        {
+            return DeserializeNode(optionsElement, new RetryOptions());
+        }
+
+        /// <param name="optionsElement">The element representing the SelectionOptions object</param>
+        /// <returns>The deserialized SelectionOptions object</returns>
+        protected virtual SelectionOptions DeserializeSelectionOptions(XElement optionsElement)
+        {
+            return DeserializeNode(optionsElement, new SelectionOptions());
+        }
+
+        /// <summary>
+        /// Apply properties from the supplied <paramref name="xElement"/> to the <paramref name="optionsObject"/>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="xElement">The parent node, whose children represent the properties of the created object.</param>
+        /// <param name="optionsObject">The object to apply the values to</param>
+        /// <returns>An <typeparamref name="T"/> object that has the settings provided by the <paramref name="xElement"/></returns>
+        protected static T DeserializeNode<T>(XElement xElement, T optionsObject) where T : class, new()
+        {
+            if (optionsObject is null) optionsObject = new T();
+            if (xElement is null) return optionsObject;
+            var props = typeof(T).GetProperties(PropertyBindingFlags);
+            foreach (var prop in props)
+            {
+                if (prop.CustomAttributes.Any(attr => attr.AttributeType == typeof(ObsoleteAttribute)))
+                    continue;
+                Type propType = prop.PropertyType;
+                bool isPropIEnum = propType == typeof(IEnumerable<string>);
+                bool isPropList = propType == typeof(List<string>);
+                if (isPropIEnum || isPropList)
+                {
+                    var items = xElement
+                        .Element(prop.Name)
+                        ?.Elements(Item)
+                        ?.Select(item => item.Value)
+                        ?.ToArray();
+                    if (items is null) continue;
+                    if (isPropIEnum)
+                        prop.SetValue(optionsObject, items);
+                    else if (isPropList)
+                        (prop.GetValue(optionsObject) as List<string>).AddRange(items);
+                }
+                else
+                {
+                    string strValue = xElement.Element(prop.Name)?.Value;
+                    if (strValue is null) continue;
+                    if (propType == typeof(string))
+                    {
+                        prop.SetValue(optionsObject, strValue);
+                    }
+                    else if (propType == typeof(bool))
+                    {
+                        if (bool.TryParse(strValue, out bool val))
+                            prop.SetValue(optionsObject, val);
+                    }
+                    else if (propType == typeof(int))
+                    {
+                        if (int.TryParse(strValue, out var val))
+                            prop.SetValue(optionsObject, val);
+                    }
+                    else if (propType == typeof(long))
+                    {
+                        if (long.TryParse(strValue, out var val))
+                            prop.SetValue(optionsObject, val);
+                    }
+                }
+            }
+            return optionsObject;
+        }
+
+        /// <inheritdoc/>
         /// <remarks>Note: This overwrites the xml file at the specified <paramref name="path"/></remarks>
         /// <inheritdoc cref="System.Xml.XmlWriter.Create(string)"/>
         /// <inheritdoc cref="XDocument.Save(System.Xml.XmlWriter)"/>
-        public void Serialize(IEnumerable<IRoboCommand> commands, string path)
+        public virtual void Serialize(IEnumerable<IRoboCommand> commands, string path)
         {
             var doc = new XDocument(new XElement("IRoboCommands"));
-            Append(doc.Root, commands);
-            using (XmlWriter writer = GetXmlWriter(path))
+            doc.Root.Add(commands.Select(SerializeRoboCommand).ToArray());
+            using (XmlWriter writer = CreateXmlWriter(path))
             {
                 doc.Save(writer);
                 writer.Dispose();
@@ -106,8 +216,7 @@ namespace RoboSharp
         }
 
         /// <inheritdoc cref="Serialize(IEnumerable{IRoboCommand}, string)"/>
-        public void Serialize(string path, params IRoboCommand[] commands)
-            => Serialize(commands, path);
+        public void Serialize(string path, params IRoboCommand[] commands) => Serialize(commands, path);
 
         /// <summary>
         /// Serialize an IRoboCommand into an <see cref="XElement"/>
@@ -118,20 +227,53 @@ namespace RoboSharp
         {
             var root = new XElement(nameof(IRoboCommand));
             root.SetAttributeValue(nameof(command.Name), command.Name);
+            root.SetAttributeValue(nameof(Type), command.GetType().FullName);
+
             // CopyOptions
-            root.Add(new XElement(nameof(command.CopyOptions), CreatePropertyNodes(command.CopyOptions)));
+            var node = SerializeCopyOptions(command.CopyOptions);
+            if (node != null) root.Add(node);
+
             // Selection Options
-            root.Add(new XElement(nameof(command.SelectionOptions), CreatePropertyNodes(command.SelectionOptions)));
+            node = SerializeSelectionOptions(command.SelectionOptions);
+            if (node != null) root.Add(node);
+
             // Logging Options
-            root.Add(new XElement(nameof(command.LoggingOptions), CreatePropertyNodes(command.LoggingOptions)));
-            // Logging Options
-            root.Add(new XElement(nameof(command.RetryOptions), CreatePropertyNodes(command.RetryOptions)));
+            node = SerializeLoggingOptions(command.LoggingOptions);
+            if (node != null) root.Add(node);
+
+            // Retry Options
+            node = SerializeRetryOptions(command.RetryOptions);
+            if (node != null) root.Add(node);
             return root;
         }
 
-        /// <summary>Name of nodes contained within IEnumerable nodes</summary>
-        protected const string CollectionItemXelementName = "Item";
-        private const BindingFlags PropertyBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty;
+        /// <summary> Serialize the <paramref name="copyOptions"/> object into an <see cref="XElement"/> </summary>
+        /// <returns>An <see cref="XElement"/> representing the object, or null if no Xelement was produced.</returns>
+        protected virtual XElement SerializeCopyOptions(CopyOptions copyOptions)
+        {
+            return new XElement(nameof(CopyOptions), CreatePropertyNodes(copyOptions));
+        }
+
+        /// <summary> Serialize the <paramref name="loggingOptions"/> object into an <see cref="XElement"/> </summary>
+        /// <returns>An <see cref="XElement"/> representing the object, or null if no Xelement was produced.</returns>
+        protected virtual XElement SerializeLoggingOptions(LoggingOptions loggingOptions)
+        {
+            return new XElement(nameof(LoggingOptions), CreatePropertyNodes(loggingOptions));
+        }
+
+        /// <summary> Serialize the <paramref name="retryOptions"/> object into an <see cref="XElement"/> </summary>
+        /// <returns>An <see cref="XElement"/> representing the object, or null if no Xelement was produced.</returns>
+        protected virtual XElement SerializeRetryOptions(RetryOptions retryOptions)
+        {
+            return new XElement(nameof(RetryOptions), CreatePropertyNodes(retryOptions));
+        }
+
+        /// <summary> Serialize the <paramref name="selectionOptions"/> object into an <see cref="XElement"/> </summary>
+        /// <returns>An <see cref="XElement"/> representing the object, or null if no Xelement was produced.</returns>
+        protected virtual XElement SerializeSelectionOptions(SelectionOptions selectionOptions)
+        {
+            return new XElement(nameof(SelectionOptions), CreatePropertyNodes(selectionOptions));
+        }
 
         /// <summary>
         /// Read all boolean, integer, and string properties of the specified object, and create <see cref="XElement"/> nodes to represent them.
@@ -181,7 +323,7 @@ namespace RoboSharp
                     if (coll is null || !coll.Any()) continue;
                     xEl = new XElement(prop.Name);
                     xEl.Add(
-                        coll.Select(val => new XElement(CollectionItemXelementName) { Value = val })
+                        coll.Where(ExtensionMethods.IsNotEmpty).Select(val => new XElement(Item) { Value = val })
                         .ToArray()
                         );
                 }
@@ -199,7 +341,11 @@ namespace RoboSharp
             return xElements.ToArray();
         }
 
-        private static bool TryGetDefaultValue<T>(PropertyInfo prop, out T value)
+        /// <summary>
+        /// Try to get the Default Value, as assigned by a <see cref="DefaultValueAttribute"/>, from the <paramref name="prop"/>
+        /// </summary>
+        /// <returns>TRUE if a default value attribute was located, otherwise FALSE</returns>
+        protected static bool TryGetDefaultValue<T>(PropertyInfo prop, out T value)
         {
             value = default;
             var defAttr = prop.GetCustomAttribute(typeof(DefaultValueAttribute));
@@ -209,65 +355,6 @@ namespace RoboSharp
                 return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Create a new <typeparamref name="T"/> object, applying properties from the supplied <paramref name="xElement"/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="xElement">The parent node, whose children represent the properties of the created object.</param>
-        /// <returns>A new <typeparamref name="T"/> object</returns>
-        protected static T ReadNodes<T>(XElement xElement) where T : new()
-        {
-            var props = typeof(T).GetProperties(PropertyBindingFlags);
-            T obj = new T();
-            foreach (var prop in props)
-            {
-                if (prop.CustomAttributes.Any(attr => attr.AttributeType == typeof(ObsoleteAttribute)))
-                    continue;
-                Type propType = prop.PropertyType;
-                bool isPropIEnum = propType == typeof(IEnumerable<string>);
-                bool isPropList = propType == typeof(List<string>);
-                if (isPropIEnum || isPropList)
-                {
-                    
-                    var items = xElement
-                        .Element(prop.Name)
-                        ?.Elements(CollectionItemXelementName)
-                        ?.Select(item => item.Value)
-                        ?.ToArray();
-                    if (items is null) continue;
-                    if (isPropIEnum)
-                        prop.SetValue(obj, items);
-                    else if (isPropList)
-                        (prop.GetValue(obj) as List<string>).AddRange(items);
-                }
-                else
-                {
-                    string strValue = xElement.Element(prop.Name)?.Value;
-                    if (strValue is null) continue;
-                    if (propType == typeof(string))
-                    {
-                        prop.SetValue(obj, strValue);
-                    }
-                    else if (propType == typeof(bool))
-                    {
-                        if (bool.TryParse(strValue, out bool val))
-                            prop.SetValue(obj, val);
-                    }
-                    else if (propType == typeof(int))
-                    {
-                        if (int.TryParse(strValue, out var val))
-                            prop.SetValue(obj, val);
-                    }
-                    else if (propType == typeof(long))
-                    {
-                        if (long.TryParse(strValue, out var val))
-                            prop.SetValue(obj, val);
-                    }
-                }
-            }
-            return obj;
         }
     }
 }

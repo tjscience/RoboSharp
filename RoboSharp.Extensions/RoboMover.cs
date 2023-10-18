@@ -50,6 +50,16 @@ namespace RoboSharp.Extensions
         public RoboMover(IRoboCommand cmd) : base(cmd)
         { }
 
+        /// <inheritdoc cref="RoboSharp.RoboCommandXmlSerializer.CreateIRoboCommandFunc"/>
+        /// <remarks>A delegate to use with the <see cref="RoboCommandXmlSerializer"/></remarks>
+        public static RoboMover XmlSerializerDelegate(string name, CopyOptions copyOptions, LoggingOptions loggingOptions, RetryOptions retryOptions, SelectionOptions selectionOptions)
+        {
+            return new RoboMover(copyOptions, loggingOptions, retryOptions, selectionOptions, null)
+            {
+                Name = name
+            };
+        }
+
         private RoboCommand standardCommand;
         private Task runningTask;
         private CancellationTokenSource cancelRequest;
