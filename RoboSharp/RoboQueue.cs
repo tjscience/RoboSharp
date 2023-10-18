@@ -913,7 +913,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void RemovCommand(Predicate<IRoboCommand> match)
+        public void RemoveCommand(Predicate<IRoboCommand> match)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveAll(match);
