@@ -12,7 +12,7 @@ namespace RoboSharp
     /// <summary>
     /// Serialize IRoboCommands to RCJ files within a directory
     /// </summary>
-    public class JobFileSerializer : IRoboQueueSerializer
+    public class JobFileSerializer : IRoboCommandSerializer
     {
 
         /// <inheritdoc cref="Deserialize(string)"/>

@@ -9,7 +9,7 @@ namespace RoboSharp.Interfaces
     /// <summary>
     /// Interface for objects to serialize / deserialize a collection of <see cref="IRoboCommand"/> objects
     /// </summary>
-    public interface IRoboQueueSerializer
+    public interface IRoboCommandSerializer
     {
         /// <summary>
         /// Serialize the IRoboCommands to a specified <paramref name="path"/>
