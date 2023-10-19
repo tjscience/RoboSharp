@@ -98,7 +98,7 @@ namespace RoboSharp
         /// <summary>
         /// set TRUE to only enable <see cref="NotifyCollectionChangedAction.Reset"/> notifications, as opposed to full notifications. (WPF Compatibility)
         /// </summary>
-        public bool ResetNotificationsOnly { get; set; } = false;
+        public bool ResetNotificationsOnly { get; set; }
 
         /// <inheritdoc/>
         public int Capacity => InternalList.Count;

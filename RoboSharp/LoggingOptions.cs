@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Text;
 
 namespace RoboSharp
@@ -18,9 +19,18 @@ namespace RoboSharp
         /// <summary>
         /// Create new LoggingOptions with Default Settings
         /// </summary>
-        public LoggingOptions(LoggingFlags flags = LoggingFlags.RoboSharpDefault) 
+        public LoggingOptions() : this(LoggingFlags.RoboSharpDefault) { }
+
+        /// <summary>
+        /// Create new LoggingOptions with Default Settings
+        /// </summary>
+        public LoggingOptions(LoggingFlags flags) 
         {
             ApplyLoggingFlags(flags |= LoggingFlags.RoboSharpDefault);
+            LogPath = string.Empty;
+            AppendLogPath = string.Empty;
+            UnicodeLogPath = string.Empty;
+            AppendUnicodeLogPath = string.Empty;
         }
 
         /// <summary>
@@ -79,18 +89,20 @@ namespace RoboSharp
         internal const string NO_JOB_HEADER = "/NJH ";
         internal const string NO_JOB_SUMMARY = "/NJS ";
         internal const string OUTPUT_AS_UNICODE = "/UNICODE ";
-        
+
         #region < Properties >
 
         /// <summary>
         /// Do not copy, timestamp or delete any files.
         /// [/L]
         /// </summary>
+        [DefaultValue(false)] 
         public virtual bool ListOnly { get; set; }
         /// <summary>
         /// Report all extra files, not just those selected.
         /// [X]
         /// </summary>
+        [DefaultValue(false)] 
         public virtual bool ReportExtraFiles { get; set; }
         /// <summary>
         /// Produce verbose output, showing skipped files.
@@ -99,16 +111,19 @@ namespace RoboSharp
         /// <remarks>
         /// If set false, RoboCommand ProgressEstimator will not be accurate due files not showing in the logs.
         /// </remarks>
-        public virtual bool VerboseOutput { get; set; } = true;
+        [DefaultValue(false)]
+        public virtual bool VerboseOutput { get; set; }
         /// <summary>
         /// Include source file time stamps in the output.
         /// [/TS]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool IncludeSourceTimeStamps { get; set; }
         /// <summary>
         /// Include full path names of files in the output.
         /// [/FP]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool IncludeFullPathNames { get; set; }
         /// <summary>
         /// Print sizes as bytes in the output.
@@ -117,85 +132,97 @@ namespace RoboSharp
         /// <remarks>
         /// Automatically appended by the base RoboCommand object to allow results to work properly
         /// </remarks>
+        [DefaultValue(false)]
         public virtual bool PrintSizesAsBytes { get; set; }
         /// <summary>
         /// Do not log file sizes.
         /// [/NS]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoFileSizes { get; set; }
         /// <summary>
         /// Do not log file classes.
         /// [/NC]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoFileClasses { get; set; }
         /// <summary>
         /// Do not log file names.
         /// [/NFL]
         /// WARNING: If this is set to TRUE then GUI cannot handle showing progress correctly as it can't get information it requires from the log
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoFileList { get; set; }
         /// <summary>
         /// Do not log directory names.
         /// [/NDL]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoDirectoryList { get; set; }
         /// <summary>
         /// Do not log percentage copied.
         /// [/NP]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoProgress { get; set; }
         /// <summary>
         /// Show estimated time of arrival of copied files.
         /// [/ETA]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool ShowEstimatedTimeOfArrival { get; set; }
         /// <summary>
         /// Output status to LOG file (overwrite existing log).
         /// [/LOG:file]
         /// </summary>
+        [DefaultValue("")]
         public virtual string LogPath { get; set; }
         /// <summary>
         /// Output status to LOG file (append to existing log).
         /// [/LOG+:file]
         /// </summary>
+        [DefaultValue("")]
         public virtual string AppendLogPath { get; set; }
         /// <summary>
         /// Output status to LOG file as UNICODE (overwrite existing log).
         /// [/UNILOG:file]
         /// </summary>
+        [DefaultValue("")]
+
         public virtual string UnicodeLogPath { get; set; }
         /// <summary>
         /// Output status to LOG file as UNICODE (append to existing log).
         /// [/UNILOG+:file]
         /// </summary>
+        [DefaultValue("")]
         public virtual string AppendUnicodeLogPath { get; set; }
         /// <summary>
         /// Output to RoboSharp and Log.
         /// [/TEE]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool OutputToRoboSharpAndLog { get; set; }
         /// <summary>
         /// Do not output a Job Header.
         /// [/NJH]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoJobHeader { get; set; }
         /// <summary>
         /// Do not output a Job Summary.
         /// [/NJS]
         /// WARNING: If this is set to TRUE then statistics will not work correctly as this information is gathered from the job summary part of the log 
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool NoJobSummary { get; set; }
         /// <summary>
         /// Output as UNICODE.
         /// [/UNICODE]
         /// </summary>
+        [DefaultValue(false)]
         public virtual bool OutputAsUnicode { get; set; }
         
         #endregion
-
-        #region < Flags >
-
-        
 
         /// <summary>
         /// Set the Logging Options using the <paramref name="flags"/> <br/>
@@ -220,9 +247,9 @@ namespace RoboSharp
             this.OutputAsUnicode = flags.HasFlag(LoggingFlags.OutputAsUnicode);
             this.ReportExtraFiles = flags.HasFlag(LoggingFlags.ReportExtraFiles);
             this.ShowEstimatedTimeOfArrival = flags.HasFlag(LoggingFlags.ShowEstimatedTimeOfArrival);
+            this.VerboseOutput = flags.HasFlag(LoggingFlags.VerboseOutput);
 
             //RoboSharp Defaults
-            if (flags.HasFlag(LoggingFlags.VerboseOutput)) this.VerboseOutput = true;
             if (flags.HasFlag(LoggingFlags.OutputToRoboSharpAndLog)) this.OutputToRoboSharpAndLog = true;
             if (flags.HasFlag(LoggingFlags.PrintSizesAsBytes)) this.PrintSizesAsBytes = true;
         }
@@ -252,8 +279,6 @@ namespace RoboSharp
             if (VerboseOutput) flags |= LoggingFlags.VerboseOutput;
             return flags;
         }
-
-        #endregion
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
         internal static string WrapPath(string logPath) => (!logPath.StartsWith("\"") && logPath.Contains(" ")) ? $"\"{logPath}\"" : logPath;
@@ -294,7 +319,7 @@ namespace RoboSharp
                 options.Append(string.Format(UNICODE_LOG_PATH, WrapPath(UnicodeLogPath)));
             if (!AppendUnicodeLogPath.IsNullOrWhiteSpace())
                 options.Append(string.Format(APPEND_UNICODE_LOG_PATH, WrapPath(AppendUnicodeLogPath)));
-            if (OutputToRoboSharpAndLog)
+            if (OutputToRoboSharpAndLog && IsLogFileSpecified())
                 options.Append(OUTPUT_TO_ROBOSHARP_AND_LOG);
             if (NoJobHeader)
                 options.Append(NO_JOB_HEADER);
@@ -313,6 +338,18 @@ namespace RoboSharp
         public override string ToString()
         {
             return Parse();
+        }
+        
+        /// <summary>
+        /// Evaluate the Log File paths and determine if any are specified.
+        /// </summary>
+        /// <returns>TRUE if atleast one log file is specified, otherwise false.</returns>
+        public bool IsLogFileSpecified()
+        {
+            return !string.IsNullOrWhiteSpace(LogPath) ||
+                !string.IsNullOrWhiteSpace(UnicodeLogPath) ||
+                !string.IsNullOrWhiteSpace(AppendLogPath) ||
+                !string.IsNullOrWhiteSpace(AppendUnicodeLogPath);
         }
 
         /// <summary>

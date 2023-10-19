@@ -11,3 +11,5 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Maintain compatibility with previous releases", Scope = "member", Target = "~M:RoboSharp.CopyOptions.CheckRunHoursString(System.String)~System.Boolean")]
 [assembly: SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "RoboCopy is a windows thing. Its not expected to run on other platforms.")]
 [assembly: SuppressMessage("Style", "IDE0019:Use pattern matching", Justification = "Valid code & easy to read")]
+[assembly: SuppressMessage("Style", "IDE0057:Use range operator", Justification = "Unavaiable in some build targets", Scope = "member", Target = "~M:RoboSharp.RoboCommand.Process_OutputDataReceived(System.Object,System.Diagnostics.DataReceivedEventArgs)")]
+[assembly: SuppressMessage("Style", "IDE0063:Use simple 'using' statement", Justification = "<Pending>", Scope = "member", Target = "~M:RoboSharp.Authentication.CheckJobFileSavePath(RoboSharp.Interfaces.IRoboCommand)~RoboSharp.AuthenticationResult")]

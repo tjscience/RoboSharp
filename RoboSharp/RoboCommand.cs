@@ -617,25 +617,54 @@ namespace RoboSharp
 
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
-            bool _NODD = JobOptions.NoDestinationDirectory;
-            bool _NOSD = JobOptions.NoSourceDirectory;
+            string _SOURCE = CopyOptions.Source;
+            string _DEST = CopyOptions.Destination;
 
             JobOptions.FilePath = path;
-            JobOptions.NoSourceDirectory = !IncludeSource;
-            JobOptions.NoDestinationDirectory = !IncludeDestination;
             JobOptions.PreventCopyOperation = true;
+            CopyOptions.Source = IncludeSource ? _SOURCE : string.Empty;
+            CopyOptions.Destination = IncludeDestination ? _DEST : string.Empty;
             try
             {
+                var AuthResult = Authentication.AuthenticateJobFileSavePath(this, domain, username, password);
+                if (!AuthResult.Success)
+                {
+                    RaiseOnCommandError(AuthResult.CommandErrorArgs);
+                    return;
+                }
                 await GetRoboCopyTask(null, domain, username, password); //This should take approximately 1-2 seconds at most
             }
             finally
             {
                 //Restore Original Settings
                 JobOptions.FilePath = _PATH;
-                JobOptions.NoSourceDirectory = _NOSD;
-                JobOptions.NoDestinationDirectory = _NODD;
                 JobOptions.PreventCopyOperation = _QUIT;
+                CopyOptions.Source = _SOURCE;
+                CopyOptions.Destination = _DEST;
             }
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public static RoboCommand LoadFromJobFile(string filePath)
+        {
+            return JobFileBuilder.Parse(filePath);
+        }
+
+        /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
+        public static bool TryLoadFromJobFile(string filePath, out RoboCommand cmd)
+        {
+            try
+            {
+                cmd = JobFileBuilder.Parse(filePath);
+                return true;
+            }
+            catch
+            {
+                cmd = null;
+                return false;
+
+            }
+            
         }
 
         #endregion
@@ -655,7 +684,7 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            var lastData = resultsBuilder.LastLine;
+            string lastData = resultsBuilder?.LastLine ?? "";
             resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null) return; // Nothing to do
@@ -799,7 +828,7 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage("JobOptions parsed.");
             //var systemOptions = " /V /R:0 /FP /BYTES /W:0 /NJH /NJS";
 
-            return string.Format("{0}{1}{2}{3} /BYTES {4}", parsedCopyOptions, parsedSelectionOptions,
+            return string.Format("{0}{1}{2}{3}{4}", parsedCopyOptions, parsedSelectionOptions,
                 parsedRetryOptions, parsedLoggingOptions, parsedJobOptions);
         }
 
@@ -815,7 +844,7 @@ namespace RoboSharp
         /// <param name="jobFile"></param>
         public void MergeJobFile(JobFile jobFile)
         {
-            Name = Name.ReplaceIfEmpty(jobFile.Job_Name);
+            Name = Name.ReplaceIfEmpty(jobFile.Name);
             copyOptions.Merge(jobFile.CopyOptions);
             LoggingOptions.Merge(jobFile.LoggingOptions);
             RetryOptions.Merge(jobFile.RetryOptions);

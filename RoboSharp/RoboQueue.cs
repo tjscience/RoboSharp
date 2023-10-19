@@ -612,7 +612,7 @@ namespace RoboSharp
                CommandList.RemoveAll((c) => c is null); // Remove all null references
                
                //Reset results of all commands in the list
-               foreach (RoboCommand cmd in CommandList)
+               foreach (RoboCommand cmd in CommandList.Where(cmd => cmd is RoboCommand).Select(cmd => (RoboCommand)cmd))
                    cmd?.ResetResults();
 
 
@@ -913,7 +913,7 @@ namespace RoboSharp
 
         /// <inheritdoc cref="List{T}.RemoveAll(Predicate{T})"/>
         /// <inheritdoc cref="ListAccessDeniedException.StandardMsg"/>
-        public void RemovCommand(Predicate<IRoboCommand> match)
+        public void RemoveCommand(Predicate<IRoboCommand> match)
         {
             if (IsRunning) throw new ListAccessDeniedException();
             CommandList.RemoveAll(match);

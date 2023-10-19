@@ -60,7 +60,7 @@ namespace RoboSharp.Results
         internal IRoboCommand Command { get; }
         private bool SkippingFile { get; set; }
         private bool CopyOpStarted { get; set; }
-        private bool IsFinalized { get; set; } = false;
+        private bool IsFinalized { get; set; }
         internal bool FileFailed { get; set; }
         private bool DirMarkedAsCopied { get; set; }
 

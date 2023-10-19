@@ -52,6 +52,6 @@ namespace RoboSharp
         /// The flags that are automatically applied by RoboSharp to allow it to function properly. <br/>
         /// The ApplyLoggingFlags method will not remove these flags, only apply them.
         /// </summary>
-        RoboSharpDefault = OutputToRoboSharpAndLog | PrintSizesAsBytes | VerboseOutput
+        RoboSharpDefault = OutputToRoboSharpAndLog | PrintSizesAsBytes
     }
 }

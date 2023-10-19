@@ -33,18 +33,21 @@ namespace RoboSharp
         /// Constructor for ICloneable Interface
         /// </summary>
         /// <param name="jobFile"></param>
+        /// <exception cref="ArgumentNullException"/>
         public JobFile(JobFile jobFile)
         {
-            this.roboCommand = jobFile.roboCommand.Clone();
+            this.roboCommand = jobFile?.roboCommand?.Clone() ?? throw new ArgumentNullException(nameof(jobFile));
         }
 
         /// <summary>
-        /// Clone the RoboCommand's options objects into a new JobFile
+        /// Create a JobFile object that shares its options objects with the specified <paramref name="cmd"/>
         /// </summary>
         /// <param name="cmd">IRoboCommand whose options shall be saved.</param>
         /// <param name="filePath">Optional FilePath to specify for future call to <see cref="Save()"/></param>
+        /// <exception cref="ArgumentNullException"/>
         public JobFile(IRoboCommand cmd, string filePath = "")
         {
+            if (cmd is null) throw new ArgumentNullException(nameof(cmd));
             FilePath = filePath ?? "";
             roboCommand = new RoboCommand(cmd.Name, cmd.CopyOptions.Source, cmd.CopyOptions.Destination, true, cmd.Configuration, cmd.CopyOptions, cmd.SelectionOptions, cmd.RetryOptions, cmd.LoggingOptions);
             try { roboCommand.JobOptions = cmd.JobOptions; } catch { }
@@ -55,10 +58,11 @@ namespace RoboSharp
         /// </summary>
         /// <param name="filePath">the filepath to save the job file into</param>
         /// <param name="commandToUseWhenSaving">the RoboCommand to use when saving</param>
+        /// <exception cref="ArgumentNullException"/>
         private JobFile(string filePath, RoboCommand commandToUseWhenSaving)
         {
-            FilePath = filePath;
-            roboCommand = commandToUseWhenSaving;
+            FilePath = filePath ?? "";
+            roboCommand = commandToUseWhenSaving ?? throw new ArgumentNullException(nameof(commandToUseWhenSaving));
         }
 
         #endregion
@@ -68,33 +72,76 @@ namespace RoboSharp
         /// <inheritdoc cref="JobFileBuilder.Parse(string)"/>
         public static JobFile ParseJobFile(string path)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(path);
-            if (cmd != null) return new JobFile(path, cmd);
-            return null;
+            return new JobFile(path, JobFileBuilder.Parse(path));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(StreamReader)"/>
         public static JobFile ParseJobFile(StreamReader streamReader)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(streamReader);
-            if (cmd != null) return new JobFile("", cmd);
-            return null;
+            return new JobFile("", JobFileBuilder.Parse(streamReader));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(FileInfo)"/>
         public static JobFile ParseJobFile(FileInfo file)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(file);
-            if (cmd != null) return new JobFile(file.FullName, cmd);
-            return null;
+            return new JobFile(file.FullName, JobFileBuilder.Parse(file));
         }
 
         /// <inheritdoc cref="JobFileBuilder.Parse(IEnumerable{String})"/>
         public static JobFile ParseJobFile(IEnumerable<string> FileText)
         {
-            RoboCommand cmd = JobFileBuilder.Parse(FileText);
-            if (cmd != null) return new JobFile("", cmd);
-            return null;
+            return new JobFile("", JobFileBuilder.Parse(FileText));
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(string)"/>
+        public static bool TryParseJobFile(string path, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(path);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(FileInfo)"/>
+        public static bool TryParseJobFile(FileInfo file, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(file);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Try to parse a file at the specified path.</summary>
+        /// <returns>True if the the <paramref name="jobFile"/> was created successfully, otherwise false.</returns>
+        /// <inheritdoc cref="ParseJobFile(StreamReader)"/>
+        public static bool TryParseJobFile(StreamReader streamReader, out JobFile jobFile)
+        {
+            jobFile = null;
+            try
+            {
+                jobFile = ParseJobFile(streamReader);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         #endregion
@@ -132,9 +179,9 @@ namespace RoboSharp
         #region < Fields >
 
         /// <summary>
-        /// Options are stored in a RoboCommand object for simplicity.
+        /// The underlying RoboCommand object
         /// </summary>
-        protected RoboCommand roboCommand;
+        private readonly RoboCommand roboCommand;
 
         #endregion
 
@@ -144,16 +191,11 @@ namespace RoboSharp
         public virtual string FilePath { get; set; }
 
         /// <inheritdoc cref="RoboCommand.Name"/>
-        public string Job_Name
+        public string Name
         {
-            get => roboCommand?.Name ?? jobName;
-            set
-            {
-                jobName = value;
-                if (roboCommand != null) roboCommand.Name = value;
-            }
+            get => roboCommand.Name;
+            set => roboCommand.Name = value;
         }
-        string jobName;
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public CopyOptions CopyOptions => roboCommand?.CopyOptions;
@@ -166,6 +208,16 @@ namespace RoboSharp
 
         /// <inheritdoc cref="RoboCommand.LoggingOptions"/>
         public SelectionOptions SelectionOptions => roboCommand?.SelectionOptions;
+
+        /// <summary>
+        /// Check if the <see cref="CopyOptions.Source"/> is empty
+        /// </summary>
+        public bool NoSourceDirectory => string.IsNullOrWhiteSpace(CopyOptions.Source);
+
+        /// <summary>
+        /// Check if the <see cref="CopyOptions.Destination"/> is empty
+        /// </summary>
+        public bool NoDestinationDirectory => string.IsNullOrWhiteSpace(CopyOptions.Destination);
 
         #endregion
 

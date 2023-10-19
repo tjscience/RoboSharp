@@ -19,18 +19,20 @@ namespace RoboSharp
         public const string JOBFILE_CommentPrefix = ":: ";
 
         /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
-        public const string JOBFILE_Extension = JobFile.JOBFILE_Extension;
-
-        /// <inheritdoc cref="JobFile.JOBFILE_Extension"/>
         internal const string JOBFILE_JobName = ":: JOB_NAME: ";
 
         internal const string JOBFILE_StopIfDisposing = ":: StopIfDisposing: ";
 
         /// <summary>Pattern to Identify the SWITCH, DELIMITER and VALUE section</summary>
+        //language=regex
         private const string RegString_SWITCH = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>.+?)";
+        
         /// <summary>Pattern to Identify the SWITCH, DELIMIETER and VALUE section</summary>
+        //language=regex
         private const string RegString_SWITCH_NumericValue = "\\s*(?<SWITCH>\\/[A-Za-z]+[-]{0,1})(?<DELIMITER>\\s*:?\\s*)(?<VALUE>[0-9]+?)";
+        
         /// <summary>Pattern to Identify COMMENT sections - Throws out white space and comment delimiter '::' </summary>
+        //language=regex
         private const string RegString_COMMENT = "((?:\\s*[:]{2,}\\s*[:]{0,})(?<COMMENT>.*))";
 
 
@@ -144,39 +146,53 @@ namespace RoboSharp
         #region < Methods that feed Main Parse Routine >
 
         /// <summary>
+        /// Check if the supplied filepath is valid for a RoboCopyJob file (.rcj)
+        /// </summary>
+        /// <param name="filePath">The file path to evaluate</param>
+        /// <returns>TRUE if the path has the correct extension, otherwise false.</returns>
+        public static bool IsCorrectFileExtension(string filePath) => Path.GetExtension(filePath).Equals(JobFile.JOBFILE_Extension, StringComparison.InvariantCultureIgnoreCase);
+
+        /// <summary>
         /// Read each line using <see cref="FileInfo.OpenText"/> and attempt to produce a Job File. <para/>
-        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
         /// </summary>
         /// <param name="file">FileInfo object for some Job File. File Path should end in .RCJ</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="FileNotFoundException"/>
+        /// <inheritdoc cref="Parse(StreamReader)"/>
+        /// <inheritdoc cref="File.OpenText(string)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(FileInfo file)
         {
-            if (file.Extension != JOBFILE_Extension) return null;
+            if (!IsCorrectFileExtension(file.Name)) throw new ArgumentException("Unexpected FileName - Must end with " + JobFile.JOBFILE_Extension, nameof(file));
+            if (!File.Exists(file.FullName)) throw new FileNotFoundException("Unable to parse file, file not found.", file.FullName);
             return Parse(file.OpenText());
         }
 
         /// <summary>
-        /// Use <see cref="File.OpenText(string)"/> to read all lines from the supplied file path. <para/>
-        /// If FileExtension != ".RCJ" -> returns null. Otherwise parses the file.
+        /// Read each line using <see cref="File.OpenText"/> and attempt to produce a Job File. <para/>
         /// </summary>
         /// <param name="path">File Path to some Job File. File Path should end in .RCJ</param>
-        /// <returns></returns>
+        /// <exception cref="ArgumentException"/>
+        /// <inheritdoc cref="Parse(StreamReader)"/>
+        /// <inheritdoc cref="File.OpenText(string)"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(string path)
         {
-            if (Path.GetExtension(path) != JOBFILE_Extension) return null;
+            if (!IsCorrectFileExtension(path)) throw new ArgumentException("Unexpected FileName - Must end with " + JobFile.JOBFILE_Extension, nameof(path));
             return Parse(File.OpenText(path));
         }
 
         /// <summary>
         /// Read each line from a StreamReader and attempt to produce a Job File.
         /// </summary>
-        /// <param name="streamReader">StreamReader for a file stream that represents a Job File</param>
-        /// <returns></returns>
+        /// <param name="streamReader">StreamReader for a file stream that represents a Job File.</param>
+        /// <exception cref="ArgumentNullException"/>
+        /// <inheritdoc cref="Parse(IEnumerable{string})"/>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         internal static RoboCommand Parse(StreamReader streamReader)
         {
+            if (streamReader is null) throw new ArgumentNullException(nameof(streamReader));
             List<string> Lines = new List<string>();
             using (streamReader)
             {
@@ -194,7 +210,7 @@ namespace RoboSharp
         /// Parse each line in <paramref name="Lines"/>, and attempt to create a new JobFile object.
         /// </summary>
         /// <param name="Lines">String[] read from a JobFile</param>
-        /// <returns></returns>
+        /// <returns>A new robocommand</returns>
         internal static RoboCommand Parse(IEnumerable<string> Lines)
         {
             //Extract information from the Lines to quicken processing in *OptionsRegex classes
@@ -273,32 +289,33 @@ namespace RoboSharp
         /// </summary>
         private static CopyOptions Build_CopyOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
         {
-            var options = new CopyOptions();
-
-            //Bool Checks 
-            options.CheckPerFile = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CHECK_PER_FILE.Trim());
-            options.CopyAll = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_ALL.Trim());
-            options.CopyFilesWithSecurity = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_FILES_WITH_SECURITY.Trim());
-            options.CopySubdirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES.Trim());
-            options.CopySubdirectoriesIncludingEmpty = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY.Trim());
-            options.CopySymbolicLink = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SYMBOLIC_LINK.Trim());
-            options.CreateDirectoryAndFileTree = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE.Trim());
-            options.DoNotCopyDirectoryInfo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_COPY_DIRECTORY_INFO.Trim());
-            options.DoNotUseWindowsCopyOffload = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_USE_WINDOWS_COPY_OFFLOAD.Trim());
-            options.EnableBackupMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_BACKUP_MODE.Trim());
-            options.EnableEfsRawMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_EFSRAW_MODE.Trim());
-            options.EnableRestartMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE.Trim());
-            options.EnableRestartModeWithBackupFallback = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK.Trim());
-            options.FatFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FAT_FILES.Trim());
-            options.FixFileSecurityOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_SECURITY_ON_ALL_FILES.Trim());
-            options.FixFileTimesOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_TIMES_ON_ALL_FILES.Trim());
-            options.Mirror = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MIRROR.Trim());
-            options.MoveFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES.Trim());
-            options.MoveFilesAndDirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES_AND_DIRECTORIES.Trim());
-            options.Purge = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.PURGE.Trim());
-            options.RemoveFileInformation = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.REMOVE_FILE_INFORMATION.Trim());
-            options.TurnLongPathSupportOff = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.TURN_LONG_PATH_SUPPORT_OFF.Trim());
-            options.UseUnbufferedIo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.USE_UNBUFFERED_IO.Trim());
+            var options = new CopyOptions
+            {
+                //Bool Checks 
+                CheckPerFile = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CHECK_PER_FILE.Trim()),
+                CopyAll = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_ALL.Trim()),
+                CopyFilesWithSecurity = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_FILES_WITH_SECURITY.Trim()),
+                CopySubdirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES.Trim()),
+                CopySubdirectoriesIncludingEmpty = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY.Trim()),
+                CopySymbolicLink = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.COPY_SYMBOLIC_LINK.Trim()),
+                CreateDirectoryAndFileTree = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE.Trim()),
+                DoNotCopyDirectoryInfo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_COPY_DIRECTORY_INFO.Trim()),
+                DoNotUseWindowsCopyOffload = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.DO_NOT_USE_WINDOWS_COPY_OFFLOAD.Trim()),
+                EnableBackupMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_BACKUP_MODE.Trim()),
+                EnableEfsRawMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_EFSRAW_MODE.Trim()),
+                EnableRestartMode = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE.Trim()),
+                EnableRestartModeWithBackupFallback = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK.Trim()),
+                FatFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FAT_FILES.Trim()),
+                FixFileSecurityOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_SECURITY_ON_ALL_FILES.Trim()),
+                FixFileTimesOnAllFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.FIX_FILE_TIMES_ON_ALL_FILES.Trim()),
+                Mirror = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MIRROR.Trim()),
+                MoveFiles = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES.Trim()),
+                MoveFilesAndDirectories = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.MOVE_FILES_AND_DIRECTORIES.Trim()),
+                Purge = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.PURGE.Trim()),
+                RemoveFileInformation = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.REMOVE_FILE_INFORMATION.Trim()),
+                TurnLongPathSupportOff = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.TURN_LONG_PATH_SUPPORT_OFF.Trim()),
+                UseUnbufferedIo = Flags.Any(flag => flag.Success && flag.Value == CopyOptions.USE_UNBUFFERED_IO.Trim())
+            };
 
             //int / string values on same line as flag
             foreach (var match in ValueFlags)
@@ -308,6 +325,9 @@ namespace RoboSharp
 
                 switch (flag)
                 {
+                    case "/NOSD": // No Source Directory
+                    case "/NODD": // No Desstination Directory
+                        break;
                     case "/A+":
                         options.AddAttributes = value;
                         break;
@@ -397,23 +417,24 @@ namespace RoboSharp
         /// </summary>
         private static SelectionOptions Build_SelectionOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
         {
-            var options = new SelectionOptions();
-
-            //Bool Checks 
-            options.CompensateForDstDifference = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE.Trim());
-            options.ExcludeChanged = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_CHANGED.Trim());
-            options.ExcludeExtra = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_EXTRA.Trim());
-            options.ExcludeJunctionPoints = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS.Trim());
-            options.ExcludeJunctionPointsForDirectories = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES.Trim());
-            options.ExcludeJunctionPointsForFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_FILES.Trim());
-            options.ExcludeLonely = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_LONELY.Trim());
-            options.ExcludeNewer = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_NEWER.Trim());
-            options.ExcludeOlder = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_OLDER.Trim());
-            options.IncludeSame = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_SAME.Trim());
-            options.IncludeTweaked = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_TWEAKED.Trim());
-            options.OnlyCopyArchiveFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES.Trim());
-            options.OnlyCopyArchiveFilesAndResetArchiveFlag = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG.Trim());
-            options.UseFatFileTimes = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.USE_FAT_FILE_TIMES.Trim());
+            var options = new SelectionOptions
+            {
+                //Bool Checks 
+                CompensateForDstDifference = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE.Trim()),
+                ExcludeChanged = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_CHANGED.Trim()),
+                ExcludeExtra = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_EXTRA.Trim()),
+                ExcludeJunctionPoints = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS.Trim()),
+                ExcludeJunctionPointsForDirectories = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES.Trim()),
+                ExcludeJunctionPointsForFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_FILES.Trim()),
+                ExcludeLonely = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_LONELY.Trim()),
+                ExcludeNewer = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_NEWER.Trim()),
+                ExcludeOlder = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.EXCLUDE_OLDER.Trim()),
+                IncludeSame = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_SAME.Trim()),
+                IncludeTweaked = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.INCLUDE_TWEAKED.Trim()),
+                OnlyCopyArchiveFiles = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES.Trim()),
+                OnlyCopyArchiveFilesAndResetArchiveFlag = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG.Trim()),
+                UseFatFileTimes = Flags.Any(flag => flag.Success && flag.Value == SelectionOptions.USE_FAT_FILE_TIMES.Trim())
+            };
 
             //int / string values on same line as flag
             foreach (var match in ValueFlags)
@@ -523,25 +544,26 @@ namespace RoboSharp
         /// </summary>
         private static LoggingOptions Build_LoggingOptions(IEnumerable<Group> Flags, IEnumerable<GroupCollection> ValueFlags, IEnumerable<string> Lines)
         {
-            var options = new LoggingOptions();
-
-            //Bool Checks 
-            options.IncludeFullPathNames = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_FULL_PATH_NAMES.Trim());
-            options.IncludeSourceTimeStamps = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS.Trim());
-            options.ListOnly = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.LIST_ONLY.Trim());
-            options.NoDirectoryList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_DIRECTORY_LIST.Trim());
-            options.NoFileClasses = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_CLASSES.Trim());
-            options.NoFileList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_LIST.Trim());
-            options.NoFileSizes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_SIZES.Trim());
-            options.NoJobHeader = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_HEADER.Trim());
-            options.NoJobSummary = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_SUMMARY.Trim());
-            options.NoProgress = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_PROGRESS.Trim());
-            options.OutputAsUnicode = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_AS_UNICODE.Trim());
-            options.OutputToRoboSharpAndLog = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_TO_ROBOSHARP_AND_LOG.Trim());
-            options.PrintSizesAsBytes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.PRINT_SIZES_AS_BYTES.Trim());
-            options.ReportExtraFiles = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.REPORT_EXTRA_FILES.Trim());
-            options.ShowEstimatedTimeOfArrival = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL.Trim());
-            options.VerboseOutput = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.VERBOSE_OUTPUT.Trim());
+            var options = new LoggingOptions
+            {
+                //Bool Checks 
+                IncludeFullPathNames = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_FULL_PATH_NAMES.Trim()),
+                IncludeSourceTimeStamps = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS.Trim()),
+                ListOnly = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.LIST_ONLY.Trim()),
+                NoDirectoryList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_DIRECTORY_LIST.Trim()),
+                NoFileClasses = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_CLASSES.Trim()),
+                NoFileList = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_LIST.Trim()),
+                NoFileSizes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_FILE_SIZES.Trim()),
+                NoJobHeader = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_HEADER.Trim()),
+                NoJobSummary = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_JOB_SUMMARY.Trim()),
+                NoProgress = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.NO_PROGRESS.Trim()),
+                OutputAsUnicode = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_AS_UNICODE.Trim()),
+                OutputToRoboSharpAndLog = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.OUTPUT_TO_ROBOSHARP_AND_LOG.Trim()),
+                PrintSizesAsBytes = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.PRINT_SIZES_AS_BYTES.Trim()),
+                ReportExtraFiles = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.REPORT_EXTRA_FILES.Trim()),
+                ShowEstimatedTimeOfArrival = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL.Trim()),
+                VerboseOutput = Flags.Any(flag => flag.Success && flag.Value == LoggingOptions.VERBOSE_OUTPUT.Trim())
+            };
 
             //int / string values on same line as flag
             foreach (var match in ValueFlags)
