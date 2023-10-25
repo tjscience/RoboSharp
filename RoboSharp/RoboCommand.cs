@@ -192,7 +192,7 @@ namespace RoboSharp
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
         /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled to only operate within specified timeframe). Otherwise False. </summary>
-        public bool IsScheduled { get => !String.IsNullOrWhiteSpace(CopyOptions.RunHours); }
+        public bool IsScheduled { get => !String.IsNullOrWhiteSpace(CopyOptions?.RunHours); }
         /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
@@ -371,7 +371,6 @@ namespace RoboSharp
                     process?.Kill();
                     isCancelled = true;
                 }
-                //hasExited = true;
                 if (DisposeProcess)
                 {
                     process?.Dispose();
@@ -433,6 +432,7 @@ namespace RoboSharp
         /// <inheritdoc cref="Authentication.AuthenticateSourceAndDestination"/>
         public virtual Task Start(string domain = "", string username = "", string password = "")
         {
+            if (disposedValue) throw GetDisposedException();
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
 
 #if !NET40_OR_GREATER && !NET6_0_OR_GREATER
@@ -475,6 +475,7 @@ namespace RoboSharp
         /// <exception cref="InvalidOperationException"/>
         private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
+            if (disposedValue) throw GetDisposedException();
             if (process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
 
             isRunning = true;
@@ -598,7 +599,7 @@ namespace RoboSharp
         public async Task SaveAsJobFile(string path, bool IncludeSource = false, bool IncludeDestination = false, string domain = "", string username = "", string password = "")
         {
             //If currently running and this is called, clone the command, then run the save method against the clone.
-            if (process != null)
+            if (disposedValue | process != null)
             {
                 var cmd = this.Clone();
                 cmd.StopIfDisposing = true;
@@ -615,6 +616,7 @@ namespace RoboSharp
                 return;
             }
 
+            if (disposedValue) throw GetDisposedException();
             bool _QUIT = JobOptions.PreventCopyOperation;
             string _PATH = JobOptions.FilePath;
             string _SOURCE = CopyOptions.Source;
@@ -857,19 +859,18 @@ namespace RoboSharp
 
         #region < IDisposable Implementation >
 
-        bool disposed = false;
+        private bool disposedValue;
 
         /// <summary>Dispose of this object. Kills RoboCopy process if <see cref="StopIfDisposing"/> == true &amp;&amp; <see cref="IsScheduled"/> == false. </summary>
         /// <remarks><inheritdoc cref="IDisposable.Dispose" path="/summary"/></remarks>
         public void Dispose()
         {
-            Dispose(true);
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Finalizer -> Cleans up resources when garbage collected
-        /// </summary>
+        /// <summary>  Finalizer -> Cleans up the process hooks during finalization </summary>
         ~RoboCommand()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
@@ -879,25 +880,27 @@ namespace RoboSharp
         /// <summary>IDisposable Implementation</summary>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposed)
-                return;
-
-            if (disposing)
+            if (!disposedValue)
             {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects) - None
+                }
 
+                // Check if a running process should be killed
+                if (StopIfDisposing && !IsScheduled)
+                {
+                    Stop(true);
+                }
+
+                //Release any hooks to the process, but allow it to continue running
+                process?.Dispose();
+                process = null;
+                disposedValue = true;
             }
-
-            if (StopIfDisposing && !IsScheduled)
-            {
-                Stop(true);
-            }
-
-            //Release any hooks to the process, but allow it to continue running
-            process?.Dispose();
-            process = null;
-
-            disposed = true;
         }
+
+        private ObjectDisposedException GetDisposedException() => new ObjectDisposedException(Name, "Cannot Start a disposed RoboCommand");
 
         #endregion IDisposable Implementation
     }

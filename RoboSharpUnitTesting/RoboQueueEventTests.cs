@@ -4,6 +4,7 @@ using System.IO;
 using RoboSharp;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace RoboSharp.UnitTests
 {
@@ -156,6 +157,33 @@ namespace RoboSharp.UnitTests
             RQ.CollectionChanged += (o, e) => TestPassed = true;
             RQ.ReplaceCommand(new RoboCommand(), 0);
             if (!TestPassed) throw new AssertFailedException("CollectionChanged Event was not Raised!");
+        }
+
+        [TestMethod]
+        public async Task RoboQueue_EventOrder()
+        {
+            string PEV = "ProgressEstimator.ValuesUpdated";
+            List<string> events = new List<string>();
+            var RQ = GenerateRQ(out _);
+            RQ.OnCommandCompleted += (o,e) => events.Add(nameof(RQ.OnCommandCompleted));
+            RQ.OnCommandError += (o, e) => events.Add(nameof(RQ.OnCommandError));
+            RQ.OnCommandStarted += (o, e) => events.Add(nameof(RQ.OnCommandStarted));
+            RQ.OnCopyProgressChanged += (o, e) => events.Add(nameof(RQ.OnCopyProgressChanged));
+            //RQ.OnFileProcessed += (o, e) => events.Add(nameof(RQ.OnFileProcessed));
+            RQ.OnProgressEstimatorCreated += (o, e) =>
+            {
+                events.Add(nameof(RQ.OnProgressEstimatorCreated));
+                e.ResultsEstimate.ValuesUpdated += (x, y) => events.Add(PEV);
+            };
+            RQ.RunCompleted += (o, e) => events.Add(nameof(RQ.RunCompleted));
+            RQ.RunResultsUpdated += (o, e) => events.Add(nameof(RQ.RunResultsUpdated));
+
+            await RQ.StartAll();
+
+            Console.WriteLine("---- Events in order ----");
+            events.ForEach(Console.WriteLine);
+            Console.WriteLine("\n\n");
+            Assert.IsTrue(events.IndexOf(nameof(RQ.RunCompleted)) > events.LastIndexOf(PEV), PEV + " occurred after " + nameof(RQ.RunCompleted));
         }
 
         // Property Change would have to be tested for every time the property is changed, which can get odd to test.

@@ -536,7 +536,7 @@ namespace RoboSharp
                     TaskFaulted?.Invoke(this, new UnhandledExceptionEventArgs(continuation.Exception, true));
                     throw continuation.Exception;
                 }
-                ListResultsObj.EndTime= DateTime.Now;
+                ListResultsObj.EndTime = DateTime.Now;
                 RunCompleted?.Invoke(this, new RoboQueueCompletedEventArgs(ListResultsObj, true));
                 return (IRoboQueueResults)ListResultsObj;
             }, CancellationToken.None
@@ -558,7 +558,7 @@ namespace RoboSharp
 
             RunResultsObj = new RoboQueueResults();
             RunResultsUpdated?.Invoke(this, new ResultListUpdatedEventArgs(RunResults));
-            
+
             Task Run = StartJobs(domain, username, password, false);
             Task<IRoboQueueResults> ResultsTask = Run.ContinueWith((continuation) =>
             {
@@ -610,7 +610,7 @@ namespace RoboSharp
             Task StartAll = Task.Factory.StartNew(async () =>
            {
                CommandList.RemoveAll((c) => c is null); // Remove all null references
-               
+
                //Reset results of all commands in the list
                foreach (RoboCommand cmd in CommandList.Where(cmd => cmd is RoboCommand).Select(cmd => (RoboCommand)cmd))
                    cmd?.ResetResults();
@@ -677,7 +677,7 @@ namespace RoboSharp
             //Continuation Task return results to caller
             Task ContinueWithTask = StartAll.ContinueWith(async (continuation) =>
            {
-               Estimator?.CancelTasks();
+               await Estimator?.CancelTasks();
                if (cancellationToken.IsCancellationRequested)
                {
                    //If cancellation was requested -> Issue the STOP command to all commands in the list
@@ -802,6 +802,13 @@ namespace RoboSharp
         {
             add { CommandList.CollectionChanged += value; }
             remove { CommandList.CollectionChanged -= value; }
+        }
+
+        /// <inheritdoc cref="IList.this"/>
+        public IRoboCommand this[int i]
+        {
+            get => this.CommandList[i];
+            set => this.CommandList[i] = value;
         }
 
         /// <summary>
