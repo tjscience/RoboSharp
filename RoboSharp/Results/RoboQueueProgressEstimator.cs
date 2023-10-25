@@ -128,9 +128,8 @@ namespace RoboSharp.Results
         /// </summary>
         public void BindToProgressEstimator(IProgressEstimator estimator)
         {
-            if (!SubscribedStats.ContainsKey(estimator))
+            if (SubscribedStats.TryAdd(estimator, null))
             {
-                SubscribedStats.TryAdd(estimator, null);
                 estimator.ValuesUpdated += Estimator_ValuesUpdated;
             }
         }
@@ -214,23 +213,24 @@ namespace RoboSharp.Results
         #region < CancelTasks & DisposePattern >
 
         /// <summary>
-        /// Unbind all the ProgressEstimators
+        /// Unbind all the ProgressEstimators, then raise <see cref="ValuesUpdated"/> to clear out any pending updates.
         /// </summary>
-        public void CancelTasks() => CancelTasks(true);
+        public Task CancelTasks() => CancelTasks(true);
 
-        private void CancelTasks(bool RunUpdateTask)
+        private async Task CancelTasks(bool RunUpdateTask)
         {
-            //Preventn any additional events coming through
+            //Prevent any additional events coming through
             UnBind();
             //Push the last update out after a short delay to allow any pending events through
             if (RunUpdateTask)
             {
-                Task.Run( async () => { 
+                await Task.Run(() => 
+                {
                     lock (UpdateLock)
-                        NextUpdate = DateTime.Now.AddMilliseconds(124);
-                    await Task.Delay(125);
-                    Estimator_ValuesUpdated(null, IProgressEstimatorUpdateEventArgs.DummyArgs);
+                        NextUpdate = DateTime.Now.AddMilliseconds(100);
                 });
+                await Task.Delay(150);
+                Estimator_ValuesUpdated(this, IProgressEstimatorUpdateEventArgs.DummyArgs);
             }
         }
 
@@ -239,14 +239,7 @@ namespace RoboSharp.Results
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                    CancelTasks();
-                }
-
-                //Cancel the tasks
-                CancelTasks(false);
+                _ = CancelTasks(disposing);
                 disposedValue = true;
             }
         }
@@ -267,6 +260,6 @@ namespace RoboSharp.Results
             GC.SuppressFinalize(this);
         }
 
-        #endregion
+#endregion
     }
 }
