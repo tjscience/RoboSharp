@@ -299,13 +299,21 @@ namespace RoboSharp
             options.ShowEstimatedTimeOfArrival |= sanitizedCmd.HasFlag(LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL);
             options.VerboseOutput |= sanitizedCmd.HasFlag(LoggingOptions.VERBOSE_OUTPUT);
 
-            /*
-            options.AppendLogPath;
-            options.AppendUnicodeLogPath;
-            options.LogPath;
-            options.UnicodeLogPath;
-            */
+            options.LogPath = ExtractLogPath(LoggingOptions.LOG_PATH);
+            options.AppendLogPath = ExtractLogPath(LoggingOptions.APPEND_LOG_PATH);
+            options.UnicodeLogPath = ExtractLogPath(LoggingOptions.UNICODE_LOG_PATH);
+            options.AppendUnicodeLogPath = ExtractLogPath(LoggingOptions.APPEND_UNICODE_LOG_PATH);
+            
             return roboCommand;
+
+            string ExtractLogPath(string filter)
+            {
+                if (TryExtractParameter(command, filter, out string path))
+                {
+                    return path.Trim('\"');
+                }
+                return string.Empty;
+            }
         }
 
         private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)

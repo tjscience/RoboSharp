@@ -26,6 +26,11 @@ namespace RoboSharp
                     return outerString.Contains(innerString);
             }
         }
+
+        internal static string Trim(this string text, char character)
+        {
+            return text.Trim(trimChars: new char[] { character });
+        }
 #endif
 
         /// <summary> Encase the LogPath in quotes if needed </summary>

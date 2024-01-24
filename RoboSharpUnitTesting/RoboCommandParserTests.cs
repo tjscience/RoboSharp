@@ -60,5 +60,26 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.SelectionOptions.MaxFileSize, cmdResult.SelectionOptions.MaxFileSize, "\n\nMaxFileSize does not match!");
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
+
+        [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
+        [DataRow("C:\\MyLogFile.txt")]
+        [TestMethod]
+        public void TestLogging(string path)
+        {
+            // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
+            // ( What the library generates should be able to be reparsed back into the library )
+            IRoboCommand cmdSource = new RoboCommand();
+            cmdSource.LoggingOptions.LogPath = path;
+            cmdSource.LoggingOptions.AppendLogPath = path;
+            cmdSource.LoggingOptions.AppendUnicodeLogPath = path;
+            cmdSource.LoggingOptions.UnicodeLogPath = path;
+            IRoboCommand cmdResult = RoboCommandParser.Parse(cmdSource.ToString());
+
+            Assert.AreEqual(cmdSource.LoggingOptions.LogPath, cmdResult.LoggingOptions.LogPath, "\n\nLogPath does not match!");
+            Assert.AreEqual(cmdSource.LoggingOptions.UnicodeLogPath, cmdResult.LoggingOptions.UnicodeLogPath, "\n\nUnicodeLogPath does not match!");
+            Assert.AreEqual(cmdSource.LoggingOptions.AppendLogPath, cmdResult.LoggingOptions.AppendLogPath, "\n\nAppendLogPath does not match!");
+            Assert.AreEqual(cmdSource.LoggingOptions.AppendUnicodeLogPath, cmdResult.LoggingOptions.AppendUnicodeLogPath, "\n\nAppendUnicodeLogPath does not match!");
+            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
     }
 }
