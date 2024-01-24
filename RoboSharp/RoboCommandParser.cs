@@ -329,14 +329,34 @@ namespace RoboSharp
                 options.MinLastAccessDate = param;
             }
 
+             // Get Excluded Files
+            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Files");
+            var matchCollection = Regex.Matches(command, @".+?(?<filters>/XF\s.+?)+\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No File Exclusions found.");
+            foreach (Match c in matchCollection)
+            {
+                string s = c.Groups["filters"].Value.TrimStart("/XF").Trim();
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    Debugger.Instance.DebugMessage($"---> Excluded File : {s}");
+                    options.ExcludedFiles.Add(s);
+                }
+            }
 
-            /*         
-            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting Excluded Files");
-            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting Excluded Directories");
-            options.ExcludedFiles;
-            options.ExcludedDirectories;
-            */
-
+            // Get Excluded Dirs
+            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Directories");
+            matchCollection = Regex.Matches(command, @".+?(?<filters>/XD\s.+?)+\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No Directory Exclusions found.");
+            foreach (Match c in matchCollection)
+            {
+                string s = c.Groups["filters"].Value.TrimStart("/XD").Trim();
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    Debugger.Instance.DebugMessage($"---> Excluded Directory : {s}");
+                    options.ExcludedDirectories.Add(s);
+                }
+            }
+            
             return roboCommand;
         }
 
