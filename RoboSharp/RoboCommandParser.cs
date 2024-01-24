@@ -13,6 +13,7 @@ namespace RoboSharp
     /// </summary>
     public static class RoboCommandParser
     {
+
         /// <returns>A new <see cref="RoboCommand"/></returns>
         /// <inheritdoc cref="Parse(string, Interfaces.IRoboCommandFactory)"/>
         public static Interfaces.IRoboCommand Parse(string command) => Parse(command, new RoboCommandFactory());
@@ -25,32 +26,44 @@ namespace RoboSharp
         /// <returns>A new IRoboCommand object generated from the <paramref name="factory"/></returns>
         public static Interfaces.IRoboCommand Parse(string command, Interfaces.IRoboCommandFactory factory)
         {
+            Debugger.Instance.DebugMessage($"RoboCommandParser - Begin parsing input string : {command}");
+            command = command.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
             ParsedSourceDest paths = ParseSourceAndDestination(command);
             string sanitizedCmd = SanitizeCommandString(command);
             var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd), ParseSelectionFlags(sanitizedCmd));
             
-            return roboCommand
+           roboCommand
                 .ParseCopyOptions(command, sanitizedCmd)
                 .ParseLoggingOptions(command, sanitizedCmd)
                 .ParseSelectionOptions(command, sanitizedCmd)
                 .ParseRetryOptions(command, sanitizedCmd);
+            Debugger.Instance.DebugMessage("RoboCommandParser.Parse completed.\n");
+            return roboCommand;
         }
 
         /// <summary> Prep the command text for use with the HasFlag function </summary>
         private static string SanitizeCommandString(string command) => command.ToLowerInvariant() + " ";
 
         /// <summary> Check if the string contains a the flag string - both are sanitized to lower invariant </summary>
-        private static bool HasFlag(this string cmd, string flag) => cmd.Contains(flag.ToLowerInvariant());
+        private static bool HasFlag(this string cmd, string flag) 
+        {
+            bool value = cmd.Contains(flag.ToLowerInvariant());
+            Debugger.Instance.DebugMessage($"--> Switch {flag}{(value ? "" : " not")} detected.");
+            return value;
+        }
         
 
         /// <summary> Attempt to extract the parameter from a format pattern string </summary>
         private static bool TryExtractParameter(string commandText, string formatString, out string parameter)
         {
             parameter = null;
-
             string prefix = formatString.Substring(0, formatString.IndexOf('{')).TrimEnd('{').Trim(); // Turn /LEV:{0} into /LEV:
-
-            if (!commandText.Contains(prefix, StringComparison.InvariantCultureIgnoreCase)) return false;
+            
+            if (!commandText.Contains(prefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                Debugger.Instance.DebugMessage($"--> Switch {prefix} not detected.");
+                return false;
+            }
             string subSection = commandText.Substring(commandText.IndexOf(prefix, StringComparison.InvariantCultureIgnoreCase)); // Get from that point forward
             
             int substringLength = subSection.IndexOf(" /");
@@ -60,6 +73,7 @@ namespace RoboSharp
             }
 
             parameter = subSection.Replace(prefix, string.Empty);
+            Debugger.Instance.DebugMessage($"--> Switch {prefix} found. Value : {parameter}");
             return true;
         }
 
@@ -84,31 +98,42 @@ namespace RoboSharp
             //lang=regex
             //const string validPathChars = "[^:*?\"<>\\|\\s]";
             //lang=regex
-            const string quotedPattern = "\"(?<source>.+?:.+?)\"\\s+\"(?<dest>.+?:.+?)\".*";
+            const string quotedPattern = "^(?<rc>robocopy\\s*)?\"(?<source>.+?:.+?)\"\\s+\"(?<dest>.+?:.+?)\".*";
             //lang=regex
-            const string sourceQuotedPattern = "\"(?<source>.+?:[^:*?\"<>\\|\\s]+)\"\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*";
+            const string sourceQuotedPattern = "^(?<rc>robocopy\\s*)?\"(?<source>.+?:[^:*?\"<>\\|\\s]+)\"\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*";
             //lang=regex
-            const string destQuotedPattern = "(?<rc>robocopy\\s*)?(?<source>/.+?:[^:*?\"<>\\|\\s]+)\\s+\"(?<dest>.+?:[^:*?\"<>\\|\\s]+)\".*";
+            const string destQuotedPattern = "^(?<rc>robocopy\\s*)?(?<source>/.+?:[^:*?\"<>\\|\\s]+)\\s+\"(?<dest>.+?:[^:*?\"<>\\|\\s]+)\".*";
             //lang=regex
-            const string nonQuotedPattern = "(?<rc>robocopy\\s*)?(?<source>.+?:[^:*?\"<>\\|\\s]+)\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*"; // Non-Quoted strings search until they encounter white-space
+            const string nonQuotedPattern = "^(?<rc>robocopy\\s*)?(?<source>.+?:[^:*?\"<>\\|\\s]+)\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*"; // Non-Quoted strings search until they encounter white-space
 
             // Return the first match
             return PatternMatch(quotedPattern)
                 ?? PatternMatch(nonQuotedPattern)
                 ?? PatternMatch(sourceQuotedPattern)
                 ?? PatternMatch(destQuotedPattern)
-                ?? new ParsedSourceDest(string.Empty, string.Empty);
+                ?? LogNoMatch();
             
             ParsedSourceDest? PatternMatch(string pattern)
             {
                 var match = Regex.Match(command, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
                 if (match.Success)
                 {
-                    return new ParsedSourceDest(match.Groups["source"].Value, match.Groups["dest"].Value);
+                    string source = match.Groups["source"].Value;
+                    string dest = match.Groups["dest"].Value;
+                    Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
+                    Debugger.Instance.DebugMessage($"----> Pattern : " + pattern);
+                    Debugger.Instance.DebugMessage($"----> Source : " + source);
+                    Debugger.Instance.DebugMessage($"----> Destination : " + dest);
+                    return new ParsedSourceDest(source, dest);
                 }else
                 {
                     return null;
                 }
+            }
+            ParsedSourceDest LogNoMatch()
+            {
+                Debugger.Instance.DebugMessage($"--> Unable to detect a Source/Destination pattern match");
+                return new ParsedSourceDest(string.Empty, string.Empty);
             }
         }
 
@@ -135,6 +160,7 @@ namespace RoboSharp
         /// </summary>
         private static IRoboCommand ParseCopyOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
+            Debugger.Instance.DebugMessage($"Parsing Copy Options");
             var options = roboCommand.CopyOptions;
             options.CheckPerFile |= sanitizedCmd.HasFlag(CopyOptions.CHECK_PER_FILE);
             options.CopyAll |= sanitizedCmd.HasFlag(CopyOptions.COPY_ALL);
@@ -197,6 +223,7 @@ namespace RoboSharp
             }
 
             /*
+            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
             options.FileFilter;
             */
 
@@ -231,6 +258,7 @@ namespace RoboSharp
         /// </summary>
         private static IRoboCommand ParseSelectionOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
+            Debugger.Instance.DebugMessage($"Parsing Selection Options");
             var options = roboCommand.SelectionOptions;
             options.CompensateForDstDifference |= command.HasFlag(SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE);
             options.UseFatFileTimes |= command.HasFlag(SelectionOptions.USE_FAT_FILE_TIMES);
@@ -267,9 +295,11 @@ namespace RoboSharp
             {
                 options.MinLastAccessDate = param;
             }
-            
+
 
             /*         
+            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting Excluded Files");
+            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting Excluded Directories");
             options.ExcludedFiles;
             options.ExcludedDirectories;
             */
@@ -281,6 +311,7 @@ namespace RoboSharp
 
         private static IRoboCommand ParseLoggingOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
+            Debugger.Instance.DebugMessage($"Parsing Logging Options");
             var options = roboCommand.LoggingOptions;
             options.IncludeFullPathNames |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_FULL_PATH_NAMES);
             options.IncludeSourceTimeStamps |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS);
@@ -318,6 +349,7 @@ namespace RoboSharp
 
         private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
+            Debugger.Instance.DebugMessage($"Parsing Retry Options");
             var options = roboCommand.RetryOptions;
             options.SaveToRegistry |= sanitizedCmd.HasFlag(RetryOptions.SAVE_TO_REGISTRY);
             options.WaitForSharenames |= sanitizedCmd.HasFlag(RetryOptions.WAIT_FOR_SHARENAMES);

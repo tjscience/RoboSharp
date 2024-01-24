@@ -12,6 +12,11 @@ namespace RoboSharp.UnitTests
     [TestClass()]
     public class RoboCommandParserTests
     {
+        private static void DebuggerWriteLine(object sender, Debugger.DebugMessageArgs args)
+        {
+            Console.WriteLine("--- " + args.Message);
+        }
+        
         [DataRow("robocopy C:\\source D:\\destination\\ \"*.*\" /copyall", DisplayName = "Accept All Files")]
         [DataRow("robocopy C:\\source D:\\destination /copyall", DisplayName = "No Quotes")]
         [DataRow("robocopy C:\\source \"D:\\destination\" /copyall", DisplayName = "Destination Quotes")]
@@ -33,7 +38,7 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            IRoboCommand cmdSource = new RoboCommand(source, destination, copyFlags, selectionFlags, loggingFlags);
+            RoboCommand cmdSource = new RoboCommand(source, destination, copyFlags, selectionFlags, loggingFlags);
             string text = cmdSource.ToString();
             IRoboCommand cmdResult = RoboCommandParser.Parse(text);
             Assert.AreEqual(cmdSource.CopyOptions.Source, cmdResult.CopyOptions.Source, "\nCopyOptions.Source is not equal!");
@@ -54,8 +59,12 @@ namespace RoboSharp.UnitTests
             IRoboCommand cmdSource = new RoboCommand();
             cmdSource.SelectionOptions.MinFileSize = 1234567890;
             cmdSource.SelectionOptions.MaxFileSize= 0987654321;
-            IRoboCommand cmdResult = RoboCommandParser.Parse(cmdSource.ToString());
+            string text = cmdSource.ToString();
 
+            Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
+            IRoboCommand cmdResult = RoboCommandParser.Parse(text);
+            Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
+            
             Assert.AreEqual(cmdSource.SelectionOptions.MinFileSize, cmdResult.SelectionOptions.MinFileSize, "\n\nMinFileSize does not match!");
             Assert.AreEqual(cmdSource.SelectionOptions.MaxFileSize, cmdResult.SelectionOptions.MaxFileSize, "\n\nMaxFileSize does not match!");
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
