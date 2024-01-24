@@ -86,7 +86,7 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
-        [DataRow("C:\\Some Folder\\MyLogFile.txt")]
+        [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
         [DataRow("C:\\MyLogFile.txt")]
         [TestMethod]
         public void TestLogging(string path)
@@ -100,10 +100,12 @@ namespace RoboSharp.UnitTests
             cmdSource.LoggingOptions.UnicodeLogPath = path;
             IRoboCommand cmdResult = RoboCommandParser.Parse(cmdSource.ToString());
 
-            Assert.AreEqual(cmdSource.LoggingOptions.LogPath, cmdResult.LoggingOptions.LogPath, "\n\nLogPath does not match!");
-            Assert.AreEqual(cmdSource.LoggingOptions.UnicodeLogPath, cmdResult.LoggingOptions.UnicodeLogPath, "\n\nUnicodeLogPath does not match!");
-            Assert.AreEqual(cmdSource.LoggingOptions.AppendLogPath, cmdResult.LoggingOptions.AppendLogPath, "\n\nAppendLogPath does not match!");
-            Assert.AreEqual(cmdSource.LoggingOptions.AppendUnicodeLogPath, cmdResult.LoggingOptions.AppendUnicodeLogPath, "\n\nAppendUnicodeLogPath does not match!");
+            // the source paths are trimmed here because they are functionally identical, but the wrapping is removed during the parsing and sanitization process during path qualification. End result command should be the same though.
+            string trimmedPath = path.Trim('\"');
+            Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.LogPath, "\n\nLogPath does not match!");
+            Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.UnicodeLogPath, "\n\nUnicodeLogPath does not match!");
+            Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.AppendLogPath, "\n\nAppendLogPath does not match!");
+            Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.AppendUnicodeLogPath, "\n\nAppendUnicodeLogPath does not match!");
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
@@ -121,12 +123,12 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
-        //[DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
-        //[DataRow("C:\\MyLogFile.txt")]
+        [DataRow("C:\\Windows\\System32", "D:\\Time\\For\\Sleep")]
         [DataRow(DisplayName = "No Filter Specified")]
         [TestMethod]
         public void TestExcludedDirectories(params string[] filters)
         {
+            // Note : Handle instances of /XD multiple times https://superuser.com/questions/482112/using-robocopy-and-excluding-multiple-directories
             RoboCommand cmd = new RoboCommand();
             cmd.SelectionOptions.ExcludedDirectories.AddRange(filters);
             IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
