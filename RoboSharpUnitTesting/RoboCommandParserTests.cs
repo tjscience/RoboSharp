@@ -86,6 +86,48 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
+        [DataRow("19941012", "20220910")]
+        [DataRow("5", "25")]
+        [TestMethod]
+        public void TestFileAge(string min, string max)
+        {
+            // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
+            // ( What the library generates should be able to be reparsed back into the library )
+            IRoboCommand cmdSource = new RoboCommand();
+            cmdSource.SelectionOptions.MinFileAge= min;
+            cmdSource.SelectionOptions.MaxFileAge = max;
+            string text = cmdSource.ToString();
+
+            Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
+            IRoboCommand cmdResult = RoboCommandParser.Parse(text);
+            Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
+
+            Assert.AreEqual(cmdSource.SelectionOptions.MinFileAge, cmdResult.SelectionOptions.MinFileAge, "\n\nMinFileAge does not match!");
+            Assert.AreEqual(cmdSource.SelectionOptions.MaxFileAge, cmdResult.SelectionOptions.MaxFileAge, "\n\nMaxFileAge does not match!");
+            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
+
+        [DataRow("19941012", "20220910")]
+        [DataRow("5", "20201219")]
+        [TestMethod]
+        public void TestFileLastAccessDate(string min, string max)
+        {
+            // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
+            // ( What the library generates should be able to be reparsed back into the library )
+            IRoboCommand cmdSource = new RoboCommand();
+            cmdSource.SelectionOptions.MinLastAccessDate = min;
+            cmdSource.SelectionOptions.MaxLastAccessDate = max;
+            string text = cmdSource.ToString();
+
+            Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
+            IRoboCommand cmdResult = RoboCommandParser.Parse(text);
+            Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
+
+            Assert.AreEqual(cmdSource.SelectionOptions.MinLastAccessDate, cmdResult.SelectionOptions.MinLastAccessDate, "\n\nMinLastAccessDate does not match!");
+            Assert.AreEqual(cmdSource.SelectionOptions.MaxLastAccessDate, cmdResult.SelectionOptions.MaxLastAccessDate, "\n\nMaxLastAccessDate does not match!");
+            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
+
         [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
         [DataRow("C:\\MyLogFile.txt")]
         [TestMethod]

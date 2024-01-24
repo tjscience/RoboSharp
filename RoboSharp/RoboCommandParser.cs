@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace RoboSharp
 {
     /// <summary>
-    /// Class used to parse a string that represents a Command Line call to robocommand, and return a command with those parameters.
+    /// Factory class used to parse a string that represents a Command Line call to robocommand, and return a command with those parameters.
     /// </summary>
     public static class RoboCommandParser
     {
@@ -72,7 +72,7 @@ namespace RoboSharp
                 subSection = subSection.Substring(0, substringLength); // Reduce the subsection down to the relevant portion by cutting off at the next parameter switch
             }
 
-            parameter = subSection.Replace(prefix, string.Empty);
+            parameter = subSection.Replace(prefix, string.Empty).Trim();
             Debugger.Instance.DebugMessage($"--> Switch {prefix} found. Value : {parameter}");
             return true;
         }
@@ -280,7 +280,7 @@ namespace RoboSharp
             {
                 options.MaxFileSize = value;
             }
-            if (TryExtractParameter(command, SelectionOptions.MAX_FILE_AGE, out param))
+            if (TryExtractParameter(command, SelectionOptions.MIN_FILE_AGE, out param))
             {
                 options.MinFileAge = param;
             }
