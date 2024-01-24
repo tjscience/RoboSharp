@@ -81,5 +81,46 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.LoggingOptions.AppendUnicodeLogPath, cmdResult.LoggingOptions.AppendUnicodeLogPath, "\n\nAppendUnicodeLogPath does not match!");
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
+
+        [DataRow("TestFile1.txt", "File2.pdf", "*wildcard*")]
+        [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
+        [DataRow("C:\\MyLogFile.txt")]
+        [DataRow(DisplayName = "No Filter Specified")]
+        [TestMethod]
+        public void TestExcludedFiles(params string[] filters)
+        {
+            RoboCommand cmd = new RoboCommand();
+            cmd.SelectionOptions.ExcludedFiles.AddRange(filters);
+            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
+
+        //[DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
+        //[DataRow("C:\\MyLogFile.txt")]
+        [DataRow(DisplayName = "No Filter Specified")]
+        [TestMethod]
+        public void TestExcludedDirectories(params string[] filters)
+        {
+            RoboCommand cmd = new RoboCommand();
+            cmd.SelectionOptions.ExcludedDirectories.AddRange(filters);
+            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
+
+        [DataRow("*.pdf")]
+        [DataRow("*.pdf", "*.txt", "*.jpg")]
+        [DataRow("*.*")]
+        [DataRow(DisplayName = "No Filter Specified")]
+        [TestMethod]
+        public void TestFileFilter(params string[] filters)
+        {
+            RoboCommand cmd = new RoboCommand();
+            cmd.CopyOptions.AddFileFilter(filters);
+            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+        }
     }
 }
