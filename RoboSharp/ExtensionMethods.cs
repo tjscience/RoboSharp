@@ -54,7 +54,7 @@ namespace RoboSharp
             => string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(removal) ? text : text.Replace(removal, string.Empty);
         
         internal static string TrimStart(this string text, string trim, StringComparison comparison = StringComparison.OrdinalIgnoreCase) 
-            => string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(trim) ? text : text.StartsWith(trim, comparison) ? text.Remove(trim.Length) : text;
+            => string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(trim) ? text : text.StartsWith(trim, comparison) ? text.Remove(0, trim.Length) : text;
 
 
         /// <summary> Encase the LogPath in quotes if needed </summary>

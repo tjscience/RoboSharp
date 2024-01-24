@@ -155,9 +155,9 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
-        [DataRow("TestFile1.txt", "File2.pdf", "*wildcard*")]
-        [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
-        [DataRow("C:\\MyLogFile.txt")]
+        [DataRow("ExcludedTestFile1.txt", "ExcludedFile2.pdf", "*wildcard*")]
+        [DataRow("\"C:\\Some Folder\\Excluded.txt\"")]
+        [DataRow("C:\\Excluded.txt")]
         [DataRow(DisplayName = "No Filter Specified")]
         [TestMethod]
         public void TestExcludedFiles(params string[] filters)
@@ -171,7 +171,10 @@ namespace RoboSharp.UnitTests
             Console.WriteLine($"Output : {cmdResult}");
         }
 
-        [DataRow("C:\\Windows\\System32", "D:\\Time\\For\\Sleep")]
+        [DataRow("D:\\Excluded Dir\\", DisplayName = "Single Exclusion - Spaced")]
+        [DataRow("D:\\Excluded\\Dir\\", DisplayName = "Single Exclusion - No Spaces")]
+        [DataRow("C:\\Windows\\System32", "D:\\Excluded\\Dir\\", DisplayName = " Multiple Exclusions - No Spaces")]
+        [DataRow("C:\\Windows\\System32", "D:\\Excluded Dir\\", DisplayName = " Multiple Exclusions - Spaced")]
         [DataRow(DisplayName = "No Filter Specified")]
         [TestMethod]
         public void TestExcludedDirectories(params string[] filters)

@@ -227,20 +227,22 @@ namespace RoboSharp
             // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
             Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
             string tmp = command.Remove(options.Source).Remove(options.Destination).TrimStart("robocopy").Remove("\"\"").Trim(); // Sanitize the beginning of the string
-            var match = Regex.Match(tmp, @"^(?<filters>.+?)\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            var match = Regex.Match(tmp, "^(?<filters>[\"\\w*.?\\s]+?)\\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
             var foundFilters = match.Groups["filters"].Value;
+            
+            const string debugFormat = "--> Found File Filter : {0}";
             if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
             {
-                options.FileFilter = ParseFilters(foundFilters);
+                options.FileFilter = ParseFilters(foundFilters, debugFormat);
             }
             else 
             {
                 // no switches occurred after the filters, check end of string
-                match = Regex.Match(tmp, @"^(?<filters>.+?)\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+                match = Regex.Match(tmp, "^(?<filters>[\"\\w*.?\\s]+?)\\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
                 foundFilters = match.Groups["filters"].Value;
                 if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
                 {
-                    options.FileFilter = ParseFilters(foundFilters);
+                    options.FileFilter = ParseFilters(foundFilters, debugFormat);
                 }
                 else
                 {
@@ -254,7 +256,7 @@ namespace RoboSharp
         /// <summary>
         /// Parse the string, extracting individual filters out to an IEnumerable string
         /// </summary>
-        static IEnumerable<string> ParseFilters(string stringToParse)
+        static IEnumerable<string> ParseFilters(string stringToParse, string debugFormat)
         {
             List<string> filters = new List<string>();
             StringBuilder filterBuilder = new StringBuilder();
@@ -276,7 +278,10 @@ namespace RoboSharp
                     if (isBuilding) NextFilter(); // unquoted white space indicates end of one filter and start of next. Otherwise ignore whitepsace.
                 }
                 else
+                {
+                    isBuilding = true;
                     filterBuilder.Append(c);
+                }
             }
             NextFilter();
             return filters;
@@ -286,7 +291,7 @@ namespace RoboSharp
                 isBuilding = false;
                 string value = filterBuilder.ToString();
                 if (string.IsNullOrWhiteSpace(value)) return;
-                Debugger.Instance.DebugMessage($"--> Found File Filter : {value}");
+                Debugger.Instance.DebugMessage(string.Format(debugFormat, value));
                 filters.Add(value);
                 filterBuilder.Clear();
             }
@@ -359,29 +364,27 @@ namespace RoboSharp
 
              // Get Excluded Files
             Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Files");
-            var matchCollection = Regex.Matches(command, @".+?(?<filters>/XF\s.+?)+\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            var matchCollection = Regex.Matches(command, ".+?(?<filters>/XF\\s+[^/]+)+\\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
             if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No File Exclusions found.");
             foreach (Match c in matchCollection)
             {
                 string s = c.Groups["filters"].Value.TrimStart("/XF").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {
-                    Debugger.Instance.DebugMessage($"---> Excluded File : {s}");
-                    options.ExcludedFiles.Add(s);
+                    options.ExcludedFiles.AddRange(ParseFilters(s, "---> Excluded File : {0}"));
                 }
             }
 
             // Get Excluded Dirs
             Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Directories");
-            matchCollection = Regex.Matches(command, @".+?(?<filters>/XD\s.+?)+\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            matchCollection = Regex.Matches(command, ".+?(?<filters>/XD\\s+[^/]+)+\\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
             if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No Directory Exclusions found.");
             foreach (Match c in matchCollection)
             {
                 string s = c.Groups["filters"].Value.TrimStart("/XD").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {
-                    Debugger.Instance.DebugMessage($"---> Excluded Directory : {s}");
-                    options.ExcludedDirectories.Add(s);
+                    options.ExcludedDirectories.AddRange(ParseFilters(s, "---> Excluded Directory : {0}")); ;
                 }
             }
             
