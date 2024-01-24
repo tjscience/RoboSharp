@@ -224,11 +224,43 @@ namespace RoboSharp
                 options.RunHours = param;
             }
 
-            /*
-            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
-            options.FileFilter;
-            */
+            options.FileFilter = GetFilters();
 
+            IEnumerable<string> GetFilters()
+            {
+                // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
+                Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
+                string tmp = command.Remove(options.Source).Remove(options.Destination).TrimStart("robocopy").Remove("\"\"").Trim(); // Sanitize the beginning of the string
+                var match = Regex.Match(tmp, @"^(?<filters>.+?)\s+(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase| RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+                var foundFilters = match.Groups["filters"].Value;
+                if (!match.Success | (string.IsNullOrWhiteSpace(foundFilters))) return options.FileFilter; // No Match Found
+                List<string> filters = new List<string>();
+                StringBuilder filterBuilder = new StringBuilder();
+                bool isQuoted = false;
+                bool isBuilding = false;
+                foreach(char c in foundFilters)
+                {
+                    if (isQuoted && c == '"')
+                    {
+                        isQuoted = false;
+                        isBuilding = false;
+                        filters.Add(filterBuilder.ToString());
+                        filterBuilder.Clear();
+                    }
+                    else if (isQuoted)
+                        filterBuilder.Append(c);
+                    else if (c == '"')
+                    {
+                        isQuoted = true;
+                        isBuilding = true;
+                    }
+                    else if (!isBuilding && char.IsWhiteSpace(c))
+                    { /* Do Nothing because this whitespace preceeds the start of a filter */}
+                    else
+                        filterBuilder.Append(c);
+                }
+                return filters;
+            }
             return roboCommand;
         }
 
