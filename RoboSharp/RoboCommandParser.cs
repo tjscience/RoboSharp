@@ -56,7 +56,7 @@ namespace RoboSharp
         /// <summary> Attempt to extract the parameter from a format pattern string </summary>
         private static bool TryExtractParameter(string commandText, string formatString, out string parameter)
         {
-            parameter = null;
+            parameter = string.Empty;
             string prefix = formatString.Substring(0, formatString.IndexOf('{')).TrimEnd('{').Trim(); // Turn /LEV:{0} into /LEV:
             
             if (!commandText.Contains(prefix, StringComparison.InvariantCultureIgnoreCase))
@@ -187,18 +187,18 @@ namespace RoboSharp
             {
                 options.AddAttributes = param;
             }
-            if (TryExtractParameter(command, CopyOptions.COPY_FLAGS, out param))
-            {
-                options.CopyFlags = param;
-            }
+
+            _ = TryExtractParameter(command, CopyOptions.COPY_FLAGS, out param); // Always set this value
+            options.CopyFlags = param;
+            
             if (TryExtractParameter(command, CopyOptions.DEPTH, out param) && int.TryParse(param, out int value))
             {
                 options.Depth = value;
             }
-            if (TryExtractParameter(command, CopyOptions.DIRECTORY_COPY_FLAGS, out param))
-            {
-                options.DirectoryCopyFlags = param;
-            }
+            
+            _ = TryExtractParameter(command, CopyOptions.DIRECTORY_COPY_FLAGS, out param); // Always set this value
+            options.DirectoryCopyFlags = param;
+
             if (TryExtractParameter(command, CopyOptions.INTER_PACKET_GAP, out param) && int.TryParse(param, out value))
             {
                 options.InterPacketGap = value;
