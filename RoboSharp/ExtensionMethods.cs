@@ -7,11 +7,27 @@ using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace RoboSharp
 {
     internal static class ExtensionMethods
     {
+#if !NETSTANDARD2_1_OR_GREATER
+        internal static bool Contains(this string outerString, string innerString, StringComparison stringComparison)
+        {
+            switch (stringComparison)
+            {
+                case StringComparison.CurrentCultureIgnoreCase:
+                    return outerString.ToLower(CultureInfo.CurrentCulture).Contains(innerString.ToLower(CultureInfo.CurrentCulture));
+                case StringComparison.InvariantCultureIgnoreCase:
+                    return outerString.ToLowerInvariant().Contains(innerString.ToLowerInvariant());
+                default:
+                    return outerString.Contains(innerString);
+            }
+        }
+#endif
+
         /// <summary> Encase the LogPath in quotes if needed </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         [DebuggerHidden()]
