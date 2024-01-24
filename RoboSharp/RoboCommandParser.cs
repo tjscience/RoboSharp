@@ -91,8 +91,6 @@ namespace RoboSharp
             public readonly string Dest;
         }
 
-
-
         private static ParsedSourceDest ParseSourceAndDestination(string command)
         {
             //lang=regex
@@ -118,13 +116,17 @@ namespace RoboSharp
                 var match = Regex.Match(command, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
                 if (match.Success)
                 {
-                    string source = match.Groups["source"].Value;
-                    string dest = match.Groups["dest"].Value;
+                    string source = match.Groups["source"].Value.Trim('\"');
+                    string dest = match.Groups["dest"].Value.Trim('\"');
+                    source = source.IsPathFullyQualified() ? source : null;
+                    dest = dest.IsPathFullyQualified() ? dest : null;
+                    if (source is null && dest is null) return null;
+
                     Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
                     Debugger.Instance.DebugMessage($"----> Pattern : " + pattern);
                     Debugger.Instance.DebugMessage($"----> Source : " + source);
                     Debugger.Instance.DebugMessage($"----> Destination : " + dest);
-                    return new ParsedSourceDest(source, dest);
+                    return new ParsedSourceDest(source ?? string.Empty, dest ?? string.Empty);
                 }else
                 {
                     return null;
@@ -231,7 +233,6 @@ namespace RoboSharp
         }
 
         #endregion
-
 
         #region < Selection Options Parsing  >
         private static SelectionFlags ParseSelectionFlags(string sanitizedCmd)

@@ -16,7 +16,23 @@ namespace RoboSharp.UnitTests
         {
             Console.WriteLine("--- " + args.Message);
         }
-        
+
+
+        /// <summary>
+        /// Use this one when debugging specific commands that are not deciphering for you!
+        /// </summary>
+        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" /MOVE", DisplayName = "Example")]
+        [TestMethod()]
+        public void TestCustomParameters(string command)
+        {
+            Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
+            IRoboCommand cmd = RoboCommandParser.Parse(command);
+            Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
+            Console.WriteLine("\n\n Generated Command : ");
+            Console.WriteLine(command.ToString());
+            //Assert.AreEqual(command, command.ToString(), true);
+        }
+
         [DataRow("robocopy C:\\source D:\\destination\\ \"*.*\" /copyall", DisplayName = "Accept All Files")]
         [DataRow("robocopy C:\\source D:\\destination /copyall", DisplayName = "No Quotes")]
         [DataRow("robocopy C:\\source \"D:\\destination\" /copyall", DisplayName = "Destination Quotes")]
@@ -70,7 +86,7 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
-        [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
+        [DataRow("C:\\Some Folder\\MyLogFile.txt")]
         [DataRow("C:\\MyLogFile.txt")]
         [TestMethod]
         public void TestLogging(string path)
