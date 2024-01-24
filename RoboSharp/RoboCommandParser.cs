@@ -26,34 +26,39 @@ namespace RoboSharp
         public static Interfaces.IRoboCommand Parse(string command, Interfaces.IRoboCommandFactory factory)
         {
             ParsedSourceDest paths = ParseSourceAndDestination(command);
-            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(command), ParseSelectionFlags(command));
-
+            string sanitizedCmd = SanitizeCommandString(command);
+            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd), ParseSelectionFlags(sanitizedCmd));
+            
             return roboCommand
-                .ParseCopyOptions(command)
-                .ParseLoggingOptions(command)
-                .ParseSelectionOptions(command)
-                .ParseRetryOptions(command);
+                .ParseCopyOptions(command, sanitizedCmd)
+                .ParseLoggingOptions(command, sanitizedCmd)
+                .ParseSelectionOptions(command, sanitizedCmd)
+                .ParseRetryOptions(command, sanitizedCmd);
         }
 
+        /// <summary> Prep the command text for use with the HasFlag function </summary>
+        private static string SanitizeCommandString(string command) => command.ToLowerInvariant() + " ";
+
         /// <summary> Check if the string contains a the flag string - both are sanitized to lower invariant </summary>
-        private static bool HasFlag(this string cmd, string flag) => cmd.Contains(flag.ToLowerInvariant().Trim());
+        private static bool HasFlag(this string cmd, string flag) => cmd.Contains(flag.ToLowerInvariant());
+        
 
         /// <summary> Attempt to extract the parameter from a format pattern string </summary>
         private static bool TryExtractParameter(string commandText, string formatString, out string parameter)
         {
-            string sanitizedCmd = commandText.ToLowerInvariant();
-            string sanitizedFormat = formatString.ToLowerInvariant();
             parameter = null;
 
-            string prefix = sanitizedFormat.Substring(0, sanitizedFormat.IndexOf('{')).TrimEnd('{').Trim(); // Turn /LEV:{0} into /LEV:
+            string prefix = formatString.Substring(0, formatString.IndexOf('{')).TrimEnd('{').Trim(); // Turn /LEV:{0} into /LEV:
 
-            if (!sanitizedCmd.Contains(prefix)) return false;
-            string subSection = sanitizedCmd.Substring(sanitizedCmd.IndexOf(prefix)); // Get from that point forward
+            if (!commandText.Contains(prefix, StringComparison.InvariantCultureIgnoreCase)) return false;
+            string subSection = commandText.Substring(commandText.IndexOf(prefix, StringComparison.InvariantCultureIgnoreCase)); // Get from that point forward
+            
             int substringLength = subSection.IndexOf(" /");
             if (substringLength > 0)
             {
                 subSection = subSection.Substring(0, substringLength); // Reduce the subsection down to the relevant portion by cutting off at the next parameter switch
             }
+
             parameter = subSection.Replace(prefix, string.Empty);
             return true;
         }
@@ -72,13 +77,20 @@ namespace RoboSharp
             public readonly string Dest;
         }
 
+
+
         private static ParsedSourceDest ParseSourceAndDestination(string command)
         {
-            // Source should typically be first
-            Regex quotedPattern = new Regex("\"(?<source>.*:.*)\"\\s*\"(?<dest>.*:.*)\".*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            Regex nonQuotedPattern = new Regex("(?<source>.*:.*)\\s*(?<dest>.*:.*).*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            Regex sourceQuotedPattern = new Regex("\"(?<source>.*:.*)\"\\s*(?<dest>.*:.*).*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-            Regex destQuotedPattern = new Regex("(?<source>.*:.*)\\s*\"(?<dest>.*:.*)\".*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            //lang=regex
+            //const string validPathChars = "[^:*?\"<>\\|\\s]";
+            //lang=regex
+            const string quotedPattern = "\"(?<source>.+?:.+?)\"\\s+\"(?<dest>.+?:.+?)\".*";
+            //lang=regex
+            const string sourceQuotedPattern = "\"(?<source>.+?:[^:*?\"<>\\|\\s]+)\"\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*";
+            //lang=regex
+            const string destQuotedPattern = "(?<rc>robocopy\\s*)?(?<source>/.+?:[^:*?\"<>\\|\\s]+)\\s+\"(?<dest>.+?:[^:*?\"<>\\|\\s]+)\".*";
+            //lang=regex
+            const string nonQuotedPattern = "(?<rc>robocopy\\s*)?(?<source>.+?:[^:*?\"<>\\|\\s]+)\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*"; // Non-Quoted strings search until they encounter white-space
 
             // Return the first match
             return PatternMatch(quotedPattern)
@@ -87,9 +99,9 @@ namespace RoboSharp
                 ?? PatternMatch(destQuotedPattern)
                 ?? new ParsedSourceDest(string.Empty, string.Empty);
             
-            ParsedSourceDest? PatternMatch(Regex pattern)
+            ParsedSourceDest? PatternMatch(string pattern)
             {
-                var match = pattern.Match(command);
+                var match = Regex.Match(command, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
                 if (match.Success)
                 {
                     return new ParsedSourceDest(match.Groups["source"].Value, match.Groups["dest"].Value);
@@ -104,27 +116,26 @@ namespace RoboSharp
 
         #region < Copy Options Parsing >
 
-        private static CopyActionFlags ParseCopyFlags(string command)
+        private static CopyActionFlags ParseCopyFlags(string sanitizedCmd)
         {
             CopyActionFlags flags = CopyActionFlags.Default;
-            if (command.HasFlag(CopyOptions.NETWORK_COMPRESSION)) flags |= CopyActionFlags.Compress;
-            if (command.HasFlag(CopyOptions.COPY_SUBDIRECTORIES)) flags |= CopyActionFlags.CopySubdirectories;
-            if (command.HasFlag(CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY)) flags |= CopyActionFlags.CopySubdirectoriesIncludingEmpty;
-            if (command.HasFlag(CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE)) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
-            if (command.HasFlag(CopyOptions.MIRROR)) flags |= CopyActionFlags.Mirror;
-            if (command.HasFlag(CopyOptions.MOVE_FILES)) flags |= CopyActionFlags.MoveFiles;
-            if (command.HasFlag(CopyOptions.MOVE_FILES_AND_DIRECTORIES)) flags |= CopyActionFlags.MoveFilesAndDirectories;
-            if (command.HasFlag(CopyOptions.PURGE)) flags |= CopyActionFlags.Purge;
+            if (sanitizedCmd.HasFlag(CopyOptions.NETWORK_COMPRESSION)) flags |= CopyActionFlags.Compress;
+            if (sanitizedCmd.HasFlag(CopyOptions.COPY_SUBDIRECTORIES)) flags |= CopyActionFlags.CopySubdirectories;
+            if (sanitizedCmd.HasFlag(CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY)) flags |= CopyActionFlags.CopySubdirectoriesIncludingEmpty;
+            if (sanitizedCmd.HasFlag(CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE)) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
+            if (sanitizedCmd.HasFlag(CopyOptions.MIRROR)) flags |= CopyActionFlags.Mirror;
+            if (sanitizedCmd.HasFlag(CopyOptions.MOVE_FILES)) flags |= CopyActionFlags.MoveFiles;
+            if (sanitizedCmd.HasFlag(CopyOptions.MOVE_FILES_AND_DIRECTORIES)) flags |= CopyActionFlags.MoveFilesAndDirectories;
+            if (sanitizedCmd.HasFlag(CopyOptions.PURGE)) flags |= CopyActionFlags.Purge;
             return flags;
         }
 
         /// <summary>
         /// Parse the Copy Options not discovered by ParseCopyFlags
         /// </summary>
-        private static IRoboCommand ParseCopyOptions(this IRoboCommand roboCommand, string command)
+        private static IRoboCommand ParseCopyOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
             var options = roboCommand.CopyOptions;
-            string sanitizedCmd = command.ToLowerInvariant();
             options.CheckPerFile |= sanitizedCmd.HasFlag(CopyOptions.CHECK_PER_FILE);
             options.CopyAll |= sanitizedCmd.HasFlag(CopyOptions.COPY_ALL);
             options.CopyFilesWithSecurity |= sanitizedCmd.HasFlag(CopyOptions.COPY_FILES_WITH_SECURITY);
@@ -143,18 +154,50 @@ namespace RoboSharp
             options.UseUnbufferedIo |= sanitizedCmd.HasFlag(CopyOptions.USE_UNBUFFERED_IO);
 
             // Non-Boolean Options
+
+            if (TryExtractParameter(command, CopyOptions.ADD_ATTRIBUTES, out string param))
+            {
+                options.AddAttributes = param;
+            }
+            if (TryExtractParameter(command, CopyOptions.COPY_FLAGS, out param))
+            {
+                options.CopyFlags = param;
+            }
+            if (TryExtractParameter(command, CopyOptions.DEPTH, out param) && int.TryParse(param, out int value))
+            {
+                options.Depth = value;
+            }
+            if (TryExtractParameter(command, CopyOptions.DIRECTORY_COPY_FLAGS, out param))
+            {
+                options.DirectoryCopyFlags = param;
+            }
+            if (TryExtractParameter(command, CopyOptions.INTER_PACKET_GAP, out param) && int.TryParse(param, out value))
+            {
+                options.InterPacketGap = value;
+            }
+            if (TryExtractParameter(command, CopyOptions.MONITOR_SOURCE_CHANGES_LIMIT, out param) && int.TryParse(param, out value))
+            {
+                options.MonitorSourceChangesLimit = value;
+            }
+            if (TryExtractParameter(command, CopyOptions.MONITOR_SOURCE_TIME_LIMIT, out param) && int.TryParse(param, out value))
+            {
+                options.MonitorSourceTimeLimit = value;
+            }
+            if (TryExtractParameter(command, CopyOptions.MULTITHREADED_COPIES_COUNT, out param) && int.TryParse(param, out value))
+            {
+                options.MultiThreadedCopiesCount = value;
+            }
+            if (TryExtractParameter(command, CopyOptions.REMOVE_ATTRIBUTES, out param))
+            {
+                options.RemoveAttributes = param;
+            }
+            if (TryExtractParameter(command, CopyOptions.RUN_HOURS, out param) && CopyOptions.IsRunHoursStringValid(param))
+            {
+                options.RunHours = param;
+            }
+
             /*
-            options.AddAttributes
-            options.CopyFlags;
-            options.Depth;
-            options.DirectoryCopyFlags;
             options.FileFilter;
-            options.InterPacketGap;
-            options.MonitorSourceChangesLimit;
-            options.MonitorSourceTimeLimit;
-            options.MultiThreadedCopiesCount;
-            options.RemoveAttributes;
-            options.RunHours;
             */
 
             return roboCommand;
@@ -164,10 +207,9 @@ namespace RoboSharp
 
 
         #region < Selection Options Parsing  >
-        private static SelectionFlags ParseSelectionFlags(string command)
+        private static SelectionFlags ParseSelectionFlags(string sanitizedCmd)
         {
             SelectionFlags flags = SelectionFlags.Default;
-            string sanitizedCmd = command.ToLowerInvariant();
             if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_CHANGED)) flags |= SelectionFlags.ExcludeChanged;
             if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_EXTRA)) flags |= SelectionFlags.ExcludeExtra;
             if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_JUNCTION_POINTS)) flags |= SelectionFlags.ExcludeJunctionPoints;
@@ -187,7 +229,7 @@ namespace RoboSharp
         /// <summary>
         /// Parse the Selection Options not discovered by ParseSelectionFlags
         /// </summary>
-        private static IRoboCommand ParseSelectionOptions(this IRoboCommand roboCommand, string command)
+        private static IRoboCommand ParseSelectionOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
             var options = roboCommand.SelectionOptions;
             options.CompensateForDstDifference |= command.HasFlag(SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE);
@@ -196,6 +238,10 @@ namespace RoboSharp
             if (TryExtractParameter(command, SelectionOptions.INCLUDE_ATTRIBUTES, out string param))
             {
                 options.IncludeAttributes = param;
+            }
+            if (TryExtractParameter(command, SelectionOptions.EXCLUDE_ATTRIBUTES, out param))
+            {
+                options.ExcludeAttributes = param;
             }
             if (TryExtractParameter(command, SelectionOptions.MAX_FILE_AGE, out param))
             {
@@ -209,7 +255,7 @@ namespace RoboSharp
             {
                 options.MinFileAge = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.MAX_FILE_SIZE, out param) && long.TryParse(param, out value))
+            if (TryExtractParameter(command, SelectionOptions.MIN_FILE_SIZE, out param) && long.TryParse(param, out value))
             {
                 options.MinFileSize = value;
             }
@@ -221,11 +267,11 @@ namespace RoboSharp
             {
                 options.MinLastAccessDate = param;
             }
+            
 
             /*         
             options.ExcludedFiles;
             options.ExcludedDirectories;
-            options.ExcludeAttributes;
             */
 
             return roboCommand;
@@ -233,10 +279,9 @@ namespace RoboSharp
 
         #endregion
 
-        private static IRoboCommand ParseLoggingOptions(this IRoboCommand roboCommand, string command)
+        private static IRoboCommand ParseLoggingOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
             var options = roboCommand.LoggingOptions;
-            string sanitizedCmd = command.ToLowerInvariant();
             options.IncludeFullPathNames |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_FULL_PATH_NAMES);
             options.IncludeSourceTimeStamps |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS);
             options.ListOnly |= sanitizedCmd.HasFlag(LoggingOptions.LIST_ONLY);
@@ -263,16 +308,20 @@ namespace RoboSharp
             return roboCommand;
         }
 
-        private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command)
+        private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
         {
             var options = roboCommand.RetryOptions;
-            options.SaveToRegistry |= command.HasFlag(RetryOptions.SAVE_TO_REGISTRY);
-            options.WaitForSharenames |= command.HasFlag(RetryOptions.WAIT_FOR_SHARENAMES);
+            options.SaveToRegistry |= sanitizedCmd.HasFlag(RetryOptions.SAVE_TO_REGISTRY);
+            options.WaitForSharenames |= sanitizedCmd.HasFlag(RetryOptions.WAIT_FOR_SHARENAMES);
 
-            /*
-            options.RetryCount;
-            options.RetryWaitTime;
-            */
+            if (TryExtractParameter(command, RetryOptions.RETRY_COUNT, out string param) && int.TryParse(param, out int value))
+            {
+                options.RetryCount = value;
+            }
+            if (TryExtractParameter(command, RetryOptions.RETRY_WAIT_TIME, out param) && int.TryParse(param, out value))
+            {
+                options.RetryWaitTime = value;
+            }
             return roboCommand;
         }
     }
