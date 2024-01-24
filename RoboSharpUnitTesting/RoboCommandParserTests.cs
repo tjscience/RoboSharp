@@ -21,6 +21,9 @@ namespace RoboSharp.UnitTests
         /// <summary>
         /// Use this one when debugging specific commands that are not deciphering for you!
         /// </summary>
+        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" \"*.txt\" \"*.pdf\"", DisplayName = "quoted filters")]
+        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" *.txt *.pdf", DisplayName = "multiple unquoted filters")]
+        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" *.txt", DisplayName = ".txt Only")]
         [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" /MOVE", DisplayName = "Example")]
         [TestMethod()]
         public void TestCustomParameters(string command)
@@ -28,22 +31,23 @@ namespace RoboSharp.UnitTests
             Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
             IRoboCommand cmd = RoboCommandParser.Parse(command);
             Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
-            Console.WriteLine("\n\n Generated Command : ");
-            Console.WriteLine(command.ToString());
+            Console.WriteLine($"\n\n Input : {command}");
+            Console.WriteLine($"Output : {cmd}");
             //Assert.AreEqual(command, command.ToString(), true);
         }
 
-        [DataRow("robocopy C:\\source D:\\destination\\ \"*.*\" /copyall", DisplayName = "Accept All Files")]
-        [DataRow("robocopy C:\\source D:\\destination /copyall", DisplayName = "No Quotes")]
-        [DataRow("robocopy C:\\source \"D:\\destination\" /copyall", DisplayName = "Destination Quotes")]
-        [DataRow("robocopy \"C:\\source\" D:\\destination /copyall", DisplayName = "Source Quoted")]
-        [DataRow("robocopy \"C:\\source\" \"D:\\destination\" /copyall", DisplayName = "Both Quoted")]
+        [DataRow("C:\\source", "D:\\destination", DisplayName = "No Quotes")]
+        [DataRow("C:\\source", "\"D:\\destination\"", DisplayName = "Destination Quotes")]
+        [DataRow("\"C:\\source\"", "D:\\destination", DisplayName = "Source Quoted")]
+        [DataRow("\"C:\\source\"", "\"D:\\destination\"", DisplayName = "Both Quoted")]
+        [DataRow("\"C:\\source dir\"", "\"D:\\destination dir\"", DisplayName = "Both Quoted and Spaced")]
         [TestMethod()]
-        public void ParseSourceDestinationTest(string command)
+        public void TestSourceAndDestination(string source, string dest)
         {
+            string command = $"robocopy {source} {dest} /copyall";
             IRoboCommand cmd = RoboCommandParser.Parse(command);
-            Assert.AreEqual("C:\\source", cmd.CopyOptions.Source, "\n\nSource is not expected value");
-            Assert.AreEqual("D:\\destination", cmd.CopyOptions.Destination, "\n\nDestination is not expected value");
+            Assert.AreEqual(source.Trim('\"'), cmd.CopyOptions.Source, "\n\nSource is not expected value");
+            Assert.AreEqual(dest.Trim('\"'), cmd.CopyOptions.Destination, "\n\nDestination is not expected value");
             Assert.IsTrue(cmd.CopyOptions.CopyAll, "\nCopyAll flag was not detected");
         }
 
@@ -161,8 +165,10 @@ namespace RoboSharp.UnitTests
             RoboCommand cmd = new RoboCommand();
             cmd.SelectionOptions.ExcludedFiles.AddRange(filters);
             IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
-
+            
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Console.WriteLine($"\n\n Input : {cmd}");
+            Console.WriteLine($"Output : {cmdResult}");
         }
 
         [DataRow("C:\\Windows\\System32", "D:\\Time\\For\\Sleep")]
@@ -176,6 +182,8 @@ namespace RoboSharp.UnitTests
             IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
 
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Console.WriteLine($"\n\n Input : {cmd}");
+            Console.WriteLine($"Output : {cmdResult}");
         }
 
         [DataRow("*.pdf")]
@@ -190,6 +198,24 @@ namespace RoboSharp.UnitTests
             IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
 
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Console.WriteLine($"\n\n Input : {cmd}");
+            Console.WriteLine($"Output : {cmdResult}");
+        }
+
+        
+        [DataRow("C:\\MySource \"D:\\My Destination\" \"*.txt\"")]
+        [DataRow("C:\\MySource \"D:\\My Destination\" \"*.txt\" /MOVE")]
+        [TestMethod]
+        public void TestFileFilterRaw(string input)
+        {
+            // Note : Due to how RoboCommand prints out file filters, ensure input file filters are always quoted
+            IRoboCommand cmdResult = RoboCommandParser.Parse(input);
+            cmdResult.LoggingOptions.PrintSizesAsBytes = false;
+            string expected = input += " /R:0 /W:30"; // robocommand ALWAYS prints these values
+
+            Assert.AreEqual(expected, cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{expected}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Console.WriteLine($"\n\n Input : {input}");
+            Console.WriteLine($"Output : {cmdResult}");
         }
     }
 }
