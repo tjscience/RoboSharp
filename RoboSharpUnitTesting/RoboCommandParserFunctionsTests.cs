@@ -19,12 +19,12 @@ namespace RoboSharp.UnitTests
             var result = RoboCommandParserFunctions.ExtractFlag(input, flag, out string outputText);
             Assert.AreEqual(expectedResult, result, "\n Function Result Incorrect");
             Assert.AreEqual(expectedOutput, outputText.Trim(), "\n Sanitized Output Mismatch");
-            
+
             bool actionPerformed = false;
             result = RoboCommandParserFunctions.ExtractFlag(input, flag, out outputText, () => actionPerformed = true);
             Assert.AreEqual(expectedResult, result, "\n Function Result Incorrect");
             Assert.AreEqual(expectedOutput, outputText.Trim(), "\n Sanitized Output Mismatch");
-            Assert.AreEqual(expectedResult, actionPerformed, $"/n Function {(expectedResult ? "Not Performed" : "Performed Unexpectedly") }");
+            Assert.AreEqual(expectedResult, actionPerformed, $"/n Function {(expectedResult ? "Not Performed" : "Performed Unexpectedly")}");
         }
 
         [DataRow("Test_1.txt *.pdf *.txt *_SomeFile*.jpg", "Test_1.txt", "*.pdf", "*.txt", "*_SomeFile*.jpg")]
@@ -69,6 +69,49 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(expectedResult, result, "/n Function Result Mismatch");
             Assert.AreEqual(expectedvalue, value, "/n Expected Value Mismatch");
             Assert.AreEqual(expectedOutput, outputText.Trim(), "/n Sanitized Output Mismatch");
-        }        
+        }
+
+        [DataRow(@"*.* *.pdf", @"", 2, DisplayName = "Test 1")]
+        [DataRow(@" *.* *.pdf ", @"", 2, DisplayName = "Test 2")]
+        [DataRow(@" *.* /PURGE ", @"/PURGE ", 1, DisplayName = "Test 3")]
+        [DataRow(@"""Some File.txt"" *.* *.pdf ", @"", 3, DisplayName = "Test 4")]
+        [DataRow(@"*.* ""Some File.txt"" *.pdf /s", @"/s", 3, DisplayName = "Test 5")]
+        [TestMethod]
+        public void FileFilterParsingTest(string input, string expectedoutput, int expectedCount)
+        {
+            Debugger.Instance.DebugMessageEvent += RoboCommandParserTests.DebuggerWriteLine;
+            var result = RoboCommandParserFunctions.ExtractFileFilters(input, out string modified);
+            Debugger.Instance.DebugMessageEvent -= RoboCommandParserTests.DebuggerWriteLine;
+            Assert.AreEqual(expectedCount, result.Count(), "Did not receive expected count!");
+            Assert.AreEqual(expectedoutput.Trim(), modified.Trim(), "Extracted Text does not match!");
+        }
+
+        [DataRow(@"/XF C:\someDir\someFile.pdf *some_Other-File* /XD SomeDir", @"/XD SomeDir", 2, DisplayName = "Test 1")]
+        [DataRow(@"/XF some-File.?df /XD *SomeDir* /XF SomeFile.*", @"/XD *SomeDir*", 2, DisplayName = "Test 2")]
+        [DataRow(@"/XF some_File.*df /COPYALL /XF ""*some Other-File*"" /XD *SomeDir* ", @"/COPYALL  /XD *SomeDir*", 2, DisplayName = "Test 3")]
+        [DataRow(@"/PURGE /XF ""C:\some File.pdf"" *someOtherFile* /XD SomeDir", @"/PURGE  /XD SomeDir", 2, DisplayName = "Test 4")]
+        [TestMethod]
+        public void ExtractExclusionFilesTest(string input, string expectedoutput, int expectedCount)
+        {
+            Debugger.Instance.DebugMessageEvent += RoboCommandParserTests.DebuggerWriteLine;
+            var result = RoboCommandParserFunctions.ExtractExclusionFiles(input, out string modified);
+            Debugger.Instance.DebugMessageEvent -= RoboCommandParserTests.DebuggerWriteLine;
+            Assert.AreEqual(expectedCount, result.Count(), "Did not receive expected count of excluded Files!");
+            Assert.AreEqual(expectedoutput.Trim(), modified.Trim(), "Extracted Text does not match!");
+        }
+
+        [DataRow(@"/XD C:\someDir *someOtherDir* /XF SomeFile.*", @"/XF SomeFile.*", 2, DisplayName = "Test 1")]
+        [DataRow(@"/XD C:\someDir /XD *someOtherDir* /XF SomeFile.*", @"/XF SomeFile.*", 2, DisplayName = "Test 2")]
+        [DataRow(@"/XD C:\someDir /XF SomeFile.* /XD *someOtherDir* ", @"/XF SomeFile.*", 2, DisplayName = "Test 3")]
+        [DataRow(@"/XD ""C:\some Dir"" *someOtherDir* /XF SomeFile.*", @"/XF SomeFile.*", 2, DisplayName = "Test 4")]
+        [TestMethod]
+        public void ExtractExclusionDirectoriesTest(string input, string expectedoutput, int expectedCount)
+        {
+            Debugger.Instance.DebugMessageEvent += RoboCommandParserTests.DebuggerWriteLine;
+            var result = RoboCommandParserFunctions.ExtractExclusionDirectories(input, out string modified);
+            Debugger.Instance.DebugMessageEvent -= RoboCommandParserTests.DebuggerWriteLine;
+            Assert.AreEqual(expectedCount, result.Count(), "Did not receive expected count of excluded directories!");
+            Assert.AreEqual(expectedoutput.Trim(), modified.Trim(), "Extracted Text does not match!");
+        }
     }
 }

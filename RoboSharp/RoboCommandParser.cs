@@ -129,30 +129,9 @@ namespace RoboSharp
             }
 
             // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
-            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
-            string tmp = command.Remove(options.Source).Remove(options.Destination).TrimStart("robocopy").Remove("\"\"").Trim(); // Sanitize the beginning of the string
-            var match = Regex.Match(tmp, "^(?<filters>[\"\\w*.?\\s]+?)\\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
-            var foundFilters = match.Groups["filters"].Value;
             
-            const string debugFormat = "--> Found File Filter : {0}";
-            if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
-            {
-                options.FileFilter = ParseFilters(foundFilters, debugFormat);
-            }
-            else 
-            {
-                // no switches occurred after the filters, check end of string
-                match = Regex.Match(tmp, "^(?<filters>[\"\\w*.?\\s]+?)\\s+?(?<firstSwitch>/[A-Z])", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
-                foundFilters = match.Groups["filters"].Value;
-                if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
-                {
-                    options.FileFilter = ParseFilters(foundFilters, debugFormat);
-                }
-                else
-                {
-                    Debugger.Instance.DebugMessage($"--> No file filters found.");
-                }
-            }
+            var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd, out sanitizedCmd);
+            if (filters.Any()) options.FileFilter = filters;
 
             return roboCommand;
         }
@@ -222,37 +201,10 @@ namespace RoboSharp
                 options.MinLastAccessDate = param;
             }
 
-            //lang=regex
-            const string XF_Pattern = @"(?<filter>(?<=/XF)\s*(( (?<Quotes>""(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") |(?<NoQuotes>(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.]+)(\s*(?!=/[\w])))+?)+?)";
-            //lang=regex
-            const string XD_Pattern = @"(?<filter>(?<=/XD)\s*(( (?<Quotes>""(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") |(?<NoQuotes>(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.]+) )\s*)+)";
+            options.ExcludedDirectories.AddRange(RoboCommandParserFunctions.ExtractExclusionDirectories(sanitizedCmd, out sanitizedCmd));
+            options.ExcludedFiles.AddRange(RoboCommandParserFunctions.ExtractExclusionFiles(sanitizedCmd, out sanitizedCmd));
 
-            // Get Excluded Files
-            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Files");
-            var matchCollection = Regex.Matches(command, XF_Pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
-            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No File Exclusions found.");
-            foreach (Match c in matchCollection)
-            {
-                string s = c.Groups["filter"].Value.TrimStart("/XF").Trim();
-                if (!string.IsNullOrWhiteSpace(s))
-                {
-                    options.ExcludedFiles.AddRange(ParseFilters(s, "---> Excluded File : {0}"));
-                }
-            }
 
-            // Get Excluded Dirs
-            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Directories");
-            matchCollection = Regex.Matches(command,XD_Pattern , RegexOptions.IgnoreCase  |RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
-            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No Directory Exclusions found.");
-            foreach (Match c in matchCollection)
-            {
-                string s = c.Groups["filter"].Value.TrimStart("/XD").Trim();
-                if (!string.IsNullOrWhiteSpace(s))
-                {
-                    options.ExcludedDirectories.AddRange(ParseFilters(s, "---> Excluded Directory : {0}")); ;
-                }
-            }
-            
             return roboCommand;
         }
 

@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("RoboSharp.UnitTests")]
 namespace RoboSharp
 {
     /// <summary>
     /// This class houses the various helper functions used to parse and apply the parameters of an input robocopy command to an IRoboCommand
     /// </summary>
     /// <remarks>Exposed for unit testing</remarks>
-    public static class RoboCommandParserFunctions
+    
+    internal static class RoboCommandParserFunctions
     {
         /// <summary>
         /// Helper object that reports the result from <see cref="ParseSourceAndDestination(string)"/>
@@ -58,27 +62,27 @@ namespace RoboSharp
 
             ParsedSourceDest? PatternMatch(string pattern)
             {
+                string rawSource = string.Empty;
+                string rawDest = string.Empty;
+                string source = null;
+                string dest = null;
                 var match = Regex.Match(inputText, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
                 if (match.Success)
                 {
-                    string rawSource = match.Groups["source"].Value;
-                    string rawDest = match.Groups["dest"].Value;
-                    string source = rawSource.Trim('\"');
-                    string dest = rawDest.Trim('\"');
+                    rawSource = match.Groups["source"].Value;
+                    rawDest = match.Groups["dest"].Value;
+                    source = rawSource.Trim('\"');
+                    dest = rawDest.Trim('\"');
                     source = source.IsPathFullyQualified() ? source : null;
                     dest = dest.IsPathFullyQualified() ? dest : null;
-                    if (source is null && dest is null) return null;
 
                     Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
                     Debugger.Instance.DebugMessage($"----> Pattern : " + pattern);
                     Debugger.Instance.DebugMessage($"----> Source : " + source);
                     Debugger.Instance.DebugMessage($"----> Destination : " + dest);
-                    return new ParsedSourceDest(source ?? string.Empty, dest ?? string.Empty, inputText, inputText.Remove(rawSource).Remove(rawDest).TrimStart("robocopy"));
+                    
                 }
-                else
-                {
-                    return null;
-                }
+                return new ParsedSourceDest(source ?? string.Empty, dest ?? string.Empty, inputText, inputText.Remove(rawSource).Remove(rawDest).TrimStart("robocopy"));
             }
             ParsedSourceDest LogNoMatch()
             {
@@ -181,6 +185,88 @@ namespace RoboSharp
                 filters.Add(value);
                 filterBuilder.Clear();
             }
+        }
+
+        //lang=regex
+        const string XF_Pattern = @"(?<filter>\/XF\s*( ((?<Quotes>""(\/\/[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") | (?<NoQuotes>(\/\/[a-zA-Z]|[A-Z]:|[^\/\:\s])?[\w*$\-\/\\.]+)) (\s*(?!\/[a-zA-Z])) )+)";
+        //lang=regex
+        const string XD_Pattern = @"(?<filter>\/XD\s*(( (?<Quotes>""(\/\/[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") | (?<NoQuotes>(\/\/[a-zA-Z]|[A-Z]:|[^\/\:\s])?[\w*$\-\/\\.]+)) (\s*(?!\/[a-zA-Z])) )+)";
+        //lang=regex
+        const string FileFilter = @"(?<filter>((?<Quotes>""[^""]+"") | (?<NoQuotes>((?<!\/)[^\/""])+))+)"; // anything up until the first standalone option 
+
+        /// <summary>
+        /// File Filters to INCLUDE - These are always be at the beginning of the input string
+        /// </summary>
+        /// <param name="input">An input string with the source and destination removed. 
+        /// <br/>Valid : *.*  ""text"" /XF  -- Reads up until the first OPTION switch
+        /// <br/>Not Valid : robocopy Source destination -- these will be consdidered 3 seperate filters.
+        /// <br/>Not Valid : Source/destination -- these will be considered as file filters.
+        /// </param>
+        /// <param name="modifiedText">Any text that was found after all filters were parsed.</param>
+        public static IEnumerable<string> ExtractFileFilters(string input, out string modifiedText)
+        {
+            const string debugFormat = "--> Found File Filter : {0}";
+            Debugger.Instance.DebugMessage($"Parsing Copy Options - Extracting File Filters");
+
+            var match = Regex.Match(input, FileFilter, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
+            string foundFilters = match.Groups["filter"].Value;
+            modifiedText = input.Remove(foundFilters);
+
+            if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
+            {
+                return ParseFilters(foundFilters, debugFormat);
+            }
+            else
+            {
+                Debugger.Instance.DebugMessage($"--> No file filters found.");
+#if NET452
+                return new string[] { };
+#else
+                return Array.Empty<string>();
+#endif
+            }
+        }
+
+        public static IEnumerable<string> ExtractExclusionFiles(string input, out string modifiedText)
+        {
+            // Get Excluded Files
+            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Files");
+            var matchCollection = Regex.Matches(input, XF_Pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No File Exclusions found.");
+            List<string> result = new List<string>();
+            modifiedText = input;
+            foreach (Match c in matchCollection)
+            {
+                string s = c.Groups["filter"].Value;
+                modifiedText = modifiedText.Remove(s);
+                s = s.TrimStart("/XF").Trim();
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    result.AddRange(ParseFilters(s, "---> Excluded File : {0}"));
+                }
+            }
+            return result;
+        }
+
+        public static IEnumerable<string> ExtractExclusionDirectories(string input, out string modifiedText)
+        {
+            // Get Excluded Dirs
+            Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Directories");
+            var matchCollection = Regex.Matches(input, XD_Pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No Directory Exclusions found.");
+            List<string> result = new List<string>();
+            modifiedText = input;
+            foreach (Match c in matchCollection)
+            {
+                string s = c.Groups["filter"].Value;
+                modifiedText = modifiedText.Remove(s);
+                s = s.TrimStart("/XD").Trim();
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    result.AddRange(ParseFilters(s, "---> Excluded Directory : {0}")); ;
+                }
+            }
+            return result;
         }
     }
 }

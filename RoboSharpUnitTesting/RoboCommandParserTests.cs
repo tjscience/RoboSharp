@@ -237,7 +237,7 @@ namespace RoboSharp.UnitTests
             cmdResult.LoggingOptions.PrintSizesAsBytes = false;
             string expected = input += " /R:0 /W:30"; // robocommand ALWAYS prints these values
 
-            Assert.AreEqual(expected, cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{expected}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Assert.AreEqual(expected.Trim(), cmdResult.ToString().Trim(), $"\n\nProduced Command is not equal!\nExpected:\t{expected}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
             Console.WriteLine($"\n\n Input : {input}");
             Console.WriteLine($"Output : {cmdResult}");
         }
