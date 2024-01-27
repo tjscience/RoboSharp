@@ -12,11 +12,12 @@ namespace RoboSharp.UnitTests
     [TestClass()]
     public class RoboCommandParserTests
     {
-        private static void DebuggerWriteLine(object sender, Debugger.DebugMessageArgs args)
+        public static void DebuggerWriteLine(object sender, Debugger.DebugMessageArgs args)
         {
             Console.WriteLine("--- " + args.Message);
         }
 
+        const string CmdEndText = @" /R:0 /W:30 /BYTES";
 
         /// <summary>
         /// Use this one when debugging specific commands that are not deciphering for you!
@@ -46,9 +47,11 @@ namespace RoboSharp.UnitTests
         {
             string command = $"robocopy {source} {dest} /copyall";
             IRoboCommand cmd = RoboCommandParser.Parse(command);
+            Console.WriteLine(" Input : " + command);
+            Console.WriteLine("Output : " + cmd);
             Assert.AreEqual(source.Trim('\"'), cmd.CopyOptions.Source, "\n\nSource is not expected value");
             Assert.AreEqual(dest.Trim('\"'), cmd.CopyOptions.Destination, "\n\nDestination is not expected value");
-            Assert.IsTrue(cmd.CopyOptions.CopyAll, "\nCopyAll flag was not detected");
+            Assert.IsTrue(cmd.CopyOptions.CopyAll, "\nCopyAll was Removed!");
         }
 
         [DataRow( (SelectionFlags)4097,  (CopyActionFlags)255, (LoggingFlags)65535, "C:\\SomeSourcePath\\My Source Folder", "D:\\SomeDestination\\My Dest Folder", DisplayName = "Test_All_Flags")]
@@ -155,9 +158,9 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
-        [DataRow("ExcludedTestFile1.txt", "ExcludedFile2.pdf", "*wildcard*")]
-        [DataRow("\"C:\\Some Folder\\Excluded.txt\"")]
-        [DataRow("C:\\Excluded.txt")]
+        [DataRow("ExcludedTestFile1.txt", "ExcludedFile2.pdf", "\"*wild card*\"", DisplayName = "Multiple Filters")]
+        [DataRow("\"C:\\Some Folder\\Excluded.txt\"", DisplayName = "Quoted Filter")]
+        [DataRow("C:\\Excluded.txt", DisplayName = "UnQuoted Filters")]
         [DataRow(DisplayName = "No Filter Specified")]
         [TestMethod]
         public void TestExcludedFiles(params string[] filters)
@@ -169,6 +172,24 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
             Console.WriteLine($"\n\n Input : {cmd}");
             Console.WriteLine($"Output : {cmdResult}");
+        }
+
+        [DataRow(@"robocopy /XF c:\MyFile.txt /COPYALL /XF ""d:\File 2.pdf""", @"""*.*"" /COPYALL /XF c:\MyFile.txt ""d:\File 2.pdf""", DisplayName = "Multiple /XF flags with Quotes")]
+        [DataRow(@"robocopy /XF c:\MyFile.txt /COPYALL /XF d:\File2.pdf", @"""*.*"" /COPYALL /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Multiple /XF flags")]
+        [DataRow(@"robocopy /XF c:\MyFile.txt d:\File2.pdf", @"""*.*"" /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Single XF Flag with multiple Filters")]
+        [TestMethod]
+        public void TestExcludedFilesRaw(string input, string expected)
+        {
+            IRoboCommand cmdResult = RoboCommandParser.Parse(input);
+            
+            expected += CmdEndText;
+            
+            Console.WriteLine($"\n\n    Input : {input}");
+            Console.WriteLine($" Expected : {expected}");
+            Console.WriteLine($"   Output : {cmdResult}");
+
+            Assert.AreEqual(expected.Trim(), cmdResult.ToString().Trim(), "Command not expected result."); // Final test : both should produce the same ToString()
+            
         }
 
         [DataRow("D:\\Excluded Dir\\", DisplayName = "Single Exclusion - Spaced")]

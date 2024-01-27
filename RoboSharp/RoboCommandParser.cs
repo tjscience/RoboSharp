@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static RoboSharp.RoboCommandParserFunctions;
 
 namespace RoboSharp
 {
@@ -29,197 +30,100 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage($"RoboCommandParser - Begin parsing input string : {command}");
             command = command.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
             ParsedSourceDest paths = ParseSourceAndDestination(command);
-            string sanitizedCmd = SanitizeCommandString(command);
-            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd), ParseSelectionFlags(sanitizedCmd));
+            string newInput = paths.SanitizedString + " "; // Ensure white space at end of string because all constants have it
+            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(newInput, out newInput), ParseSelectionFlags(newInput, out newInput));
             
            roboCommand
-                .ParseCopyOptions(command, sanitizedCmd)
-                .ParseLoggingOptions(command, sanitizedCmd)
-                .ParseSelectionOptions(command, sanitizedCmd)
-                .ParseRetryOptions(command, sanitizedCmd);
+                .ParseCopyOptions(newInput, out newInput)
+                .ParseLoggingOptions(newInput, out newInput)
+                .ParseSelectionOptions(newInput, out newInput)
+                .ParseRetryOptions(newInput, out newInput);
             Debugger.Instance.DebugMessage("RoboCommandParser.Parse completed.\n");
             return roboCommand;
         }
 
-        /// <summary> Prep the command text for use with the HasFlag function </summary>
-        private static string SanitizeCommandString(string command) => command.ToLowerInvariant() + " ";
-
-        /// <summary> Check if the string contains a the flag string - both are sanitized to lower invariant </summary>
-        private static bool HasFlag(this string cmd, string flag) 
-        {
-            bool value = cmd.Contains(flag.ToLowerInvariant());
-            Debugger.Instance.DebugMessage($"--> Switch {flag}{(value ? "" : " not")} detected.");
-            return value;
-        }
-        
-
-        /// <summary> Attempt to extract the parameter from a format pattern string </summary>
-        private static bool TryExtractParameter(string commandText, string formatString, out string parameter)
-        {
-            parameter = string.Empty;
-            string prefix = formatString.Substring(0, formatString.IndexOf('{')).TrimEnd('{').Trim(); // Turn /LEV:{0} into /LEV:
-            
-            if (!commandText.Contains(prefix, StringComparison.InvariantCultureIgnoreCase))
-            {
-                Debugger.Instance.DebugMessage($"--> Switch {prefix} not detected.");
-                return false;
-            }
-            string subSection = commandText.Substring(commandText.IndexOf(prefix, StringComparison.InvariantCultureIgnoreCase)); // Get from that point forward
-            
-            int substringLength = subSection.IndexOf(" /");
-            if (substringLength > 0)
-            {
-                subSection = subSection.Substring(0, substringLength); // Reduce the subsection down to the relevant portion by cutting off at the next parameter switch
-            }
-
-            parameter = subSection.Replace(prefix, string.Empty).Trim();
-            Debugger.Instance.DebugMessage($"--> Switch {prefix} found. Value : {parameter}");
-            return true;
-        }
-
-
-        #region < Source and Destination Parsing >
-
-        private readonly struct ParsedSourceDest
-        {
-            public ParsedSourceDest(string source, string dest)
-            {
-                Source = source;
-                Dest = dest;
-            }
-            public readonly string Source;
-            public readonly string Dest;
-        }
-
-        private static ParsedSourceDest ParseSourceAndDestination(string command)
-        {
-            //lang=regex
-            //const string validPathChars = "[^:*?\"<>\\|\\s]";
-            //lang=regex
-            const string quotedPattern = "^(?<rc>robocopy\\s*)?\"(?<source>.+?:.+?)\"\\s+\"(?<dest>.+?:.+?)\".*";
-            //lang=regex
-            const string sourceQuotedPattern = "^(?<rc>robocopy\\s*)?\"(?<source>.+?:[^:*?\"<>\\|\\s]+)\"\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*";
-            //lang=regex
-            const string destQuotedPattern = "^(?<rc>robocopy\\s*)?(?<source>/.+?:[^:*?\"<>\\|\\s]+)\\s+\"(?<dest>.+?:[^:*?\"<>\\|\\s]+)\".*";
-            //lang=regex
-            const string nonQuotedPattern = "^(?<rc>robocopy\\s*)?(?<source>.+?:[^:*?\"<>\\|\\s]+)\\s+(?<dest>.+?:[^:*?\"<>\\|\\s]+).*"; // Non-Quoted strings search until they encounter white-space
-
-            // Return the first match
-            return PatternMatch(quotedPattern)
-                ?? PatternMatch(nonQuotedPattern)
-                ?? PatternMatch(sourceQuotedPattern)
-                ?? PatternMatch(destQuotedPattern)
-                ?? LogNoMatch();
-            
-            ParsedSourceDest? PatternMatch(string pattern)
-            {
-                var match = Regex.Match(command, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
-                if (match.Success)
-                {
-                    string source = match.Groups["source"].Value.Trim('\"');
-                    string dest = match.Groups["dest"].Value.Trim('\"');
-                    source = source.IsPathFullyQualified() ? source : null;
-                    dest = dest.IsPathFullyQualified() ? dest : null;
-                    if (source is null && dest is null) return null;
-
-                    Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
-                    Debugger.Instance.DebugMessage($"----> Pattern : " + pattern);
-                    Debugger.Instance.DebugMessage($"----> Source : " + source);
-                    Debugger.Instance.DebugMessage($"----> Destination : " + dest);
-                    return new ParsedSourceDest(source ?? string.Empty, dest ?? string.Empty);
-                }else
-                {
-                    return null;
-                }
-            }
-            ParsedSourceDest LogNoMatch()
-            {
-                Debugger.Instance.DebugMessage($"--> Unable to detect a Source/Destination pattern match");
-                return new ParsedSourceDest(string.Empty, string.Empty);
-            }
-        }
-
-        #endregion
-
         #region < Copy Options Parsing >
 
-        private static CopyActionFlags ParseCopyFlags(string sanitizedCmd)
+        private static CopyActionFlags ParseCopyFlags(string cmd, out string updatedText)
         {
             CopyActionFlags flags = CopyActionFlags.Default;
-            if (sanitizedCmd.HasFlag(CopyOptions.NETWORK_COMPRESSION)) flags |= CopyActionFlags.Compress;
-            if (sanitizedCmd.HasFlag(CopyOptions.COPY_SUBDIRECTORIES)) flags |= CopyActionFlags.CopySubdirectories;
-            if (sanitizedCmd.HasFlag(CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY)) flags |= CopyActionFlags.CopySubdirectoriesIncludingEmpty;
-            if (sanitizedCmd.HasFlag(CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE)) flags |= CopyActionFlags.CreateDirectoryAndFileTree;
-            if (sanitizedCmd.HasFlag(CopyOptions.MIRROR)) flags |= CopyActionFlags.Mirror;
-            if (sanitizedCmd.HasFlag(CopyOptions.MOVE_FILES)) flags |= CopyActionFlags.MoveFiles;
-            if (sanitizedCmd.HasFlag(CopyOptions.MOVE_FILES_AND_DIRECTORIES)) flags |= CopyActionFlags.MoveFilesAndDirectories;
-            if (sanitizedCmd.HasFlag(CopyOptions.PURGE)) flags |= CopyActionFlags.Purge;
+            ExtractFlag(cmd, CopyOptions.NETWORK_COMPRESSION, out cmd, () => flags |= CopyActionFlags.Compress);
+            ExtractFlag(cmd, CopyOptions.COPY_SUBDIRECTORIES, out cmd, () => flags |= CopyActionFlags.CopySubdirectories);
+            ExtractFlag(cmd, CopyOptions.COPY_SUBDIRECTORIES_INCLUDING_EMPTY, out cmd, () => flags |= CopyActionFlags.CopySubdirectoriesIncludingEmpty);
+            ExtractFlag(cmd, CopyOptions.CREATE_DIRECTORY_AND_FILE_TREE, out cmd, () => flags |= CopyActionFlags.CreateDirectoryAndFileTree);
+            ExtractFlag(cmd, CopyOptions.MIRROR, out cmd, () => flags |= CopyActionFlags.Mirror);
+            ExtractFlag(cmd, CopyOptions.MOVE_FILES, out cmd, () => flags |= CopyActionFlags.MoveFiles);
+            ExtractFlag(cmd, CopyOptions.MOVE_FILES_AND_DIRECTORIES, out cmd, () => flags |= CopyActionFlags.MoveFilesAndDirectories);
+            ExtractFlag(cmd, CopyOptions.PURGE, out cmd, () => flags |= CopyActionFlags.Purge);
+            updatedText = cmd;
             return flags;
         }
 
         /// <summary>
         /// Parse the Copy Options not discovered by ParseCopyFlags
         /// </summary>
-        private static IRoboCommand ParseCopyOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
+        private static IRoboCommand ParseCopyOptions(this IRoboCommand roboCommand, string command, out string sanitizedCmd)
         {
             Debugger.Instance.DebugMessage($"Parsing Copy Options");
             var options = roboCommand.CopyOptions;
-            options.CheckPerFile |= sanitizedCmd.HasFlag(CopyOptions.CHECK_PER_FILE);
-            options.CopyAll |= sanitizedCmd.HasFlag(CopyOptions.COPY_ALL);
-            options.CopyFilesWithSecurity |= sanitizedCmd.HasFlag(CopyOptions.COPY_FILES_WITH_SECURITY);
-            options.CopySymbolicLink |= sanitizedCmd.HasFlag(CopyOptions.COPY_SYMBOLIC_LINK);
-            options.DoNotCopyDirectoryInfo |= sanitizedCmd.HasFlag(CopyOptions.DO_NOT_COPY_DIRECTORY_INFO);
-            options.DoNotUseWindowsCopyOffload |= sanitizedCmd.HasFlag(CopyOptions.DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
-            options.EnableBackupMode |= sanitizedCmd.HasFlag(CopyOptions.ENABLE_BACKUP_MODE);
-            options.EnableEfsRawMode |= sanitizedCmd.HasFlag(CopyOptions.ENABLE_EFSRAW_MODE);
-            options.EnableRestartMode |= sanitizedCmd.HasFlag(CopyOptions.ENABLE_RESTART_MODE);
-            options.EnableRestartModeWithBackupFallback |= sanitizedCmd.HasFlag(CopyOptions.ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK);
-            options.FatFiles |= sanitizedCmd.HasFlag(CopyOptions.FAT_FILES);
-            options.FixFileSecurityOnAllFiles |= sanitizedCmd.HasFlag(CopyOptions.FIX_FILE_SECURITY_ON_ALL_FILES);
-            options.FixFileTimesOnAllFiles |= sanitizedCmd.HasFlag(CopyOptions.FIX_FILE_TIMES_ON_ALL_FILES);
-            options.RemoveFileInformation |= sanitizedCmd.HasFlag(CopyOptions.REMOVE_FILE_INFORMATION);
-            options.TurnLongPathSupportOff |= sanitizedCmd.HasFlag(CopyOptions.TURN_LONG_PATH_SUPPORT_OFF);
-            options.UseUnbufferedIo |= sanitizedCmd.HasFlag(CopyOptions.USE_UNBUFFERED_IO);
+            sanitizedCmd = command;
+
+            options.CheckPerFile |= ExtractFlag(sanitizedCmd, CopyOptions.CHECK_PER_FILE, out sanitizedCmd);
+            options.CopyAll |= ExtractFlag(sanitizedCmd, CopyOptions.COPY_ALL, out sanitizedCmd);
+            options.CopyFilesWithSecurity |= ExtractFlag(sanitizedCmd, CopyOptions.COPY_FILES_WITH_SECURITY, out sanitizedCmd);
+            options.CopySymbolicLink |= ExtractFlag(sanitizedCmd, CopyOptions.COPY_SYMBOLIC_LINK, out sanitizedCmd);
+            options.DoNotCopyDirectoryInfo |= ExtractFlag(sanitizedCmd, CopyOptions.DO_NOT_COPY_DIRECTORY_INFO, out sanitizedCmd);
+            options.DoNotUseWindowsCopyOffload |= ExtractFlag(sanitizedCmd, CopyOptions.DO_NOT_USE_WINDOWS_COPY_OFFLOAD, out sanitizedCmd);
+            options.EnableBackupMode |= ExtractFlag(sanitizedCmd, CopyOptions.ENABLE_BACKUP_MODE, out sanitizedCmd);
+            options.EnableEfsRawMode |= ExtractFlag(sanitizedCmd, CopyOptions.ENABLE_EFSRAW_MODE, out sanitizedCmd);
+            options.EnableRestartMode |= ExtractFlag(sanitizedCmd, CopyOptions.ENABLE_RESTART_MODE, out sanitizedCmd);
+            options.EnableRestartModeWithBackupFallback |= ExtractFlag(sanitizedCmd, CopyOptions.ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK, out sanitizedCmd);
+            options.FatFiles |= ExtractFlag(sanitizedCmd, CopyOptions.FAT_FILES, out sanitizedCmd);
+            options.FixFileSecurityOnAllFiles |= ExtractFlag(sanitizedCmd, CopyOptions.FIX_FILE_SECURITY_ON_ALL_FILES, out sanitizedCmd);
+            options.FixFileTimesOnAllFiles |= ExtractFlag(sanitizedCmd, CopyOptions.FIX_FILE_TIMES_ON_ALL_FILES, out sanitizedCmd);
+            options.RemoveFileInformation |= ExtractFlag(sanitizedCmd, CopyOptions.REMOVE_FILE_INFORMATION, out sanitizedCmd);
+            options.TurnLongPathSupportOff |= ExtractFlag(sanitizedCmd, CopyOptions.TURN_LONG_PATH_SUPPORT_OFF, out sanitizedCmd);
+            options.UseUnbufferedIo |= ExtractFlag(sanitizedCmd, CopyOptions.USE_UNBUFFERED_IO, out sanitizedCmd);
 
             // Non-Boolean Options
 
-            if (TryExtractParameter(command, CopyOptions.ADD_ATTRIBUTES, out string param))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.ADD_ATTRIBUTES, out string param, out sanitizedCmd))
             {
                 options.AddAttributes = param;
             }
 
-            _ = TryExtractParameter(command, CopyOptions.COPY_FLAGS, out param); // Always set this value
+            _ = TryExtractParameter(sanitizedCmd, CopyOptions.COPY_FLAGS, out param, out sanitizedCmd); // Always set this value
             options.CopyFlags = param;
             
-            if (TryExtractParameter(command, CopyOptions.DEPTH, out param) && int.TryParse(param, out int value))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.DEPTH, out param, out sanitizedCmd) && int.TryParse(param, out int value))
             {
                 options.Depth = value;
             }
             
-            _ = TryExtractParameter(command, CopyOptions.DIRECTORY_COPY_FLAGS, out param); // Always set this value
+            _ = TryExtractParameter(sanitizedCmd, CopyOptions.DIRECTORY_COPY_FLAGS, out param, out sanitizedCmd); // Always set this value
             options.DirectoryCopyFlags = param;
 
-            if (TryExtractParameter(command, CopyOptions.INTER_PACKET_GAP, out param) && int.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.INTER_PACKET_GAP, out param, out sanitizedCmd) && int.TryParse(param, out value))
             {
                 options.InterPacketGap = value;
             }
-            if (TryExtractParameter(command, CopyOptions.MONITOR_SOURCE_CHANGES_LIMIT, out param) && int.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.MONITOR_SOURCE_CHANGES_LIMIT, out param, out sanitizedCmd) && int.TryParse(param, out value))
             {
                 options.MonitorSourceChangesLimit = value;
             }
-            if (TryExtractParameter(command, CopyOptions.MONITOR_SOURCE_TIME_LIMIT, out param) && int.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.MONITOR_SOURCE_TIME_LIMIT, out param, out sanitizedCmd) && int.TryParse(param, out value))
             {
                 options.MonitorSourceTimeLimit = value;
             }
-            if (TryExtractParameter(command, CopyOptions.MULTITHREADED_COPIES_COUNT, out param) && int.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.MULTITHREADED_COPIES_COUNT, out param, out sanitizedCmd) && int.TryParse(param, out value))
             {
                 options.MultiThreadedCopiesCount = value;
             }
-            if (TryExtractParameter(command, CopyOptions.REMOVE_ATTRIBUTES, out param))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.REMOVE_ATTRIBUTES, out param, out sanitizedCmd))
             {
                 options.RemoveAttributes = param;
             }
-            if (TryExtractParameter(command, CopyOptions.RUN_HOURS, out param) && CopyOptions.IsRunHoursStringValid(param))
+            if (TryExtractParameter(sanitizedCmd, CopyOptions.RUN_HOURS, out param, out sanitizedCmd) && CopyOptions.IsRunHoursStringValid(param))
             {
                 options.RunHours = param;
             }
@@ -253,122 +157,83 @@ namespace RoboSharp
             return roboCommand;
         }
 
-        /// <summary>
-        /// Parse the string, extracting individual filters out to an IEnumerable string
-        /// </summary>
-        static IEnumerable<string> ParseFilters(string stringToParse, string debugFormat)
-        {
-            List<string> filters = new List<string>();
-            StringBuilder filterBuilder = new StringBuilder();
-            bool isQuoted = false;
-            bool isBuilding = false;
-            foreach (char c in stringToParse)
-            {
-                if (isQuoted && c == '"')
-                    NextFilter();
-                else if (isQuoted)
-                    filterBuilder.Append(c);
-                else if (c == '"')
-                {
-                    isQuoted = true;
-                    isBuilding = true;
-                }
-                else if (char.IsWhiteSpace(c))
-                {
-                    if (isBuilding) NextFilter(); // unquoted white space indicates end of one filter and start of next. Otherwise ignore whitepsace.
-                }
-                else
-                {
-                    isBuilding = true;
-                    filterBuilder.Append(c);
-                }
-            }
-            NextFilter();
-            return filters;
-            void NextFilter()
-            {
-                isQuoted = false;
-                isBuilding = false;
-                string value = filterBuilder.ToString();
-                if (string.IsNullOrWhiteSpace(value)) return;
-                Debugger.Instance.DebugMessage(string.Format(debugFormat, value));
-                filters.Add(value);
-                filterBuilder.Clear();
-            }
-        }
-
         #endregion
 
         #region < Selection Options Parsing  >
-        private static SelectionFlags ParseSelectionFlags(string sanitizedCmd)
+        private static SelectionFlags ParseSelectionFlags(string cmd, out string updatedText)
         {
             SelectionFlags flags = SelectionFlags.Default;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_CHANGED)) flags |= SelectionFlags.ExcludeChanged;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_EXTRA)) flags |= SelectionFlags.ExcludeExtra;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_JUNCTION_POINTS)) flags |= SelectionFlags.ExcludeJunctionPoints;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES)) flags |= SelectionFlags.ExcludeJunctionPointsForDirectories;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_FILES)) flags |= SelectionFlags.ExcludeJunctionPointsForFiles;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_LONELY)) flags |= SelectionFlags.ExcludeLonely;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_NEWER)) flags |= SelectionFlags.ExcludeNewer;
-            if (sanitizedCmd.HasFlag(SelectionOptions.EXCLUDE_OLDER)) flags |= SelectionFlags.ExcludeOlder;
-            if (sanitizedCmd.HasFlag(SelectionOptions.INCLUDE_SAME)) flags |= SelectionFlags.IncludeSame;
-            if (sanitizedCmd.HasFlag(SelectionOptions.INCLUDE_TWEAKED)) flags |= SelectionFlags.IncludeTweaked;
-            if (sanitizedCmd.HasFlag(SelectionOptions.ONLY_COPY_ARCHIVE_FILES)) flags |= SelectionFlags.OnlyCopyArchiveFiles;
-            if (sanitizedCmd.HasFlag(SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG)) flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag;
-
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_CHANGED, out cmd, () => flags |= SelectionFlags.ExcludeChanged);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_EXTRA, out cmd, () => flags |= SelectionFlags.ExcludeExtra);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_JUNCTION_POINTS, out cmd, () => flags |= SelectionFlags.ExcludeJunctionPoints);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_DIRECTORIES, out cmd, () => flags |= SelectionFlags.ExcludeJunctionPointsForDirectories);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_JUNCTION_POINTS_FOR_FILES, out cmd, () => flags |= SelectionFlags.ExcludeJunctionPointsForFiles);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_LONELY, out cmd, () => flags |= SelectionFlags.ExcludeLonely);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_NEWER, out cmd, () => flags |= SelectionFlags.ExcludeNewer);
+            ExtractFlag(cmd, SelectionOptions.EXCLUDE_OLDER, out cmd, () => flags |= SelectionFlags.ExcludeOlder);
+            ExtractFlag(cmd, SelectionOptions.INCLUDE_SAME, out cmd, () => flags |= SelectionFlags.IncludeSame);
+            ExtractFlag(cmd, SelectionOptions.INCLUDE_TWEAKED, out cmd, () => flags |= SelectionFlags.IncludeTweaked);
+            ExtractFlag(cmd, SelectionOptions.ONLY_COPY_ARCHIVE_FILES, out cmd, () => flags |= SelectionFlags.OnlyCopyArchiveFiles);
+            ExtractFlag(cmd, SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG, out cmd, () => flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag);
+            updatedText = cmd;
             return flags;
         }
 
         /// <summary>
         /// Parse the Selection Options not discovered by ParseSelectionFlags
         /// </summary>
-        private static IRoboCommand ParseSelectionOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
+        private static IRoboCommand ParseSelectionOptions(this IRoboCommand roboCommand, string command, out string sanitizedCmd)
         {
             Debugger.Instance.DebugMessage($"Parsing Selection Options");
             var options = roboCommand.SelectionOptions;
-            options.CompensateForDstDifference |= command.HasFlag(SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE);
-            options.UseFatFileTimes |= command.HasFlag(SelectionOptions.USE_FAT_FILE_TIMES);
+            options.CompensateForDstDifference |= ExtractFlag(command, SelectionOptions.COMPENSATE_FOR_DST_DIFFERENCE, out sanitizedCmd);
+            options.UseFatFileTimes |= ExtractFlag(sanitizedCmd,SelectionOptions.USE_FAT_FILE_TIMES, out sanitizedCmd);
 
-            if (TryExtractParameter(command, SelectionOptions.INCLUDE_ATTRIBUTES, out string param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.INCLUDE_ATTRIBUTES, out string param, out sanitizedCmd))
             {
                 options.IncludeAttributes = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.EXCLUDE_ATTRIBUTES, out param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.EXCLUDE_ATTRIBUTES, out param, out sanitizedCmd))
             {
                 options.ExcludeAttributes = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.MAX_FILE_AGE, out param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MAX_FILE_AGE, out param, out sanitizedCmd))
             {
                 options.MaxFileAge = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.MAX_FILE_SIZE, out param) && long.TryParse(param, out var value))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MAX_FILE_SIZE, out param, out sanitizedCmd) && long.TryParse(param, out var value))
             {
                 options.MaxFileSize = value;
             }
-            if (TryExtractParameter(command, SelectionOptions.MIN_FILE_AGE, out param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MIN_FILE_AGE, out param, out sanitizedCmd))
             {
                 options.MinFileAge = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.MIN_FILE_SIZE, out param) && long.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MIN_FILE_SIZE, out param, out sanitizedCmd) && long.TryParse(param, out value))
             {
                 options.MinFileSize = value;
             }
-            if (TryExtractParameter(command, SelectionOptions.MAX_LAST_ACCESS_DATE, out param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MAX_LAST_ACCESS_DATE, out param, out sanitizedCmd))
             {
                 options.MaxLastAccessDate = param;
             }
-            if (TryExtractParameter(command, SelectionOptions.MIN_LAST_ACCESS_DATE, out param))
+            if (TryExtractParameter(sanitizedCmd, SelectionOptions.MIN_LAST_ACCESS_DATE, out param, out sanitizedCmd))
             {
                 options.MinLastAccessDate = param;
             }
 
-             // Get Excluded Files
+            //lang=regex
+            const string XF_Pattern = @"(?<filter>(?<=/XF)\s*(( (?<Quotes>""(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") |(?<NoQuotes>(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.]+)(\s*(?!=/[\w])))+?)+?)";
+            //lang=regex
+            const string XD_Pattern = @"(?<filter>(?<=/XD)\s*(( (?<Quotes>""(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.\s]+"") |(?<NoQuotes>(//[a-zA-Z]|[A-Z]:|[^/:\s])?[\w\*$\-\/\\.]+) )\s*)+)";
+
+            // Get Excluded Files
             Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Files");
-            var matchCollection = Regex.Matches(command, ".+?(?<filters>/XF\\s+[^/]+)+\\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            var matchCollection = Regex.Matches(command, XF_Pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
             if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No File Exclusions found.");
             foreach (Match c in matchCollection)
             {
-                string s = c.Groups["filters"].Value.TrimStart("/XF").Trim();
+                string s = c.Groups["filter"].Value.TrimStart("/XF").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {
                     options.ExcludedFiles.AddRange(ParseFilters(s, "---> Excluded File : {0}"));
@@ -377,11 +242,11 @@ namespace RoboSharp
 
             // Get Excluded Dirs
             Debugger.Instance.DebugMessage($"Parsing Selection Options - Extracting Excluded Directories");
-            matchCollection = Regex.Matches(command, ".+?(?<filters>/XD\\s+[^/]+)+\\s+(?<firstSwitch>/[A-Z])?", RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
+            matchCollection = Regex.Matches(command,XD_Pattern , RegexOptions.IgnoreCase  |RegexOptions.IgnorePatternWhitespace | RegexOptions.ExplicitCapture | RegexOptions.Compiled);
             if (matchCollection.Count == 0) Debugger.Instance.DebugMessage($"--> No Directory Exclusions found.");
             foreach (Match c in matchCollection)
             {
-                string s = c.Groups["filters"].Value.TrimStart("/XD").Trim();
+                string s = c.Groups["filter"].Value.TrimStart("/XD").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {
                     options.ExcludedDirectories.AddRange(ParseFilters(s, "---> Excluded Directory : {0}")); ;
@@ -393,37 +258,39 @@ namespace RoboSharp
 
         #endregion
 
-        private static IRoboCommand ParseLoggingOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
+        private static IRoboCommand ParseLoggingOptions(this IRoboCommand roboCommand, string command, out string sanitizedCmd)
         {
             Debugger.Instance.DebugMessage($"Parsing Logging Options");
             var options = roboCommand.LoggingOptions;
-            options.IncludeFullPathNames |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_FULL_PATH_NAMES);
-            options.IncludeSourceTimeStamps |= sanitizedCmd.HasFlag(LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS);
-            options.ListOnly |= sanitizedCmd.HasFlag(LoggingOptions.LIST_ONLY);
-            options.NoDirectoryList |= sanitizedCmd.HasFlag(LoggingOptions.NO_DIRECTORY_LIST);
-            options.NoFileClasses |= sanitizedCmd.HasFlag(LoggingOptions.NO_FILE_CLASSES);
-            options.NoFileList |= sanitizedCmd.HasFlag(LoggingOptions.NO_FILE_LIST);
-            options.NoFileSizes |= sanitizedCmd.HasFlag(LoggingOptions.NO_FILE_SIZES);
-            options.NoJobHeader |= sanitizedCmd.HasFlag(LoggingOptions.NO_JOB_HEADER);
-            options.NoJobSummary |= sanitizedCmd.HasFlag(LoggingOptions.NO_JOB_SUMMARY);
-            options.NoProgress |= sanitizedCmd.HasFlag(LoggingOptions.NO_PROGRESS);
-            options.OutputAsUnicode |= sanitizedCmd.HasFlag(LoggingOptions.OUTPUT_AS_UNICODE);
-            options.OutputToRoboSharpAndLog |= sanitizedCmd.HasFlag(LoggingOptions.OUTPUT_TO_ROBOSHARP_AND_LOG);
-            options.PrintSizesAsBytes |= sanitizedCmd.HasFlag(LoggingOptions.PRINT_SIZES_AS_BYTES);
-            options.ReportExtraFiles |= sanitizedCmd.HasFlag(LoggingOptions.REPORT_EXTRA_FILES);
-            options.ShowEstimatedTimeOfArrival |= sanitizedCmd.HasFlag(LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL);
-            options.VerboseOutput |= sanitizedCmd.HasFlag(LoggingOptions.VERBOSE_OUTPUT);
+            sanitizedCmd = command;
 
-            options.LogPath = ExtractLogPath(LoggingOptions.LOG_PATH);
-            options.AppendLogPath = ExtractLogPath(LoggingOptions.APPEND_LOG_PATH);
-            options.UnicodeLogPath = ExtractLogPath(LoggingOptions.UNICODE_LOG_PATH);
-            options.AppendUnicodeLogPath = ExtractLogPath(LoggingOptions.APPEND_UNICODE_LOG_PATH);
+            options.IncludeFullPathNames |= ExtractFlag(sanitizedCmd, LoggingOptions.INCLUDE_FULL_PATH_NAMES, out sanitizedCmd, null);
+            options.IncludeSourceTimeStamps |= ExtractFlag(sanitizedCmd, LoggingOptions.INCLUDE_SOURCE_TIMESTAMPS, out sanitizedCmd, null);
+            options.ListOnly |= ExtractFlag(sanitizedCmd, LoggingOptions.LIST_ONLY, out sanitizedCmd, null);
+            options.NoDirectoryList |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_DIRECTORY_LIST, out sanitizedCmd, null);
+            options.NoFileClasses |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_FILE_CLASSES, out sanitizedCmd, null);
+            options.NoFileList |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_FILE_LIST, out sanitizedCmd, null);
+            options.NoFileSizes |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_FILE_SIZES, out sanitizedCmd, null);
+            options.NoJobHeader |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_JOB_HEADER, out sanitizedCmd, null);
+            options.NoJobSummary |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_JOB_SUMMARY, out sanitizedCmd, null);
+            options.NoProgress |= ExtractFlag(sanitizedCmd, LoggingOptions.NO_PROGRESS, out sanitizedCmd, null);
+            options.OutputAsUnicode |= ExtractFlag(sanitizedCmd, LoggingOptions.OUTPUT_AS_UNICODE, out sanitizedCmd, null);
+            options.OutputToRoboSharpAndLog |= ExtractFlag(sanitizedCmd, LoggingOptions.OUTPUT_TO_ROBOSHARP_AND_LOG, out sanitizedCmd, null);
+            options.PrintSizesAsBytes |= ExtractFlag(sanitizedCmd, LoggingOptions.PRINT_SIZES_AS_BYTES, out sanitizedCmd, null);
+            options.ReportExtraFiles |= ExtractFlag(sanitizedCmd, LoggingOptions.REPORT_EXTRA_FILES, out sanitizedCmd, null);
+            options.ShowEstimatedTimeOfArrival |= ExtractFlag(sanitizedCmd, LoggingOptions.SHOW_ESTIMATED_TIME_OF_ARRIVAL, out sanitizedCmd, null);
+            options.VerboseOutput |= ExtractFlag(sanitizedCmd, LoggingOptions.VERBOSE_OUTPUT, out sanitizedCmd, null);
+
+            options.LogPath = ExtractLogPath(LoggingOptions.LOG_PATH, sanitizedCmd, out sanitizedCmd);
+            options.AppendLogPath = ExtractLogPath(LoggingOptions.APPEND_LOG_PATH, sanitizedCmd, out sanitizedCmd);
+            options.UnicodeLogPath = ExtractLogPath(LoggingOptions.UNICODE_LOG_PATH, sanitizedCmd, out sanitizedCmd);
+            options.AppendUnicodeLogPath = ExtractLogPath(LoggingOptions.APPEND_UNICODE_LOG_PATH, sanitizedCmd, out sanitizedCmd);
             
             return roboCommand;
 
-            string ExtractLogPath(string filter)
+            string ExtractLogPath(string filter, string input, out string output)
             {
-                if (TryExtractParameter(command, filter, out string path))
+                if (TryExtractParameter(input, filter, out string path, out output))
                 {
                     return path.Trim('\"');
                 }
@@ -431,18 +298,19 @@ namespace RoboSharp
             }
         }
 
-        private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command, string sanitizedCmd)
+        private static IRoboCommand ParseRetryOptions(this IRoboCommand roboCommand, string command, out string sanitizedCmd)
         {
             Debugger.Instance.DebugMessage($"Parsing Retry Options");
             var options = roboCommand.RetryOptions;
-            options.SaveToRegistry |= sanitizedCmd.HasFlag(RetryOptions.SAVE_TO_REGISTRY);
-            options.WaitForSharenames |= sanitizedCmd.HasFlag(RetryOptions.WAIT_FOR_SHARENAMES);
+            
+            options.SaveToRegistry |= ExtractFlag(command, RetryOptions.SAVE_TO_REGISTRY, out sanitizedCmd, null);
+            options.WaitForSharenames |= ExtractFlag(sanitizedCmd, RetryOptions.WAIT_FOR_SHARENAMES, out sanitizedCmd, null);
 
-            if (TryExtractParameter(command, RetryOptions.RETRY_COUNT, out string param) && int.TryParse(param, out int value))
+            if (TryExtractParameter(sanitizedCmd, RetryOptions.RETRY_COUNT, out string param, out sanitizedCmd) && int.TryParse(param, out int value))
             {
                 options.RetryCount = value;
             }
-            if (TryExtractParameter(command, RetryOptions.RETRY_WAIT_TIME, out param) && int.TryParse(param, out value))
+            if (TryExtractParameter(sanitizedCmd, RetryOptions.RETRY_WAIT_TIME, out param, out sanitizedCmd) && int.TryParse(param, out value))
             {
                 options.RetryWaitTime = value;
             }

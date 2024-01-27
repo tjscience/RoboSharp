@@ -50,11 +50,19 @@ namespace RoboSharp
         internal static bool IsPathFullyQualified(this string path) => System.IO.Path.IsPathFullyQualified(path);
 #endif
 
-        internal static string Remove(this string text, string removal) 
-            => string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(removal) ? text : text.Replace(removal, string.Empty);
-        
-        internal static string TrimStart(this string text, string trim, StringComparison comparison = StringComparison.OrdinalIgnoreCase) 
-            => string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(trim) ? text : text.StartsWith(trim, comparison) ? text.Remove(0, trim.Length) : text;
+        internal static string Remove(this string text, string removal, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(removal) || !text.Contains(removal, comparison))
+                return text;
+            return text.Remove(text.IndexOf(removal, comparison), removal.Length);
+        }
+
+        internal static string TrimStart(this string text, string trim, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(trim) || !text.StartsWith(trim, comparison))
+                return text;
+            return text.Remove(0, trim.Length);
+        }
 
 
         /// <summary> Encase the LogPath in quotes if needed </summary>
