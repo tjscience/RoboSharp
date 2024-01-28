@@ -7,6 +7,7 @@
     <Copyright>Copyright 2023</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
+	  <langversion>8.0</langversion>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>

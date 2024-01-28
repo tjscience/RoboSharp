@@ -29,6 +29,7 @@ namespace RoboSharp
         {
             Debugger.Instance.DebugMessage($"RoboCommandParser - Begin parsing input string : {command}");
             command = command.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
+            command = TrimRobocopy(command);
             ParsedSourceDest paths = ParseSourceAndDestination(command);
             string newInput = paths.SanitizedString + " "; // Ensure white space at end of string because all constants have it
             var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(newInput, out newInput), ParseSelectionFlags(newInput, out newInput));

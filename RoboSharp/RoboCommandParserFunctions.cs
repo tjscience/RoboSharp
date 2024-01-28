@@ -41,6 +41,20 @@ namespace RoboSharp
         }
 
         /// <summary>
+        /// Trim robocopy from that beginning of the input string
+        /// </summary>
+        /// <returns>The trimmed string</returns>
+        public static string TrimRobocopy(string input)
+        {
+            //lang=regex 
+            const string rc = @"^\s*(?<rc>(?<sQuote>"".+?[:$].+?robocopy(\.exe)?"")|(?<sNoQuote>([^:*?""<>|\s]+?[:$][^:*?<>|\s]+?)?robocopy(\.exe)?))";
+            var match = Regex.Match(input, rc);
+            string ret = match.Success ? input.Remove(match.Groups[0].Value) : input;
+            if (ret.Contains("robocopy", StringComparison.InvariantCultureIgnoreCase)) throw new Exception("Unable to remove 'robocopy' from the input string.");
+            return ret;
+        }
+
+        /// <summary>
         /// Parse the input text, extracting the Source and Destination info.
         /// </summary>
         /// <param name="inputText">The input text to parse. 
