@@ -68,40 +68,73 @@ namespace RoboSharp
             // Definition (prefix) (Source (quoted version) | (no quotes)) (dest (quoted version) | (no quotes))
             // This should handle all scenarios, including networks paths such as \\MyServer\DriveName$\Apps\
             // Note : if its contained within quotes, it simply accepts tall characters within the quotes.
+            // This also includes allowing both source and destination to be empty, as long as both are empty quotes : robocopy "" "" /XF
             //lang=regex 
-            const string fullPattern = @"^(robocopy\s*)?(?<source>(?<sQuote>"".+?[:$].+?"")|(?<sNoQuote>[^:*?""<>|\s]+?[:$][^:*?<>|\s]+))\s+(?<dest>(?<dQuote>"".+?[:$].+?"")|(?<dNoQuote>[^:*?""<>|\s]+?[:$][^:*?<>|\s]+)).*$";
+            const string fullPattern = @"^\s*(?<source> (""\s*"") | (?<sQuote>""(.+?[:$].+?)"") | (?<sNoQuote>[^:*?""<>|\s]+?[:$][^:*?<>|\s]+) ) \s+ (?<dest> (""\s*"") | (?<dQuote>"".+?[:$].+?"") | (?<dNoQuote>[^:*?""<>|\s]+?[:$][^:*?<>|\s]+) ).*$";
+            var match = Regex.Match(inputText, fullPattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace);
 
-            // Return the first match
-            return PatternMatch(fullPattern) ?? LogNoMatch();
-
-            ParsedSourceDest? PatternMatch(string pattern)
+            RoboCommandParserException ex;
+            if (!match.Success)
             {
-                string rawSource = string.Empty;
-                string rawDest = string.Empty;
-                string source = null;
-                string dest = null;
-                var match = Regex.Match(inputText, pattern, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.CultureInvariant);
-                if (match.Success)
-                {
-                    rawSource = match.Groups["source"].Value;
-                    rawDest = match.Groups["dest"].Value;
-                    source = rawSource.Trim('\"');
-                    dest = rawDest.Trim('\"');
-                    source = source.IsPathFullyQualified() ? source : null;
-                    dest = dest.IsPathFullyQualified() ? dest : null;
+                Debugger.Instance.DebugMessage($"--> Unable to detect a Source/Destination pattern match \n----> Input text : " + inputText);
+                const string example = "\"\" \"\" [options]";
+                ex = new RoboCommandParserException($"Source and Destination were unable to be parsed. \nThese are required parameters that occur at the beginning of the input string.\nIf excluding them intentionally, provide a set of empty quotes at the beginning of the string.\nSee Example : {example}");
+                ex.AddData("input", inputText);
+                throw ex;
+            }
+            else
+            {
+                string rawSource = match.Groups["source"].Value;
+                string rawDest = match.Groups["dest"].Value;
+                string source = rawSource.Trim('\"');
+                string dest = rawDest.Trim('\"');
 
+                // Validate source and destination - both must be empty, or both must be fully qualified
+                bool sourceEmpty = string.IsNullOrWhiteSpace(source);
+                bool destEmpty = string.IsNullOrWhiteSpace(dest);
+                bool sourceQualified = source.IsPathFullyQualified();
+                bool destQualified = dest.IsPathFullyQualified();
+
+                if (sourceQualified && destQualified)
+                {
                     Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
-                    Debugger.Instance.DebugMessage($"----> Pattern : " + pattern);
                     Debugger.Instance.DebugMessage($"----> Source : " + source);
                     Debugger.Instance.DebugMessage($"----> Destination : " + dest);
-                    
+                    return new ParsedSourceDest(source, dest, inputText, inputText.Remove(rawSource).Remove(rawDest));
                 }
-                return new ParsedSourceDest(source ?? string.Empty, dest ?? string.Empty, inputText, inputText.Remove(rawSource).Remove(rawDest).TrimStart("robocopy"));
-            }
-            ParsedSourceDest LogNoMatch()
-            {
-                Debugger.Instance.DebugMessage($"--> Unable to detect a Source/Destination pattern match");
-                return new ParsedSourceDest(string.Empty, string.Empty, inputText, inputText);
+                else if (sourceEmpty && destEmpty)
+                {
+                    Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success: Neither specified");
+                    return new ParsedSourceDest(string.Empty, string.Empty, inputText, inputText);
+                }
+                else
+                {
+                    Debugger.Instance.DebugMessage($"--> Unable to detect a valid Source/Destination pattern match -- Input text : " + inputText);
+                    Debugger.Instance.DebugMessage($"----> Source : " + source);
+                    Debugger.Instance.DebugMessage($"----> Destination : " + dest);
+                    ex = new RoboCommandParserException(message: true switch
+                    {
+                        true when sourceEmpty && destQualified => "Destination is fully qualified, but Source is empty",
+                        true when destEmpty && sourceQualified => "Source is fully qualified, but Destination is empty",
+                        true when !sourceQualified && !destQualified => "Source and Destination are not fully qualified",
+                        true when !sourceQualified => "Source is not fully qualified",
+                        true when !destQualified => "Destination is not fully qualified",
+                        _ => "Source / Destination Parsing Error",
+                    });
+                    if (!sourceQualified | sourceEmpty)
+                    {
+                        ex ??= new RoboCommandParserException("Source path is not valid");
+                        ex.AddData("Source", rawSource);
+                        ex.AddData("Source_Error", string.IsNullOrWhiteSpace(source) ? "Source is empty" : "Source is not fully qualified");
+                    }
+                    if (!destQualified | destEmpty)
+                    {
+                        ex ??= new RoboCommandParserException("Destination path is not valid");
+                        ex.AddData("Destination", rawDest);
+                        ex.AddData("Destination_Error", string.IsNullOrWhiteSpace(dest) ? "Destination is empty" : "Destination is not fully qualified");
+                    }
+                    throw ex;
+                }
             }
         }
 
