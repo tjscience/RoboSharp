@@ -77,9 +77,9 @@ namespace RoboSharp
             if (!match.Success)
             {
                 Debugger.Instance.DebugMessage($"--> Unable to detect a Source/Destination pattern match \n----> Input text : " + inputText);
-                const string example = "\"\" \"\" [options]";
-                ex = new RoboCommandParserException($"Source and Destination were unable to be parsed. \nThese are required parameters that occur at the beginning of the input string.\nIf excluding them intentionally, provide a set of empty quotes at the beginning of the string.\nSee Example : {example}");
+                ex = new RoboCommandParserException($"Source and Destination were unable to be parsed.");
                 ex.AddData("input", inputText);
+                //ex.AddData("Workaround", "One workaround to this is  to submit the input text with the source / destination empty. This can be done with an empty set of quotes at the beginning of the input string.");
                 throw ex;
             }
             else

@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -48,9 +49,9 @@ namespace RoboSharp.UnitTests
 
         [DataRow("C:\\MySource \"D:\\My Destination\" /XF", @"C:\MySource", @"D:\My Destination", "/XF", DisplayName = "Quoted Destination")]
         [DataRow("\"C:\\My Source\" D:\\MyDestination /XF", @"C:\My Source", @"D:\MyDestination", "/XF", DisplayName = "Quoted Source")]
-        [DataRow("robocopy \"C:\\My Source\" \"D:\\My Destination\" /XF", @"C:\My Source", @"D:\My Destination", "/XF", DisplayName = "Quotes + Spaces")]
-        [DataRow("robocopy \"C:\\MySource\" \"D:\\MyDestination\" /XF", @"C:\MySource", @"D:\MyDestination", "/XF", DisplayName = "Quotes")]
-        [DataRow(@"robocopy C:\MySource D:\MyDestination /XF", @"C:\MySource", @"D:\MyDestination", "/XF", DisplayName = "No Quotes")]
+        [DataRow("\"C:\\My Source\" \"D:\\My Destination\" /XF", @"C:\My Source", @"D:\My Destination", "/XF", DisplayName = "Quotes + Spaces")]
+        [DataRow("\"C:\\MySource\" \"D:\\MyDestination\" /XF", @"C:\MySource", @"D:\MyDestination", "/XF", DisplayName = "Quotes")]
+        [DataRow(@"C:\MySource D:\MyDestination /XF", @"C:\MySource", @"D:\MyDestination", "/XF", DisplayName = "No Quotes")]
         [TestMethod()]
         public void ParseSourceAndDestinationTest(string input, string expectedSource, string expectedDestination, string expectedSanitizedValue)
         {
@@ -59,6 +60,41 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(expectedSource, result.Source, "\n Source Value Incorrect");
             Assert.AreEqual(expectedDestination, result.Dest, "\n Destination Value Incorrect");
             Assert.AreEqual(expectedSanitizedValue, result.SanitizedString.Trim(), "\n Sanitized Value Incorrect");
+        }
+
+        [DataRow("", "D:\\Dest", DisplayName = "Empty Source")]
+        [DataRow("bad_source", "D:\\Dest", DisplayName = "Unable to Parse ( source )")]
+        [DataRow("D:\\Source", "bad_dest", DisplayName = "Unable to Parse ( destination )")]
+        [DataRow("8:bad_source", "D:\\Dest", DisplayName = "Unqualified Source")]
+        [DataRow("D:\\Source", "", DisplayName = "Empty Destination")]
+        [DataRow("D:\\Source", "/:bad_dest", DisplayName = "Unqualified Destination")]
+        [DataRow("", "", false, DisplayName = "No Values - Quotes")]
+        [DataRow("", "", true, false, DisplayName = "No Values- No Quotes")]
+        [DataRow("//Server\\myServer$\\1", "//Server\\myServer$\\2", false, false, DisplayName = "Server Test - No Quotes")]
+        [DataRow("//Server\\myServer$\\1", "//Server\\myServer$\\2", false, true, DisplayName = "Server Test - Quotes")]
+        [TestMethod()]
+        public void ParseSourceAndDestinationExceptionTest(string source, string destination, bool shouldThrow = true, bool wrap = true)
+        {
+            void runTest()
+            {
+                try
+                {
+                    string quote(string input) => wrap ? $"\"{input}\"" : input;
+                    RoboCommandParserFunctions.ParseSourceAndDestination(string.Format("{0} {1} /PURGE", quote(source), quote(destination)));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    foreach (DictionaryEntry item in ex.Data)
+                        Console.WriteLine(string.Format("{0} : {1}", item.Key, item.Value.ToString()));
+                    throw;
+                }
+
+            }
+            if (shouldThrow)
+                Assert.ThrowsException<RoboCommandParserException>(runTest);
+            else
+                runTest();
         }
 
         [DataRow("Test_1 /Data:5", "/Data:{0}", "5", "Test_1", true)]

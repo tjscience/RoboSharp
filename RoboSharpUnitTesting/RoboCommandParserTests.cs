@@ -19,12 +19,20 @@ namespace RoboSharp.UnitTests
 
         const string CmdEndText = @" /R:0 /W:30 /BYTES";
 
+        private static RoboCommand GetNewCommand(string source = default, string destination =  default) => new RoboCommand(
+            source: source.IsNullOrWhiteSpace() ?  "C:\\Source" : source,
+            destination: destination.IsNullOrWhiteSpace() ? "D:\\Destination" : destination
+            );
+
+        private static string PrintCmd(IRoboCommand command ) => command.CopyOptions.Source.IsNullOrWhiteSpace() ?  $"\"\" \"\" {command}" : command.ToString();
+
         /// <summary>
         /// Use this one when debugging specific commands that are not deciphering for you!
         /// </summary>
-        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" \"*.txt\" \"*.pdf\"", DisplayName = "quoted filters")]
-        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" *.txt *.pdf", DisplayName = "multiple unquoted filters")]
-        [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" *.txt", DisplayName = ".txt Only")]
+        [DataRow("\"\" \"\" \"*.txt\" \"*.pdf\"", DisplayName = "No Source or Dest")]
+        [DataRow("robocopy.exe \"C:\\MySource\" \"D:\\My Destination\" \"*.txt\" \"*.pdf\"", DisplayName = "quoted filters")]
+        [DataRow("\"D:\\Some Folder\\robocopy.exe\" \"C:\\MySource\" \"D:\\My Destination\" *.txt *.pdf", DisplayName = "multiple unquoted filters")]
+        [DataRow("c:\\windows\\system32\\robocopy.exe \"C:\\MySource\" \"D:\\My Destination\" *.txt", DisplayName = ".txt Only")]
         [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" /MOVE", DisplayName = "Example")]
         [TestMethod()]
         public void TestCustomParameters(string command)
@@ -61,17 +69,17 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            RoboCommand cmdSource = new RoboCommand(source, destination, copyFlags, selectionFlags, loggingFlags);
-            string text = cmdSource.ToString();
+            RoboCommand cmd = new RoboCommand(source, destination, copyFlags, selectionFlags, loggingFlags);
+            string text = PrintCmd(cmd);
             IRoboCommand cmdResult = RoboCommandParser.Parse(text);
-            Assert.AreEqual(cmdSource.CopyOptions.Source, cmdResult.CopyOptions.Source, "\nCopyOptions.Source is not equal!");
-            Assert.AreEqual(cmdSource.CopyOptions.Destination, cmdResult.CopyOptions.Destination, "\nCopyOptions.Destination is not equal!");
-            Assert.AreEqual(cmdSource.CopyOptions.GetCopyActionFlags(), cmdResult.CopyOptions.GetCopyActionFlags(), $"\n\nCopy Flags are not the same!\n\nExpected:{cmdSource.CopyOptions.GetCopyActionFlags()}\nResult:{cmdResult.CopyOptions.GetCopyActionFlags()}");
-            Assert.AreEqual(cmdSource.SelectionOptions.GetSelectionFlags(), cmdResult.SelectionOptions.GetSelectionFlags(), $"\n\nSelection Flags are not the same!\n\nExpected:{cmdSource.SelectionOptions.GetSelectionFlags()}\nResult:{cmdResult.SelectionOptions.GetSelectionFlags()}");
-            Assert.AreEqual(cmdSource.LoggingOptions.GetLoggingActionFlags(), cmdResult.LoggingOptions.GetLoggingActionFlags(), $"\n\nLogging Flags are not the same!\n\nExpected:{cmdSource.LoggingOptions.GetLoggingActionFlags()}\nResult:{cmdResult.LoggingOptions.GetLoggingActionFlags()}");
+            Assert.AreEqual(cmd.CopyOptions.Source, cmdResult.CopyOptions.Source, "\nCopyOptions.Source is not equal!");
+            Assert.AreEqual(cmd.CopyOptions.Destination, cmdResult.CopyOptions.Destination, "\nCopyOptions.Destination is not equal!");
+            Assert.AreEqual(cmd.CopyOptions.GetCopyActionFlags(), cmdResult.CopyOptions.GetCopyActionFlags(), $"\n\nCopy Flags are not the same!\n\nExpected:{cmd.CopyOptions.GetCopyActionFlags()}\nResult:{cmdResult.CopyOptions.GetCopyActionFlags()}");
+            Assert.AreEqual(cmd.SelectionOptions.GetSelectionFlags(), cmdResult.SelectionOptions.GetSelectionFlags(), $"\n\nSelection Flags are not the same!\n\nExpected:{cmd.SelectionOptions.GetSelectionFlags()}\nResult:{cmdResult.SelectionOptions.GetSelectionFlags()}");
+            Assert.AreEqual(cmd.LoggingOptions.GetLoggingActionFlags(), cmdResult.LoggingOptions.GetLoggingActionFlags(), $"\n\nLogging Flags are not the same!\n\nExpected:{cmd.LoggingOptions.GetLoggingActionFlags()}\nResult:{cmdResult.LoggingOptions.GetLoggingActionFlags()}");
 
             // Final test : both should produce the same ToString()
-            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}");
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}");
         }
 
         [TestMethod]
@@ -79,18 +87,18 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            IRoboCommand cmdSource = new RoboCommand();
-            cmdSource.SelectionOptions.MinFileSize = 1234567890;
-            cmdSource.SelectionOptions.MaxFileSize= 0987654321;
-            string text = cmdSource.ToString();
+            IRoboCommand cmd = GetNewCommand();
+            cmd.SelectionOptions.MinFileSize = 1234567890;
+            cmd.SelectionOptions.MaxFileSize= 0987654321;
+            string text = PrintCmd(cmd);
 
             Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
             IRoboCommand cmdResult = RoboCommandParser.Parse(text);
             Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
             
-            Assert.AreEqual(cmdSource.SelectionOptions.MinFileSize, cmdResult.SelectionOptions.MinFileSize, "\n\nMinFileSize does not match!");
-            Assert.AreEqual(cmdSource.SelectionOptions.MaxFileSize, cmdResult.SelectionOptions.MaxFileSize, "\n\nMaxFileSize does not match!");
-            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Assert.AreEqual(cmd.SelectionOptions.MinFileSize, cmdResult.SelectionOptions.MinFileSize, "\n\nMinFileSize does not match!");
+            Assert.AreEqual(cmd.SelectionOptions.MaxFileSize, cmdResult.SelectionOptions.MaxFileSize, "\n\nMaxFileSize does not match!");
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
         [DataRow("19941012", "20220910")]
@@ -100,18 +108,18 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            IRoboCommand cmdSource = new RoboCommand();
-            cmdSource.SelectionOptions.MinFileAge= min;
-            cmdSource.SelectionOptions.MaxFileAge = max;
-            string text = cmdSource.ToString();
+            IRoboCommand cmd = GetNewCommand();
+            cmd.SelectionOptions.MinFileAge= min;
+            cmd.SelectionOptions.MaxFileAge = max;
+            string text = PrintCmd(cmd);
 
             Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
             IRoboCommand cmdResult = RoboCommandParser.Parse(text);
             Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
 
-            Assert.AreEqual(cmdSource.SelectionOptions.MinFileAge, cmdResult.SelectionOptions.MinFileAge, "\n\nMinFileAge does not match!");
-            Assert.AreEqual(cmdSource.SelectionOptions.MaxFileAge, cmdResult.SelectionOptions.MaxFileAge, "\n\nMaxFileAge does not match!");
-            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Assert.AreEqual(cmd.SelectionOptions.MinFileAge, cmdResult.SelectionOptions.MinFileAge, "\n\nMinFileAge does not match!");
+            Assert.AreEqual(cmd.SelectionOptions.MaxFileAge, cmdResult.SelectionOptions.MaxFileAge, "\n\nMaxFileAge does not match!");
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
         [DataRow("19941012", "20220910")]
@@ -121,18 +129,18 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            IRoboCommand cmdSource = new RoboCommand();
-            cmdSource.SelectionOptions.MinLastAccessDate = min;
-            cmdSource.SelectionOptions.MaxLastAccessDate = max;
-            string text = cmdSource.ToString();
+            IRoboCommand cmd = GetNewCommand();
+            cmd.SelectionOptions.MinLastAccessDate = min;
+            cmd.SelectionOptions.MaxLastAccessDate = max;
+            string text = PrintCmd(cmd);
 
             Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
             IRoboCommand cmdResult = RoboCommandParser.Parse(text);
             Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
 
-            Assert.AreEqual(cmdSource.SelectionOptions.MinLastAccessDate, cmdResult.SelectionOptions.MinLastAccessDate, "\n\nMinLastAccessDate does not match!");
-            Assert.AreEqual(cmdSource.SelectionOptions.MaxLastAccessDate, cmdResult.SelectionOptions.MaxLastAccessDate, "\n\nMaxLastAccessDate does not match!");
-            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Assert.AreEqual(cmd.SelectionOptions.MinLastAccessDate, cmdResult.SelectionOptions.MinLastAccessDate, "\n\nMinLastAccessDate does not match!");
+            Assert.AreEqual(cmd.SelectionOptions.MaxLastAccessDate, cmdResult.SelectionOptions.MaxLastAccessDate, "\n\nMaxLastAccessDate does not match!");
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
         [DataRow("\"C:\\Some Folder\\MyLogFile.txt\"")]
@@ -142,12 +150,12 @@ namespace RoboSharp.UnitTests
         {
             // Transform the selection flags to a robocommand, generate the command, parse it, then test that both have the same flags. 
             // ( What the library generates should be able to be reparsed back into the library )
-            IRoboCommand cmdSource = new RoboCommand();
-            cmdSource.LoggingOptions.LogPath = path;
-            cmdSource.LoggingOptions.AppendLogPath = path;
-            cmdSource.LoggingOptions.AppendUnicodeLogPath = path;
-            cmdSource.LoggingOptions.UnicodeLogPath = path;
-            IRoboCommand cmdResult = RoboCommandParser.Parse(cmdSource.ToString());
+            IRoboCommand cmd = GetNewCommand();
+            cmd.LoggingOptions.LogPath = path;
+            cmd.LoggingOptions.AppendLogPath = path;
+            cmd.LoggingOptions.AppendUnicodeLogPath = path;
+            cmd.LoggingOptions.UnicodeLogPath = path;
+            IRoboCommand cmdResult = RoboCommandParser.Parse(PrintCmd(cmd));
 
             // the source paths are trimmed here because they are functionally identical, but the wrapping is removed during the parsing and sanitization process during path qualification. End result command should be the same though.
             string trimmedPath = path.Trim('\"');
@@ -155,7 +163,7 @@ namespace RoboSharp.UnitTests
             Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.UnicodeLogPath, "\n\nUnicodeLogPath does not match!");
             Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.AppendLogPath, "\n\nAppendLogPath does not match!");
             Assert.AreEqual(trimmedPath, cmdResult.LoggingOptions.AppendUnicodeLogPath, "\n\nAppendUnicodeLogPath does not match!");
-            Assert.AreEqual(cmdSource.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmdSource}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
+            Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
         }
 
         [DataRow("ExcludedTestFile1.txt", "ExcludedFile2.pdf", "\"*wild card*\"", DisplayName = "Multiple Filters")]
@@ -165,18 +173,18 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void TestExcludedFiles(params string[] filters)
         {
-            RoboCommand cmd = new RoboCommand();
+            IRoboCommand cmd = GetNewCommand();
             cmd.SelectionOptions.ExcludedFiles.AddRange(filters);
-            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+            IRoboCommand cmdResult = RoboCommandParser.Parse(PrintCmd(cmd));
             
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
             Console.WriteLine($"\n\n Input : {cmd}");
             Console.WriteLine($"Output : {cmdResult}");
         }
 
-        [DataRow(@"robocopy /XF c:\MyFile.txt /COPYALL /XF ""d:\File 2.pdf""", @"""*.*"" /COPYALL /XF c:\MyFile.txt ""d:\File 2.pdf""", DisplayName = "Multiple /XF flags with Quotes")]
-        [DataRow(@"robocopy /XF c:\MyFile.txt /COPYALL /XF d:\File2.pdf", @"""*.*"" /COPYALL /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Multiple /XF flags")]
-        [DataRow(@"robocopy /XF c:\MyFile.txt d:\File2.pdf", @"""*.*"" /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Single XF Flag with multiple Filters")]
+        [DataRow(@"robocopy """" """"  /XF c:\MyFile.txt /COPYALL /XF ""d:\File 2.pdf""", @"""*.*"" /COPYALL /XF c:\MyFile.txt ""d:\File 2.pdf""", DisplayName = "Multiple /XF flags with Quotes")]
+        [DataRow(@"robocopy """" """"  /XF c:\MyFile.txt /COPYALL /XF d:\File2.pdf", @"""*.*"" /COPYALL /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Multiple /XF flags")]
+        [DataRow(@"robocopy """" """"  /XF c:\MyFile.txt d:\File2.pdf", @"""*.*"" /XF c:\MyFile.txt d:\File2.pdf", DisplayName = "Single XF Flag with multiple Filters")]
         [TestMethod]
         public void TestExcludedFilesRaw(string input, string expected)
         {
@@ -201,13 +209,16 @@ namespace RoboSharp.UnitTests
         public void TestExcludedDirectories(params string[] filters)
         {
             // Note : Handle instances of /XD multiple times https://superuser.com/questions/482112/using-robocopy-and-excluding-multiple-directories
-            RoboCommand cmd = new RoboCommand();
+            IRoboCommand cmd = GetNewCommand();
             cmd.SelectionOptions.ExcludedDirectories.AddRange(filters);
-            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+            IRoboCommand cmdResult = RoboCommandParser.Parse(PrintCmd(cmd));
+            
+            Console.WriteLine($"\n\n Input : {PrintCmd(cmd)}");
+            Console.WriteLine($"Expected : {cmd}");
+            Console.WriteLine($"Output : {cmdResult}");
 
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
-            Console.WriteLine($"\n\n Input : {cmd}");
-            Console.WriteLine($"Output : {cmdResult}");
+            
         }
 
         [DataRow("*.pdf")]
@@ -217,9 +228,9 @@ namespace RoboSharp.UnitTests
         [TestMethod]
         public void TestFileFilter(params string[] filters)
         {
-            RoboCommand cmd = new RoboCommand();
+            IRoboCommand cmd = GetNewCommand();
             cmd.CopyOptions.AddFileFilter(filters);
-            IRoboCommand cmdResult = RoboCommandParser.Parse(cmd.ToString());
+            IRoboCommand cmdResult = RoboCommandParser.Parse(PrintCmd(cmd));
 
             Assert.AreEqual(cmd.ToString(), cmdResult.ToString(), $"\n\nProduced Command is not equal!\nExpected:\t{cmd}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
             Console.WriteLine($"\n\n Input : {cmd}");

@@ -35,7 +35,7 @@ namespace RoboSharp
 
             // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
             // Also Ensure white space at end of string because all constants have it
-            sanitizedCmd = sanitizedCmd.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
+            sanitizedCmd = paths.SanitizedString.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
             var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd + " ", out sanitizedCmd);
             
             // Get the command
