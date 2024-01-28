@@ -7,16 +7,21 @@ using System.Threading.Tasks;
 
 namespace RoboSharp
 {
-    internal class RoboCommandParserException : Exception
+    /// <summary>
+    /// An exception thrown by the <see cref="RoboCommandParser"/>
+    /// </summary>
+    public class RoboCommandParserException : Exception
     {
         private RoboCommandParserException() :base() { }
 
-        public RoboCommandParserException(string message) : base(message) { }
+        internal RoboCommandParserException(string message) : base(message) { }
 
+        /// <returns>Contains parameter data about the function that resulted in the exception.</returns>
+        /// <inheritdoc cref="Exception.Data"/>
         public override IDictionary Data => (IDictionary)_data;
 
         private readonly IDictionary<string, object> _data = new Dictionary<string, object>();
 
-        public void AddData(string key, object value) => _data.Add(key, value);
+        internal void AddData(string key, object value) => _data.Add(key, value);
     }
 }
