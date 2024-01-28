@@ -28,17 +28,28 @@ namespace RoboSharp
         public static Interfaces.IRoboCommand Parse(string command, Interfaces.IRoboCommandFactory factory)
         {
             Debugger.Instance.DebugMessage($"RoboCommandParser - Begin parsing input string : {command}");
-            command = command.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
-            command = TrimRobocopy(command);
-            ParsedSourceDest paths = ParseSourceAndDestination(command);
-            string newInput = paths.SanitizedString + " "; // Ensure white space at end of string because all constants have it
-            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(newInput, out newInput), ParseSelectionFlags(newInput, out newInput));
+                        
+            // Trim robocopy.exe from the beginning of the string, then extract the source/destination.
+            string sanitizedCmd = TrimRobocopy(command);
+            ParsedSourceDest paths = ParseSourceAndDestination(sanitizedCmd);
+
+            // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
+            // Also Ensure white space at end of string because all constants have it
+            sanitizedCmd = sanitizedCmd.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
+            var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd + " ", out sanitizedCmd);
             
-           roboCommand
-                .ParseCopyOptions(newInput, out newInput)
-                .ParseLoggingOptions(newInput, out newInput)
-                .ParseSelectionOptions(newInput, out newInput)
-                .ParseRetryOptions(newInput, out newInput);
+            // Get the command
+            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd, out sanitizedCmd), ParseSelectionFlags(sanitizedCmd, out sanitizedCmd));
+            
+            // apply the file filters, if any were discovered
+            if (filters.Any()) roboCommand.CopyOptions.AddFileFilter(filters.ToArray());
+
+            // apply the remaining options
+            roboCommand
+                .ParseCopyOptions(sanitizedCmd, out sanitizedCmd)
+                .ParseLoggingOptions(sanitizedCmd, out sanitizedCmd)
+                .ParseSelectionOptions(sanitizedCmd, out sanitizedCmd)
+                .ParseRetryOptions(sanitizedCmd, out sanitizedCmd);
             Debugger.Instance.DebugMessage("RoboCommandParser.Parse completed.\n");
             return roboCommand;
         }
@@ -128,12 +139,6 @@ namespace RoboSharp
             {
                 options.RunHours = param;
             }
-
-            // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
-            
-            var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd, out sanitizedCmd);
-            if (filters.Any()) options.FileFilter = filters;
-
             return roboCommand;
         }
 
