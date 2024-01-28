@@ -123,13 +123,11 @@ namespace RoboSharp
                     });
                     if (!sourceQualified | sourceEmpty)
                     {
-                        ex ??= new RoboCommandParserException("Source path is not valid");
                         ex.AddData("Source", rawSource);
                         ex.AddData("Source_Error", string.IsNullOrWhiteSpace(source) ? "Source is empty" : "Source is not fully qualified");
                     }
                     if (!destQualified | destEmpty)
                     {
-                        ex ??= new RoboCommandParserException("Destination path is not valid");
                         ex.AddData("Destination", rawDest);
                         ex.AddData("Destination_Error", string.IsNullOrWhiteSpace(dest) ? "Destination is empty" : "Destination is not fully qualified");
                     }
