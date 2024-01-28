@@ -229,7 +229,7 @@ namespace RoboSharp
                 string value = filterBuilder.ToString();
                 if (string.IsNullOrWhiteSpace(value)) return;
                 Debugger.Instance.DebugMessage(string.Format(debugFormat, value));
-                filters.Add(value);
+                filters.Add(value.Trim());
                 filterBuilder.Clear();
             }
         }
