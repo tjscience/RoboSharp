@@ -34,6 +34,25 @@ namespace RoboSharp
             }
         }
 
+        /// <summary>Attempt the parse the <paramref name="commandOptions"/> into a new IRoboCommand object</summary>
+        /// <returns>True if successful, otherwise false</returns>
+        /// <param name="result">If successful, a new IRobocommand, otherwise null</param>
+        /// <inheritdoc cref="ParseOptions(string, IRoboCommandFactory)"/>
+        /// <param name="commandOptions"/><param name="factory"/>
+        public static bool TryParseOptions(string commandOptions, out IRoboCommand result, IRoboCommandFactory factory = default)
+        {
+            try
+            {
+                result = ParseOptions(commandOptions, factory ?? RoboCommandFactory.DefaultFactory);
+                return true;
+            }
+            catch
+            {
+                result = null;
+                return false;
+            }
+        }
+
         /// <returns>A new <see cref="RoboCommand"/></returns>
         /// <inheritdoc cref="Parse(string, Interfaces.IRoboCommandFactory)"/>
         public static IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.DefaultFactory);
@@ -41,9 +60,12 @@ namespace RoboSharp
         /// <summary>
         /// Parse the <paramref name="command"/> text into a new IRoboCommand.
         /// </summary>
-        /// <param name="command">The Command-Line string of options to parse. <br/>Example:  robocopy "source" "destination" /xc /copyall </param>
+        /// <param name="command">The Command-Line string of options to parse. <br/>Example:  robocopy "C:\source" "D:\destination" *.pdf /xc /copyall </param>
         /// <param name="factory">The factory used to generate the robocommand</param>
         /// <returns>A new IRoboCommand object generated from the <paramref name="factory"/></returns>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="ArgumentNullException"/>
+        /// <exception cref="RoboCommandParserException"/>
         public static IRoboCommand Parse(string command, IRoboCommandFactory factory)
         {
             if (string.IsNullOrWhiteSpace(command)) throw new ArgumentException("Input string is null or empty!", nameof(command));
@@ -58,22 +80,63 @@ namespace RoboSharp
             // Filters SHOULD be immediately following the source/destination string at the very beginning of the text
             // Also Ensure white space at end of string because all constants have it
             sanitizedCmd = paths.SanitizedString.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
-            var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd + " ", out sanitizedCmd);
+            var roboCommand = ParseOptionsInternal(sanitizedCmd, paths, factory);
+            Debugger.Instance.DebugMessage("RoboCommandParser.Parse completed successfully.\n");
+            return roboCommand;
+        }
+
+        /// <summary>
+        /// Parse a string of text that represents a set of robocopy options into an IRoboCommand
+        /// </summary>
+        /// <param name="commandOptions">The robocopy options to parse. Must not contain the phrase 'robocopy'. Must also not contain source/destination info.</param>
+        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.DefaultFactory"/></param>
+        /// <returns>An IRoboCommand that represents the specified options</returns>
+        /// <exception cref="ArgumentException"/>
+        /// <exception cref="RoboCommandParserException"/>
+        public static IRoboCommand ParseOptions(string commandOptions, IRoboCommandFactory factory = default)
+        {
+            // Sanity Checks to ensure correct method is being utilized:
+            if (string.IsNullOrWhiteSpace(commandOptions)) throw new ArgumentException("Input string is null or empty!", nameof(commandOptions));
+            if (commandOptions.Contains("robocopy")) throw new ArgumentException("Input string contains the phrase 'robocopy' - can not continue. Did you mean to use RoboCommandParser.Parse() instead?", nameof(commandOptions));
+
+            Debugger.Instance.DebugMessage($"RoboCommandParser.ParseOptions - Begin parsing input string : {commandOptions}");
+            try
+            {
+                var sourceDest = ParseSourceAndDestination(commandOptions);
+                if (sourceDest.SanitizedString.Trim() != commandOptions.Trim()) throw new ArgumentException("Input string contained Source/Destination arguments. RoboCommandParser.Parse() should be used instead.");
+            }
+            catch (RoboCommandParserException ex)
+            {
+                if (ex.Message != RoboCommandParserFunctions.SourceDestinationUnableToParseMessage) // ignore this specific message, as it indicates no source/destination, which is correct for this.
+                    throw new ArgumentException("Input string contained Source/Destination arguments. RoboCommandParser.Parse() should be used instead.", ex);
+            }
+
+            var roboCommand = ParseOptionsInternal(commandOptions, new ParsedSourceDest(commandOptions), factory ?? RoboCommandFactory.DefaultFactory);
+            Debugger.Instance.DebugMessage("RoboCommandParser.ParseOptions completed successfully.\n");
+            return roboCommand;
+
+        }
+
+        /// <summary> Parse the options text into a new IRoboCommand object. </summary> 
+        /// <param name="options">This should be the sanitized string of options  -- without any source/destination data </param>
+        /// <param name="factory"/><param name="sourceDest">struct containing the source/destination data to pass into the factory</param>
+        private static IRoboCommand ParseOptionsInternal(string options, ParsedSourceDest sourceDest, IRoboCommandFactory factory)
+        {
+            string sanitizedCmd = options.Trim() + " ";
+            var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd, out sanitizedCmd);
 
             // Get the command
-            var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd, out sanitizedCmd), ParseSelectionFlags(sanitizedCmd, out sanitizedCmd));
-            
+            var roboCommand = factory.GetRoboCommand(sourceDest.Source, sourceDest.Dest, ParseCopyFlags(sanitizedCmd, out sanitizedCmd), ParseSelectionFlags(sanitizedCmd, out sanitizedCmd));
+
             // apply the file filters, if any were discovered
             if (filters.Any()) roboCommand.CopyOptions.AddFileFilter(filters.ToArray());
 
             // apply the remaining options
-            roboCommand
+            return roboCommand
                 .ParseCopyOptions(sanitizedCmd, out sanitizedCmd)
                 .ParseLoggingOptions(sanitizedCmd, out sanitizedCmd)
                 .ParseSelectionOptions(sanitizedCmd, out sanitizedCmd)
                 .ParseRetryOptions(sanitizedCmd, out sanitizedCmd);
-            Debugger.Instance.DebugMessage("RoboCommandParser.Parse completed.\n");
-            return roboCommand;
         }
 
         #region < Copy Options Parsing >

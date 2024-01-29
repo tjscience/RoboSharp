@@ -716,9 +716,23 @@ namespace RoboSharp.BackupApp
                 LoadCommand(new RoboCommand());
                 var cmd = RoboCommandParser.Parse(input);
                 LoadCommand(cmd);
-
             }
             catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "RoboCommandParser Error!");
+            }
+        }
+
+        private void OptionParseTextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string input = this.OptionParserText.Text;
+            try
+            {
+                LoadCommand(new RoboCommand());
+                var cmd = RoboCommandParser.ParseOptions(input);
+                LoadCommand(cmd);
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "RoboCommandParser Error!");
             }

@@ -24,6 +24,9 @@ namespace RoboSharp
         {
             #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             
+
+            public ParsedSourceDest(string input) : this(string.Empty, string.Empty, input, input) { }
+
             public ParsedSourceDest(string source, string dest, string input, string sanitized)
             {
                 Source = source;

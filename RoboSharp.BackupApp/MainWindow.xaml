@@ -20,7 +20,7 @@
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                     <Setter Property="TextWrapping" Value="NoWrap"/>
-                                    <Setter Property="Width" Value="120"/>
+                                    <Setter Property="Width" Value="110"/>
                                 </Style>
                                 <Style TargetType="TextBox" x:Key="userInputTextBox">
                                     <Setter Property="Margin" Value="10,0"/>
@@ -30,7 +30,9 @@
                                 </Style>
                                 <Style TargetType="Button" x:Key="userInputButton">
                                     <Setter Property="Margin" Value="0"/>
-                                    <Setter Property="Width" Value="75"/>
+                                    <Setter Property="Padding" Value="0,5"/>
+                                    <Setter Property="Width" Value="100"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
                                 </Style>
                             </StackPanel.Resources>
                             <!-- Source -->
@@ -45,11 +47,17 @@
                                 <TextBox x:Name="Destination" Width="400" Style="{StaticResource userInputTextBox}" />
                                 <Button x:Name="DestinationBrowseButton" Content="Browse"  Click="DestinationBrowseButton_Click" Style="{StaticResource userInputButton}"/>
                             </StackPanel>
-                            <!-- RoboCommandParser -->
+                            <!-- RoboCommandParser.Parse -->
                             <StackPanel Style="{StaticResource userInputs}">
                                 <TextBlock Text="Command Parsing" Style="{StaticResource userInputTxtBlock}"/>
                                 <TextBox x:Name="ParserText" Width="400" ToolTip="Paste a valid RoboCopy string here to parse it" Style="{StaticResource userInputTextBox}" />
                                 <Button x:Name="ParseTextBtn" Content="Parse" ToolTip="Parse the input string"  Click="ParseTextBtn_Click" Style="{StaticResource userInputButton}"/>
+                            </StackPanel>
+                            <!-- RoboCommandParser.ParseOptions -->
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Option Parsing" Style="{StaticResource userInputTxtBlock}"/>
+                                <TextBox x:Name="OptionParserText" Width="400" ToolTip="Parse Options Only - Must not contain 'robocopy', a source, or a destination." Style="{StaticResource userInputTextBox}" />
+                                <Button x:Name="OptionParseTextBtn" Content="Parse Options" ToolTip="Parse the input string"  Click="OptionParseTextBtn_Click" Style="{StaticResource userInputButton}"/>
                             </StackPanel>
                             <!-- Job Name -->
                             <StackPanel Style="{StaticResource userInputs}">
