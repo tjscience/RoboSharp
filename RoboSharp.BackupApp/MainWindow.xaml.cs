@@ -702,6 +702,22 @@ namespace RoboSharp.BackupApp
         }
 
         #endregion
+
+        private void ParseTextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string input = this.ParserText.Text;
+            try
+            {
+                LoadCommand(new RoboCommand());
+                var cmd = RoboCommandParser.Parse(input);
+                LoadCommand(cmd);
+
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "RoboCommandParser Error!");
+            }
+        }
     }
 
     public class FileError
