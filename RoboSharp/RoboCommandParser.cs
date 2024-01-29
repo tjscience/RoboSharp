@@ -86,7 +86,7 @@ namespace RoboSharp
         }
 
         /// <summary>
-        /// Parse a string of text that represents a set of robocopy options into an IRoboCommand
+        /// Parse a string of text that represents a set of robocopy options (without source/destination) into an IRoboCommand
         /// </summary>
         /// <param name="commandOptions">The robocopy options to parse. Must not contain the phrase 'robocopy'. Must also not contain source/destination info.</param>
         /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.DefaultFactory"/></param>
@@ -102,6 +102,7 @@ namespace RoboSharp
             Debugger.Instance.DebugMessage($"RoboCommandParser.ParseOptions - Begin parsing input string : {commandOptions}");
             try
             {
+                //commandOptions = TrimRobocopy(commandOptions);
                 var sourceDest = ParseSourceAndDestination(commandOptions);
                 if (sourceDest.SanitizedString.Trim() != commandOptions.Trim()) throw new ArgumentException("Input string contained Source/Destination arguments. RoboCommandParser.Parse() should be used instead.");
             }

@@ -252,5 +252,37 @@ namespace RoboSharp.UnitTests
             Console.WriteLine($"\n\n Input : {input}");
             Console.WriteLine($"Output : {cmdResult}");
         }
+
+        [DataRow("*.pdf /purge /xf \"C:\\my file\"", false)]
+        [DataRow("robocopy C:\\Source D:\\Dest *.pdf", true)]
+        [DataRow("C:\\Source D:\\Dest *.pdf", true)]
+        [DataRow("C:\\Source \"\" *.pdf", true)]
+        [DataRow("C:\\Source *.pdf", true)]
+        [DataRow("robocopy *.pdf", true)]
+        [TestMethod]
+        public void TestParseOptions(string input, bool shouldThrow)
+        {
+            void runTest()
+            {
+                Console.WriteLine(string.Format("Test String : {0}", input));
+                try
+                {
+                    _ = RoboCommandParser.ParseOptions(input);
+                }catch(Exception ex)
+                {
+                    Console.WriteLine(string.Format("Exception Message ({0}expected) :", shouldThrow ? "" : "NOT "));
+                    Console.Write(ex.Message);
+                    throw;
+                }
+            }
+            if (shouldThrow)
+            {
+                Assert.ThrowsException<ArgumentException>(runTest);
+            }
+            else
+            {
+                runTest();
+            }
+        }
     }
 }
