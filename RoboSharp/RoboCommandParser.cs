@@ -36,7 +36,7 @@ namespace RoboSharp
 
         /// <returns>A new <see cref="RoboCommand"/></returns>
         /// <inheritdoc cref="Parse(string, Interfaces.IRoboCommandFactory)"/>
-        public static Interfaces.IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.DefaultFactory);
+        public static IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.DefaultFactory);
 
         /// <summary>
         /// Parse the <paramref name="command"/> text into a new IRoboCommand.
@@ -44,9 +44,12 @@ namespace RoboSharp
         /// <param name="command">The Command-Line string of options to parse. <br/>Example:  robocopy "source" "destination" /xc /copyall </param>
         /// <param name="factory">The factory used to generate the robocommand</param>
         /// <returns>A new IRoboCommand object generated from the <paramref name="factory"/></returns>
-        public static Interfaces.IRoboCommand Parse(string command, Interfaces.IRoboCommandFactory factory)
+        public static IRoboCommand Parse(string command, IRoboCommandFactory factory)
         {
-            Debugger.Instance.DebugMessage($"RoboCommandParser - Begin parsing input string : {command}");
+            if (string.IsNullOrWhiteSpace(command)) throw new ArgumentException("Input string is null or empty!", nameof(command));
+            if (factory is null) throw new ArgumentNullException(nameof(factory));
+
+            Debugger.Instance.DebugMessage($"RoboCommandParser.Parse - Begin parsing input string : {command}");
                         
             // Trim robocopy.exe from the beginning of the string, then extract the source/destination.
             string sanitizedCmd = TrimRobocopy(command);
@@ -56,7 +59,7 @@ namespace RoboSharp
             // Also Ensure white space at end of string because all constants have it
             sanitizedCmd = paths.SanitizedString.Replace("\"*.*\"", "").Replace(" *.* ", " "); // Remove the DEFAULT FILTER wildcard from the text
             var filters = RoboCommandParserFunctions.ExtractFileFilters(sanitizedCmd + " ", out sanitizedCmd);
-            
+
             // Get the command
             var roboCommand = factory.GetRoboCommand(paths.Source, paths.Dest, ParseCopyFlags(sanitizedCmd, out sanitizedCmd), ParseSelectionFlags(sanitizedCmd, out sanitizedCmd));
             
