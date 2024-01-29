@@ -201,7 +201,12 @@ namespace RoboSharp.BackupApp
             // 
             string fileFilterItems = "";
             foreach (string s in copy.CopyOptions.FileFilter)
-                fileFilterItems += s;
+            {
+                if (s.Contains(' '))
+                    fileFilterItems += $"\"{s}\" "; // wrap the white space
+                else
+                    fileFilterItems += s + " ";
+            }
             FileFilter.Text = fileFilterItems;
 
             CopySubDirectories.IsChecked = copy.CopyOptions.CopySubdirectories;
