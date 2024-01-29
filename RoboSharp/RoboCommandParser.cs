@@ -16,10 +16,10 @@ namespace RoboSharp
     {
         /// <summary>Attempt the parse the <paramref name="command"/> into a new IRoboCommand object</summary>
         /// <returns>True if successful, otherwise false</returns>
+        /// <param name="result">If successful, a new IRobocommand, otherwise null</param>
+        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.DefaultFactory"/></param>
         /// <inheritdoc cref="Parse(string, IRoboCommandFactory)"/>
         /// <param name="command"/>
-        /// <param name="result">If successful, a new IRobocommand, otherwise null</param>
-        /// <param name="factory"/>
         public static bool TryParse(string command, out IRoboCommand result, IRoboCommandFactory factory = default)
         {
             try
