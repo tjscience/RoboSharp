@@ -15,6 +15,12 @@ namespace RoboSharp
     public class RoboCommandFactory : IRoboCommandFactory
     {
         /// <summary>
+        /// The default <see cref="IRoboCommandFactory"/> that will produce <see cref="RoboCommand"/> objects
+        /// </summary>
+        public static RoboCommandFactory DefaultFactory => _default ??= new RoboCommandFactory();
+        private static RoboCommandFactory _default;
+
+        /// <summary>
         /// The Default <see cref="CopyActionFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
         /// </summary>
         public CopyActionFlags DefaultCopyOptions { get; set; } = CopyActionFlags.Default;

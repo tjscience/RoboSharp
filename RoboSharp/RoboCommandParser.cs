@@ -14,10 +14,29 @@ namespace RoboSharp
     /// </summary>
     public static class RoboCommandParser
     {
+        /// <summary>Attempt the parse the <paramref name="command"/> into a new IRoboCommand object</summary>
+        /// <returns>True if successful, otherwise false</returns>
+        /// <inheritdoc cref="Parse(string, IRoboCommandFactory)"/>
+        /// <param name="command"/>
+        /// <param name="result">If successful, a new IRobocommand, otherwise null</param>
+        /// <param name="factory"/>
+        public static bool TryParse(string command, out IRoboCommand result, IRoboCommandFactory factory = default)
+        {
+            try
+            {
+                result = Parse(command, factory ?? RoboCommandFactory.DefaultFactory);
+                return true;
+            }
+            catch
+            {
+                result = null;
+                return false;
+            }
+        }
 
         /// <returns>A new <see cref="RoboCommand"/></returns>
         /// <inheritdoc cref="Parse(string, Interfaces.IRoboCommandFactory)"/>
-        public static Interfaces.IRoboCommand Parse(string command) => Parse(command, new RoboCommandFactory());
+        public static Interfaces.IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.DefaultFactory);
 
         /// <summary>
         /// Parse the <paramref name="command"/> text into a new IRoboCommand.
