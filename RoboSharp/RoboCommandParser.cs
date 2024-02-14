@@ -17,14 +17,14 @@ namespace RoboSharp
         /// <summary>Attempt the parse the <paramref name="command"/> into a new IRoboCommand object</summary>
         /// <returns>True if successful, otherwise false</returns>
         /// <param name="result">If successful, a new IRobocommand, otherwise null</param>
-        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.DefaultFactory"/></param>
+        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.Default"/></param>
         /// <inheritdoc cref="Parse(string, IRoboCommandFactory)"/>
         /// <param name="command"/>
         public static bool TryParse(string command, out IRoboCommand result, IRoboCommandFactory factory = default)
         {
             try
             {
-                result = Parse(command, factory ?? RoboCommandFactory.DefaultFactory);
+                result = Parse(command, factory ?? RoboCommandFactory.Default);
                 return true;
             }
             catch
@@ -43,7 +43,7 @@ namespace RoboSharp
         {
             try
             {
-                result = ParseOptions(commandOptions, factory ?? RoboCommandFactory.DefaultFactory);
+                result = ParseOptions(commandOptions, factory ?? RoboCommandFactory.Default);
                 return true;
             }
             catch
@@ -55,7 +55,7 @@ namespace RoboSharp
 
         /// <returns>A new <see cref="RoboCommand"/></returns>
         /// <inheritdoc cref="Parse(string, Interfaces.IRoboCommandFactory)"/>
-        public static IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.DefaultFactory);
+        public static IRoboCommand Parse(string command) => Parse(command, RoboCommandFactory.Default);
 
         /// <summary>
         /// Parse the <paramref name="command"/> text into a new IRoboCommand.
@@ -89,7 +89,7 @@ namespace RoboSharp
         /// Parse a string of text that represents a set of robocopy options (without source/destination) into an IRoboCommand
         /// </summary>
         /// <param name="commandOptions">The robocopy options to parse. Must not contain the phrase 'robocopy'. Must also not contain source/destination info.</param>
-        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.DefaultFactory"/></param>
+        /// <param name="factory">The factory used to generate the robocommand. <br/>If not specified, uses <see cref="RoboCommandFactory.Default"/></param>
         /// <returns>An IRoboCommand that represents the specified options</returns>
         /// <exception cref="ArgumentException"/>
         /// <exception cref="RoboCommandParserException"/>
@@ -112,7 +112,7 @@ namespace RoboSharp
                     throw new ArgumentException("Input string contained Source/Destination arguments. RoboCommandParser.Parse() should be used instead.", ex);
             }
 
-            var roboCommand = ParseOptionsInternal(commandOptions, new ParsedSourceDest(commandOptions), factory ?? RoboCommandFactory.DefaultFactory);
+            var roboCommand = ParseOptionsInternal(commandOptions, new ParsedSourceDest(commandOptions), factory ?? RoboCommandFactory.Default);
             Debugger.Instance.DebugMessage("RoboCommandParser.ParseOptions completed successfully.\n");
             return roboCommand;
 
