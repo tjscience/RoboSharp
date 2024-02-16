@@ -50,21 +50,19 @@ namespace RoboSharp
         }
 
         /// <inheritdoc cref="Init"/>
-        public RoboCommand(string name, bool stopIfDisposing = true)
-        {
-            InitClassProperties();
-            Init(name, stopIfDisposing);
-        }
+        public RoboCommand(string name, bool stopIfDisposing) : this(string.Empty, string.Empty, name, stopIfDisposing) { }
 
         /// <inheritdoc cref="Init"/>
-        public RoboCommand(string source, string destination, bool stopIfDisposing = true)
-        {
-            InitClassProperties();
-            Init("", stopIfDisposing, source, destination);
-        }
+        public RoboCommand(string source, string destination) : this(source, destination, string.Empty, stopIfDisposing: true) { }
 
         /// <inheritdoc cref="Init"/>
-        public RoboCommand(string source, string destination, string name, bool stopIfDisposing = true)
+        public RoboCommand(string source, string destination, bool stopIfDisposing) : this(source, destination, string.Empty, stopIfDisposing) { }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name) : this(source, destination, name, StopIfDisposing: true) { }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string source, string destination, string name, bool stopIfDisposing)
         {
             InitClassProperties();
             Init(name, stopIfDisposing, source, destination);
