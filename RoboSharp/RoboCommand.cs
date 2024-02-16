@@ -34,6 +34,13 @@ namespace RoboSharp
             Init();
         }
 
+        /// <inheritdoc cref="RoboCommand.RoboCommand(string, string, CopyActionFlags, SelectionFlags, LoggingFlags)"/>
+        public RoboCommand(string source, string destination, string name, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags = SelectionFlags.Default, LoggingFlags loggingFlags = LoggingFlags.RoboSharpDefault)
+            :this(source, destination, copyActionFlags, selectionFlags, loggingFlags)
+        {
+            Name = name;
+        }
+
         /// <summary>
         /// Create a new RoboCommand object with the provided settings.
         /// </summary>
@@ -48,6 +55,9 @@ namespace RoboSharp
             this.selectionOptions.ApplySelectionFlags(selectionFlags);
             this.LoggingOptions.ApplyLoggingFlags(loggingFlags);
         }
+
+        /// <inheritdoc cref="Init"/>
+        public RoboCommand(string name) : this(string.Empty, string.Empty, name, stopIfDisposing: true) { }
 
         /// <inheritdoc cref="Init"/>
         public RoboCommand(string name, bool stopIfDisposing) : this(string.Empty, string.Empty, name, stopIfDisposing) { }
