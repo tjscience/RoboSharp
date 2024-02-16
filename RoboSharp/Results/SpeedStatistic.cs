@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using RoboSharp.Interfaces;
 
+[assembly:InternalsVisibleTo("RoboSharp.UnitTests")]
 namespace RoboSharp.Results
 {
     /// <summary>
@@ -74,7 +75,7 @@ namespace RoboSharp.Results
                 if (BytesPerSecField != value)
                 {
                     BytesPerSecField = value;
-                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
+                    if (EnablePropertyChangeEvent) OnPropertyChange(nameof(BytesPerSec));
                 }
             }
         }
@@ -88,7 +89,7 @@ namespace RoboSharp.Results
                 if (MegaBytesPerMinField != value)
                 {
                     MegaBytesPerMinField = value;
-                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
+                    if (EnablePropertyChangeEvent) OnPropertyChange(nameof(MegaBytesPerMin));
                 }
             }
         }
@@ -126,19 +127,19 @@ namespace RoboSharp.Results
         {
             var res = new SpeedStatistic();
 
-            var pattern = new Regex(@"\d+([\.,]\d+)?");
+            var pattern = new Regex(@"\d+([.,]\d+)+");
             Match match;
 
             match = pattern.Match(line1);
             if (match.Success)
             {
-                res.BytesPerSec = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
+                res.BytesPerSec = decimal.Parse(match.Value);
             }
 
             match = pattern.Match(line2);
             if (match.Success)
             {
-                res.MegaBytesPerMin = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
+                res.MegaBytesPerMin = decimal.Parse(match.Value);
             }
 
             return res;
