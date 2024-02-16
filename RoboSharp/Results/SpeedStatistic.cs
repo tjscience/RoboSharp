@@ -75,7 +75,7 @@ namespace RoboSharp.Results
                 if (BytesPerSecField != value)
                 {
                     BytesPerSecField = value;
-                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
+                    if (EnablePropertyChangeEvent) OnPropertyChange(nameof(BytesPerSec));
                 }
             }
         }
@@ -89,7 +89,7 @@ namespace RoboSharp.Results
                 if (MegaBytesPerMinField != value)
                 {
                     MegaBytesPerMinField = value;
-                    if (EnablePropertyChangeEvent) OnPropertyChange("MegaBytesPerMin");
+                    if (EnablePropertyChangeEvent) OnPropertyChange(nameof(MegaBytesPerMin));
                 }
             }
         }
