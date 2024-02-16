@@ -132,13 +132,13 @@ namespace RoboSharp.Results
             match = pattern.Match(line1);
             if (match.Success)
             {
-                res.BytesPerSec = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
+                res.BytesPerSec = decimal.Parse(match.Value);
             }
 
             match = pattern.Match(line2);
             if (match.Success)
             {
-                res.MegaBytesPerMin = Convert.ToDecimal(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture);
+                res.MegaBytesPerMin = decimal.Parse(match.Value);
             }
 
             return res;
