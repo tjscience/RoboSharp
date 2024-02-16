@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using RoboSharp.Interfaces;
 
+[assembly:InternalsVisibleTo("RoboSharp.UnitTests")]
 namespace RoboSharp.Results
 {
     /// <summary>
@@ -126,7 +127,7 @@ namespace RoboSharp.Results
         {
             var res = new SpeedStatistic();
 
-            var pattern = new Regex(@"\d+([\.,]\d+)?");
+            var pattern = new Regex(@"\d+([.,]\d+)+");
             Match match;
 
             match = pattern.Match(line1);
