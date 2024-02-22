@@ -12,6 +12,65 @@ namespace RoboSharp.UnitTests
     [TestClass()]
     public class RoboCommandParserFunctionsTests
     {
+
+
+
+        [TestMethod()]
+        public void TrimRoboCopyTest() // null expected = no change
+        {
+            string Trim(string text) => RoboCommandParserFunctions.TrimRobocopy(text);
+
+            const string nonQuoted = @"robocopy ";
+            const string nonQuotedExe = @"robocopy.exe ";
+            const string fullPath = @"c:\windows\system32\robocopy ";
+            const string fullPathExe = @"c:\windows\system32\robocopy.exe ";
+            const string quotedPath = @"""c:\windows\system32\robocopy"" ";
+            const string quotedPathExe = @"""D:\Some Other\Folder\robocopy.exe"" ";
+            int i = 0;
+
+            // trim entire string
+            Assert.AreEqual(string.Empty, Trim(nonQuoted), "\nFailed Trim All - Test 1");
+            Assert.AreEqual(string.Empty, Trim(nonQuotedExe), "\nFailed rim All - Test 2");
+            Assert.AreEqual(string.Empty, Trim(fullPath), "\nFailed trim All - Test 3");
+            Assert.AreEqual(string.Empty, Trim(fullPathExe), "", "\nFailed trim All - Test 4");
+            Assert.AreEqual(string.Empty, Trim(quotedPath), "\nFailed trim All - Test 5");
+            Assert.AreEqual(string.Empty, Trim(quotedPathExe), "", "\nFailed trim All - Test 6");
+
+            // test text following the path to robocopy
+            string[] testArray = new string[]
+            {
+                "*.txt /xf",
+                @"""C:\source\robocopy\"" ""D:\Dest\"" /a /b /c"
+            };
+            i = 0;
+
+            foreach (string testStr in testArray) 
+            {   
+                Assert.AreEqual(testStr, Trim2(nonQuoted), $"\nFailed Clear start only - Test {i} - no-quotes");
+                Assert.AreEqual(testStr, Trim2(nonQuotedExe), $"\nFailed Clear start only - Test {i} - no-quotes");
+                Assert.AreEqual(testStr, Trim2(fullPath), $"\nFailed Clear start only - Test {i} - full path");
+                Assert.AreEqual(testStr, Trim2(fullPathExe), $"\nFailed Clear start only - Test {i} - full path");
+                Assert.AreEqual(testStr, Trim2(quotedPath), $"\nFailed Clear start only - Test {i} - quoted full path");
+                Assert.AreEqual(testStr, Trim2(quotedPathExe), $"\nFailed Clear start only - Test {i} - quoted full path");
+                i++;
+
+                string Trim2(string text) => Trim(string.Format("{0} {1}", text, testStr.Trim()));
+            }
+
+            // No Change Tests
+            testArray = new string[]
+            {
+                @"""C:\source\"" ""D:\Dest\"" /a /b /c",
+                @"*.pdf /a /b /c ",
+            };
+            i = 0;
+            foreach(string nc  in testArray)
+            {
+                Assert.AreEqual(nc, Trim(nc), "\nFailed No Change - Test Index : " + i);
+                i++;
+            }
+        }
+
         [DataRow("Test_1 /E /XD", "/PURGE ", false, "Test_1 /E /XD")]
         [DataRow("Test_1 /E /XD", "/E ", true, "Test_1 /XD")]
         [TestMethod()]

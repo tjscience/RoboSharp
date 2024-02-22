@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Microsoft.Win32;
 using RoboSharp.Interfaces;
 using System.Diagnostics;
+using System.Text;
+using System.Collections;
 
 namespace RoboSharp.BackupApp
 {
@@ -719,7 +721,11 @@ namespace RoboSharp.BackupApp
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message, "RoboCommandParser Error!");
+                StringBuilder text = new StringBuilder();
+                text.Append(ex.Message);
+                foreach (DictionaryEntry item in ex.Data)
+                    text.Append(string.Format("\n{0} : {1}", item.Key, item.Value));
+                MessageBox.Show(text.ToString(), "RoboCommandParser Error!");
             }
         }
 
@@ -734,7 +740,11 @@ namespace RoboSharp.BackupApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "RoboCommandParser Error!");
+                StringBuilder text = new StringBuilder();
+                text.Append(ex.Message);
+                foreach (DictionaryEntry item in ex.Data)
+                    text.Append(string.Format("\n{0} : {1}", item.Key, item.Value));
+                MessageBox.Show(text.ToString(), "RoboCommandParser Error!");
             }
         }
     }

@@ -50,10 +50,10 @@ namespace RoboSharp
         public static string TrimRobocopy(string input)
         {
             //lang=regex 
-            const string rc = @"^\s*(?<rc>(?<sQuote>"".+?[:$].+?robocopy(\.exe)?"")|(?<sNoQuote>([^:*?""<>|\s]+?[:$][^:*?<>|\s]+?)?robocopy(\.exe)?))";
-            var match = Regex.Match(input, rc);
+            const string rc = @"^(?<rc>\s*((?<sQuote>"".+?[:$].+?robocopy(\.exe)?"")|(?<sNoQuote>([^:*?""<>|\s]+?[:$][^:*?<>|\s]+?)?robocopy(\.exe)?))\s+)";
+            var match = Regex.Match(input, rc, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture| RegexOptions.CultureInvariant);
             string ret = match.Success ? input.Remove(match.Groups[0].Value) : input;
-            if (ret.Contains("robocopy", StringComparison.InvariantCultureIgnoreCase)) throw new RoboCommandParserException("Unable to remove 'robocopy' from the input string.");
+            //if (ret.Contains("robocopy", StringComparison.InvariantCultureIgnoreCase)) throw new RoboCommandParserException("Unable to remove 'robocopy' from the input string.");
             return ret;
         }
 
@@ -126,23 +126,15 @@ namespace RoboSharp
                 Debugger.Instance.DebugMessage($"----> Destination : " + dest);
                 ex = new RoboCommandParserException(message: true switch
                 {
-                    true when sourceEmpty && destQualified => "Destination is fully qualified, but Source is empty",
-                    true when destEmpty && sourceQualified => "Source is fully qualified, but Destination is empty",
-                    true when !sourceQualified && !destQualified => "Source and Destination are not fully qualified",
-                    true when !sourceQualified => "Source is not fully qualified",
-                    true when !destQualified => "Destination is not fully qualified",
+                    true when sourceEmpty && destQualified => "Destination is fully qualified, but Source is empty. See exception data.",
+                    true when destEmpty && sourceQualified => "Source is fully qualified, but Destination is empty. See exception data.",
+                    true when !sourceQualified && !destQualified => "Source and Destination are not fully qualified. See exception data.",
+                    true when !sourceQualified => "Source is not fully qualified. See exception data. ",
+                    true when !destQualified => "Destination is not fully qualified. See exception data.",
                     _ => "Source / Destination Parsing Error",
                 });
-                if (!sourceQualified | sourceEmpty)
-                {
-                    ex.AddData("Source", rawSource);
-                    ex.AddData("Source_Error", string.IsNullOrWhiteSpace(source) ? "Source is empty" : "Source is not fully qualified");
-                }
-                if (!destQualified | destEmpty)
-                {
-                    ex.AddData("Destination", rawDest);
-                    ex.AddData("Destination_Error", string.IsNullOrWhiteSpace(dest) ? "Destination is empty" : "Destination is not fully qualified");
-                }
+                ex.AddData("Source", rawSource);
+                ex.AddData("Destination", rawDest);
                 throw ex;
             }
         }
