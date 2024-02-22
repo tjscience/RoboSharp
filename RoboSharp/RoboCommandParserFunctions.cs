@@ -53,7 +53,6 @@ namespace RoboSharp
             const string rc = @"^(?<rc>\s*((?<sQuote>"".+?[:$].+?robocopy(\.exe)?"")|(?<sNoQuote>([^:*?""<>|\s]+?[:$][^:*?<>|\s]+?)?robocopy(\.exe)?))\s+)";
             var match = Regex.Match(input, rc, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture| RegexOptions.CultureInvariant);
             string ret = match.Success ? input.Remove(match.Groups[0].Value) : input;
-            //if (ret.Contains("robocopy", StringComparison.InvariantCultureIgnoreCase)) throw new RoboCommandParserException("Unable to remove 'robocopy' from the input string.");
             return ret;
         }
 
@@ -133,8 +132,9 @@ namespace RoboSharp
                     true when !destQualified => "Destination is not fully qualified. See exception data.",
                     _ => "Source / Destination Parsing Error",
                 });
-                ex.AddData("Source", rawSource);
-                ex.AddData("Destination", rawDest);
+                ex.AddData("Input Text", inputText);
+                ex.AddData("Parsed Source", rawSource);
+                ex.AddData("Parsed Destination", rawDest);
                 throw ex;
             }
         }
