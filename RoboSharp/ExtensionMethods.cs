@@ -7,11 +7,64 @@ using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace RoboSharp
 {
     internal static class ExtensionMethods
     {
+#if NETSTANDARD2_0 || NET452_OR_GREATER
+
+        internal static bool Contains(this string outerString, string innerString, StringComparison stringComparison)
+        {
+            switch (stringComparison)
+            {
+                case StringComparison.CurrentCultureIgnoreCase:
+                    return outerString.ToLower(CultureInfo.CurrentCulture).Contains(innerString.ToLower(CultureInfo.CurrentCulture));
+                case StringComparison.InvariantCultureIgnoreCase:
+                    return outerString.ToLowerInvariant().Contains(innerString.ToLowerInvariant());
+                default:
+                    return outerString.Contains(innerString);
+            }
+        }
+
+        internal static string Trim(this string text, char character)
+        {
+            return text.Trim(trimChars: new char[] { character });
+        }
+
+        internal static bool IsPathFullyQualified(this string path)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (path.Length < 2) return false; //There is no way to specify a fixed path with one character (or less).
+            if (path.Length == 2 && IsValidDriveChar(path[0]) && path[1] == System.IO.Path.VolumeSeparatorChar) return true; //Drive Root C:
+            if (path.Length >= 3 && IsValidDriveChar(path[0]) && path[1] == System.IO.Path.VolumeSeparatorChar && IsDirectorySeperator(path[2])) return true; //Check for standard paths. C:\
+            if (path.Length >= 3 && IsDirectorySeperator(path[0]) && IsDirectorySeperator(path[1])) return true; //This is start of a UNC path
+            return false; //Default
+        }
+
+        private static bool IsDirectorySeperator(char c) => c == System.IO.Path.DirectorySeparatorChar | c == System.IO.Path.AltDirectorySeparatorChar;
+        private static bool IsValidDriveChar(char c) => c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z';
+
+#else
+        internal static bool IsPathFullyQualified(this string path) => System.IO.Path.IsPathFullyQualified(path);
+#endif
+
+        internal static string Remove(this string text, string removal, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(removal) || !text.Contains(removal, comparison))
+                return text;
+            return text.Remove(text.IndexOf(removal, comparison), removal.Length);
+        }
+
+        internal static string TrimStart(this string text, string trim, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        {
+            if (string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(trim) || !text.StartsWith(trim, comparison))
+                return text;
+            return text.Remove(0, trim.Length);
+        }
+
+
         /// <summary> Encase the LogPath in quotes if needed </summary>
         [MethodImpl(methodImplOptions: MethodImplOptions.AggressiveInlining)]
         [DebuggerHidden()]

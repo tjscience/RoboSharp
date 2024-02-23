@@ -15,6 +15,11 @@ namespace RoboSharp
     public class RoboCommandFactory : IRoboCommandFactory
     {
         /// <summary>
+        /// The default <see cref="IRoboCommandFactory"/> that will produce <see cref="RoboCommand"/> objects
+        /// </summary>
+        public static readonly IRoboCommandFactory Default = new DefaultRobotCommandFactory();
+
+        /// <summary>
         /// The Default <see cref="CopyActionFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
         /// </summary>
         public CopyActionFlags DefaultCopyOptions { get; set; } = CopyActionFlags.Default;
@@ -83,6 +88,14 @@ namespace RoboSharp
         public virtual IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags)
         {
             return GetRoboCommand(source, destination, copyActionFlags, DefaultSelectionOptions);
+        }
+
+        private class DefaultRobotCommandFactory : IRoboCommandFactory
+        {
+            public IRoboCommand GetRoboCommand() => new RoboCommand(string.Empty, string.Empty, CopyActionFlags.Default, SelectionFlags.Default, LoggingFlags.RoboSharpDefault);
+            public IRoboCommand GetRoboCommand(string source, string destination) => new RoboCommand(source, destination, CopyActionFlags.Default, SelectionFlags.Default, LoggingFlags.RoboSharpDefault);
+            public IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags) => new RoboCommand(source, destination, copyActionFlags, SelectionFlags.Default, LoggingFlags.RoboSharpDefault);
+            public IRoboCommand GetRoboCommand(string source, string destination, CopyActionFlags copyActionFlags, SelectionFlags selectionFlags) => new RoboCommand(source, destination, copyActionFlags, selectionFlags, LoggingFlags.RoboSharpDefault);
         }
     }
 }

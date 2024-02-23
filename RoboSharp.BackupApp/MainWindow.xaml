@@ -8,33 +8,64 @@
             <TabItem Header="Options" x:Name="OptionsTab">
                 <Grid>
                     <ScrollViewer Margin="0,0,0,0" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto">
-                        <Grid x:Name="OptionsGrid">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="10"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="173*"/>
-                                <ColumnDefinition Width="540*"/>
-                            </Grid.ColumnDefinitions>
+                        <StackPanel x:Name="OptionsGrid" Height="auto">
+                            <!-- Styles -->
+                            <StackPanel.Resources>
+                                <Style TargetType="StackPanel" x:Key="userInputs">
+                                    <Setter Property="Orientation" Value="Horizontal"/>
+                                    <Setter Property="Margin" Value="10,10,10,0"/>
+                                </Style>
+                                <Style TargetType="TextBlock" x:Key="userInputTxtBlock">
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="TextWrapping" Value="NoWrap"/>
+                                    <Setter Property="Width" Value="110"/>
+                                </Style>
+                                <Style TargetType="TextBox" x:Key="userInputTextBox">
+                                    <Setter Property="Margin" Value="10,0"/>
+                                    <Setter Property="MinWidth" Value="175"/>
+                                    <Setter Property="MaxWidth" Value="600"/>
+                                    <Setter Property="Height" Value="23"/>
+                                </Style>
+                                <Style TargetType="Button" x:Key="userInputButton">
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Padding" Value="0,5"/>
+                                    <Setter Property="Width" Value="100"/>
+                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                </Style>
+                            </StackPanel.Resources>
                             <!-- Source -->
-                            <TextBlock Grid.Row="1" Margin="34,0,0,0" HorizontalAlignment="Left" TextWrapping="Wrap" Text="Source" VerticalAlignment="Top"/>
-                            <TextBox x:Name="Source" Grid.Row="1" HorizontalAlignment="Left" Height="23" Margin="34,20,0,5" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" Grid.ColumnSpan="2"/>
-                            <Button x:Name="SourceBrowseButton" Grid.Row="1" Margin="433,20,0,5" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse" Click="SourceBrowseButton_Click" Grid.Column="1"/>
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Source" Style="{StaticResource userInputTxtBlock}" />
+                                <TextBox x:Name="Source" Width="400" Style="{StaticResource userInputTextBox}"/>
+                                <Button x:Name="SourceBrowseButton" Content="Browse" Click="SourceBrowseButton_Click" Style="{StaticResource userInputButton}"/>
+                            </StackPanel>
                             <!-- Destination -->
-                            <TextBlock HorizontalAlignment="Left" Grid.Row="2" Margin="34,0,0,0" TextWrapping="Wrap" Text="Destination" VerticalAlignment="Top"/>
-                            <TextBox x:Name="Destination" Grid.Row="2" HorizontalAlignment="Left" Height="23" Margin="34,20,0,5" TextWrapping="Wrap" VerticalAlignment="Top" Width="560" Grid.ColumnSpan="2"/>
-                            <Button x:Name="DestinationBrowseButton" Grid.Row="2" Margin="433,20,0,5" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Content="Browse"  Click="DestinationBrowseButton_Click" Grid.Column="1"/>
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Destination" Style="{StaticResource userInputTxtBlock}"/>
+                                <TextBox x:Name="Destination" Width="400" Style="{StaticResource userInputTextBox}" />
+                                <Button x:Name="DestinationBrowseButton" Content="Browse"  Click="DestinationBrowseButton_Click" Style="{StaticResource userInputButton}"/>
+                            </StackPanel>
+                            <!-- RoboCommandParser.Parse -->
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Command Parsing" Style="{StaticResource userInputTxtBlock}"/>
+                                <TextBox x:Name="ParserText" Width="400" ToolTip="Paste a valid RoboCopy string here to parse it" Style="{StaticResource userInputTextBox}" />
+                                <Button x:Name="ParseTextBtn" Content="Parse" ToolTip="Parse the input string"  Click="ParseTextBtn_Click" Style="{StaticResource userInputButton}"/>
+                            </StackPanel>
+                            <!-- RoboCommandParser.ParseOptions -->
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Option Parsing" Style="{StaticResource userInputTxtBlock}"/>
+                                <TextBox x:Name="OptionParserText" Width="400" ToolTip="Parse Options Only - Must not contain 'robocopy', a source, or a destination." Style="{StaticResource userInputTextBox}" />
+                                <Button x:Name="OptionParseTextBtn" Content="Parse Options" ToolTip="Parse the input string"  Click="OptionParseTextBtn_Click" Style="{StaticResource userInputButton}"/>
+                            </StackPanel>
                             <!-- Job Name -->
-                            <TextBlock HorizontalAlignment="Left"  Grid.Row="3" Margin="34,0,0,0" TextWrapping="Wrap" Text="Job Name (Optional)" VerticalAlignment="Center" />
-                            <TextBox x:Name="JobName"  Grid.Row="3" HorizontalAlignment="Left" Height="23" Margin="159,5,0,5" TextWrapping="Wrap" VerticalAlignment="Center" Width="175" Grid.ColumnSpan="2"/>
+                            <StackPanel Style="{StaticResource userInputs}">
+                                <TextBlock Text="Job Name (Optional)" Style="{StaticResource userInputTxtBlock}"/>
+                                <TextBox x:Name="JobName"  Width="175" Style="{StaticResource userInputTextBox}"/>
+                            </StackPanel>
                             <!-- Job Options -->
-                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Margin="34,10,20,10">
+                            <StackPanel Margin="34,10,20,10">
                                 <Expander Background="LightBlue" Header="Copy Options">
                                     <Grid Margin="10">
                                         <Grid.RowDefinitions>
@@ -232,7 +263,7 @@
                                 </Expander>
                             </StackPanel>
                             <!-- Single Job GroupBox -->
-                            <GroupBox Header="Single Job ( RoboCommand )"  Grid.Row="5" Margin="34,0,0,5" Height="60" Width="Auto"  HorizontalAlignment="Left" VerticalAlignment="Top"  Grid.ColumnSpan="2">
+                            <GroupBox Header="Single Job ( RoboCommand )"  Grid.Row="5" Margin="34,0,0,5" Height="60" Width="Auto"  HorizontalAlignment="Left" >
                                 <Grid>
                                     <Button Content="Load Job" HorizontalAlignment="Left" Margin="20,10,30,0" VerticalAlignment="Top" Width="75" Click="BtnLoadJob_Click"/>
                                     <Button Content="Save Job" HorizontalAlignment="Left" Margin="115,10,30,0" VerticalAlignment="Top" Width="75" Click="BtnSaveJob_Click"/>
@@ -240,64 +271,66 @@
                                 </Grid>
                             </GroupBox>
                             <!-- Multi-Job GroupBox -->
-                            <GroupBox Header="Multiple Jobs ( RoboQueue )"  Grid.Row="6" Margin="34,10,0,0" Height="Auto" Width="Auto"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.ColumnSpan="2">
-                                <Grid IsSharedSizeScope="True">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="5"/>
-                                        <RowDefinition Height="50"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="200"/>
-                                    </Grid.RowDefinitions>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="120"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="btnAddToQueue" Content="Add to Queue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_AddToQueue"/>
-                                    <Button x:Name="btnReplaceSelected" Content="Update Selected"  Grid.Row="1" Grid.Column="1" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_ReplaceSelected" />
-                                    <Button x:Name="btnRemoveSelectedJob" Content="Remove Selected" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_RemoveSelected"/>
-                                    <Button x:Name="btnLoadSelectedJob" Content="Load Selected" Grid.Row="3" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Width="98" Click="btn_LoadSelected" />
-                                    <!-- Concurrent Jobs -->
-                                    <Label x:Name="lbloncurrentJobs" Content="Commands to run at once (0 = all):" Grid.Row="3" Grid.Column="2" Margin="0,0,0,73" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
-                                    <ComboBox x:Name="cmbConcurrentJobs_OptionsPage" Grid.Row="3" Grid.Column="3"  Margin="34,0,0,46"  HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged" RenderTransformOrigin="-1.375,0.727" />
-                                    <!-- Start Queue Options -->
-                                    <CheckBox x:Name="chkListOnly" Content="ListOnly Mode"  Grid.Row="3" Grid.Column="2"  Margin="5,0,0,46" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked" RenderTransformOrigin="0.175,-1.267" />
-                                    <Button x:Name="btnStartJobQueue" Content="Start Job Queue" Grid.Row="3" Grid.Column="2" Margin="96,0,38,10"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue" Grid.ColumnSpan="2"/>
-                                    <!-- Listbox Header-->
-                                    <Grid Margin="38,0,0,0" Grid.Row="2" Width="410" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.ColumnSpan="4">
+                            <StackPanel Orientation="Horizontal" Margin="34,10,10,0">
+                                <GroupBox Header="Multiple Jobs ( RoboQueue )" Height="Auto" Width="Auto" HorizontalAlignment="Left" >
+                                    <Grid IsSharedSizeScope="True">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="5"/>
+                                            <RowDefinition Height="50"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="200"/>
+                                        </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition SharedSizeGroup="ListBoxColumn1"/>
-                                            <ColumnDefinition SharedSizeGroup="ListBoxColumn2"/>
-                                            <ColumnDefinition SharedSizeGroup="ListBoxColumn3"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="120"/>
+                                            <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Label Grid.Column="0" Content="Job Name" HorizontalAlignment="Left" Width="Auto" Visibility="Visible"/>
-                                        <Label Grid.Column="2" Content="Parameters" HorizontalAlignment="Left" Width="Auto"/>
+                                        <Button x:Name="btnAddToQueue" Content="Add to Queue" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_AddToQueue"/>
+                                        <Button x:Name="btnReplaceSelected" Content="Update Selected"  Grid.Row="1" Grid.Column="1" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_ReplaceSelected" />
+                                        <Button x:Name="btnRemoveSelectedJob" Content="Remove Selected" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Center" Width="98" Click="btn_RemoveSelected"/>
+                                        <Button x:Name="btnLoadSelectedJob" Content="Load Selected" Grid.Row="3" Grid.Column="2" HorizontalAlignment="Center" VerticalAlignment="Top" Width="98" Click="btn_LoadSelected" />
+                                        <!-- Concurrent Jobs -->
+                                        <Label x:Name="lbloncurrentJobs" Content="Commands to run at once (0 = all):" Grid.Row="3" Grid.Column="2" Margin="0,0,0,73" Grid.ColumnSpan="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+                                        <ComboBox x:Name="cmbConcurrentJobs_OptionsPage" Grid.Row="3" Grid.Column="3"  Margin="34,0,0,46"  HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="40" SelectionChanged="MultiJob_ConcurrentAmountChanged" RenderTransformOrigin="-1.375,0.727" />
+                                        <!-- Start Queue Options -->
+                                        <CheckBox x:Name="chkListOnly" Content="ListOnly Mode"  Grid.Row="3" Grid.Column="2"  Margin="5,0,0,46" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" Checked="chkListOnly_Checked" Unchecked="chkListOnly_UnChecked" RenderTransformOrigin="0.175,-1.267" />
+                                        <Button x:Name="btnStartJobQueue" Content="Start Job Queue" Grid.Row="3" Grid.Column="2" Margin="96,0,38,10"  HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="98" Click="btn_StartQueue" Grid.ColumnSpan="2"/>
+                                        <!-- Listbox Header-->
+                                        <Grid Margin="38,0,0,0" Grid.Row="2" Width="410" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.ColumnSpan="4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition SharedSizeGroup="ListBoxColumn1"/>
+                                                <ColumnDefinition SharedSizeGroup="ListBoxColumn2"/>
+                                                <ColumnDefinition SharedSizeGroup="ListBoxColumn3"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Label Grid.Column="0" Content="Job Name" HorizontalAlignment="Left" Width="Auto" Visibility="Visible"/>
+                                            <Label Grid.Column="2" Content="Parameters" HorizontalAlignment="Left" Width="Auto"/>
+                                        </Grid>
+                                        <!-- https://stackoverflow.com/questions/8911026/multicolumn-listbox-in-wpf -->
+                                        <ListBox x:Name="ListBox_RoboQueueJobs_OptionsPage" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0"  SelectionChanged="RoboQueueListBoxSelectionChanged">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Height="20">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" SharedSizeGroup="ListBoxColumn1"/>
+                                                            <ColumnDefinition Width="15" SharedSizeGroup="ListBoxColumn2"/>
+                                                            <ColumnDefinition Width="*" SharedSizeGroup="ListBoxColumn3"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <!-- Bind to the NAME property -->
+                                                        <TextBlock Grid.Column="0" Text="{Binding Path=Name}"/>
+                                                        <!-- Bind to the ToString method-->
+                                                        <TextBlock Grid.Column="2" Text="{Binding}"/>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
                                     </Grid>
-                                    <!-- https://stackoverflow.com/questions/8911026/multicolumn-listbox-in-wpf -->
-                                    <ListBox x:Name="ListBox_RoboQueueJobs_OptionsPage" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,5,0,0"  SelectionChanged="RoboQueueListBoxSelectionChanged">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <Grid Height="20">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" SharedSizeGroup="ListBoxColumn1"/>
-                                                        <ColumnDefinition Width="15" SharedSizeGroup="ListBoxColumn2"/>
-                                                        <ColumnDefinition Width="*" SharedSizeGroup="ListBoxColumn3"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <!-- Bind to the NAME property -->
-                                                    <TextBlock Grid.Column="0" Text="{Binding Path=Name}"/>
-                                                    <!-- Bind to the ToString method-->
-                                                    <TextBlock Grid.Column="2" Text="{Binding}"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
-                                </Grid>
-                            </GroupBox>
-                            <GroupBox Header="RoboSharp Debugging"  Grid.Row="6" Margin="345,10,0,0" Height="302" Width="189"  HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1">
-                                <CheckBox x:Name="chk_SaveEventLogs" Content="EventLogging" ToolTip="Create LogFiles for OnCopyProgressChanged and OnFileProcessed"  Margin="85,0,-2,253" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
-                            </GroupBox>
-                        </Grid>
+                                </GroupBox>
+                                <GroupBox Header="RoboSharp Debugging" Height="302" Width="189" HorizontalAlignment="Left">
+                                    <CheckBox x:Name="chk_SaveEventLogs" Content="EventLogging" ToolTip="Create LogFiles for OnCopyProgressChanged and OnFileProcessed"  Margin="85,0,-2,253" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
+                                </GroupBox>
+                            </StackPanel>
+                        </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </TabItem>

@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Microsoft.Win32;
 using RoboSharp.Interfaces;
 using System.Diagnostics;
+using System.Text;
+using System.Collections;
 
 namespace RoboSharp.BackupApp
 {
@@ -201,7 +203,12 @@ namespace RoboSharp.BackupApp
             // 
             string fileFilterItems = "";
             foreach (string s in copy.CopyOptions.FileFilter)
-                fileFilterItems += s;
+            {
+                if (s.Contains(' '))
+                    fileFilterItems += $"\"{s}\" "; // wrap the white space
+                else
+                    fileFilterItems += s + " ";
+            }
             FileFilter.Text = fileFilterItems;
 
             CopySubDirectories.IsChecked = copy.CopyOptions.CopySubdirectories;
@@ -702,6 +709,44 @@ namespace RoboSharp.BackupApp
         }
 
         #endregion
+
+        private void ParseTextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string input = this.ParserText.Text;
+            try
+            {
+                LoadCommand(new RoboCommand());
+                var cmd = RoboCommandParser.Parse(input);
+                LoadCommand(cmd);
+            }
+            catch(Exception ex)
+            {
+                StringBuilder text = new StringBuilder();
+                text.Append(ex.Message);
+                foreach (DictionaryEntry item in ex.Data)
+                    text.Append(string.Format("\n{0} : {1}", item.Key, item.Value));
+                MessageBox.Show(text.ToString(), "RoboCommandParser Error!");
+            }
+        }
+
+        private void OptionParseTextBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string input = this.OptionParserText.Text;
+            try
+            {
+                LoadCommand(new RoboCommand());
+                var cmd = RoboCommandParser.ParseOptions(input);
+                LoadCommand(cmd);
+            }
+            catch (Exception ex)
+            {
+                StringBuilder text = new StringBuilder();
+                text.Append(ex.Message);
+                foreach (DictionaryEntry item in ex.Data)
+                    text.Append(string.Format("\n{0} : {1}", item.Key, item.Value));
+                MessageBox.Show(text.ToString(), "RoboCommandParser Error!");
+            }
+        }
     }
 
     public class FileError

@@ -13,3 +13,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Style", "IDE0019:Use pattern matching", Justification = "Valid code & easy to read")]
 [assembly: SuppressMessage("Style", "IDE0057:Use range operator", Justification = "Unavaiable in some build targets", Scope = "member", Target = "~M:RoboSharp.RoboCommand.Process_OutputDataReceived(System.Object,System.Diagnostics.DataReceivedEventArgs)")]
 [assembly: SuppressMessage("Style", "IDE0063:Use simple 'using' statement", Justification = "<Pending>", Scope = "member", Target = "~M:RoboSharp.Authentication.CheckJobFileSavePath(RoboSharp.Interfaces.IRoboCommand)~RoboSharp.AuthenticationResult")]
+[assembly: SuppressMessage("Style", "IDE0057:Use range operator", Justification = "<Pending>", Scope = "member", Target = "~M:RoboSharp.RoboCommandParser.TryExtractParameter(System.String,System.String,System.String@)~System.Boolean")]
