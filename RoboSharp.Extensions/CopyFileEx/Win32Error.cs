@@ -56,9 +56,15 @@ namespace RoboSharp.Extensions.CopyFileEx
 
         ///<summary>
         /// Look up the Win32 error code and generate the appropriate exception.
+        /// <br/>
+        /// <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/18d8fbe8-a967-4f1c-ae50-99ca8e491d2d"/>
         /// </summary>
         /// <remarks>
-        /// <see href="https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/18d8fbe8-a967-4f1c-ae50-99ca8e491d2d"/>
+        /// Errors will have the following dictionary entries:
+        /// <br/> - Source
+        /// <br/> - Destination
+        /// <br/> - Win32ErrorCode
+        /// <br/> - Help Page
         /// </remarks>
         /// <returns>null if the <paramref name="errorCode"/> == 0, otherwise an Exception object</returns>
         public static Exception GenerateException(string sourceFile, string destFile, int errorCode)
