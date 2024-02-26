@@ -45,7 +45,7 @@ namespace RoboSharp.Extensions.CopyFileEx
         /// The function fails if the source file is a link source, but the file cannot be tracked after the move. 
         /// This situation can occur if the destination is a volume formatted with the FAT file system.
         /// </summary>
-        FAIL_IF_NOT_TRACKABLE = 0x00000020
+        FAIL_IF_NOT_TRACKABLE = 0x00000020,
 
         /// <summary>
         /// If a file exists at the destination, overwrite it.
