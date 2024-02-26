@@ -206,6 +206,7 @@ namespace RoboSharp.Extensions
             finally
             {
                 updateToken.Cancel();
+                await updateTask.ConfigureAwait(false);
             }
 
             Report();

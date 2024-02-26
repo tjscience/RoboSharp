@@ -39,25 +39,25 @@ namespace RoboSharp
         public ErrorEventArgs(int errorCode, string error, string errorDescription, string errorPath, DateTime? dateTime = null, string signedErrorCode = null)
         {
             Error = error;
-            ErrorDescription = errorDescription;
             ErrorCode = errorCode;
+            ErrorDescription = errorDescription;
             ErrorPath = errorPath;
             DateTime = dateTime ?? DateTime.Now;
             SignedErrorCode = signedErrorCode ?? errorCode.ToString();
         }
 
         /// <summary>
-        /// Error Code
+        /// The error message
         /// </summary>
         public string Error { get; }
 
         /// <summary>
-        /// Error Description
+        /// Error Description or stack trace
         /// </summary>
         public string ErrorDescription { get; }
         
         /// <summary>
-        /// Error Code
+        /// The error code
         /// </summary>
         public int ErrorCode { get; }
 

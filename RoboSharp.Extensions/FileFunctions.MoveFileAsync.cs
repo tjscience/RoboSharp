@@ -24,8 +24,8 @@ namespace RoboSharp.Extensions
         ///  If the function fails, the return value is zero.To get extended error information, call GetLastError. 
         ///  <para/>When moving a file across volumes, if lpProgressRoutine returns PROGRESS_CANCEL due to the user canceling the operation, MoveFileWithProgress will return zero and GetLastError will return ERROR_REQUEST_ABORTED.The existing file is left intact.
         ///  <para/>When moving a file across volumes, if lpProgressRoutine returns PROGRESS_STOP due to the user stopping the operation, MoveFileWithProgress will return zero and GetLastError will return ERROR_REQUEST_ABORTED.The existing file is left intact.
-        ///  </returns>
-        /// <remarks><see href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefilewithprogressa"/></remarks>
+        /// </returns>
+        /// <see href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefilewithprogressa"/>
         [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Auto)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool MoveFileWithProgressA(
@@ -175,6 +175,7 @@ namespace RoboSharp.Extensions
             finally
             {
                 updateToken.Cancel();
+                await updateTask.ConfigureAwait(false);
             }
             Report();
             return result;
