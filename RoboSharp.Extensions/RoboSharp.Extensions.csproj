@@ -3,7 +3,7 @@
   <PropertyGroup>
       <TargetFrameworks>net452;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-      <Version>1.3.4</Version>
+      <Version>1.3.6</Version>
       <Copyright>Copyright 2023</Copyright>
       <Authors>Robert Brenckman</Authors>
       <owners>Terry</owners>
@@ -21,9 +21,15 @@
            - RoboMover will instead use File.Move() to simply move the file into the new directory, instead of wasting time copying then deleting, greatly improving throughput.
            - RoboMover always checks if the Source and Destination are on the same root, and if files are getting moved. If both conditions are true, it performs the move. If either condition is false, it will run as a standard RoboCommand.
       </Description>
+      <PackageReleaseNotes>
+          - Now provides a wrapper for the CopyFileEx utility to allow for asynchronous file movement.
+      </PackageReleaseNotes>
+      <PackageTags>RoboSharp RoboCopy CopyFileEx</PackageTags>
       <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net452' Or '$(TargetFramework)' == 'netstandard2.0'">
+        <LangVersion>8.0</LangVersion>
+    </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\RoboSharp\RoboSharp.csproj" />
   </ItemGroup>
