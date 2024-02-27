@@ -8,7 +8,7 @@ namespace RoboSharp.Extensions.CopyFileEx
     /// Flags to pass into CopyFileEx to determine how it should run
     /// </summary>
     [Flags]
-    public enum CopyFileOptions  : uint
+    public enum CopyFileExOptions  : uint
     {
         /// <summary>
         /// No Options Specified - This allows destination files to be overwritten

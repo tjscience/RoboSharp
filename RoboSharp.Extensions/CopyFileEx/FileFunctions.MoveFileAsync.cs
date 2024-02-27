@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RoboSharp.Extensions.CopyFileEx;
 
-namespace RoboSharp.Extensions
+namespace RoboSharp.Extensions.CopyFileEx
 {
     public static partial class FileFunctions
     {

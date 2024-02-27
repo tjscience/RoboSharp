@@ -14,7 +14,7 @@ namespace RoboSharp.Extensions
         private const string EmptyDestinationErr = "Destination Path can not be empty";
 
         /// <inheritdoc cref="FileFunctions.CopyFileProgressAsync"/>
-        public static void CopyTo(this FileInfo source, string destination, CopyProgressCallback callback, CopyFileOptions options = CopyFileOptions.FAIL_IF_EXISTS)
+        public static void CopyTo(this FileInfo source, string destination, CopyProgressCallback callback, CopyFileExOptions options = CopyFileExOptions.FAIL_IF_EXISTS)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
             if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException(EmptyDestinationErr, nameof(source));
@@ -50,7 +50,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="FileFunctions.CopyFileProgressAsync"/>
-        public static Task CopyToAsync(this FileInfo source, string destination, CopyProgressCallback callback, CopyFileOptions options, CancellationToken token = default)
+        public static Task CopyToAsync(this FileInfo source, string destination, CopyProgressCallback callback, CopyFileExOptions options, CancellationToken token = default)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
             if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException(EmptyDestinationErr, nameof(source));
@@ -58,7 +58,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="FileFunctions.CopyFileProgressAsync"/>
-        public static Task CopyToAsync(this FileInfo source, string destination, IProgress<double> progress, CopyFileOptions options, CancellationToken token = default)
+        public static Task CopyToAsync(this FileInfo source, string destination, IProgress<double> progress, CopyFileExOptions options, CancellationToken token = default)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
             if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException(EmptyDestinationErr, nameof(source));
@@ -66,7 +66,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <inheritdoc cref="FileFunctions.CopyFileProgressAsync"/>
-        public static Task CopyToAsync(this FileInfo source, string destination, IProgress<long> progress, CopyFileOptions options, CancellationToken token = default)
+        public static Task CopyToAsync(this FileInfo source, string destination, IProgress<long> progress, CopyFileExOptions options, CancellationToken token = default)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
             if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException(EmptyDestinationErr, nameof(source));

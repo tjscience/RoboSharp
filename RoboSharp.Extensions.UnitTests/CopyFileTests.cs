@@ -52,14 +52,14 @@ namespace RoboSharp.Extensions.UnitTests
             string sourceFile = "SomeFIle.txt";
             string destFile = "SomeOtherFile.txt";
             if (File.Exists(sourceFile)) File.Delete(sourceFile);
-            Assert.ThrowsException<FileNotFoundException>(() => FileFunctions.CopyFile(sourceFile, destFile, CopyFileOptions.FAIL_IF_EXISTS));
+            Assert.ThrowsException<FileNotFoundException>(() => FileFunctions.CopyFile(sourceFile, destFile, CopyFileExOptions.FAIL_IF_EXISTS));
 
             File.WriteAllText(sourceFile, "Test Contents");
             File.WriteAllText(destFile, "Content to replace");
             Assert.IsTrue(File.Exists(sourceFile));
             Assert.IsTrue(File.Exists(destFile));
-            Assert.IsTrue(FileFunctions.CopyFile(sourceFile, destFile, CopyFileOptions.NONE));
-            Assert.ThrowsException<IOException>(() => FileFunctions.CopyFile(sourceFile, destFile, CopyFileOptions.FAIL_IF_EXISTS));
+            Assert.IsTrue(FileFunctions.CopyFile(sourceFile, destFile, CopyFileExOptions.NONE));
+            Assert.ThrowsException<IOException>(() => FileFunctions.CopyFile(sourceFile, destFile, CopyFileExOptions.FAIL_IF_EXISTS));
 
             bool callbackHit = false;
             int callbackHitCount = 0;
@@ -115,14 +115,14 @@ namespace RoboSharp.Extensions.UnitTests
             string sourceFile = "SomeFIle.txt";
             string destFile = "SomeOtherFile.txt";
             if (File.Exists(sourceFile)) File.Delete(sourceFile);
-            await Assert.ThrowsExceptionAsync<FileNotFoundException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.NONE));
+            await Assert.ThrowsExceptionAsync<FileNotFoundException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.NONE));
 
             File.WriteAllText(sourceFile, "Test Contents");
             File.WriteAllText(destFile, "Content to replace");
             Assert.IsTrue(File.Exists(sourceFile));
             Assert.IsTrue(File.Exists(destFile));
-            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.NONE));
-            await Assert.ThrowsExceptionAsync<IOException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.FAIL_IF_EXISTS));
+            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.NONE));
+            await Assert.ThrowsExceptionAsync<IOException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.FAIL_IF_EXISTS));
 
             bool callbackHit = false;
             int callbackHitCount = 0;
@@ -135,7 +135,7 @@ namespace RoboSharp.Extensions.UnitTests
                 return CopyProgressCallbackResult.CANCEL;
             });
             Assert.IsFalse(callbackHit);
-            await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.NONE, cancelCallback));
+            await Assert.ThrowsExceptionAsync<OperationCanceledException>(async () => await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.NONE, cancelCallback));
             Assert.IsTrue(callbackHit);
             Assert.AreEqual(1, callbackHitCount);
             callbackHit = false;
@@ -149,7 +149,7 @@ namespace RoboSharp.Extensions.UnitTests
                 return CopyProgressCallbackResult.QUIET;
             });
             Assert.IsFalse(callbackHit);
-            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.NONE, quietCallback));
+            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.NONE, quietCallback));
             Assert.IsTrue(callbackHit);
             Assert.AreEqual(1, callbackHitCount);
             callbackHit = false;
@@ -163,7 +163,7 @@ namespace RoboSharp.Extensions.UnitTests
                 return CopyProgressCallbackResult.CONTINUE;
             });
             Assert.IsFalse(callbackHit);
-            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileOptions.NONE, continueCallback));
+            Assert.IsTrue(await FileFunctions.CopyFileAsync(sourceFile, destFile, CopyFileExOptions.NONE, continueCallback));
             Assert.IsTrue(callbackHit);
             Assert.IsTrue(callbackHitCount >= 2);
             callbackHit = false;

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RoboSharp.Extensions
+namespace RoboSharp.Extensions.CopyFileEx
 {
     public static partial class FileFunctions
     {
@@ -100,7 +100,10 @@ namespace RoboSharp.Extensions
             CopyProgressCallbackResult report(long total, long processed)
             {
                 progress.Report((double)100 * processed / total);
-                return CopyProgressCallbackResult.CONTINUE;
+                if (progress is ProgressReporter pg)
+                    return pg.Result;
+                else 
+                    return CopyProgressCallbackResult.CONTINUE;
             }
         }
     }

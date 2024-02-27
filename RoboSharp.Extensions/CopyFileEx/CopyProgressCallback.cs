@@ -70,12 +70,14 @@ namespace RoboSharp.Extensions.CopyFileEx
         CONTINUE = 0,
 
         /// <summary>
-        /// Cancel the copy operation and delete the destination file. 
+        /// Cancel the copy operation.
+        /// The partially copied destination file is deleted.
         /// </summary>
         CANCEL = 1,
 
         /// <summary>
-        /// Stop the copy operation. It can be restarted at a later time. 
+        /// Stop the copy operation. It can be restarted at a later time.
+        /// The partially copied destination file is left intact.
         /// </summary>
         STOP = 2,
 
