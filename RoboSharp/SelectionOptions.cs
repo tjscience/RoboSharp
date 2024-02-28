@@ -207,7 +207,7 @@ namespace RoboSharp
 
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
-        /// JobOptions file saves these into the /IF (Include Files) section
+        /// JobOptions file saves these into the /XF (Exclude Files) section
         /// </summary>
         public List<string> ExcludedFiles { get; } = new List<string>();
 
@@ -245,7 +245,7 @@ namespace RoboSharp
         }
         /// <summary>
         /// Allows you to supply a set of files to copy or use wildcard characters (* or ?). <br/>
-        /// JobOptions file saves these into the /IF (Include Files) section
+        /// JobOptions file saves these into the /XD (Exclude Directories) section
         /// </summary>
         public List<string> ExcludedDirectories { get; } = new List<string>();
 
