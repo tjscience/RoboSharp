@@ -100,13 +100,13 @@ namespace RoboSharp
         public virtual bool ListOnly { get; set; }
         /// <summary>
         /// Report all extra files, not just those selected.
-        /// [X]
+        /// [/X]
         /// </summary>
         [DefaultValue(false)] 
         public virtual bool ReportExtraFiles { get; set; }
         /// <summary>
         /// Produce verbose output, showing skipped files.
-        /// [V]
+        /// [/V]
         /// </summary>
         /// <remarks>
         /// If set false, RoboCommand ProgressEstimator will not be accurate due files not showing in the logs.
