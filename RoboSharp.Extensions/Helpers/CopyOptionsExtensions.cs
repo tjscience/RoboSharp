@@ -1,4 +1,5 @@
 ﻿using RoboSharp.Interfaces;
+﻿using RoboSharp.Extensions.CopyFileEx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +15,28 @@ namespace RoboSharp.Extensions.Helpers
     /// </summary>
     public static class CopyOptionsExtensions
     {
+        /// <summary>
+        /// Gets the relevant settings from the <paramref name="options"/> object for use with CopyFileEx
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns>
+        /// A set of <see cref="CopyFileExOptions"/> that may have the following options enabled : 
+        /// <br/> - <see cref="CopyFileExOptions.NO_OFFLOAD"/>
+        /// <br/> - <see cref="CopyFileExOptions.NO_BUFFERING"/>
+        /// <br/> - <see cref="CopyFileExOptions.RESTARTABLE"/> | <see cref="CopyFileExOptions.RESUME_FROM_PAUSE"/>
+        /// <br/> - <see cref="CopyFileExOptions.COPY_SYMLINK"/>
+        /// <br/> - <see cref="CopyFileExOptions.REQUEST_COMPRESSED_TRAFFIC"/>
+        /// </returns>
+        public static CopyFileEx.CopyFileExOptions GetCopyFileExOptions(this CopyOptions options)
+        {
+            if (options is null) throw new ArgumentNullException(nameof(options));
+            CopyFileExOptions copyOptions = CopyFileExOptions.NONE;
+            if (options.EnableRestartMode) copyOptions |= CopyFileExOptions.RESTARTABLE;
+            if (options.CopySymbolicLink) copyOptions |= CopyFileExOptions.COPY_SYMLINK;
+            if (options.Compress) copyOptions |= CopyFileExOptions.REQUEST_COMPRESSED_TRAFFIC;
+            if (options.UseUnbufferedIo) copyOptions |= CopyFileExOptions.NO_BUFFERING;
+            return copyOptions;
+        }
 
         /// <summary>
         /// Evaluates the <paramref name="flag"/> to check if any of the MOV options are enabled
