@@ -8,12 +8,14 @@ using RoboSharp.Extensions.CopyFileEx;
 namespace RoboSharp.Extensions
 {
     /// <summary>
-    /// Class that extends <see cref="FilePair"/> to provide functionality for copying/moving the file asynchronously.
+    /// Class that extends <see cref="FilePair"/> to implement Copy/Move async methods via CopyFileEx
     /// </summary>
-    public class FileCopier : FilePair, INotifyPropertyChanged
+    public class FileCopierEx : AbstractFileCopier
     {
         private bool _isCopied;
         private bool _isCopying;
+        private bool _isPaused;
+        private bool _isMoving;
         private bool _wasCancelled;
         private double _progress;
         private DateTime _startDate;
@@ -22,25 +24,17 @@ namespace RoboSharp.Extensions
         private CancellationTokenSource _cancellationSource;
 
         /// <summary>
-        /// The Progress Updated event
-        /// </summary>
-        public event EventHandler<CopyProgressEventArgs> ProgressUpdated;
-
-        /// <inheritdoc/>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
         /// Create a new FileCopier from the supplied file paths
         /// </summary>
         /// <inheritdoc cref="FilePair.FilePair(FileInfo, FileInfo, IDirectoryPair)"/>
-        public FileCopier(FileInfo source, FileInfo destination, IDirectoryPair parent = null) : base(source, destination, parent)
+        public FileCopierEx(FileInfo source, FileInfo destination, IDirectoryPair parent = null) : base(source, destination, parent)
         { }
 
         /// <summary>
         /// Create a new FileCopier from the supplied file paths
         /// </summary>
         /// <inheritdoc cref="FilePair.FilePair(string, string, IDirectoryPair)"/>
-        public FileCopier(string source, string destination, IDirectoryPair parent = null) : base(source, destination, parent)
+        public FileCopierEx(string source, string destination, IDirectoryPair parent = null) : base(source, destination, parent)
         { }
 
         /// <summary>
@@ -48,24 +42,26 @@ namespace RoboSharp.Extensions
         /// </summary>
         /// <exception cref="ArgumentNullException"/>
         /// <inheritdoc cref="FilePair.FilePair(IFilePair, IDirectoryPair)"/>
-        public FileCopier(IFilePair filePair, IDirectoryPair parent = null) : base(filePair, parent)
+        public FileCopierEx(IFilePair filePair, IDirectoryPair parent = null) : base(filePair, parent)
         { }
-
-        /// <summary>
-        /// File Size in bytes
-        /// </summary>
-        public long Bytes => Source.Exists ? Source.Length : Destination.Length;
 
         /// <summary>
         /// The options to use when performing the copy operation - Note : Does not apply to move operations.
         /// </summary>
-        /// <remarks><see cref="CopyFileOptions.FAIL_IF_EXISTS"/> is set by the 'overwrite' parameter of the <see cref="CopyAsync(bool)"/> method</remarks>
-        public CopyFileOptions CopyOptions { get; set; }
+        /// <remarks>
+        ///  - <see cref="CopyFileExOptions.FAIL_IF_EXISTS"/> is set by the 'overwrite' parameter of the <see cref="CopyAsync(bool)"/> method
+        ///  <br/> - <see cref="CopyFileExOptions.RESTARTABLE"/> must be set here if you wish to enable the <see cref="Pause"/> functionality.
+        /// </remarks>
+        public CopyFileExOptions CopyOptions { get; set; }
 
         /// <summary>
         /// TRUE is the copier was paused while it was running, otherwise false.
         /// </summary>
-        public bool IsPaused { get; private set; }
+        public bool IsPaused
+        {
+            get { return _isPaused; }
+            private set { SetProperty(ref _isPaused, value, nameof(IsPaused)); }
+        }
 
         /// <summary>
         /// Copied Status -> True if the copy action has been performed.
@@ -90,13 +86,6 @@ namespace RoboSharp.Extensions
             private set { SetProperty(ref _wasCancelled, value, nameof(WasCancelled)); }
         }
 
-        /// <inheritdoc/>
-        public double Progress
-        {
-            get { return _progress; }
-            set { SetProperty(ref _progress, value, nameof(Progress)); }
-        }
-        
         /// <summary> </summary>
         public DateTime StartDate
         {
@@ -127,49 +116,31 @@ namespace RoboSharp.Extensions
             }
         }
 
-        /// <summary> Raises the FileCopyProgressUpdated event </summary>
-        protected virtual void OnProgressUpdated(double progress)
-        {
-            Progress = progress;
-            ProgressUpdated?.Invoke(this, new CopyProgressEventArgs(progress, ProcessedFileInfo, Parent.ProcessedFileInfo));
-        }
-
-        /// <summary> Raises the PropertyChanged event </summary>
-        protected virtual void OnPropertyChanged(string name = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        /// <summary> Set the property and raise PropertyChanged </summary>
-        protected void SetProperty<T>(ref T field, T value, string propertyName)
-        {
-            if (!field.Equals(value))
-            {
-                field = value;
-                OnPropertyChanged(propertyName);
-            }
-        }
-
         #region < Pause / Resume / Cancel >
 
         /// <summary>
-        /// Pause the copy action
+        /// Stops the COPY operation using the 'STOP' argument. The copy task then enters an 'await Task.Delay(100)' loop until resumed or cancelled. Warning : During this period the file is not locked as CopyFileEx has released its hold.
+        /// Upon being resumed, CopyFileEx will attempt to resume where it left off. 
+        /// <para/> Only possible when <see cref="CopyFileExOptions.RESTARTABLE"/> is specified in the <see cref="CopyOptions"/>
+        /// <br/> No effect on the MOVE operation.
         /// </summary>
-        public void Pause()
+        public override void Pause()
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
-            if (IsCopying)
-                IsPaused = true;
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
+            if (IsCopying && !_isMoving)
+                IsPaused = CopyOptions.HasFlag(CopyFileExOptions.RESTARTABLE);
         }
 
         /// <summary>
-        /// Resume if paused
+        /// Resume a COPY operation
         /// </summary>
-        public void Resume()
+        public override void Resume()
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
             if (IsCopying && IsPaused)
+            {
                 IsPaused = false;
+            }
         }
 
         /// <summary>
@@ -187,9 +158,9 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Request Cancellation immediately.
         /// </summary>
-        public void Cancel()
+        public override void Cancel()
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
             if (CanCancel())
             {
                 _cancellationSource?.Cancel();
@@ -199,9 +170,9 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// Request Cancellation after a number of <paramref name="milliseconds"/>
         /// </summary>
-        public async void CancelAfter(int milliseconds)
+        public async void Cancel(int milliseconds)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
             if (CanCancel())
             {
                 await Task.Delay(milliseconds);
@@ -220,6 +191,7 @@ namespace RoboSharp.Extensions
             StartDate = DateTime.Now;
             IsCopied = false;
             IsCopying = true;
+            IsPaused = false;
             WasCancelled = false;
             Progress = 0;
         }
@@ -235,15 +207,16 @@ namespace RoboSharp.Extensions
             IsCopying = false;
             WasCancelled = _cancellationSource?.IsCancellationRequested ?? false;
             IsCopied = isCopied;
+            IsPaused = false;
             EndDate = DateTime.Now;
             _cancellationSource?.Dispose();
             _cancellationSource = null;
         }
 
-        /// <inheritdoc cref="FileFunctions.CopyFileAsync(string, string, IProgress{double}, CopyFileOptions, int, CancellationToken)"/>
-        public async Task<bool> CopyAsync(bool overwrite = false)
+        /// <inheritdoc cref="FileFunctions.CopyFileAsync(string, string, IProgress{double}, CopyFileExOptions, int, CancellationToken)"/>
+        public override async Task<bool> CopyAsync(bool overwrite = false)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
             if (IsCopying) throw new InvalidOperationException("Copy/Move Operation Already in progress!");
 
             Source.Refresh();
@@ -253,8 +226,19 @@ namespace RoboSharp.Extensions
             bool copied = false;
             try
             {
-                var options = overwrite ? CopyOptions &= ~CopyFileOptions.FAIL_IF_EXISTS : CopyOptions | CopyFileOptions.FAIL_IF_EXISTS;
-                copied = await FileFunctions.CopyFileAsync(Source.FullName, Destination.FullName, new Progress<double>(OnProgressUpdated), options, 100, _cancellationSource.Token);
+                var options = overwrite ? CopyOptions &= ~CopyFileExOptions.FAIL_IF_EXISTS : CopyOptions | CopyFileExOptions.FAIL_IF_EXISTS;
+                while (!_cancellationSource.IsCancellationRequested)
+                {
+                    if (IsPaused)
+                    {
+                        await Task.Delay(100);
+                    }
+                    else
+                    {
+                        bool result = await PerformCopy(options);
+                        if (result) return true;
+                    }
+                }
             }
             finally
             {
@@ -269,11 +253,52 @@ namespace RoboSharp.Extensions
             return IsCopied;
         }
 
+        private async Task<bool> PerformCopy(CopyFileExOptions options)
+        {
+            bool result =false;
+            Task updateTask = null;
+            long fileSize = Source.Length;
+            long totalBytesRead = 0;
+
+            // Updater - asynchronous background task
+            var updateToken = CancellationTokenSource.CreateLinkedTokenSource(_cancellationSource.Token);
+            updateTask = Task.Run(async () =>
+               {
+                   while (totalBytesRead < Source.Length)
+                   {
+                       OnProgressUpdated((double)100 * totalBytesRead / fileSize);
+                       await Task.Delay(100, updateToken.Token);
+                       updateToken.Token.ThrowIfCancellationRequested();
+                   }
+               }, updateToken.Token);
+
+            //Writer - consumes a thread
+            try
+            {
+                var callback = FileFunctions.CreateCallback(progressRecorder, _cancellationSource.Token);
+                result = await FileFunctions.CopyFileAsync(Source.FullName, Destination.FullName, options, callback, token: _cancellationSource.Token).ConfigureAwait(false);
+            }
+            catch(OperationCanceledException) when (IsPaused) { }
+            finally
+            {
+                updateToken.Cancel();
+                await updateTask.ContinueWith(t => { }).ConfigureAwait(false);
+            }
+            return result;
+
+            CopyProgressCallbackResult progressRecorder(long size, long copied)
+            {
+                fileSize = size;
+                totalBytesRead = copied;
+                return IsPaused ? CopyProgressCallbackResult.STOP : CopyProgressCallbackResult.CONTINUE;
+            }
+        }
+
 
         /// <inheritdoc cref="FileFunctions.MoveFileAsync(string, string, IProgress{double}, int, bool, CancellationToken)"/>
-        public async Task<bool> Move(bool overWrite = false)
+        public override async Task<bool> MoveAsync(bool overWrite = false)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopier));
+            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
             if (IsCopying) throw new InvalidOperationException("Copy/Move Operation Already in progress!");
 
             if (!File.Exists(Source.FullName))
@@ -287,6 +312,7 @@ namespace RoboSharp.Extensions
             }
 
             SetStarted();
+            _isMoving = true;
             bool moved = false;
             try
             {
@@ -305,6 +331,7 @@ namespace RoboSharp.Extensions
             }
             finally
             {
+                _isMoving = false;
                 SetEnded(isCopied: moved);
                 if (moved)
                 {
@@ -315,7 +342,6 @@ namespace RoboSharp.Extensions
             }
             return moved;
         }
-
 
 #region < Dispose >
 
@@ -343,7 +369,7 @@ namespace RoboSharp.Extensions
         /// <summary>
         /// 
         /// </summary>
-        ~FileCopier()
+        ~FileCopierEx()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             Dispose(disposing: false);
@@ -361,52 +387,52 @@ namespace RoboSharp.Extensions
 
         #region < Static >
 
-        /// <inheritdoc cref="FileCopier.FileCopier(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopier CreateCopier(FileInfo source, FileInfo destination, IDirectoryPair parent) => new FileCopier(source, destination, parent);
+        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
+        public static FileCopierEx CreateCopier(FileInfo source, FileInfo destination, IDirectoryPair parent) => new FileCopierEx(source, destination, parent);
 
-        /// <inheritdoc cref="FileCopier.FileCopier(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopier CreateCopier(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent) => new FileCopier(source, destination, parent);
+        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
+        public static FileCopierEx CreateCopier(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent) => new FileCopierEx(source, destination, parent);
 
         /// <summary>Create a new FileCopier from the supplied file paths</summary>
         /// <inheritdoc cref="EvaluateSource(string)"/>
         /// <inheritdoc cref="EvaluateDestination(string)"/>
-        /// <inheritdoc cref="FileCopier.FileCopier(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopier FromSourceAndDestination(string source, string destination, IDirectoryPair parent = null)
+        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
+        public static FileCopierEx FromSourceAndDestination(string source, string destination, IDirectoryPair parent = null)
         {
             EvaluateSource(source);
             EvaluateDestination(destination);
             var sourceFile = new FileInfo(source);
             var destFile = new FileInfo(destination);
             if (parent is null) parent = new DirectoryPair(sourceFile.Directory, destFile.Directory);
-            return new FileCopier(sourceFile, destFile, parent);
+            return new FileCopierEx(sourceFile, destFile, parent);
         }
 
         /// <summary>Create a new FileCopier from the supplied file paths</summary>
         /// <param name="destination">The Destination Directory</param>
         /// <inheritdoc cref="EvaluateSource(string)"/>
-        /// <inheritdoc cref="FileCopier.FileCopier(FileInfo, FileInfo, IDirectoryPair)"/>
+        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
         /// <param name="parent"/><param name="source"/>
-        public static FileCopier FromSourceAndDestination(string source, DirectoryInfo destination, IDirectoryPair parent = null)
+        public static FileCopierEx FromSourceAndDestination(string source, DirectoryInfo destination, IDirectoryPair parent = null)
         {
             if (destination is null) throw new ArgumentNullException(nameof(destination));
             EvaluateSource(source);
             var sourceFile = new FileInfo(source);
             var destFile = new FileInfo(Path.Combine(destination.FullName, sourceFile.Name));
             if (parent is null) parent = new DirectoryPair(sourceFile.Directory, destination);
-            return new FileCopier(sourceFile, destFile, parent);
+            return new FileCopierEx(sourceFile, destFile, parent);
         }
 
         /// <summary>Create a new FileCopier from the supplied file paths</summary>
         /// <param name="destination">The Destination Directory</param>
-        /// <inheritdoc cref="FileCopier.FileCopier(FileInfo, FileInfo, IDirectoryPair)"/>
+        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
         /// <param name="parent"/><param name="source"/>
-        public static FileCopier FromSourceAndDestination(FileInfo source, DirectoryInfo destination, IDirectoryPair parent = null)
+        public static FileCopierEx FromSourceAndDestination(FileInfo source, DirectoryInfo destination, IDirectoryPair parent = null)
         {
             if (source is null) throw new ArgumentNullException(nameof(source));
             if (destination is null) throw new ArgumentNullException(nameof(destination));
             var destFile = new FileInfo(Path.Combine(destination.FullName, source.Name));
             if (parent is null) parent = new DirectoryPair(source.Directory, destination);
-            return new FileCopier(source, destFile, parent);
+            return new FileCopierEx(source, destFile, parent);
         }
 
         /// <summary>
@@ -451,6 +477,7 @@ namespace RoboSharp.Extensions
             ex = null;
             try { EvaluateSource(source); return true; } catch (Exception e) { ex = e; return false; }
         }
+
 
         #endregion
     }

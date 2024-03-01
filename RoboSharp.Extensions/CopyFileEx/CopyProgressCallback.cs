@@ -34,7 +34,7 @@ namespace RoboSharp.Extensions.CopyFileEx
         IntPtr hDestinationFile,
         IntPtr data);
 
-    /// <summary>Method signature for function to pass into <see cref="RoboSharp.Extensions.FileFunctions.CreateCallback(BytesTransferredCallback)"/></summary>
+    /// <summary>Method signature for function to pass into <see cref="RoboSharp.Extensions.CopyFileEx.FileFunctions.CreateCallback(BytesTransferredCallback)"/></summary>
     /// <remarks>
     /// Signature : Func{long, long, CopyProgressCallbackResult}
     /// <br/>
