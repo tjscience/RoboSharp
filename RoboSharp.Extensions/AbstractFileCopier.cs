@@ -55,7 +55,7 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Raise the ProgressUpdated event
+        /// Set the value for <see cref="Progress"/> property then raise the ProgressUpdated event
         /// </summary>
         /// <param name="progress"></param>
         protected virtual void OnProgressUpdated(double progress)

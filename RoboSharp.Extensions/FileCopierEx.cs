@@ -144,39 +144,14 @@ namespace RoboSharp.Extensions
         }
 
         /// <summary>
-        /// Determine if the copy operation can currently be cancelled
-        /// </summary>
-        /// <returns>TRUE if the operation is running and has not yet been cancelled. Otherwise false.</returns>
-        public bool CanCancel() => !_disposed && IsCopying && !(_cancellationSource?.IsCancellationRequested ?? true);
-
-        /// <summary>
-        /// Determine if the copy operation can current be started
-        /// </summary>
-        /// <returns>TRUE if the operation can be started, FALSE is the object is disposed / currently copying</returns>
-        public bool CanStart() => !_disposed && !IsCopying;
-
-        /// <summary>
         /// Request Cancellation immediately.
         /// </summary>
         public override void Cancel()
         {
             if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
-            if (CanCancel())
+            if (IsCopying && !(_cancellationSource?.IsCancellationRequested ?? true))
             {
                 _cancellationSource?.Cancel();
-            }
-        }
-
-        /// <summary>
-        /// Request Cancellation after a number of <paramref name="milliseconds"/>
-        /// </summary>
-        public async void Cancel(int milliseconds)
-        {
-            if (_disposed) throw new ObjectDisposedException(nameof(FileCopierEx));
-            if (CanCancel())
-            {
-                await Task.Delay(milliseconds);
-                Cancel();
             }
         }
 
@@ -382,102 +357,6 @@ namespace RoboSharp.Extensions
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        #endregion
-
-        #region < Static >
-
-        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopierEx CreateCopier(FileInfo source, FileInfo destination, IDirectoryPair parent) => new FileCopierEx(source, destination, parent);
-
-        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopierEx CreateCopier(FileInfo source, FileInfo destination, IProcessedDirectoryPair parent) => new FileCopierEx(source, destination, parent);
-
-        /// <summary>Create a new FileCopier from the supplied file paths</summary>
-        /// <inheritdoc cref="EvaluateSource(string)"/>
-        /// <inheritdoc cref="EvaluateDestination(string)"/>
-        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
-        public static FileCopierEx FromSourceAndDestination(string source, string destination, IDirectoryPair parent = null)
-        {
-            EvaluateSource(source);
-            EvaluateDestination(destination);
-            var sourceFile = new FileInfo(source);
-            var destFile = new FileInfo(destination);
-            if (parent is null) parent = new DirectoryPair(sourceFile.Directory, destFile.Directory);
-            return new FileCopierEx(sourceFile, destFile, parent);
-        }
-
-        /// <summary>Create a new FileCopier from the supplied file paths</summary>
-        /// <param name="destination">The Destination Directory</param>
-        /// <inheritdoc cref="EvaluateSource(string)"/>
-        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
-        /// <param name="parent"/><param name="source"/>
-        public static FileCopierEx FromSourceAndDestination(string source, DirectoryInfo destination, IDirectoryPair parent = null)
-        {
-            if (destination is null) throw new ArgumentNullException(nameof(destination));
-            EvaluateSource(source);
-            var sourceFile = new FileInfo(source);
-            var destFile = new FileInfo(Path.Combine(destination.FullName, sourceFile.Name));
-            if (parent is null) parent = new DirectoryPair(sourceFile.Directory, destination);
-            return new FileCopierEx(sourceFile, destFile, parent);
-        }
-
-        /// <summary>Create a new FileCopier from the supplied file paths</summary>
-        /// <param name="destination">The Destination Directory</param>
-        /// <inheritdoc cref="FileCopierEx.FileCopierEx(FileInfo, FileInfo, IDirectoryPair)"/>
-        /// <param name="parent"/><param name="source"/>
-        public static FileCopierEx FromSourceAndDestination(FileInfo source, DirectoryInfo destination, IDirectoryPair parent = null)
-        {
-            if (source is null) throw new ArgumentNullException(nameof(source));
-            if (destination is null) throw new ArgumentNullException(nameof(destination));
-            var destFile = new FileInfo(Path.Combine(destination.FullName, source.Name));
-            if (parent is null) parent = new DirectoryPair(source.Directory, destination);
-            return new FileCopierEx(source, destFile, parent);
-        }
-
-        /// <summary>
-        /// Evaluate the <paramref name="source"/> Path to ensure its a fully qualified file path
-        /// </summary>
-        /// <param name="source">Fully Qualified Source File Path</param>
-        /// <inheritdoc cref="EvaluateDestination(string)"/>
-        public static void EvaluateSource(string source)
-        {
-            if (source is null) throw new ArgumentNullException(nameof(source));
-            if (string.IsNullOrWhiteSpace(source)) throw new ArgumentException("No Source Path Specified", nameof(source));
-            if (!Path.IsPathRooted(source)) throw new ArgumentException("Source Path is not rooted", nameof(source));
-            if (string.IsNullOrEmpty(Path.GetFileName(source))) throw new ArgumentException("No FileName Provided in Source", nameof(source));
-        }
-
-        /// <summary>
-        /// Evaluate the <paramref name="destination"/> Path to ensure its a fully qualified file path.
-        /// </summary>
-        /// <param name="destination">Fully Qualified Destination File Path</param>
-        /// <exception cref="ArgumentException"/>
-        /// <exception cref="ArgumentNullException"/>
-        public static void EvaluateDestination(string destination)
-        {
-            if (destination is null) throw new ArgumentNullException(nameof(destination));
-            if (string.IsNullOrWhiteSpace(destination)) throw new ArgumentException("No Destination Path Specified", nameof(destination));
-            if (!Path.IsPathRooted(destination)) throw new ArgumentException("Destination Path is not rooted", nameof(destination));
-            if (string.IsNullOrEmpty(Path.GetFileName(destination))) throw new ArgumentException("No Destination FileName Provided", nameof(destination));
-        }
-
-        /// <returns>TRUE if the path is fully qualified, otherwise false.</returns>
-        /// <inheritdoc cref="EvaluateDestination(string)"/>
-        public static bool TryEvaluateDestination(string destination, out Exception ex)
-        {
-            ex = null;
-            try { EvaluateDestination(destination); return true; } catch (Exception e) { ex = e; return false; }
-        }
-
-        /// <returns>TRUE if the path is fully qualified, otherwise false.</returns>
-        /// <inheritdoc cref="EvaluateSource(string)"/>
-        public static bool TryEvaluateSource(string source, out Exception ex)
-        {
-            ex = null;
-            try { EvaluateSource(source); return true; } catch (Exception e) { ex = e; return false; }
-        }
-
 
         #endregion
     }
