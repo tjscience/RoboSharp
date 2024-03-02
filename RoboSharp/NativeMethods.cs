@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace RoboSharp
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    /// <summary>
+    
     /// Native Methods for Pause/Suspend/Resume processes
     /// </summary>
     public static class NativeMethods
@@ -34,6 +34,7 @@ namespace RoboSharp
         public static bool Suspend(this Process process)
         {
             if (process.HasExited) return false;
+            if (!VersionManager.IsPlatformWindows) throw new InvalidOperationException("This operation is only available in a windows environment.");
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
@@ -48,6 +49,7 @@ namespace RoboSharp
         public static bool Resume(this Process process)
         {
             if (process.HasExited) return false;
+            if (!VersionManager.IsPlatformWindows) throw new InvalidOperationException("This operation is only available in a windows environment.");
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);

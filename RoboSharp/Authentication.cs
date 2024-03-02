@@ -100,6 +100,7 @@ namespace RoboSharp
             }
             else
             {
+                if (!VersionManager.IsPlatformWindows) throw new InvalidOperationException("Authentication is only available from a windows environment.");
                 result = null;
                 void Eval() { result = auth(command); }
                 ImpersonatedRun.Execute(domain, username, password, Eval);

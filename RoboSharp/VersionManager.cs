@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,13 +11,37 @@ using System.Threading.Tasks;
 namespace RoboSharp
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    
+    /// <summary>
+    /// Class that retrieves the OS version.
+    /// </summary>
     public static class VersionManager
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        [DefaultValue(UseRtlGetVersion)]
         public enum VersionCheckType
         {
-            UseRtlGetVersion,
-            UseWMI
+            /// <summary>
+            /// Use ntdll.dll (windows only) to retrieve the OS Version information
+            /// </summary>
+            UseRtlGetVersion = 0,
+
+            /// <summary>
+            /// Use Microsoft.Management.Infrastructure
+            /// </summary>
+            UseWMI = 1,
         }
+
+        /// <summary>
+        /// True if running in a windows environment, otherwise false.
+        /// </summary>
+#if NET452
+        public static readonly bool IsPlatformWindows = true;
+#else
+        public static readonly bool IsPlatformWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
 
         public static VersionCheckType VersionCheck { get; set; } = VersionManager.VersionCheckType.UseRtlGetVersion;
 
@@ -28,7 +53,7 @@ namespace RoboSharp
             {
                 if (version == null)
                 {
-                    if (VersionCheck == VersionCheckType.UseWMI)
+                    if (!IsPlatformWindows || VersionCheck == VersionCheckType.UseWMI)
                     {
                         var v = GetOsVersion();
                         version = GetOsVersionNumber(v);
@@ -60,6 +85,8 @@ namespace RoboSharp
 
         private static string GetOsVersion()
         {
+            if (!IsPlatformWindows) return Environment.OSVersion.Version.ToString();
+
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
