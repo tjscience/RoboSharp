@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿#if !NET6_0_OR_GREATER
+
+using System.Runtime.InteropServices;
 
 namespace RoboSharp.Extensions.SymbolicLinkSupport
 {
@@ -24,3 +26,5 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         public byte[] PathBuffer;
     }
 }
+
+#endif

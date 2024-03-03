@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !NET6_0_OR_GREATER
+
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -85,19 +87,14 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             string pszTo,
             FileAttributes dwAttrTo);
 
-        public static void CreateDirectoryLink(string linkPath, string targetPath)
-        {
-            CreateDirectoryLink(linkPath, targetPath, false);
-        }
-
-        public static void CreateDirectoryLink(string linkPath, string targetPath, bool makeTargetPathRelative)
+        public static FileSystemInfo CreateAsSymbolicLink(string linkPath, string targetPath, bool isDirectory, bool makeTargetPathRelative = false)
         {
             if (makeTargetPathRelative)
             {
-                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath, true);
+                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath, isDirectory);
             }
 
-            if (!CreateSymbolicLink(linkPath, targetPath, targetIsADirectory) || Marshal.GetLastWin32Error() != 0)
+            if (!CreateSymbolicLink(linkPath, targetPath, isDirectory ? targetIsADirectory : targetIsAFile) || Marshal.GetLastWin32Error() != 0)
             {
                 try
                 {
@@ -108,24 +105,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
                     throw new IOException(exception.Message, exception);
                 }
             }
-        }
-
-        public static void CreateFileLink(string linkPath, string targetPath)
-        {
-            CreateFileLink(linkPath, targetPath, false);
-        }
-        
-        public static void CreateFileLink(string linkPath, string targetPath, bool makeTargetPathRelative)
-        {
-            if (makeTargetPathRelative)
-            {
-                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath);
-            }
-
-            if (!CreateSymbolicLink(linkPath, targetPath, targetIsAFile))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
-            }
+            return isDirectory ? new DirectoryInfo(targetPath) : new FileInfo(targetPath);
         }
         
         private static string GetTargetPathRelativeToLink(string linkPath, string targetPath, bool linkAndTargetAreDirectories = false)
@@ -157,23 +137,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         }
 
-        public static bool Exists(string path)
-        {
-            if (!Directory.Exists(path) && !File.Exists(path))
-            {
-                return false;
-            }
-            string target = GetTarget(path);
-            return target != null;
-        }
-
-        private static SafeFileHandle GetFileHandle(string path)
-        {
-            return CreateFile(path, genericReadAccess, shareModeAll, IntPtr.Zero, openExisting,
-                fileFlagsForOpenReparsePointAndBackupSemantics, IntPtr.Zero);
-        }
-
-        public static string GetTarget(string path)
+        public static string GetLinkTarget(string path)
         {
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return null;
@@ -201,11 +165,6 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
                 return null;
             }
             return GetTargetFromReparseData(reparseDataBuffer, path);
-        }
-
-        public static bool IsSymbolicLink(string path)
-        {
-            return Exists(path);
         }
 
         public static bool IsJunctionPoint(string path)
@@ -241,6 +200,12 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             }
 
             return target;
+        }
+
+        private static SafeFileHandle GetFileHandle(string path)
+        {
+            return CreateFile(path, genericReadAccess, shareModeAll, IntPtr.Zero, openExisting,
+                fileFlagsForOpenReparsePointAndBackupSemantics, IntPtr.Zero);
         }
 
         private static SymbolicLinkReparseData? GetReparseData(string path)
@@ -294,3 +259,5 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         }
     }
 }
+
+#endif
