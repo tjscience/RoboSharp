@@ -26,7 +26,6 @@ namespace RoboSharp.UnitTests
             const string fullPathExe = @"c:\windows\system32\robocopy.exe ";
             const string quotedPath = @"""c:\windows\system32\robocopy"" ";
             const string quotedPathExe = @"""D:\Some Other\Folder\robocopy.exe"" ";
-            int i = 0;
 
             // trim entire string
             Assert.AreEqual(string.Empty, Trim(nonQuoted), "\nFailed Trim All - Test 1");
@@ -42,7 +41,7 @@ namespace RoboSharp.UnitTests
                 "*.txt /xf",
                 @"""C:\source\robocopy\"" ""D:\Dest\"" /a /b /c"
             };
-            i = 0;
+            int i = 0;
 
             foreach (string testStr in testArray) 
             {   

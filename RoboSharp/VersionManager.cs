@@ -62,7 +62,9 @@ namespace RoboSharp
                     else
                     {
                         var osVersionInfo = new OSVERSIONINFOEX { OSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX)) };
-                        RtlGetVersion(ref osVersionInfo);
+                        var hrResult = RtlGetVersion(ref osVersionInfo);
+                        if (hrResult != 0) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+
                         var versionString = $"{osVersionInfo.MajorVersion}.{osVersionInfo.MinorVersion}{osVersionInfo.BuildNumber}";
                         version = GetOsVersionNumber(versionString);
                         return version.Value;
@@ -108,14 +110,12 @@ namespace RoboSharp
 #if NET40_OR_GREATER
             using (System.Management.ManagementObjectSearcher objMOS = new System.Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
             {
-                foreach (System.Management.ManagementObject objManagement in objMOS.Get())
+                foreach (var version in from System.Management.ManagementObject objManagement in objMOS.Get()
+                                        let version = objManagement.GetPropertyValue("Version")
+                                        where version != null
+                                        select version)
                 {
-                    var version = objManagement.GetPropertyValue("Version");
-
-                    if (version != null)
-                    {
-                        return version.ToString();
-                    }
+                    return version.ToString();
                 }
             }
 #endif

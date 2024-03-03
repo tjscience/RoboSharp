@@ -7,7 +7,6 @@
     <Copyright>Copyright 2023</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
-	  <langversion>8.0</langversion>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <PackageLicenseUrl>https://github.com/tjscience/RoboSharp/blob/master/license</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/tjscience/RoboSharp</PackageProjectUrl>
@@ -17,6 +16,10 @@
     <PackageReleaseNotes>Introduce RoboCommandParser - Provides the ability to submit a robocopy command string into the library and return the equivalent IRoboCommand object.</PackageReleaseNotes>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net452' Or '$(TargetFramework)' == 'netstandard2.0'">
+    <langversion>8.0</langversion>
+  </PropertyGroup>
+    
   <ItemGroup Condition="'$(TargetFramework)' == 'net40' Or '$(TargetFramework)' == 'net452'">
     <Reference Include="System.Management" />
   </ItemGroup>
@@ -31,9 +34,5 @@
     <Compile Remove="XML_Files\**" />
     <EmbeddedResource Remove="XML_Files\**" />
     <None Remove="XML_Files\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>
