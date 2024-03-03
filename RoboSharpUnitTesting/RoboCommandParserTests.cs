@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoboSharp;
 using RoboSharp.Interfaces;
 using System;
@@ -259,7 +259,7 @@ namespace RoboSharp.UnitTests
             // Note : Due to how RoboCommand prints out file filters, ensure input file filters are always quoted
             IRoboCommand cmdResult = RoboCommandParser.Parse(input);
             cmdResult.LoggingOptions.PrintSizesAsBytes = false;
-            string expected = input += " /R:0 /W:30"; // robocommand ALWAYS prints these values
+            string expected = input += " /R:0"; // robocommand ALWAYS prints these values
 
             Assert.AreEqual(expected.Trim(), cmdResult.ToString().Trim(), $"\n\nProduced Command is not equal!\nExpected:\t{expected}\n  Result:\t{cmdResult}"); // Final test : both should produce the same ToString()
             Console.WriteLine($"\n\n Input : {input}");
