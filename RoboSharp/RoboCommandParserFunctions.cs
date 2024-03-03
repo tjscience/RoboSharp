@@ -116,7 +116,8 @@ namespace RoboSharp
             else if (sourceEmpty && destEmpty)
             {
                 Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success: Neither specified");
-                return new ParsedSourceDest(string.Empty, string.Empty, inputText, inputText);
+                string sanitized = !match.Success ? inputText : inputText.RemoveFirstOccurrence(rawSource).RemoveFirstOccurrence(rawDest);
+                return new ParsedSourceDest(string.Empty, string.Empty, inputText, sanitized);
             }
             else
             {

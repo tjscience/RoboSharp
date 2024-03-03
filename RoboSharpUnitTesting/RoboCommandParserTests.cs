@@ -17,7 +17,7 @@ namespace RoboSharp.UnitTests
             Console.WriteLine("--- " + args.Message);
         }
 
-        const string CmdEndText = @" /R:0 /W:30 /BYTES";
+        const string CmdEndText = @" /R:0 /BYTES";
 
         private static RoboCommand GetNewCommand(string source = default, string destination =  default) => new RoboCommand(
             source: source.IsNullOrWhiteSpace() ?  "C:\\Source" : source,
@@ -29,20 +29,33 @@ namespace RoboSharp.UnitTests
         /// <summary>
         /// Use this one when debugging specific commands that are not deciphering for you!
         /// </summary>
+        
         [DataRow("\"\" \"\" \"*.txt\" \"*.pdf\"", DisplayName = "No Source or Dest")]
         [DataRow("robocopy.exe \"C:\\MySource\" \"D:\\My Destination\" \"*.txt\" \"*.pdf\"", DisplayName = "quoted filters")]
         [DataRow("\"D:\\Some Folder\\robocopy.exe\" \"C:\\MySource\" \"D:\\My Destination\" *.txt *.pdf", DisplayName = "multiple unquoted filters")]
         [DataRow("c:\\windows\\system32\\robocopy.exe \"C:\\MySource\" \"D:\\My Destination\" *.txt", DisplayName = ".txt Only")]
         [DataRow("robocopy \"C:\\MySource\" \"D:\\My Destination\" /MOVE", DisplayName = "Example")]
         [TestMethod()]
-        public void TestCustomParameters(string command)
+        public void PrintOnly(string command)
         {
             Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
             IRoboCommand cmd = RoboCommandParser.Parse(command);
             Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
             Console.WriteLine($"\n\n Input : {command}");
             Console.WriteLine($"Output : {cmd}");
-            //Assert.AreEqual(command, command.ToString(), true);
+        }
+
+        [DataRow(@"robocopy """" """" *.docx /E", @" ""*.docx"" /E" + CmdEndText, DisplayName = "No Source or Dest - 1")]
+        [TestMethod()]
+        public void TestCustomParameters(string command, string expected)
+        {
+            Debugger.Instance.DebugMessageEvent += DebuggerWriteLine;
+            IRoboCommand cmd = RoboCommandParser.Parse(command);
+            Debugger.Instance.DebugMessageEvent -= DebuggerWriteLine;
+            Console.WriteLine($"\n\n   Input : {command}");
+            Console.WriteLine($"  Output : {cmd.ToString().Trim()}");
+            Console.WriteLine($"Expected : {expected.Trim()}");
+            Assert.AreEqual(expected.Trim(), cmd.ToString().Trim(), true);
         }
 
         [DataRow("C:\\source", "D:\\destination", DisplayName = "No Quotes")]
