@@ -50,7 +50,7 @@ namespace RoboSharp
         internal static bool IsPathFullyQualified(this string path) => System.IO.Path.IsPathFullyQualified(path);
 #endif
 
-        internal static string Remove(this string text, string removal, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
+        internal static string RemoveFirstOccurrence(this string text, string removal, StringComparison comparison = StringComparison.InvariantCultureIgnoreCase)
         {
             if (string.IsNullOrWhiteSpace(text) | string.IsNullOrWhiteSpace(removal) || !text.Contains(removal, comparison))
                 return text;
