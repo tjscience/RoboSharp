@@ -34,7 +34,7 @@ namespace RoboSharp
         public static bool Suspend(this Process process)
         {
             if (process.HasExited) return false;
-            if (!VersionManager.IsPlatformWindows) throw new InvalidOperationException("This operation is only available in a windows environment.");
+            VersionManager.ThrowIfNotWindowsPlatform();
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);
@@ -49,7 +49,7 @@ namespace RoboSharp
         public static bool Resume(this Process process)
         {
             if (process.HasExited) return false;
-            if (!VersionManager.IsPlatformWindows) throw new InvalidOperationException("This operation is only available in a windows environment.");
+            VersionManager.ThrowIfNotWindowsPlatform();
             foreach (ProcessThread thread in process.Threads)
             {
                 var pOpenThread = OpenThread(ThreadAccess.SUSPEND_RESUME, false, (uint)thread.Id);

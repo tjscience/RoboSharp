@@ -89,6 +89,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         public static FileSystemInfo CreateAsSymbolicLink(string linkPath, string targetPath, bool isDirectory, bool makeTargetPathRelative = false)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             if (makeTargetPathRelative)
             {
                 targetPath = GetTargetPathRelativeToLink(linkPath, targetPath, isDirectory);
@@ -139,6 +140,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         public static string GetLinkTarget(string path)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return null;
             var reparseDataBuffer = reparseData.Value;
@@ -156,6 +158,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <returns></returns>
         public static string GetJunctionTarget(string path)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             if (!Directory.Exists(path)) return null;
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return null;
@@ -174,6 +177,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         public static bool IsJunctionOrSymbolic(string path)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return false;
             SymbolicLinkReparseData data = reparseData.Value;

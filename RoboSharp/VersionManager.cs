@@ -82,6 +82,12 @@ namespace RoboSharp
             System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
         }
 
+        /// <exception cref="PlatformNotSupportedException"></exception>
+        public static void ThrowIfNotWindowsPlatform(string message = default)
+        {
+            if (!IsPlatformWindows)
+                throw new PlatformNotSupportedException(message ?? "This function is only available on Windows");
+        }
 
         private static string GetOsVersion()
         {
