@@ -87,7 +87,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             string pszTo,
             FileAttributes dwAttrTo);
 
-        public static FileSystemInfo CreateAsSymbolicLink(string linkPath, string targetPath, bool isDirectory, bool makeTargetPathRelative = false)
+        public static void CreateAsSymbolicLink(string linkPath, string targetPath, bool isDirectory, bool makeTargetPathRelative = false)
         {
             VersionManager.ThrowIfNotWindowsPlatform();
             if (makeTargetPathRelative)
@@ -106,7 +106,6 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
                     throw new IOException(exception.Message, exception);
                 }
             }
-            return isDirectory ? new DirectoryInfo(targetPath) : new FileInfo(targetPath);
         }
         
         private static string GetTargetPathRelativeToLink(string linkPath, string targetPath, bool linkAndTargetAreDirectories = false)
