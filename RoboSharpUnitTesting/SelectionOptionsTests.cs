@@ -170,6 +170,7 @@ namespace RoboSharp.UnitTests
                     Assert.AreEqual(flag.HasFlag(SelectionFlags.ExcludeOlder), options.ExcludeOlder);
                     Assert.AreEqual(flag.HasFlag(SelectionFlags.IncludeSame), options.IncludeSame);
                     Assert.AreEqual(flag.HasFlag(SelectionFlags.IncludeTweaked), options.IncludeTweaked);
+                    Assert.AreEqual(flag.HasFlag(SelectionFlags.IncludeModified), options.IncludeModified);
                     Assert.AreEqual(flag.HasFlag(SelectionFlags.OnlyCopyArchiveFiles), options.OnlyCopyArchiveFiles);
                     Assert.AreEqual(flag.HasFlag(SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag), options.OnlyCopyArchiveFilesAndResetArchiveFlag);
                 }

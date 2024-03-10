@@ -36,9 +36,11 @@ namespace RoboSharp
         IncludeSame = 256,
         /// <inheritdoc cref="SelectionOptions.IncludeTweaked"/>
         IncludeTweaked = 512,
+        /// <inheritdoc cref="SelectionOptions.IncludeModified"/>
+        IncludeModified = 1024,
         /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFiles"/>
-        OnlyCopyArchiveFiles = 1024,
+        OnlyCopyArchiveFiles = 2048,
         /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag"/>
-        OnlyCopyArchiveFilesAndResetArchiveFlag = 2048,
+        OnlyCopyArchiveFilesAndResetArchiveFlag = 4096,
     }
 }
