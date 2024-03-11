@@ -304,7 +304,7 @@ namespace RoboSharp
         public virtual bool IncludeTweaked { get; set; }
 
         /// <summary>
-        /// Includes modified files.
+        /// Includes modified files (differing change times).
         /// [/IM]
         /// </summary>
         [DefaultValue(false)]
