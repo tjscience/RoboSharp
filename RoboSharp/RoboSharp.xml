@@ -961,6 +961,12 @@
             [/IT]
             </summary>
         </member>
+		<member name="P:RoboSharp.SelectionOptions.IncludeModified">
+			<summary>
+			Includes modified files (differing change times).
+			[/IM]
+			</summary>
+		</member>
         <member name="P:RoboSharp.SelectionOptions.MaxFileSize">
             <summary>
             Zero indicates that this feature is turned off.

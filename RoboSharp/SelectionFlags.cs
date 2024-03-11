@@ -40,5 +40,7 @@ namespace RoboSharp
         OnlyCopyArchiveFiles = 1024,
         /// <inheritdoc cref="SelectionOptions.OnlyCopyArchiveFilesAndResetArchiveFlag"/>
         OnlyCopyArchiveFilesAndResetArchiveFlag = 2048,
+        /// <inheritdoc cref="SelectionOptions.IncludeModified"/>
+        IncludeModified = 4096
     }
 }

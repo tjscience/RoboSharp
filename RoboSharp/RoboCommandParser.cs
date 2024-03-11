@@ -244,6 +244,7 @@ namespace RoboSharp
             ExtractFlag(cmd, SelectionOptions.EXCLUDE_OLDER, out cmd, () => flags |= SelectionFlags.ExcludeOlder);
             ExtractFlag(cmd, SelectionOptions.INCLUDE_SAME, out cmd, () => flags |= SelectionFlags.IncludeSame);
             ExtractFlag(cmd, SelectionOptions.INCLUDE_TWEAKED, out cmd, () => flags |= SelectionFlags.IncludeTweaked);
+            ExtractFlag(cmd, SelectionOptions.INCLUDE_MODIFIED, out cmd, () => flags |= SelectionFlags.IncludeModified);
             ExtractFlag(cmd, SelectionOptions.ONLY_COPY_ARCHIVE_FILES, out cmd, () => flags |= SelectionFlags.OnlyCopyArchiveFiles);
             ExtractFlag(cmd, SelectionOptions.ONLY_COPY_ARCHIVE_FILES_AND_RESET_ARCHIVE_FLAG, out cmd, () => flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag);
             updatedText = cmd;

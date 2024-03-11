@@ -50,6 +50,7 @@ namespace RoboSharp
             ExcludeLonely = options.ExcludeLonely;
             IncludeSame = options.IncludeSame;
             IncludeTweaked = options.IncludeTweaked;
+            IncludeModified = options.IncludeModified;
             MaxFileSize = options.MaxFileSize;
             MinFileSize = options.MinFileSize;
             MaxFileAge = options.MaxFileAge;
@@ -87,6 +88,7 @@ namespace RoboSharp
         internal const string EXCLUDE_LONELY = "/XL ";
         internal const string INCLUDE_SAME = "/IS ";
         internal const string INCLUDE_TWEAKED = "/IT ";
+        internal const string INCLUDE_MODIFIED = "/IM ";
         internal const string MAX_FILE_SIZE = "/MAX:{0} ";
         internal const string MIN_FILE_SIZE = "/MIN:{0} ";
         internal const string MAX_FILE_AGE = "/MAXAGE:{0} ";
@@ -300,6 +302,13 @@ namespace RoboSharp
         /// </summary>
         [DefaultValue(false)]
         public virtual bool IncludeTweaked { get; set; }
+
+        /// <summary>
+        /// Includes modified files.
+        /// [/IM]
+        /// </summary>
+        [DefaultValue(false)]
+        public virtual bool IncludeModified { get; set; }
 
         /// <summary>
         /// Zero indicates that this feature is turned off.
@@ -516,6 +525,8 @@ namespace RoboSharp
                 options.Append(INCLUDE_SAME);
             if (IncludeTweaked)
                 options.Append(INCLUDE_TWEAKED);
+            if (IncludeModified)
+                options.Append(INCLUDE_MODIFIED);
             if (MaxFileSize > 0)
                 options.Append(string.Format(MAX_FILE_SIZE, MaxFileSize));
             if (MinFileSize > 0)
@@ -589,6 +600,7 @@ namespace RoboSharp
             ExcludeLonely |= options.ExcludeLonely;
             IncludeSame |= options.IncludeSame;
             IncludeTweaked |= options.IncludeTweaked;
+            IncludeModified |= options.IncludeModified;
             ExcludeJunctionPoints |= options.ExcludeJunctionPoints;
             ExcludeJunctionPointsForFiles |= options.ExcludeJunctionPointsForFiles;
             ExcludeJunctionPointsForDirectories |= options.ExcludeJunctionPointsForDirectories;
@@ -614,6 +626,7 @@ namespace RoboSharp
             this.ExcludeOlder = flags.HasFlag(SelectionFlags.ExcludeOlder);
             this.IncludeSame = flags.HasFlag(SelectionFlags.IncludeSame);
             this.IncludeTweaked = flags.HasFlag(SelectionFlags.IncludeTweaked);
+            this.IncludeModified = flags.HasFlag(SelectionFlags.IncludeModified);
             this.OnlyCopyArchiveFiles = flags.HasFlag(SelectionFlags.OnlyCopyArchiveFiles);
             this.OnlyCopyArchiveFilesAndResetArchiveFlag = flags.HasFlag(SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag);
         }
@@ -636,6 +649,7 @@ namespace RoboSharp
             if (this.ExcludeOlder) flags |= SelectionFlags.ExcludeOlder;
             if (this.IncludeSame) flags |= SelectionFlags.IncludeSame;
             if (this.IncludeTweaked) flags |= SelectionFlags.IncludeTweaked;
+            if (this.IncludeModified) flags |= SelectionFlags.IncludeModified;
             if (this.OnlyCopyArchiveFiles) flags |= SelectionFlags.OnlyCopyArchiveFiles;
             if (this.OnlyCopyArchiveFilesAndResetArchiveFlag) flags |= SelectionFlags.OnlyCopyArchiveFilesAndResetArchiveFlag;
 

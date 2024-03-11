@@ -453,6 +453,9 @@ namespace RoboSharp.Results
                         case true when currentFile.FileClass.Equals(Config.LogParsing_TweakedInclusion, StringComparison.CurrentCultureIgnoreCase):  //IncludeTweaked
                             SkippedOrCopied(currentFile, !Command.SelectionOptions.IncludeTweaked);
                             break;
+                        case true when currentFile.FileClass.Equals(Config.LogParsing_ModifiedInclusion, StringComparison.CurrentCultureIgnoreCase):  //IncludeModified
+                            SkippedOrCopied(currentFile, !Command.SelectionOptions.IncludeModified);
+                            break;
 
                         //Mark As Skip Conditions
                         case true when currentFile.FileClass.Equals(Config.LogParsing_FileExclusion, StringComparison.CurrentCultureIgnoreCase):    //FileExclusion
