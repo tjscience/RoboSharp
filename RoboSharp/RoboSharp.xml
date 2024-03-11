@@ -963,7 +963,7 @@
         </member>
 		<member name="P:RoboSharp.SelectionOptions.IncludeModified">
 			<summary>
-			Includes modified files (differing change times).
+			Includes modified files.
 			[/IM]
 			</summary>
 		</member>
