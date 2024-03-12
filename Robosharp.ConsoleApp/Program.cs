@@ -10,6 +10,9 @@ using System.Threading.Tasks;
 
 try
 {
+    // test construction of a basic command
+    using (var testCmd = new RoboCommand()){ }
+
     // Change this to the desired factory - a custom factory will be required for use with linux systems
     IRoboCommandFactory commandFactory = RoboCommandFactory.Default;
 
@@ -26,6 +29,7 @@ try
     Console.WriteLine("Command Parsed Successfully -- Starting command.\n");
     cmd.OnFileProcessed += Cmd_OnFileProcessed;
     cmd.OnError += Cmd_OnError;
+    using (cmd);
     await cmd.Start(); // If using the default factory, this will throw PlatformNotSupported in a non-windows environment!
 }
 catch(Exception e)
