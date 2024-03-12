@@ -478,6 +478,8 @@ namespace RoboSharp
                     return config.LogParsing_SameFile;
                 case ProcessedFileFlag.TweakedInclusion:
                     return config.LogParsing_TweakedInclusion;
+                case ProcessedFileFlag.ModifiedInclusion:
+                    return config.LogParsing_ModifiedInclusion;
                 default:
                     throw new NotImplementedException(string.Format("{0} '{1}' Not Implemented!", nameof(ProcessedFileFlag), status));
             }

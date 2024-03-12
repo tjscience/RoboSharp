@@ -46,6 +46,8 @@ namespace RoboSharp
         SameFile,
         /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_TweakedInclusion"/>
         TweakedInclusion,
+        /// <inheritdoc cref="RoboSharpConfiguration.LogParsing_ModifiedInclusion"/>
+        ModifiedInclusion,
 
     }
 
