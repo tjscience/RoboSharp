@@ -29,8 +29,8 @@ try
     Console.WriteLine("Command Parsed Successfully -- Starting command.\n");
     cmd.OnFileProcessed += Cmd_OnFileProcessed;
     cmd.OnError += Cmd_OnError;
-    using (cmd);
     await cmd.Start(); // If using the default factory, this will throw PlatformNotSupported in a non-windows environment!
+    if (cmd is IDisposable dp) dp.Dispose();
 }
 catch(Exception e)
 {
