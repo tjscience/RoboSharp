@@ -137,7 +137,7 @@ namespace RoboSharp
                 .ParseCopyOptions(sanitizedCmd, out sanitizedCmd)
                 .ParseLoggingOptions(sanitizedCmd, out sanitizedCmd)
                 .ParseSelectionOptions(sanitizedCmd, out sanitizedCmd)
-                .ParseRetryOptions(sanitizedCmd, out sanitizedCmd);
+                .ParseRetryOptions(sanitizedCmd, out _);
         }
 
         #region < Copy Options Parsing >
@@ -333,7 +333,7 @@ namespace RoboSharp
             
             return roboCommand;
 
-            string ExtractLogPath(string filter, string input, out string output)
+            static string ExtractLogPath(string filter, string input, out string output)
             {
                 if (TryExtractParameter(input, filter, out string path, out output))
                 {

@@ -8,15 +8,17 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
     /// </summary>
     public static class FileInfoExtensions
     {
+
+#if !NET6_0_OR_GREATER  // Extension methods are not needed in .net6 as they are now native to FileSystemInfo
         /// <summary>
         /// Creates a symbolic link to this file at the specified path.
         /// </summary>
         /// <param name="it">the source file for the symbolic link.</param>
         /// <param name="path">the path of the symbolic link.</param>
         /// <param name="makeTargetPathRelative">whether the target should be made relative to the symbolic link. Default <c>false</c>.</param>
-        public static void CreateSymbolicLink(this FileInfo it, string path, bool makeTargetPathRelative)
+        public static void CreateAsSymbolicLink(this FileInfo it, string path, bool makeTargetPathRelative)
         {
-            SymbolicLink.CreateFileLink(path, it.FullName, makeTargetPathRelative);
+            SymbolicLink.CreateAsSymbolicLink(path, it.FullName, false, makeTargetPathRelative);
         }
 
         /// <summary>
@@ -24,10 +26,11 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// </summary>
         /// <param name="it">the source file for the symbolic link.</param>
         /// <param name="path">the path of the symbolic link.</param>
-        public static void CreateSymbolicLink(this FileInfo it, string path)
+        public static void CreateAsSymbolicLink(this FileInfo it, string path)
         {
-            it.CreateSymbolicLink(path, false);
+            SymbolicLink.CreateAsSymbolicLink(path, it.FullName, false, false);
         }
+#endif
 
         /// <summary>
         /// Determines whether this file is a symbolic link.
@@ -36,18 +39,26 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <returns><code>true</code> if the file is, indeed, a symbolic link, <code>false</code> otherwise.</returns>
         public static bool IsSymbolicLink(this FileInfo it)
         {
-            return SymbolicLink.GetTarget(it.FullName) != null;
+#if NET6_0_OR_GREATER
+            return it.LinkTarget != null;
+#else
+            return SymbolicLink.GetLinkTarget(it.FullName) != null;
+#endif
         }
 
         /// <summary>
-        /// Determines whether the target of this symbolic link still exists.
+        /// Determines whether the target of this symbolic link exists.
         /// </summary>
         /// <param name="it">The symbolic link in question.</param>
         /// <returns><code>true</code> if this symbolic link is valid, <code>false</code> otherwise.</returns>
         /// <exception cref="System.ArgumentException">If the file in question is not a symbolic link.</exception>
         public static bool IsSymbolicLinkValid(this FileInfo it)
         {
-            return File.Exists(it.GetSymbolicLinkTarget());
+            if (it.IsSymbolicLink())
+            {
+                return File.Exists(GetSymbolicLinkTarget(it));
+            }
+            return it.Exists;
         }
 
         /// <summary>
@@ -58,9 +69,13 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <exception cref="System.ArgumentException">If the file in question is not a symbolic link.</exception>
         public static string GetSymbolicLinkTarget(this FileInfo it)
         {
+#if NET6_0_OR_GREATER
+            return it.LinkTarget ?? it.FullName;
+#else
             if (!it.IsSymbolicLink())
                 throw new ArgumentException("file specified is not a symbolic link.");
-            return SymbolicLink.GetTarget(it.FullName);
+            return SymbolicLink.GetLinkTarget(it.FullName);
+#endif
         }
     }
 }

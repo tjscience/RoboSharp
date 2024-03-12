@@ -22,9 +22,6 @@ namespace RoboSharp
         /// </summary>
         public readonly struct ParsedSourceDest
         {
-            #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-            
-
             public ParsedSourceDest(string input) : this(string.Empty, string.Empty, input, input) { }
 
             public ParsedSourceDest(string source, string dest, string input, string sanitized)
@@ -39,8 +36,6 @@ namespace RoboSharp
             public readonly string InputString;
             /// <summary> The InputString with the Source and Destination removed </summary>
             public readonly string SanitizedString;
-
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         }
 
         /// <summary>
@@ -52,7 +47,7 @@ namespace RoboSharp
             //lang=regex 
             const string rc = @"^(?<rc>\s*((?<sQuote>"".+?[:$].+?robocopy(\.exe)?"")|(?<sNoQuote>([^:*?""<>|\s]+?[:$][^:*?<>|\s]+?)?robocopy(\.exe)?))\s+)";
             var match = Regex.Match(input, rc, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture| RegexOptions.CultureInvariant);
-            string ret = match.Success ? input.Remove(match.Groups[0].Value) : input;
+            string ret = match.Success ? input.RemoveFirstOccurrence(match.Groups[0].Value) : input;
             return ret;
         }
 
@@ -111,12 +106,13 @@ namespace RoboSharp
                 Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success:");
                 Debugger.Instance.DebugMessage($"----> Source : " + source);
                 Debugger.Instance.DebugMessage($"----> Destination : " + dest);
-                return new ParsedSourceDest(source, dest, inputText, inputText.Remove(rawSource).Remove(rawDest));
+                return new ParsedSourceDest(source, dest, inputText, inputText.RemoveFirstOccurrence(rawSource).RemoveFirstOccurrence(rawDest));
             }
             else if (sourceEmpty && destEmpty)
             {
                 Debugger.Instance.DebugMessage($"--> Source and Destination Pattern Match Success: Neither specified");
-                return new ParsedSourceDest(string.Empty, string.Empty, inputText, inputText);
+                string sanitized = !match.Success ? inputText : inputText.RemoveFirstOccurrence(rawSource).RemoveFirstOccurrence(rawDest);
+                return new ParsedSourceDest(string.Empty, string.Empty, inputText, sanitized);
             }
             else
             {
@@ -168,9 +164,9 @@ namespace RoboSharp
                 subSection = subSection.Substring(0, substringLength); // Reduce the subsection down to the relevant portion by cutting off at the next parameter switch
             }
 
-            value = subSection.Remove(prefix).Trim();
+            value = subSection.RemoveFirstOccurrence(prefix).Trim();
             Debugger.Instance.DebugMessage($"--> Switch {prefix} found. Value : {value}");
-            modifiedText = inputText.Remove(subSection);
+            modifiedText = inputText.RemoveFirstOccurrence(subSection);
             return true;
         }
 
@@ -186,7 +182,7 @@ namespace RoboSharp
         {
             bool value = inputText.Contains(flag, StringComparison.InvariantCultureIgnoreCase);
             Debugger.Instance.DebugMessage($"--> Switch {flag}{(value ? "" : " not")} detected.");
-            modifiedText = !value ? inputText : inputText.Remove(flag);
+            modifiedText = !value ? inputText : inputText.RemoveFirstOccurrence(flag);
             if (value) actionIfTrue?.Invoke();
             return value;
         }
@@ -258,7 +254,7 @@ namespace RoboSharp
 
             var match = Regex.Match(input, FileFilter, RegexOptions.IgnoreCase | RegexOptions.ExplicitCapture | RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
             string foundFilters = match.Groups["filter"].Value;
-            modifiedText = input.Remove(foundFilters);
+            modifiedText = input.RemoveFirstOccurrence(foundFilters);
 
             if (match.Success && !string.IsNullOrWhiteSpace(foundFilters))
             {
@@ -286,7 +282,7 @@ namespace RoboSharp
             foreach (Match c in matchCollection)
             {
                 string s = c.Groups["filter"].Value;
-                modifiedText = modifiedText.Remove(s);
+                modifiedText = modifiedText.RemoveFirstOccurrence(s);
                 s = s.TrimStart("/XF").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {
@@ -307,7 +303,7 @@ namespace RoboSharp
             foreach (Match c in matchCollection)
             {
                 string s = c.Groups["filter"].Value;
-                modifiedText = modifiedText.Remove(s);
+                modifiedText = modifiedText.RemoveFirstOccurrence(s);
                 s = s.TrimStart("/XD").Trim();
                 if (!string.IsNullOrWhiteSpace(s))
                 {

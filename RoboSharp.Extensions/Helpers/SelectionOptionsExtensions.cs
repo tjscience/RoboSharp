@@ -429,7 +429,7 @@ namespace RoboSharp.Extensions.Helpers
         /// <returns><see langword="true"/> if any of the regex items in the <paramref name="exclusionCollection"/> match the filename, otherwise false</returns>
         public static bool ShouldExcludeFileName(this SelectionOptions options, string fileName, IEnumerable<Regex> exclusionCollection = null)
         {
-            if (exclusionCollection is null) exclusionCollection = options.GetExcludedFileRegex();
+            exclusionCollection ??= options.GetExcludedFileRegex();
             if (!exclusionCollection.Any()) return false;
             string fname = Path.GetFileName(fileName);
             return exclusionCollection.Any(r => r.IsMatch(fname));
@@ -479,7 +479,7 @@ namespace RoboSharp.Extensions.Helpers
         /// <returns></returns>
         public static bool ShouldExcludeDirectoryName(this SelectionOptions options, string directoryPath, IEnumerable<Helpers.DirectoryRegex> exclusionCollection = null)
         {
-            if (exclusionCollection is null) exclusionCollection = options.GetExcludedDirectoryRegex();
+            exclusionCollection ??= options.GetExcludedDirectoryRegex();
             if (exclusionCollection.None()) return false;
             return exclusionCollection.Any(ob => ob.ShouldExcludeDirectory(directoryPath));
         }
@@ -531,7 +531,11 @@ namespace RoboSharp.Extensions.Helpers
         {
             if (!Directory.Exists(directory)) return true;
             if (options.ExcludeJunctionPoints | options.ExcludeJunctionPointsForDirectories)
+#if NET6_0_OR_GREATER
+                return new DirectoryInfo(directory).IsSymbolicLink();
+#else
                 return SymbolicLink.IsJunctionOrSymbolic(directory);
+#endif
             else
                 return false;
         }
@@ -541,7 +545,7 @@ namespace RoboSharp.Extensions.Helpers
         {
             if (!directory.Exists) return true;
             if (options.ExcludeJunctionPoints | options.ExcludeJunctionPointsForDirectories)
-                return SymbolicLink.IsJunctionOrSymbolic(directory.FullName);
+                return directory.IsSymbolicLink();// SymbolicLink.IsJunctionOrSymbolic(directory.FullName);
             else
                 return false;
         }
@@ -549,7 +553,7 @@ namespace RoboSharp.Extensions.Helpers
         /// <inheritdoc cref="ShouldExcludeJunctionDirectory(SelectionOptions, string)"/>
         public static bool ShouldExcludeJunctionDirectory(this SelectionOptions options, IDirectoryPair pair) => ShouldExcludeJunctionDirectory(options, pair.Source);
 
-        #endregion
+#endregion
 
     }
 }

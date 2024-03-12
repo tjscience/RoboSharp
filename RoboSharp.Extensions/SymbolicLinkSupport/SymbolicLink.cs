@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if !NET6_0_OR_GREATER
+
+using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -53,7 +55,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// </remarks>
         private const int maxRelativePathLengthUnicodeChars = 260;
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern SafeFileHandle CreateFile(
             string lpFileName,
             uint dwDesiredAccess,
@@ -63,7 +65,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             uint dwFlagsAndAttributes,
             IntPtr hTemplateFile);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         static extern bool CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, int dwFlags);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
@@ -85,19 +87,15 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             string pszTo,
             FileAttributes dwAttrTo);
 
-        public static void CreateDirectoryLink(string linkPath, string targetPath)
+        public static void CreateAsSymbolicLink(string linkPath, string targetPath, bool isDirectory, bool makeTargetPathRelative = false)
         {
-            CreateDirectoryLink(linkPath, targetPath, false);
-        }
-
-        public static void CreateDirectoryLink(string linkPath, string targetPath, bool makeTargetPathRelative)
-        {
+            VersionManager.ThrowIfNotWindowsPlatform();
             if (makeTargetPathRelative)
             {
-                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath, true);
+                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath, isDirectory);
             }
 
-            if (!CreateSymbolicLink(linkPath, targetPath, targetIsADirectory) || Marshal.GetLastWin32Error() != 0)
+            if (!CreateSymbolicLink(linkPath, targetPath, isDirectory ? targetIsADirectory : targetIsAFile) || Marshal.GetLastWin32Error() != 0)
             {
                 try
                 {
@@ -107,24 +105,6 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
                 {
                     throw new IOException(exception.Message, exception);
                 }
-            }
-        }
-
-        public static void CreateFileLink(string linkPath, string targetPath)
-        {
-            CreateFileLink(linkPath, targetPath, false);
-        }
-        
-        public static void CreateFileLink(string linkPath, string targetPath, bool makeTargetPathRelative)
-        {
-            if (makeTargetPathRelative)
-            {
-                targetPath = GetTargetPathRelativeToLink(linkPath, targetPath);
-            }
-
-            if (!CreateSymbolicLink(linkPath, targetPath, targetIsAFile))
-            {
-                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
             }
         }
         
@@ -157,24 +137,9 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         }
 
-        public static bool Exists(string path)
+        public static string GetLinkTarget(string path)
         {
-            if (!Directory.Exists(path) && !File.Exists(path))
-            {
-                return false;
-            }
-            string target = GetTarget(path);
-            return target != null;
-        }
-
-        private static SafeFileHandle GetFileHandle(string path)
-        {
-            return CreateFile(path, genericReadAccess, shareModeAll, IntPtr.Zero, openExisting,
-                fileFlagsForOpenReparsePointAndBackupSemantics, IntPtr.Zero);
-        }
-
-        public static string GetTarget(string path)
-        {
+            VersionManager.ThrowIfNotWindowsPlatform();
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return null;
             var reparseDataBuffer = reparseData.Value;
@@ -192,6 +157,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <returns></returns>
         public static string GetJunctionTarget(string path)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             if (!Directory.Exists(path)) return null;
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return null;
@@ -203,11 +169,6 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             return GetTargetFromReparseData(reparseDataBuffer, path);
         }
 
-        public static bool IsSymbolicLink(string path)
-        {
-            return Exists(path);
-        }
-
         public static bool IsJunctionPoint(string path)
         {
             return GetJunctionTarget(path) != null;
@@ -215,6 +176,7 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
 
         public static bool IsJunctionOrSymbolic(string path)
         {
+            VersionManager.ThrowIfNotWindowsPlatform();
             SymbolicLinkReparseData? reparseData = GetReparseData(path);
             if (reparseData is null) return false;
             SymbolicLinkReparseData data = reparseData.Value;
@@ -241,6 +203,12 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
             }
 
             return target;
+        }
+
+        private static SafeFileHandle GetFileHandle(string path)
+        {
+            return CreateFile(path, genericReadAccess, shareModeAll, IntPtr.Zero, openExisting,
+                fileFlagsForOpenReparsePointAndBackupSemantics, IntPtr.Zero);
         }
 
         private static SymbolicLinkReparseData? GetReparseData(string path)
@@ -294,3 +262,5 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         }
     }
 }
+
+#endif

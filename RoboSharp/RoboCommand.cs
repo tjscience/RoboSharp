@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -175,6 +175,7 @@ namespace RoboSharp
         private bool isPaused;
         private bool isRunning;
         private bool isCancelled;
+        private bool isScheduled;
         private Results.ResultsBuilder resultsBuilder;
 
         /// <summary>
@@ -200,7 +201,7 @@ namespace RoboSharp
         /// <summary> Value indicating if process was Cancelled </summary>
         public bool IsCancelled { get { return isCancelled; } }
         /// <summary> TRUE if <see cref="CopyOptions.RunHours"/> is set up (Copy Operation is scheduled to only operate within specified timeframe). Otherwise False. </summary>
-        public bool IsScheduled { get => !String.IsNullOrWhiteSpace(CopyOptions?.RunHours); }
+        public bool IsScheduled { get => isScheduled; }
         /// <summary> Get the parameters string passed to RoboCopy based on the current setup </summary>
         public string CommandOptions { get { return GenerateParameters(); } }
         /// <inheritdoc cref="RoboSharp.CopyOptions"/>
@@ -440,6 +441,7 @@ namespace RoboSharp
         /// <inheritdoc cref="Authentication.AuthenticateSourceAndDestination"/>
         public virtual Task Start(string domain = "", string username = "", string password = "")
         {
+            VersionManager.ThrowIfNotWindowsPlatform("RoboCommand.Start(), which invokes robocopy, is only available in a windows environment. Use a custom implementation instead.");
             if (disposedValue) throw GetDisposedException();
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
 
@@ -452,6 +454,7 @@ namespace RoboSharp
             isCancelled = false;
             isPaused = false;
             isRunning = true;
+            isScheduled = !String.IsNullOrWhiteSpace(CopyOptions?.RunHours) && CopyOptions.IsRunHoursStringValid(CopyOptions.RunHours);
 
             resultsBuilder = new Results.ResultsBuilder(this);
             results = null;
@@ -572,6 +575,7 @@ namespace RoboSharp
                 //Run Post-Processing of the Generated JobFile if one was created.
                 JobOptions.RunPostProcessing(this);
 
+                isScheduled = false;
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
 
                 if (continuation.IsFaulted && !WasCancelled) // If some fault occurred while processing, throw the exception to caller

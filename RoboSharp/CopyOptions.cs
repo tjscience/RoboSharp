@@ -144,7 +144,7 @@ namespace RoboSharp
         
         private IEnumerable<string> fileFilter = new[] { DefaultFileFilter };
         private string copyFlags = "DAT";
-        private string directoryCopyFlags = VersionManager.Version >= 6.2 ? "DA" : "T";
+        private string directoryCopyFlags = !VersionManager.IsPlatformWindows ? "DA" : VersionManager.Version >= 6.2 ? "DA" : "T";
 
         #endregion Option Defaults
 
@@ -577,6 +577,7 @@ namespace RoboSharp
         public string Parse(bool optionsOnly = false)
         {
             Debugger.Instance.DebugMessage("Parsing CopyOptions...");
+            bool isNotWindows = !VersionManager.IsPlatformWindows;
             var version = VersionManager.Version;
             var options = new StringBuilder();
 
@@ -603,7 +604,7 @@ namespace RoboSharp
                 options.Append(string.Format(COPY_FLAGS, cleanedCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
             }
-            if (!cleanedDirectoryCopyFlags.IsNullOrWhiteSpace() && version >= 5.1260026)
+            if (!cleanedDirectoryCopyFlags.IsNullOrWhiteSpace() && (isNotWindows | version >= 5.1260026))
             {
                 options.Append(string.Format(DIRECTORY_COPY_FLAGS, cleanedDirectoryCopyFlags));
                 Debugger.Instance.DebugMessage(string.Format("Parsing CopyOptions progress ({0}).", options.ToString()));
@@ -623,7 +624,7 @@ namespace RoboSharp
                 options.Append(ENABLE_BACKUP_MODE);
             if (EnableRestartModeWithBackupFallback)
                 options.Append(ENABLE_RESTART_MODE_WITH_BACKUP_FALLBACK);
-            if (UseUnbufferedIo && version >= 6.2)
+            if (UseUnbufferedIo && (isNotWindows | version >= 6.2))
                 options.Append(USE_UNBUFFERED_IO);
             if (EnableEfsRawMode)
                 options.Append(ENABLE_EFSRAW_MODE);
@@ -669,9 +670,9 @@ namespace RoboSharp
                 options.Append(COPY_SYMBOLIC_LINK);
             if (MultiThreadedCopiesCount > 0)
                 options.Append(string.Format(MULTITHREADED_COPIES_COUNT, MultiThreadedCopiesCount));
-            if (DoNotCopyDirectoryInfo && version >= 6.2)
+            if (DoNotCopyDirectoryInfo && (isNotWindows | version >= 6.2))
                 options.Append(DO_NOT_COPY_DIRECTORY_INFO);
-            if (DoNotUseWindowsCopyOffload && version >= 6.2)
+            if (DoNotUseWindowsCopyOffload && (isNotWindows | version >= 6.2))
                 options.Append(DO_NOT_USE_WINDOWS_COPY_OFFLOAD);
             if (Compress)
                 options.Append(NETWORK_COMPRESSION);

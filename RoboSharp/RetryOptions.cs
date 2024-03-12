@@ -50,6 +50,7 @@ namespace RoboSharp
         /// Specifies the number of retries N on failed copies (default is 0).
         /// [/R:N]
         /// </summary>
+        /// <remarks>RoboCopy default = 1 million retries (1000000)</remarks>
         [DefaultValue(0)]
         public virtual int RetryCount
         {
@@ -92,10 +93,13 @@ namespace RoboSharp
         {
             var options = new StringBuilder();
 
-            options.Append(string.Format(RETRY_COUNT, RetryCount));
-            options.Append(string.Format(RETRY_WAIT_TIME, RetryWaitTime));
+            if (RetryCount >= 0 && RetryCount != 1000000)
+                options.Append(string.Format(RETRY_COUNT, RetryCount));
+            
+            if (RetryWaitTime >= 0 && RetryWaitTime != 30)
+                options.Append(string.Format(RETRY_WAIT_TIME, RetryWaitTime));
 
-            if (SaveToRegistry)
+            if (SaveToRegistry && VersionManager.IsPlatformWindows)
                 options.Append(SAVE_TO_REGISTRY);
             if (WaitForSharenames)
                 options.Append(WAIT_FOR_SHARENAMES);

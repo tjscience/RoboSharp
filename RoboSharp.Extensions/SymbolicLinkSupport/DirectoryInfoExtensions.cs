@@ -8,15 +8,16 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
     /// </summary>
     public static class DirectoryInfoExtensions
     {
+#if !NET6_0_OR_GREATER  // Extension methods are not needed in .net6 as they are now native to FileSystemInfo
         /// <summary>
         /// Creates a symbolic link to this directory at the specified path.
         /// </summary>
         /// <param name="directoryInfo">the source directory for the symbolic link.</param>
         /// <param name="path">the path of the symbolic link.</param>
         /// <param name="makeTargetPathRelative">whether the target should be made relative to the symbolic link. Default <c>false</c>.</param>
-        public static void CreateSymbolicLink(this DirectoryInfo directoryInfo, string path, bool makeTargetPathRelative)
+        public static void CreateAsSymbolicLink(this DirectoryInfo directoryInfo, string path, bool makeTargetPathRelative)
         {
-            SymbolicLink.CreateDirectoryLink(path, directoryInfo.FullName, makeTargetPathRelative);
+            SymbolicLink.CreateAsSymbolicLink(path, directoryInfo.FullName, true, makeTargetPathRelative);
         }
 
         /// <summary>
@@ -24,10 +25,11 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// </summary>
         /// <param name="directoryInfo">the source directory for the symbolic link.</param>
         /// <param name="path">the path of the symbolic link.</param>
-        public static void CreateSymbolicLink(this DirectoryInfo directoryInfo, string path)
+        public static void CreateAsSymbolicLink(this DirectoryInfo directoryInfo, string path)
         {
-            directoryInfo.CreateSymbolicLink(path, false);
-        }        
+            SymbolicLink.CreateAsSymbolicLink(path, directoryInfo.FullName, true, false);
+        }
+#endif
 
         /// <summary>
         /// Determines whether this directory is a symbolic link.
@@ -36,7 +38,11 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <returns><code>true</code> if the directory is, indeed, a symbolic link, <code>false</code> otherwise.</returns>
         public static bool IsSymbolicLink(this DirectoryInfo directoryInfo)
         {
-            return SymbolicLink.GetTarget(directoryInfo.FullName) != null;
+#if NET6_0_OR_GREATER
+            return directoryInfo.LinkTarget != null;
+#else
+            return SymbolicLink.GetLinkTarget(directoryInfo.FullName) != null;
+#endif
         }
 
         /// <summary>
@@ -47,7 +53,11 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <exception cref="System.ArgumentException">If the directory is not a symbolic link.</exception>
         public static bool IsSymbolicLinkValid(this DirectoryInfo directoryInfo)
         {
-            return Directory.Exists(directoryInfo.GetSymbolicLinkTarget());
+            if (directoryInfo.IsSymbolicLink())
+            {
+                return File.Exists(GetSymbolicLinkTarget(directoryInfo));
+            }
+            return directoryInfo.Exists;
         }
 
         /// <summary>
@@ -58,10 +68,13 @@ namespace RoboSharp.Extensions.SymbolicLinkSupport
         /// <exception cref="System.ArgumentException">If the directory in question is not a symbolic link.</exception>
         public static string GetSymbolicLinkTarget(this DirectoryInfo directoryInfo)
         {
+#if NET6_0_OR_GREATER
+            return directoryInfo.LinkTarget ?? directoryInfo.FullName;
+#else
             if (!directoryInfo.IsSymbolicLink())
-                throw new ArgumentException("Specified directory is not a symbolic link.");
-
-            return SymbolicLink.GetTarget(directoryInfo.FullName);
+                throw new ArgumentException("file specified is not a symbolic link.");
+            return SymbolicLink.GetLinkTarget(directoryInfo.FullName);
+#endif
         }
     }
 }

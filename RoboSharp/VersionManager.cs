@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -10,13 +11,37 @@ using System.Threading.Tasks;
 namespace RoboSharp
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    
+    /// <summary>
+    /// Class that retrieves the OS version.
+    /// </summary>
     public static class VersionManager
     {
+        /// <summary>
+        /// 
+        /// </summary>
+        [DefaultValue(UseRtlGetVersion)]
         public enum VersionCheckType
         {
-            UseRtlGetVersion,
-            UseWMI
+            /// <summary>
+            /// Use ntdll.dll (windows only) to retrieve the OS Version information
+            /// </summary>
+            UseRtlGetVersion = 0,
+
+            /// <summary>
+            /// Use Microsoft.Management.Infrastructure
+            /// </summary>
+            UseWMI = 1,
         }
+
+        /// <summary>
+        /// True if running in a windows environment, otherwise false.
+        /// </summary>
+#if NET452
+        public static readonly bool IsPlatformWindows = true;
+#else
+        public static readonly bool IsPlatformWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
 
         public static VersionCheckType VersionCheck { get; set; } = VersionManager.VersionCheckType.UseRtlGetVersion;
 
@@ -28,7 +53,7 @@ namespace RoboSharp
             {
                 if (version == null)
                 {
-                    if (VersionCheck == VersionCheckType.UseWMI)
+                    if (!IsPlatformWindows || VersionCheck == VersionCheckType.UseWMI)
                     {
                         var v = GetOsVersion();
                         version = GetOsVersionNumber(v);
@@ -37,7 +62,9 @@ namespace RoboSharp
                     else
                     {
                         var osVersionInfo = new OSVERSIONINFOEX { OSVersionInfoSize = Marshal.SizeOf(typeof(OSVERSIONINFOEX)) };
-                        RtlGetVersion(ref osVersionInfo);
+                        var hrResult = RtlGetVersion(ref osVersionInfo);
+                        if (hrResult != 0) Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+
                         var versionString = $"{osVersionInfo.MajorVersion}.{osVersionInfo.MinorVersion}{osVersionInfo.BuildNumber}";
                         version = GetOsVersionNumber(versionString);
                         return version.Value;
@@ -57,9 +84,17 @@ namespace RoboSharp
             System.Threading.Thread.CurrentThread.CurrentCulture = customCulture;
         }
 
+        /// <exception cref="PlatformNotSupportedException"></exception>
+        public static void ThrowIfNotWindowsPlatform(string message = default)
+        {
+            if (!IsPlatformWindows)
+                throw new PlatformNotSupportedException(message ?? "This function is only available on Windows");
+        }
 
         private static string GetOsVersion()
         {
+            if (!IsPlatformWindows) return Environment.OSVersion.Version.ToString();
+
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
@@ -75,14 +110,12 @@ namespace RoboSharp
 #if NET40_OR_GREATER
             using (System.Management.ManagementObjectSearcher objMOS = new System.Management.ManagementObjectSearcher("SELECT * FROM  Win32_OperatingSystem"))
             {
-                foreach (System.Management.ManagementObject objManagement in objMOS.Get())
+                foreach (var version in from System.Management.ManagementObject objManagement in objMOS.Get()
+                                        let version = objManagement.GetPropertyValue("Version")
+                                        where version != null
+                                        select version)
                 {
-                    var version = objManagement.GetPropertyValue("Version");
-
-                    if (version != null)
-                    {
-                        return version.ToString();
-                    }
+                    return version.ToString();
                 }
             }
 #endif
