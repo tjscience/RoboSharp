@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -441,7 +441,7 @@ namespace RoboSharp
         /// <inheritdoc cref="Authentication.AuthenticateSourceAndDestination"/>
         public virtual Task Start(string domain = "", string username = "", string password = "")
         {
-            VersionManager.ThrowIfNotWindowsPlatform("RoboCommand (robocopy) is only available in a windows environment. Use a custom implementation instead.");
+            VersionManager.ThrowIfNotWindowsPlatform("RoboCommand.Start(), which invokes robocopy, is only available in a windows environment. Use a custom implementation instead.");
             if (disposedValue) throw GetDisposedException();
             if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
 
