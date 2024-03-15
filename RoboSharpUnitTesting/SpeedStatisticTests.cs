@@ -12,24 +12,27 @@ namespace RoboSharp.UnitTests
     public class SpeedStatisticTests
     {
         [TestMethod]
-        public void ParseTest()
+        public void ParseTest_CommaThousands() => ParseInputTest("538,252,733", 538252733m, "30,799.068", 30799.068m);
+
+        [TestMethod]
+        public void ParseTest_PeriodThousands() => ParseInputTest("538.252.733", 538252733m, "30.799,068", 30799.068m);
+
+        private void ParseInputTest(string sBPS, decimal bps, string sMB, decimal MB)
         {
-            string bps_string = " 538,252,733";
-            decimal bps = 538252733;
-
-            string mbpm_string = "30,799.068";
-            decimal mbpm = 30799.068m;
-
-            Console.Write("Validating Decimal.Parse()");
-            Assert.AreEqual(bps, decimal.Parse(bps_string), "\ndecimal parsing fails - bps");
-            Assert.AreEqual(mbpm, decimal.Parse(mbpm_string), "\ndecimal parsing fails - mbpm");
-            Console.WriteLine(" -- OK");
-
             Console.Write("Validating SpeedStatistic.Parse()");
-            var stat = SpeedStatistic.Parse(bps_string, mbpm_string);
+            var stat = SpeedStatistic.Parse(sBPS, sMB);
             Assert.AreEqual(bps, stat.BytesPerSec, "\nBytes/second does not match!");
-            Assert.AreEqual(mbpm, stat.MegaBytesPerMin, "\nMegabytes/min does not match!");
+            Assert.AreEqual(MB, stat.MegaBytesPerMin, "\nMegabytes/min does not match!");
             Console.WriteLine(" -- OK");
+        }
+
+        [DataRow(" Velocità:           257.555.063 Byte/sec.", " Velocità:             14737,419 MB/min.")]
+        [TestMethod]
+        public void ParseText(string sBPS, string sMB) 
+        {
+            var value = SpeedStatistic.Parse(sBPS, sMB);
+            Assert.IsNotNull(value);
+            Console.WriteLine(value.ToString());
         }
     }
 }
