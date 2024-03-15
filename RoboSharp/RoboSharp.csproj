@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net452;netstandard2.0;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.4.1</Version>
+    <Version>1.4.2</Version>
     <Copyright>Copyright 2024</Copyright>
     <Authors>Terry</Authors>
     <owners>Terry</owners>
@@ -13,7 +13,7 @@
     <PackageIconUrl>https://raw.githubusercontent.com/tjscience/RoboSharp/master/robosharp.png</PackageIconUrl>
     <Description>RoboSharp is a .NET wrapper for the awesome Robocopy windows application.</Description>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageReleaseNotes>Introduce RoboCommandParser - Provides the ability to submit a robocopy command string into the library and return the equivalent IRoboCommand object.</PackageReleaseNotes>
+    <PackageReleaseNotes>Various fixes</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net452' Or '$(TargetFramework)' == 'netstandard2.0'">
