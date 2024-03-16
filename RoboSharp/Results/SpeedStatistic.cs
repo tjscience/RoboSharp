@@ -127,22 +127,29 @@ namespace RoboSharp.Results
         {
             var res = new SpeedStatistic();
 
-            var pattern = new Regex(@"\d+([.,]\d+)+");
-            Match match;
-
-            match = pattern.Match(line1);
+            Regex pattern = new Regex(@"\d+([.,]\d+)+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+            Match match = pattern.Match(line1);
             if (match.Success)
             {
-                res.BytesPerSec = decimal.Parse(match.Value);
+                res.BytesPerSec = decimal.Parse(match.Value.Replace(".",""));
             }
 
             match = pattern.Match(line2);
             if (match.Success)
             {
-                res.MegaBytesPerMin = decimal.Parse(match.Value);
+                res.MegaBytesPerMin = decimal.Parse(sanitizeMB(match.Value));
             }
 
             return res;
+
+            static string sanitizeMB(string text)
+            {
+                int decPoint = text.LastIndexOfAny(new char[] { ',', '.' });
+                if (decPoint == -1) return text;
+                string tValue = text.Substring(0, decPoint).Replace(".", ""); // sanitize thousands
+                string dValue = text.Substring(decPoint).Replace(",", "."); // sanitize decimal
+                return tValue + dValue;
+            }
         }
 
         #endregion
@@ -299,7 +306,7 @@ namespace RoboSharp.Results
 #endif
         internal void Add(IEnumerable<ISpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
         {
-            foreach (SpeedStatistic stat in stats)
+            foreach (ISpeedStatistic stat in stats)
                 Add(stat, ForceTreatAsSpeedStat);
         }
 

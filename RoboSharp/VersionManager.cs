@@ -95,7 +95,9 @@ namespace RoboSharp
         {
             if (!IsPlatformWindows) return Environment.OSVersion.Version.ToString();
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#if NET8_0_OR_GREATER 
+
+#elif NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
             using (var session = Microsoft.Management.Infrastructure.CimSession.Create("."))
 
             {
