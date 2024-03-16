@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net472;netcoreapp3.1;net8.0</TargetFrameworks>
         <IsPackable>false</IsPackable>
         <RootNamespace>RoboSharp.UnitTests</RootNamespace>
         <AssemblyName>RoboSharp.UnitTests</AssemblyName>

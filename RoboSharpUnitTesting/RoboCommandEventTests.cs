@@ -9,9 +9,9 @@ namespace RoboSharp.UnitTests
     [TestClass]
     public class RoboCommandEventTests
     {
-        private void RunTestThenAssert(IRoboCommand cmd, ref bool EventBool)
+        private static void RunTestThenAssert(IRoboCommand cmd, ref bool EventBool)
         {
-            var results = cmd.StartAsync().Result;
+            var results = cmd.StartAsync().GetAwaiter().GetResult();
             Test_Setup.WriteLogLines(results);
             if (!EventBool) throw new AssertFailedException("Subscribed Event was not Raised!");
         }
