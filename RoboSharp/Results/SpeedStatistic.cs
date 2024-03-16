@@ -306,7 +306,7 @@ namespace RoboSharp.Results
 #endif
         internal void Add(IEnumerable<ISpeedStatistic> stats, bool ForceTreatAsSpeedStat = false)
         {
-            foreach (SpeedStatistic stat in stats)
+            foreach (ISpeedStatistic stat in stats)
                 Add(stat, ForceTreatAsSpeedStat);
         }
 

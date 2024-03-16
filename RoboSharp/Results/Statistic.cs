@@ -639,7 +639,7 @@ namespace RoboSharp.Results
         /// <param name="stats">Statistics Item to add</param>
         public void AddStatistic(IEnumerable<IStatistic> stats)
         {
-            foreach (Statistic stat in stats)
+            foreach (IStatistic stat in stats)
             {
                 EnablePropertyChangeEvent = stat == stats.Last();
                 AddStatistic(stat);
@@ -784,7 +784,7 @@ namespace RoboSharp.Results
         /// <param name="stats">Statistics Item to subtract</param>
         public void Subtract(IEnumerable<IStatistic> stats)
         {
-            foreach (Statistic stat in stats)
+            foreach (IStatistic stat in stats)
             {
                 EnablePropertyChangeEvent = stat == stats.Last();
                 Subtract(stat);

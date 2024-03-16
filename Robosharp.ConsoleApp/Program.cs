@@ -48,7 +48,7 @@ static IRoboCommand AskForCommandParameters(IRoboCommandFactory factory)
         try
         {
             Console.WriteLine("Enter your Robocopy command to be parsed: ");
-            string input = Console.ReadLine();
+            string? input = Console.ReadLine();
             IRoboCommand command = RoboSharp.RoboCommandParser.Parse(input, factory);
             return command;
         }
