@@ -63,16 +63,16 @@ namespace RoboSharp
         /// </remarks>
         /// <returns>new <see cref="IRoboCommand"/> object using the parameterless constructor</returns>
         public virtual IRoboCommand GetRoboCommand()
-            => new RoboCommand(
-                source: string.Empty,
-                destination: string.Empty,
-                copyActionFlags: DefaultCopyOptions,
-                selectionFlags: DefaultSelectionOptions,
-                loggingFlags: DefaultLoggingOptions
-             )
-            {
-                Configuration = Configuration
-            };
+        {
+            return new RoboCommand(
+                name: "",
+                configuration: Configuration,
+                copyOptions: new CopyOptions(string.Empty, string.Empty, DefaultCopyOptions),
+                selectionOptions: new SelectionOptions(DefaultSelectionOptions),
+                retryOptions: new RetryOptions(),
+                loggingOptions: new LoggingOptions(DefaultLoggingOptions)
+                 );
+        }
 
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.
