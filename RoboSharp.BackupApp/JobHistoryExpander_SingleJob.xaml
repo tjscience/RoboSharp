@@ -30,5 +30,10 @@
                 <Label x:Name="lbl_SelectedItem_Bytes" Content="Byte Stats" HorizontalAlignment="Left" Height="140" Margin="30,0,0,0" VerticalAlignment="Top"/>
             </Grid>
         </Expander>
+        <Expander Header="Log Lines">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MaxHeight="600">
+                <TextBox x:Name="lbl_SelectedItem_LogLines" Text="Log Lines" IsReadOnly="True" Height="140" Margin="30,0,10,0" VerticalAlignment="Top"/>
+            </ScrollViewer>
+        </Expander>
     </StackPanel>
 </ScrollViewer>

@@ -53,6 +53,13 @@ namespace RoboSharp.BackupApp
             ByteStat = resultsObj?.BytesStatistic;
             DirStat = resultsObj?.DirectoriesStatistic;
             FileStat = resultsObj?.FilesStatistic;
+            StringBuilder log = new StringBuilder();
+            resultsObj.LogLines.ToList().ForEach(s =>
+           {
+               log.AppendLine(s);
+           });
+            Dispatcher.Invoke(() => lbl_SelectedItem_LogLines.Text = log.ToString());
+            
             IsResultsListBound = false;
 
             DirectoriesStatistic_PropertyChanged(null, null);
@@ -75,7 +82,7 @@ namespace RoboSharp.BackupApp
             ByteStat = list.BytesStatistic;
             DirStat = list.DirectoriesStatistic;
             FileStat = list.FilesStatistic;
-            
+            lbl_SelectedItem_LogLines.Text = "";
             IsResultsListBound = true;
 
             // Initialize the values

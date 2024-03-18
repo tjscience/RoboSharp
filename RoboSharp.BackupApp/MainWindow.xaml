@@ -2,12 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:av="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local="clr-namespace:RoboSharp.BackupApp" mc:Ignorable="av" x:Class="RoboSharp.BackupApp.MainWindow"
-        Title="Backup App" Height="700" Width="750" ResizeMode="CanResizeWithGrip" MinWidth="750" MaxWidth="750" MinHeight="650" >
+        Title="Backup App" Height="700" Width="750" ResizeMode="CanResizeWithGrip" MinWidth="750" MinHeight="650" >
     <Grid IsSharedSizeScope="True">
         <TabControl>
             <TabItem Header="Options" x:Name="OptionsTab">
                 <Grid>
-                    <ScrollViewer Margin="0,0,0,0" VerticalScrollBarVisibility="Auto" Width="Auto" Height="Auto">
+                    <ScrollViewer Margin="0,0,0,0" VerticalScrollBarVisibility="Auto">
                         <StackPanel x:Name="OptionsGrid" Height="auto">
                             <!-- Styles -->
                             <StackPanel.Resources>
@@ -337,7 +337,7 @@
             <!-- Single-Job Tab -->
             <TabItem x:Name="SingleJobTab" Header="Single Job ( RoboCommand )" >
                 <Grid x:Name="SingleJobTabGrid" Background="#FFE5E5E5">
-                    <ScrollViewer HorizontalAlignment="Center" Height="Auto" Margin="0,10,5,0" VerticalAlignment="Top" Width="693" Grid.ColumnSpan="4">
+                    <ScrollViewer Height="Auto" Margin="0,10,5,0" VerticalAlignment="Top" MinWidth="693" Grid.ColumnSpan="4">
                         <StackPanel>
                             <local:MultiJob_CommandProgressIndicator x:Name="SingleJobExpander_Progress" RenderTransformOrigin="0.5,0.5" Background="LightBlue"/>
                             <Expander x:Name="SingleJobExpander_Errors" Background="LightGreen" Header="Errors">
