@@ -13,11 +13,9 @@ namespace RoboSharp.Results
     /// </remarks>
     internal class ResultsBuilder
     {
-        private ResultsBuilder() { }
-
-        internal ResultsBuilder(RoboCommand roboCommand) {
+        internal ResultsBuilder(RoboCommand roboCommand, ProgressEstimator estimator) {
             RoboCommand = roboCommand;
-            Estimator = new ProgressEstimator(roboCommand);
+            Estimator = estimator;
             _isLoggingHeader = !roboCommand.LoggingOptions.NoJobHeader;
             _enableFileLogging = roboCommand.Configuration.EnableFileLogging;
             _noJobSummary = roboCommand.LoggingOptions.NoJobSummary;

@@ -54,10 +54,13 @@ namespace RoboSharp.BackupApp
             DirStat = resultsObj?.DirectoriesStatistic;
             FileStat = resultsObj?.FilesStatistic;
             StringBuilder log = new StringBuilder();
-            resultsObj.LogLines.ToList().ForEach(s =>
-           {
-               log.AppendLine(s);
-           });
+            if (resultsObj != null)
+            {
+                resultsObj.LogLines.ToList().ForEach(s =>
+                {
+                    log.AppendLine(s);
+                });
+            }
             Dispatcher.Invoke(() => lbl_SelectedItem_LogLines.Text = log.ToString());
             
             IsResultsListBound = false;

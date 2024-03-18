@@ -176,7 +176,7 @@ namespace RoboSharp
         private bool isRunning;
         private bool isCancelled;
         private bool isScheduled;
-        private Results.ResultsBuilder resultsBuilder;
+        private Results.ResultsBuilder _resultsBuilder;
 
         /// <summary>
         /// The last set of results that were created
@@ -460,8 +460,6 @@ namespace RoboSharp
             isPaused = false;
             isRunning = true;
             isScheduled = !String.IsNullOrWhiteSpace(CopyOptions?.RunHours) && CopyOptions.IsRunHoursStringValid(CopyOptions.RunHours);
-
-            resultsBuilder = new Results.ResultsBuilder(this);
             results = null;
 
             //Check Source and Destination
@@ -478,9 +476,10 @@ namespace RoboSharp
             else
             {
                 //Raise EstimatorCreatedEvent to alert consumers that the Estimator can now be bound to
-                ProgressEstimator = resultsBuilder.Estimator;
-                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(resultsBuilder.Estimator));
-                return GetRoboCopyTask(resultsBuilder, domain, username, password);
+                ProgressEstimator = new Results.ProgressEstimator(this);
+                _resultsBuilder = new Results.ResultsBuilder(this, ProgressEstimator);
+                OnProgressEstimatorCreated?.Invoke(this, new ProgressEstimatorCreatedEventArgs(ProgressEstimator));
+                return GetRoboCopyTask(_resultsBuilder, domain, username, password);
             }
         }
 
@@ -580,6 +579,7 @@ namespace RoboSharp
                 //Run Post-Processing of the Generated JobFile if one was created.
                 JobOptions.RunPostProcessing(this);
 
+                _resultsBuilder = null; // Clear the object reference to the ResultsBuilder as its no longer needed
                 isScheduled = false;
                 isRunning = false; //Now that all processing is complete, IsRunning should be reported as false.
 
@@ -703,8 +703,8 @@ namespace RoboSharp
         /// <summary> React to Process.StandardOutput </summary>
         void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            string lastData = resultsBuilder?.LastLine ?? "";
-            resultsBuilder?.AddOutput(e.Data);
+            string lastData = _resultsBuilder?.LastLine ?? "";
+            _resultsBuilder?.AddOutput(e.Data);
 
             if (e.Data == null) return; // Nothing to do
             var data = e.Data.Trim().Replace("\0", ""); // ?
@@ -714,14 +714,14 @@ namespace RoboSharp
 
             if (Regex.IsMatch(data, "^[0-9]+[.]?[0-9]*%", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace))
             {
-                var currentFile = resultsBuilder?.Estimator?.CurrentFile;
-                var currentDir = resultsBuilder?.Estimator?.CurrentDir;
+                var currentFile = ProgressEstimator.CurrentFile;
+                var currentDir = ProgressEstimator?.CurrentDir;
 
                 //Increment ProgressEstimator
                 if (data.StartsWith("100%"))
-                    resultsBuilder?.Estimator?.AddFileCopied(currentFile);
+                    ProgressEstimator?.AddFileCopied(currentFile);
                 else
-                    resultsBuilder?.Estimator?.SetCopyOpStarted();
+                    ProgressEstimator?.SetCopyOpStarted();
 
                 // copy progress data -> Use the CurrentFile and CurrentDir from the ResultsBuilder
                 OnCopyProgressChanged?.Invoke(this,
@@ -763,7 +763,7 @@ namespace RoboSharp
                         file.Name = splitData[1];
                     }
 
-                    resultsBuilder?.Estimator?.AddDir(file);
+                    ProgressEstimator?.AddDir(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (splitData.Length == 3) // File
@@ -775,7 +775,7 @@ namespace RoboSharp
                         Size = long.TryParse(splitData[1].Trim(), out long size) ? size : 0,
                         Name = splitData[2]
                     };
-                    resultsBuilder?.Estimator?.AddFile(file);
+                    ProgressEstimator?.AddFile(file);
                     OnFileProcessed?.Invoke(this, new FileProcessedEventArgs(file));
                 }
                 else if (Configuration.ErrorTokenRegex.IsMatch(data)) // Error Message - Mark the current file as FAILED immediately - Don't raise OnError event until error description comes in though
@@ -790,7 +790,7 @@ namespace RoboSharp
                 else if (Configuration.ErrorTokenRegex.IsMatch(lastData)) // Error Message - Uses previous data instead since RoboCopy reports errors onto line 1, then description onto line 2.
                 {
                     ErrorEventArgs args = new ErrorEventArgs(lastData, data, Configuration.ErrorTokenRegex);
-                    resultsBuilder.RoboCopyErrors.Add(args);
+                    _resultsBuilder.RoboCopyErrors.Add(args);
 
                     //Check to Raise the event
                     OnError?.Invoke(this, args);
