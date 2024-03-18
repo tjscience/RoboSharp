@@ -16,9 +16,12 @@ namespace RoboSharp.Extensions
     /// <summary>
     /// ResultsBuilder object for custom IRoboCommand implementations
     /// </summary>
-    public class ResultsBuilder : IResultsBuilder
+    public class ResultsBuilder : IResultsBuilder, IDisposable
     {
         #region < Constructor >
+
+        /// <inheritdoc cref="ResultsBuilder.ResultsBuilder(IRoboCommand, ProgressEstimator, DateTime?)"/>
+        public ResultsBuilder(IRoboCommand cmd) : this(cmd, new ProgressEstimator(cmd), DateTime.Now) { }
 
         /// <summary>
         /// Create a new  results builder
@@ -26,19 +29,18 @@ namespace RoboSharp.Extensions
         /// <param name="calculator">a ProgressEstimator used to calculate the total number of files/directories</param>
         /// <param name="cmd">The associated IRoboCommand</param>
         /// <param name="startTime">The time the IRoboCommand was started. If not specified, uses DateTime.Now</param>
-        public ResultsBuilder(ProgressEstimator calculator, IRoboCommand cmd, DateTime? startTime = null)
+        public ResultsBuilder(IRoboCommand cmd, ProgressEstimator calculator, DateTime? startTime = null)
         {
             Command = cmd ?? throw new ArgumentNullException(nameof(cmd));
             ProgressEstimator = calculator ?? throw new ArgumentNullException(nameof(calculator)); ;
             StartTime = startTime ?? DateTime.Now;
             CreateHeader();
-            Command.OnError += Command_OnError;
+            Subscribe();
         }
 
-        /// <inheritdoc cref="ResultsBuilder.ResultsBuilder(ProgressEstimator, IRoboCommand, DateTime?)"/>
-        public ResultsBuilder(IRoboCommand cmd) : this(new ProgressEstimator(cmd), cmd, DateTime.Now) { }
-
         #endregion
+        private bool _isLoggingHeaderOrSummary;
+        
 
         #region < Properties >
 
@@ -111,6 +113,19 @@ namespace RoboSharp.Extensions
 
         #endregion
 
+        private void Subscribe()
+        {
+            Command.OnError += Command_OnError;
+        }
+
+        /// <summary>
+        /// Unsubscribe from the associated IRoboCommand
+        /// </summary>
+        public void Unsubscribe()
+        {
+            Command.OnError -= Command_OnError;
+        }
+
         private void Command_OnError(IRoboCommand sender, ErrorEventArgs e)
         {
             CommandErrors.Add(e);
@@ -123,7 +138,7 @@ namespace RoboSharp.Extensions
         {
             ProgressEstimator.AddFile(file);
             //if (Command.LoggingOptions.ListOnly) 
-                LogFileInfo(file);
+            LogFileInfo(file);
         }
 
         /// <summary>
@@ -282,6 +297,7 @@ namespace RoboSharp.Extensions
             Command.LoggingOptions.DeleteLogFiles();
             if (!Command.LoggingOptions.NoJobHeader)
             {
+                _isLoggingHeaderOrSummary = true;
                 WriteToLogs(Divider);
                 WriteToLogs("\t   IRoboCommand : '{0}'".Format(Command.GetType()));
                 WriteToLogs("\tResults Builder : '{0}'".Format(this.GetType()));
@@ -320,6 +336,7 @@ namespace RoboSharp.Extensions
                 WriteToLogs(Divider);
                 WriteToLogs("");
             }
+            _isLoggingHeaderOrSummary = false;
         }
 
         /// <summary>
@@ -327,7 +344,7 @@ namespace RoboSharp.Extensions
         /// </summary>
         protected virtual void CreateSummary()
         {
-            int[] GetColumnSizes() 
+            int[] GetColumnSizes()
             {
                 var sizes = new List<int>();
                 int GetColumnSize(string name, long bytes, long files, long dirs)
@@ -352,7 +369,7 @@ namespace RoboSharp.Extensions
             string Align(int columnSize, long value) => RightAlign(columnSize, value.ToString());
 
             int[] ColSizes = GetColumnSizes();
-            string SummaryLine() => string.Format("    {0}{1}\t{2}\t{3}\t{4}\t{5}\t{6}", PadHeader(""), RightAlign(ColSizes[0],"Total"), RightAlign(ColSizes[1], "Copied"), RightAlign(ColSizes[2], "Skipped"), RightAlign(ColSizes[3], "Mismatch"), RightAlign(ColSizes[4], "FAILED"), RightAlign(ColSizes[5], "Extras"));
+            string SummaryLine() => string.Format("    {0}{1}\t{2}\t{3}\t{4}\t{5}\t{6}", PadHeader(""), RightAlign(ColSizes[0], "Total"), RightAlign(ColSizes[1], "Copied"), RightAlign(ColSizes[2], "Skipped"), RightAlign(ColSizes[3], "Mismatch"), RightAlign(ColSizes[4], "FAILED"), RightAlign(ColSizes[5], "Extras"));
             string Tabulator(string name, IStatistic stat) => string.Format("{0} : {1}\t{2}\t{3}\t{4}\t{5}\t{6}", PadHeader(name), Align(ColSizes[0], stat.Total), Align(ColSizes[1], stat.Copied), Align(ColSizes[2], stat.Skipped), Align(ColSizes[3], stat.Mismatch), Align(ColSizes[4], stat.Failed), Align(ColSizes[5], stat.Extras));
 
             if (IsSummaryWritten) return;
@@ -361,6 +378,7 @@ namespace RoboSharp.Extensions
             if (!Command.LoggingOptions.NoJobSummary)
             {
                 ProgressEstimator.FinalizeResults();
+                _isLoggingHeaderOrSummary = true;
                 WriteToLogs("");
                 WriteToLogs(Divider);
                 WriteToLogs("");
@@ -383,6 +401,7 @@ namespace RoboSharp.Extensions
                 WriteToLogs("");
 
             }
+            _isLoggingHeaderOrSummary = false;
             IsSummaryWritten = true;
         }
 
@@ -396,9 +415,10 @@ namespace RoboSharp.Extensions
         /// <param name="lines"></param>
         protected virtual void WriteToLogs(params string[] lines)
         {
+            if (!lines.Any()) return;
             lock (LogLines)
             {
-                LogLines.AddRange(lines);
+                if (_isLoggingHeaderOrSummary || Command.Configuration.EnableFileLogging) LogLines.AddRange(lines);
                 Command.LoggingOptions.AppendToLogs(lines);
             }
         }
@@ -409,7 +429,16 @@ namespace RoboSharp.Extensions
         public virtual RoboCopyResults GetResults()
         {
             CreateSummary();
+            Unsubscribe();
             return RoboCopyResults.FromResultsBuilder(this);
+        }
+
+        /// <summary>
+        /// Unsubscribe from the associated IRoboCommand
+        /// </summary>
+        public void Dispose()
+        {
+            Unsubscribe();
         }
 
         #endregion
