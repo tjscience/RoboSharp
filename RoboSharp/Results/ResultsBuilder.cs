@@ -18,18 +18,26 @@ namespace RoboSharp.Results
         internal ResultsBuilder(RoboCommand roboCommand) {
             RoboCommand = roboCommand;
             Estimator = new ProgressEstimator(roboCommand);
-            _maxLinesQueued = roboCommand.LoggingOptions.ListOnly ? 9 : 13;
+            _isLoggingHeader = !roboCommand.LoggingOptions.NoJobHeader;
+            _enableFileLogging = roboCommand.Configuration.EnableFileLogging;
+            _noJobSummary = roboCommand.LoggingOptions.NoJobSummary;
+            if (!_noJobSummary)
+            {
+                _lastLines = new Queue<string>();
+                _maxLinesQueued = roboCommand.LoggingOptions.ListOnly ? 9 : 13;
+            }
         }
 
         #region < Private Members >
 
         ///<summary>Reference back to the RoboCommand that spawned this object</summary>
         private readonly RoboCommand RoboCommand; 
-
         private readonly List<string> _outputLines = new List<string>();
-        private readonly Queue<string> _lastLines = new Queue<string>();
+        private readonly Queue<string> _lastLines;
         private readonly int _maxLinesQueued;
-        private bool _isLoggingHeader = true;
+        private readonly bool _enableFileLogging;
+        private readonly bool _noJobSummary;
+        private bool _isLoggingHeader;
         private int _headerSepCount;
         private string _lastLine;
 
@@ -76,12 +84,15 @@ namespace RoboSharp.Results
                 _lastLine = output;
                 return;
             }
-            else if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
+            else if (!_isLoggingHeader && Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
                 return;
 
-            if (_isLoggingHeader || RoboCommand.Configuration.EnableFileLogging) _outputLines.Add(output); // Bypass logging the file names if EnableLogging is set to false
-            if (_lastLines.Count >= _maxLinesQueued) _ = _lastLines.Dequeue();
-            _lastLines.Enqueue(output);
+            if (_isLoggingHeader || _enableFileLogging) _outputLines.Add(output); // Bypass logging the file names if EnableLogging is set to false
+            if (!_noJobSummary)
+            {
+                if (_lastLines.Count >= _maxLinesQueued) _ = _lastLines.Dequeue();
+                _lastLines.Enqueue(output);
+            }
             _lastLine = output;
         }
 
@@ -124,8 +135,17 @@ namespace RoboSharp.Results
             return res;
         }
 
-        private List<string> GetStatisticLines()
+        private IList<string> GetStatisticLines()
         {
+            if (_noJobSummary)
+            {
+#if NET452
+                return new string[] { };
+#else
+                return System.Array.Empty<string>();
+#endif
+            }
+
             var res = new List<string>();
             while (_lastLines.TryDequeue(out string line))
             {

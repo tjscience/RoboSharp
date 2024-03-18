@@ -353,7 +353,7 @@ namespace RoboSharp
 
         /// <summary>
         /// When set TRUE, capture each log line to populate the  <see cref="Results.RoboCopyResults.LogLines"/> property. 
-        /// <br/> When set FALSE (default), only the header and summary are captured, resulting in less memory utilization for long running jobs. (
+        /// <br/> When set FALSE (default), only the header and summary are captured, resulting in less memory utilization for long running jobs.
         /// </summary>
         public bool EnableFileLogging { get; set; }
 
