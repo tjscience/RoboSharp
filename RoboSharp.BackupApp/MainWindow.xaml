@@ -326,8 +326,11 @@
                                         </ListBox>
                                     </Grid>
                                 </GroupBox>
-                                <GroupBox Header="RoboSharp Debugging" Height="302" Width="189" HorizontalAlignment="Left">
-                                    <CheckBox x:Name="chk_SaveEventLogs" Content="EventLogging" ToolTip="Create LogFiles for OnCopyProgressChanged and OnFileProcessed"  Margin="85,0,-2,253" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
+                                <GroupBox Header="RoboSharp Debugging" Height="302" MinWidth="189" HorizontalAlignment="Left">
+                                    <StackPanel Margin="10" HorizontalAlignment="Right">
+                                        <CheckBox x:Name="chk_SaveEventLogs" Content="EventLogging" ToolTip="Create LogFiles for OnCopyProgressChanged and OnFileProcessed"  FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
+                                        <CheckBox x:Name="chk_EnableFileLogging" Content="RoboSharpConfiguration.EnableFileLogging" ToolTip="Record the FileNames into the Results log lines"  FlowDirection="RightToLeft" RenderTransformOrigin="0.175,-1.267" x:FieldModifier="public"/>
+                                    </StackPanel>
                                 </GroupBox>
                             </StackPanel>
                         </StackPanel>
