@@ -149,7 +149,7 @@ namespace RoboSharp.Results
             var res = new List<string>();
             while (_lastLines.TryDequeue(out string line))
             {
-                if (!RoboCommand.Configuration.EnableFileLogging) _outputLines.Add(line); // Add the summary lines to the output lines if they were not already recorded
+                if (!_enableFileLogging) _outputLines.Add(line); // Add the summary lines to the output lines if they were not already recorded
                 if (line.Contains(":") && !line.Contains("\\"))
                     res.Add(line);
             }
