@@ -18,6 +18,7 @@ namespace RoboSharp.Results
         internal ResultsBuilder(RoboCommand roboCommand) {
             RoboCommand = roboCommand;
             Estimator = new ProgressEstimator(roboCommand);
+            _maxLinesQueued = roboCommand.LoggingOptions.ListOnly ? 9 : 13;
         }
 
         #region < Private Members >
@@ -25,10 +26,15 @@ namespace RoboSharp.Results
         ///<summary>Reference back to the RoboCommand that spawned this object</summary>
         private readonly RoboCommand RoboCommand; 
 
-        private readonly List<string> outputLines = new List<string>();
+        private readonly List<string> _outputLines = new List<string>();
+        private readonly Queue<string> _lastLines = new Queue<string>();
+        private readonly int _maxLinesQueued;
+        private bool _isLoggingHeader = true;
+        private int _headerSepCount;
+        private string _lastLine;
 
         /// <summary>This is the last line that was logged.</summary>
-        internal string LastLine => outputLines.Count > 0 ? outputLines.Last() : "";
+        internal string LastLine => _lastLine ?? "";
 
         #endregion
 
@@ -62,10 +68,21 @@ namespace RoboSharp.Results
             if (output == null)
                 return;
 
-            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
+            if (_isLoggingHeader && output.Contains("--------------------------------"))
+            {
+                _headerSepCount += 1;
+                _isLoggingHeader = _headerSepCount < 3;
+                _outputLines.Add(output);
+                _lastLine = output;
+                return;
+            }
+            else if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
                 return;
 
-            outputLines.Add(output);
+            if (_isLoggingHeader || RoboCommand.Configuration.EnableFileLogging) _outputLines.Add(output); // Bypass logging the file names if EnableLogging is set to false
+            if (_lastLines.Count >= _maxLinesQueued) _ = _lastLines.Dequeue();
+            _lastLines.Enqueue(output);
+            _lastLine = output;
         }
 
         /// <summary>
@@ -85,21 +102,21 @@ namespace RoboSharp.Results
 
             //Dir Stats
             if (exitCode >= 0 && statisticLines.Count >= 1)
-                res.DirectoriesStatistic = Statistic.Parse(Statistic.StatType.Directories, statisticLines[0]);
+                res.DirectoriesStatistic = Statistic.Parse(Statistic.StatType.Directories, statisticLines[0], res.DirectoriesStatistic);
 
             //File Stats
             if (exitCode >= 0 && statisticLines.Count >= 2)
-                res.FilesStatistic = Statistic.Parse(Statistic.StatType.Files, statisticLines[1]);
+                res.FilesStatistic = Statistic.Parse(Statistic.StatType.Files, statisticLines[1], res.FilesStatistic);
 
             //Bytes
             if (exitCode >= 0 && statisticLines.Count >= 3)
-                res.BytesStatistic = Statistic.Parse(Statistic.StatType.Bytes, statisticLines[2]);
+                res.BytesStatistic = Statistic.Parse(Statistic.StatType.Bytes, statisticLines[2], res.BytesStatistic);
 
             //Speed Stats
             if (exitCode >= 0 && statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
-            res.LogLines = outputLines.ToArray();
+            res.LogLines = _outputLines.ToArray();
             res.RoboCopyErrors = this.RoboCopyErrors.ToArray();
             res.Source = this.Source;
             res.Destination = this.Destination;
@@ -110,17 +127,12 @@ namespace RoboSharp.Results
         private List<string> GetStatisticLines()
         {
             var res = new List<string>();
-            for (var i = outputLines.Count-1; i > 0; i--)
+            while (_lastLines.TryDequeue(out string line))
             {
-                var line = outputLines[i];
-                if (line.StartsWith("-----------------------"))
-                    break;
-
+                if (!RoboCommand.Configuration.EnableFileLogging) _outputLines.Add(line); // Add the summary lines to the output lines if they were not already recorded
                 if (line.Contains(":") && !line.Contains("\\"))
                     res.Add(line);
             }
-
-            res.Reverse();
             return res;
         }
     }

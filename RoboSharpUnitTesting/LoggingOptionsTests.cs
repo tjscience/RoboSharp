@@ -84,5 +84,21 @@ namespace RoboSharp.UnitTests
             results.LogLines.ToList().ForEach(Console.WriteLine);
             Console.WriteLine(results.BytesStatistic.ToString());
         }
+
+        [DataRow(true, true)]
+        [DataRow(false, true)]
+        [DataRow(true, false)]
+        [DataRow(false, false)]
+        [TestMethod]
+        public void ConfigurationLoggingEnabled(bool isEnabled, bool listOnly)
+        {
+            Test_Setup.ClearOutTestDestination();
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, listOnly);
+            cmd.Configuration.EnableFileLogging = isEnabled;
+            cmd.Start().Wait();
+            var results = cmd.GetResults();
+            Assert.IsNotNull(results);
+            results.LogLines.ToList().ForEach(Console.WriteLine);
+        }
     }
 }

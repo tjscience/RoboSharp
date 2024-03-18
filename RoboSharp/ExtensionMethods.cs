@@ -15,6 +15,21 @@ namespace RoboSharp
     {
 #if NETSTANDARD2_0 || NET452_OR_GREATER
 
+        // Adds the TryDequeue method to Net452 & NetStandard, since it was not introduced until .NetStandard2.1
+        internal static bool TryDequeue<T>(this Queue<T> queue, out T result)
+        {
+            try
+            {
+                result = queue.Dequeue();
+                return true;
+            }
+            catch
+            {
+                result = default;
+                return false;
+            }
+        }
+
         internal static bool Contains(this string outerString, string innerString, StringComparison stringComparison)
         {
             switch (stringComparison)

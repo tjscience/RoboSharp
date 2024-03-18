@@ -238,6 +238,11 @@ namespace RoboSharp
         public RoboSharpConfiguration Configuration
         {
             get { return configuration; }
+            set
+            {
+                if (value is null) throw new ArgumentNullException("Can not set Configuration to null!");
+                configuration = value;
+            }
         }
         /// <inheritdoc cref="Results.ProgressEstimator"/>
         /// <remarks>

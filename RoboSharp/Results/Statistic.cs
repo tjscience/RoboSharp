@@ -344,10 +344,11 @@ namespace RoboSharp.Results
         /// </summary>
         /// <param name="type">Statistic Type to produce</param>
         /// <param name="line">LogLine produced by RoboCopy in Summary Section</param>
+        /// <param name="estimatedStat">The statistic produced from the <see cref="ProgressEstimator"/>, whose value should be updated if the line is able to parse out the values.</param>
         /// <returns>New Statistic Object</returns>
-        public static Statistic Parse(StatType type, string line)
+        public static Statistic Parse(StatType type, string line, Statistic estimatedStat = null)
         {
-            var res = new Statistic(type);
+            var res = estimatedStat ?? new Statistic(type);
 
             var tokenNames = new[] { nameof(Total), nameof(Copied), nameof(Skipped), nameof(Mismatch), nameof(Failed), nameof(Extras) };
             var patternBuilder = new StringBuilder(@"^.*:");

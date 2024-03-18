@@ -45,6 +45,7 @@ namespace RoboSharp.UnitTests
             cmd.CopyOptions.CopySubdirectoriesIncludingEmpty = true;
             cmd.LoggingOptions.ApplyLoggingFlags(LoggingFlags.VerboseOutput | LoggingFlags.OutputToRoboSharpAndLog | LoggingFlags.PrintSizesAsBytes);
             cmd.LoggingOptions.ListOnly = ListOnlyMode;
+            cmd.Configuration.EnableFileLogging = false;
             return cmd;
         }
 

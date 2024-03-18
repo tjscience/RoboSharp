@@ -179,7 +179,16 @@ namespace RoboSharp.Extensions
         public virtual JobOptions JobOptions => throw new NotImplementedException(string.Format("IRoboCommand of type '{0}' does not implement JobOptions",this.GetType().ToString()));
 
         /// <inheritdoc/>
-        public RoboSharpConfiguration Configuration { get; protected set; }
+        public RoboSharpConfiguration Configuration
+        {
+            get => _configuration;
+            set
+            {
+                if (value is null) throw new ArgumentNullException("Configuration property can not be set null!");
+                _configuration = value;
+            }
+        }
+        private RoboSharpConfiguration _configuration;
 
         #endregion
 

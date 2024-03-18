@@ -20,6 +20,25 @@ namespace RoboSharp
         public static readonly IRoboCommandFactory Default = new DefaultRobotCommandFactory();
 
         /// <summary>
+        /// Create a new RoboCommandFactory using a default configuration
+        /// </summary>
+        public RoboCommandFactory() : this(new RoboSharpConfiguration()) { }
+
+        /// <summary>
+        /// Create a new RoboCommandFactory using the specified configuration
+        /// </summary>
+        /// <param name="configuration"></param>
+        public RoboCommandFactory(RoboSharpConfiguration configuration)
+        {
+            Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
+
+        /// <summary>
+        /// The <see cref="RoboSharpConfiguration"/> to apply to all constructed <see cref="IRoboCommand"/> objects.
+        /// </summary>
+        public RoboSharpConfiguration Configuration { get; }
+
+        /// <summary>
         /// The Default <see cref="CopyActionFlags"/> to apply when generating an <see cref="IRoboCommand"/> using this factory.
         /// </summary>
         public CopyActionFlags DefaultCopyOptions { get; set; } = CopyActionFlags.Default;
@@ -50,7 +69,10 @@ namespace RoboSharp
                 copyActionFlags: DefaultCopyOptions,
                 selectionFlags: DefaultSelectionOptions,
                 loggingFlags: DefaultLoggingOptions
-             );
+             )
+            {
+                Configuration = Configuration
+            };
 
         /// <summary>
         /// Create a new <see cref="IRoboCommand"/> object with the specified <paramref name="source"/> and <paramref name="destination"/>.
