@@ -13,22 +13,34 @@ namespace RoboSharp.Results
     /// </remarks>
     internal class ResultsBuilder
     {
-        private ResultsBuilder() { }
-
-        internal ResultsBuilder(RoboCommand roboCommand) {
+        internal ResultsBuilder(RoboCommand roboCommand, ProgressEstimator estimator) {
             RoboCommand = roboCommand;
-            Estimator = new ProgressEstimator(roboCommand);
+            Estimator = estimator;
+            _isLoggingHeader = !roboCommand.LoggingOptions.NoJobHeader;
+            _enableFileLogging = roboCommand.Configuration.EnableFileLogging;
+            _noJobSummary = roboCommand.LoggingOptions.NoJobSummary;
+            if (!_noJobSummary)
+            {
+                _lastLines = new Queue<string>();
+                _maxLinesQueued = roboCommand.LoggingOptions.ListOnly ? 9 : 13;
+            }
         }
 
         #region < Private Members >
 
         ///<summary>Reference back to the RoboCommand that spawned this object</summary>
         private readonly RoboCommand RoboCommand; 
-
-        private readonly List<string> outputLines = new List<string>();
+        private readonly List<string> _outputLines = new List<string>();
+        private readonly Queue<string> _lastLines;
+        private readonly int _maxLinesQueued;
+        private readonly bool _enableFileLogging;
+        private readonly bool _noJobSummary;
+        private bool _isLoggingHeader;
+        private int _headerSepCount;
+        private string _lastLine;
 
         /// <summary>This is the last line that was logged.</summary>
-        internal string LastLine => outputLines.Count > 0 ? outputLines.Last() : "";
+        internal string LastLine => _lastLine ?? "";
 
         #endregion
 
@@ -62,10 +74,24 @@ namespace RoboSharp.Results
             if (output == null)
                 return;
 
-            if (Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
+            if (_isLoggingHeader && output.Contains("--------------------------------"))
+            {
+                _headerSepCount += 1;
+                _isLoggingHeader = _headerSepCount < 3;
+                _outputLines.Add(output);
+                _lastLine = output;
+                return;
+            }
+            else if (!_isLoggingHeader && Regex.IsMatch(output, @"^\s*[\d\.,]+%\s*$", RegexOptions.Compiled)) //Ignore Progress Indicators
                 return;
 
-            outputLines.Add(output);
+            if (_isLoggingHeader || _enableFileLogging) _outputLines.Add(output); // Bypass logging the file names if EnableLogging is set to false
+            if (!_noJobSummary)
+            {
+                if (_lastLines.Count >= _maxLinesQueued) _ = _lastLines.Dequeue();
+                _lastLines.Enqueue(output);
+            }
+            _lastLine = output;
         }
 
         /// <summary>
@@ -85,21 +111,21 @@ namespace RoboSharp.Results
 
             //Dir Stats
             if (exitCode >= 0 && statisticLines.Count >= 1)
-                res.DirectoriesStatistic = Statistic.Parse(Statistic.StatType.Directories, statisticLines[0]);
+                res.DirectoriesStatistic = Statistic.Parse(Statistic.StatType.Directories, statisticLines[0], res.DirectoriesStatistic);
 
             //File Stats
             if (exitCode >= 0 && statisticLines.Count >= 2)
-                res.FilesStatistic = Statistic.Parse(Statistic.StatType.Files, statisticLines[1]);
+                res.FilesStatistic = Statistic.Parse(Statistic.StatType.Files, statisticLines[1], res.FilesStatistic);
 
             //Bytes
             if (exitCode >= 0 && statisticLines.Count >= 3)
-                res.BytesStatistic = Statistic.Parse(Statistic.StatType.Bytes, statisticLines[2]);
+                res.BytesStatistic = Statistic.Parse(Statistic.StatType.Bytes, statisticLines[2], res.BytesStatistic);
 
             //Speed Stats
             if (exitCode >= 0 && statisticLines.Count >= 6)
                 res.SpeedStatistic = SpeedStatistic.Parse(statisticLines[4], statisticLines[5]);
 
-            res.LogLines = outputLines.ToArray();
+            res.LogLines = _outputLines.ToArray();
             res.RoboCopyErrors = this.RoboCopyErrors.ToArray();
             res.Source = this.Source;
             res.Destination = this.Destination;
@@ -107,20 +133,24 @@ namespace RoboSharp.Results
             return res;
         }
 
-        private List<string> GetStatisticLines()
+        private IList<string> GetStatisticLines()
         {
-            var res = new List<string>();
-            for (var i = outputLines.Count-1; i > 0; i--)
+            if (_noJobSummary)
             {
-                var line = outputLines[i];
-                if (line.StartsWith("-----------------------"))
-                    break;
+#if NET452
+                return new string[] { };
+#else
+                return System.Array.Empty<string>();
+#endif
+            }
 
+            var res = new List<string>();
+            while (_lastLines.TryDequeue(out string line))
+            {
+                if (!_enableFileLogging) _outputLines.Add(line); // Add the summary lines to the output lines if they were not already recorded
                 if (line.Contains(":") && !line.Contains("\\"))
                     res.Add(line);
             }
-
-            res.Reverse();
             return res;
         }
     }

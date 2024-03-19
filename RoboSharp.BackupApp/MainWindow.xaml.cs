@@ -112,6 +112,9 @@ namespace RoboSharp.BackupApp
                 copy.OnError += copy_OnError;
                 copy.OnCommandCompleted += copy_OnCommandCompleted;
             }
+
+            copy.Configuration.EnableFileLogging = chk_EnableFileLogging.IsChecked ?? false;
+
             // copy options
             copy.CopyOptions.Source = Source.Text;
             copy.CopyOptions.Destination = Destination.Text;

@@ -151,6 +151,7 @@ namespace RoboSharp.Extensions
                 runningTask = null;
                 cancelRequest = null;
                 PairEvaluator = null;
+                resultsBuilder?.Unsubscribe();
                 resultsBuilder = null;
                 IsRunning = false;
             }

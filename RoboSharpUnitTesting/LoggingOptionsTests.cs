@@ -84,5 +84,43 @@ namespace RoboSharp.UnitTests
             results.LogLines.ToList().ForEach(Console.WriteLine);
             Console.WriteLine(results.BytesStatistic.ToString());
         }
+
+        [DataRow(true, true)]
+        [DataRow(false, true)]
+        [DataRow(true, false)]
+        [DataRow(false, false)]
+        [TestMethod]
+        public void ConfigurationLoggingEnabled(bool isEnabled, bool listOnly)
+        {
+            Test_Setup.ClearOutTestDestination();
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, listOnly);
+            cmd.Configuration.EnableFileLogging = isEnabled;
+            cmd.Start().Wait();
+            var results = cmd.GetResults();
+            Assert.IsNotNull(results);
+            results.LogLines.ToList().ForEach(Console.WriteLine);
+        }
+
+        [DataRow(true, true, DisplayName = "Default Functionality")]
+        [DataRow(false, true, DisplayName = "No Header")]
+        [DataRow(true, false, DisplayName = "No Summary")]
+        [DataRow(false, false, DisplayName = "No Header, No Summary")]
+        [TestMethod]
+        public void TestSummaryAndHeader(bool header, bool summary)
+        {
+            Test_Setup.ClearOutTestDestination();
+            RoboCommand cmd = Test_Setup.GenerateCommand(false, true);
+            //cmd.Configuration.EnableFileLogging = true;
+            cmd.LoggingOptions.NoJobHeader = !header;
+            cmd.LoggingOptions.NoJobSummary= !summary;
+            cmd.Start().Wait();
+            var results = cmd.GetResults();
+            Assert.IsNotNull(results);
+            results.LogLines.ToList().ForEach(Console.WriteLine);
+
+            Console.WriteLine("\n\n-------------- Results Object -------------- ");
+            Console.WriteLine(results.ToString());
+
+        }
     }
 }

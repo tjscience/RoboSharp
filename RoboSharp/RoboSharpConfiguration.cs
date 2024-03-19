@@ -75,6 +75,8 @@ namespace RoboSharp
 
         #endregion
 
+        #region < Tokens for Log Parsing >
+
         /// <summary>
         /// Error Token Identifier -- EN = "ERROR", DE = "FEHLER", etc <br/>
         /// Leave as / Set to null to use system default.
@@ -128,9 +130,6 @@ namespace RoboSharp
             string pattern = BaseErrTokenRegex.ToString().Replace("IDENTIFIER", errorToken);
             return new Regex(pattern, BaseErrTokenRegex.Options);
         }
-
-
-        #region < Tokens for Log Parsing >
 
         #region < File Tokens >
 
@@ -351,6 +350,12 @@ namespace RoboSharp
             set { roboCopyExe = value; }
         }
         private string roboCopyExe = null;
+
+        /// <summary>
+        /// When set TRUE, capture each log line to populate the  <see cref="Results.RoboCopyResults.LogLines"/> property. 
+        /// <br/> When set FALSE (default), only the header and summary are captured, resulting in less memory utilization for long running jobs.
+        /// </summary>
+        public bool EnableFileLogging { get; set; }
 
         /// <Remarks>Default is retrieved from the OEMCodePage</Remarks>
         /// <inheritdoc cref="System.Diagnostics.ProcessStartInfo.StandardOutputEncoding" path="/summary"/>
