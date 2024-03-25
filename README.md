@@ -27,6 +27,9 @@ If you like the project, please rate it!
 
 See the [Wiki](https://github.com/tjscience/RoboSharp/wiki) for examples and code snippets
 
+## Bugs / Issues
+
+Before submitting issues please ensure you are using the latest version available, this project is continuously being worked on and improved, so it maybe that a later version already resolve any problems you are having.  Thank you.
 
 ## Contributing to RoboSharp
 
