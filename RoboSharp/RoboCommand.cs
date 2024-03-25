@@ -553,9 +553,17 @@ namespace RoboSharp
               var ProcessExitedAsync = new TaskCompletionSource<object>();
               process.Exited += (sender, args) =>
               {
-                  process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
-                                           //hasExited = true;
-                  ProcessExitedAsync.TrySetResult(null);
+                  try
+                  {
+                      process.WaitForExit(); //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
+
+                      //hasExited = true;
+                      ProcessExitedAsync.TrySetResult(null);
+                  }
+                  catch (Exception ex)
+                  {
+                      Debugger.Instance.DebugMessage($"Exited handler error {ex.Message}");
+                  }
               };
 
               //Start the Task
