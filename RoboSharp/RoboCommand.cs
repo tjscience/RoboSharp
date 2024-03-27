@@ -168,7 +168,7 @@ namespace RoboSharp
         private JobOptions jobOptions;
 
         // Modified while running
-        private Process process;
+        private Process _process;
         private Task backupTask;
         private bool hasError;
         //private bool hasExited; //No longer evaluated
@@ -353,20 +353,20 @@ namespace RoboSharp
         /// <summary>Pause execution of the RoboCopy process when <see cref="IsPaused"/> == false</summary>
         public virtual void Pause()
         {
-            if (process != null && !process.HasExited && isPaused == false)
+            if (_process != null && !_process.HasExited && isPaused == false)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution paused.");
-                isPaused = process.Suspend();
+                isPaused = _process.Suspend();
             }
         }
 
         /// <summary>Resume execution of the RoboCopy process when <see cref="IsPaused"/> == true</summary>
         public virtual void Resume()
         {
-            if (process != null && !process.HasExited && isPaused == true)
+            if (_process != null && !_process.HasExited && isPaused == true)
             {
                 Debugger.Instance.DebugMessage("RoboCommand execution resumed.");
-                process.Resume();
+                _process.Resume();
                 isPaused = false;
             }
         }
@@ -378,17 +378,17 @@ namespace RoboSharp
         {
             //Note: This previously checked for CopyOptions.RunHours.IsNullOrWhiteSpace() == TRUE prior to issuing the stop command
             //If the removal of that check broke your application, please create a new issue thread on the repo.
-            if (process != null)
+            if (_process != null)
             {
-                if (!isCancelled && (!process?.HasExited ?? true))
+                if (!isCancelled && (!_process?.HasExited ?? true))
                 {
-                    process?.Kill();
+                    _process?.Kill();
                     isCancelled = true;
                 }
                 if (DisposeProcess)
                 {
-                    process?.Dispose();
-                    process = null;
+                    _process?.Dispose();
+                    _process = null;
                 }
             }
             isPaused = false;
@@ -448,7 +448,7 @@ namespace RoboSharp
         {
             VersionManager.ThrowIfNotWindowsPlatform("RoboCommand.Start(), which invokes robocopy, is only available in a windows environment. Use a custom implementation instead.");
             if (disposedValue) throw GetDisposedException();
-            if (process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
+            if (_process != null | IsRunning) throw new InvalidOperationException("RoboCommand.Start() method cannot be called while process is already running / IsRunning = true.");
 
 #if !NET40_OR_GREATER && !NET6_0_OR_GREATER
             if (!username.IsNullOrWhiteSpace()) throw new PlatformNotSupportedException("Authentication is only supported in .Net Framework >= 4.0 and .Net >= 6.0.");
@@ -491,16 +491,18 @@ namespace RoboSharp
         private Task GetRoboCopyTask(Results.ResultsBuilder resultsBuilder, string domain = "", string username = "", string password = "")
         {
             if (disposedValue) throw GetDisposedException();
-            if (process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
+            if (_process != null) throw new InvalidOperationException("Cannot start a new RoboCopy Process while this RoboCommand is already running.");
 
             isRunning = true;
             DateTime StartTime = DateTime.Now;
 
+
+            Process process = new Process();
+            _process = process;
+            var processExitedSource = new TaskCompletionSource<object>();
+
             backupTask = Task.Run(async () =>
           {
-
-              process = new Process();
-
               //Declare Encoding
               process.StartInfo.StandardOutputEncoding = Configuration.StandardOutputEncoding;
               process.StartInfo.StandardErrorEncoding = Configuration.StandardErrorEncoding;
@@ -544,26 +546,17 @@ namespace RoboSharp
                   resultsBuilder.CommandOptions = GenerateParameters();
               }
               process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
+              process.EnableRaisingEvents = true;
               process.OutputDataReceived += Process_OutputDataReceived;
               process.ErrorDataReceived += Process_ErrorDataReceived;
-              process.EnableRaisingEvents = true;
-
-              //Setup the WaitForExitAsync Task
-              //hasExited = false;
-              var ProcessExitedAsync = new TaskCompletionSource<object>();
-              process.Exited += (sender, args) =>
-              {
-                  process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
-                                           //hasExited = true;
-                  ProcessExitedAsync.TrySetResult(null);
-              };
+              process.Exited += ProcessExitedHandler;
 
               //Start the Task
               Debugger.Instance.DebugMessage("RoboCopy process started.");
               process.Start();
               process.BeginOutputReadLine();
               process.BeginErrorReadLine();
-              _ = await ProcessExitedAsync.Task;   //This allows task to release the thread to perform other work
+              _ = await processExitedSource.Task;   //This allows task to release the thread to perform other work
               if (resultsBuilder != null)      // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
               {
                   results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
@@ -573,6 +566,12 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
+                // unsubscribe from the process
+                process.Exited -= ProcessExitedHandler;
+                process.OutputDataReceived -= Process_OutputDataReceived;
+                process.ErrorDataReceived -= Process_ErrorDataReceived;
+                processExitedSource = null;
+                
                 bool WasCancelled = process.ExitCode == -1;
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
@@ -598,6 +597,23 @@ namespace RoboSharp
                 }
             }, CancellationToken.None);
 
+
+            void ProcessExitedHandler(object sender, EventArgs e)
+            {
+                try
+                {
+                    // WaitForExit ensures that all output lines have been sent by the process, whereas the Exited event occurs prior to lines finishing being printed
+                    process.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    Debugger.Instance.DebugMessage(ex.Message);
+                }
+                finally
+                {
+                    processExitedSource.TrySetResult(null);
+                }
+            }
             return continueWithTask;
         }
 
@@ -616,7 +632,7 @@ namespace RoboSharp
         public async Task SaveAsJobFile(string path, bool IncludeSource = false, bool IncludeDestination = false, string domain = "", string username = "", string password = "")
         {
             //If currently running and this is called, clone the command, then run the save method against the clone.
-            if (disposedValue | process != null)
+            if (disposedValue | _process != null)
             {
                 var cmd = this.Clone();
                 cmd.StopIfDisposing = true;
@@ -911,8 +927,8 @@ namespace RoboSharp
                 }
 
                 //Release any hooks to the process, but allow it to continue running
-                process?.Dispose();
-                process = null;
+                _process?.Dispose();
+                _process = null;
                 disposedValue = true;
             }
         }
