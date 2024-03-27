@@ -499,6 +499,7 @@ namespace RoboSharp
 
             Process process = new Process();
             _process = process;
+            var processExitedSource = new TaskCompletionSource<object>();
 
             backupTask = Task.Run(async () =>
           {
@@ -545,26 +546,17 @@ namespace RoboSharp
                   resultsBuilder.CommandOptions = GenerateParameters();
               }
               process.StartInfo.Arguments = resultsBuilder?.CommandOptions ?? GenerateParameters();
+              process.EnableRaisingEvents = true;
               process.OutputDataReceived += Process_OutputDataReceived;
               process.ErrorDataReceived += Process_ErrorDataReceived;
-              process.EnableRaisingEvents = true;
-
-              //Setup the WaitForExitAsync Task
-              //hasExited = false;
-              var ProcessExitedAsync = new TaskCompletionSource<object>();
-              process.Exited += (sender, args) =>
-              {
-                  process.WaitForExit();   //This looks counter-intuitive, but is required to ensure all output lines have been read before building results.
-                                           //hasExited = true;
-                  ProcessExitedAsync.TrySetResult(null);
-              };
+              process.Exited += ProcessExitedHandler;
 
               //Start the Task
               Debugger.Instance.DebugMessage("RoboCopy process started.");
               process.Start();
               process.BeginOutputReadLine();
               process.BeginErrorReadLine();
-              _ = await ProcessExitedAsync.Task;   //This allows task to release the thread to perform other work
+              _ = await processExitedSource.Task;   //This allows task to release the thread to perform other work
               if (resultsBuilder != null)      // Only replace results if a ResultsBuilder was supplied (Not supplied when saving as a JobFile)
               {
                   results = resultsBuilder.BuildResults(process?.ExitCode ?? -1);
@@ -574,6 +566,12 @@ namespace RoboSharp
 
             Task continueWithTask = backupTask.ContinueWith((continuation) => // this task always runs
             {
+                // unsubscribe from the process
+                process.Exited -= ProcessExitedHandler;
+                process.OutputDataReceived -= Process_OutputDataReceived;
+                process.ErrorDataReceived -= Process_ErrorDataReceived;
+                processExitedSource = null;
+                
                 bool WasCancelled = process.ExitCode == -1;
                 Stop(true); //Ensure process is disposed of - Sets IsRunning flags to false
 
@@ -599,6 +597,23 @@ namespace RoboSharp
                 }
             }, CancellationToken.None);
 
+
+            void ProcessExitedHandler(object sender, EventArgs e)
+            {
+                try
+                {
+                    // WaitForExit ensures that all output lines have been sent by the process, whereas the Exited event occurs prior to lines finishing being printed
+                    process.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    Debugger.Instance.DebugMessage(ex.Message);
+                }
+                finally
+                {
+                    processExitedSource.TrySetResult(null);
+                }
+            }
             return continueWithTask;
         }
 
